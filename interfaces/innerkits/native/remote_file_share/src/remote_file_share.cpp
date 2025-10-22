@@ -278,22 +278,6 @@ int RemoteFileShare::CreateSharePath(const int &fd,
     return E_OK;
 }
 
-static int GetDistributedPath(Uri &uri,
-                              const int &userId,
-                              std::string &distributedPath,
-                              const std::string &bundleName,
-                              const std::string &networkId)
-{
-    distributedPath = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + bundleName + REMOTE_SHARE_PATH_DIR +
-                      BACKSLASH + networkId + SandboxHelper::Decode(uri.GetPath());
-    if (distributedPath.size() >= PATH_MAX) {
-        LOGE("Path is too long with %{public}zu", distributedPath.size());
-        return -EINVAL;
-    }
-
-    return E_OK;
-}
-
 static int GetMediaDistributedDir(const int &userId, std::string &distributedDir, const std::string &networkId)
 {
     distributedDir = DST_PATH_HEAD + std::to_string(userId) + DST_PATH_MID + MEDIA_BUNDLE_NAME +
@@ -403,23 +387,6 @@ static std::string GetPhysicalPath(Uri &uri, const std::string &userId)
     return physicalPath;
 }
 
-static void InitHmdfsInfo(struct HmdfsDstInfo &hdi,
-                          const std::string &physicalPath,
-                          const std::string &distributedPath,
-                          const std::string &bundleName)
-{
-    hdi.localLen = physicalPath.size() + 1;
-    hdi.localPathIndex = reinterpret_cast<uint64_t>(physicalPath.c_str());
-
-    hdi.distributedLen = distributedPath.size() + 1;
-    hdi.distributedPathIndex = reinterpret_cast<uint64_t>(distributedPath.c_str());
-
-    hdi.bundleNameLen = bundleName.size() + 1;
-    hdi.bundleNameIndex = reinterpret_cast<uint64_t>(bundleName.c_str());
-
-    hdi.size = reinterpret_cast<uint64_t>(&hdi.size);
-}
-
 static std::string GetLocalNetworkId()
 {
     const std::string LOCAL = "local";
@@ -440,19 +407,6 @@ static std::string GetLocalNetworkId()
     }
 #endif
     return networkId;
-}
-
-static void SetHmdfsUriInfo(struct HmdfsUriInfo &hui,
-                            Uri &uri,
-                            uint64_t fileSize,
-                            const std::string &networkId,
-                            const std::string &bundleName)
-{
-    hui.uriStr = FILE_SCHEME + "://" + bundleName + DISTRIBUTED_DIR_PATH + REMOTE_SHARE_PATH_DIR + BACKSLASH +
-                 networkId + uri.GetPath() + NETWORK_PARA + networkId;
-
-    hui.fileSize = fileSize;
-    return;
 }
 
 static int32_t SetFileSize(const std::string &physicalPath, struct HmdfsUriInfo &hui)
@@ -480,75 +434,11 @@ static int32_t SetPublicDirHmdfsInfo(const std::string &physicalPath, const std:
     return E_OK;
 }
 
-static int32_t GetMergePathFd(HmdfsDstInfo &hdi, UniqueFd &dirFd, const int32_t &userId)
-{
-    LOGI("Open merge path start");
-    std::string ioctlDir = SHARE_PATH_HEAD + std::to_string(userId) + SHARE_PATH_MID;
-    UniqueFd dirMergeFd(open(ioctlDir.c_str(), O_RDONLY));
-    if (dirFd < 0) {
-        LOGE("Open merge path failed with %{public}d", errno);
-        return errno;
-    }
-    int32_t ret = ioctl(dirMergeFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-    if (ret != E_OK) {
-        LOGE("Ioctl merge failed with %{public}d", errno);
-        return -errno;
-    }
-    dirFd = std::move(dirMergeFd);
-    return E_OK;
-}
-
-int32_t RemoteFileShare::GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId, struct HmdfsUriInfo &hui)
-{
-    LOGI("GetDfsUriFromLocal start");
-    Uri uri(uriStr);
-    std::string bundleName = uri.GetAuthority();
-    std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
-    if (physicalPath == "") {
-        LOGE("Failed to get physical path");
-        return -EINVAL;
-    }
-    if (bundleName == MEDIA_AUTHORITY) {
-        bundleName = MEDIA_BUNDLE_NAME;
-    }
-
-    std::string networkId = GetLocalNetworkId();
-    if (bundleName == FILE_MANAGER_AUTHORITY) {
-        (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, hui, networkId);
-        LOGD("GetDfsUriFromLocal successfully");
-        return E_OK;
-    }
-
-    std::string distributedPath;
-    int ret = GetDistributedPath(uri, userId, distributedPath, bundleName, networkId);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    struct HmdfsDstInfo hdi;
-    InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
-    LOGI("open ioctlDir Create ioctl start");
-    std::string ioctlDir = SHARE_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
-    UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
-    if (dirFd < 0) {
-        LOGE("Open share path failed with %{public}d", errno);
-        return errno;
-    }
-
-    ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-    if (ret != E_OK && GetMergePathFd(hdi, dirFd, userId) != E_OK) {
-        return errno;
-    }
-    SetHmdfsUriInfo(hui, uri, hdi.size, networkId, bundleName);
-    LOGI("GetDfsUriFromLocal successfully");
-    return E_OK;
-}
-
 static int32_t UriCategoryByType(const std::vector<std::string> &uriList,
                                  std::vector<std::string> &mediaUriList,
                                  std::vector<std::string> &otherUriList)
 {
-    LOGI("GetDfsUrisFromLocal UriCategoryByType start");
+    LOGI("GetDfsUrisDirFromLocal UriCategoryByType start");
     if (uriList.size() == 0) {
         LOGE("Parameter uriList is NULL");
         return -EINVAL;
@@ -562,101 +452,6 @@ static int32_t UriCategoryByType(const std::vector<std::string> &uriList,
             otherUriList.push_back(uriStr);
         }
     }
-    return E_OK;
-}
-
-static int32_t GetMediaDfsUrisFromLocal(const std::vector<std::string> &uriList,
-                                        const int32_t &userId,
-                                        std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
-{
-    LOGI("GetMediaDfsUrisFromLocal start");
-    std::string ioctlDir = SHARE_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
-    UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
-    if (dirFd < 0) {
-        LOGE("Open share path failed with %{public}d", errno);
-        return errno;
-    }
-    std::vector<std::string> physicalPaths;
-    int getPhysicalPathRet = SandboxHelper::GetMediaSharePath(uriList, physicalPaths);
-    if (getPhysicalPathRet != E_OK) {
-        return -EINVAL;
-    }
-    std::string networkId = GetLocalNetworkId();
-    std::string bundleName = MEDIA_BUNDLE_NAME;
-    for (size_t i = 0; i < uriList.size(); i++) {
-        Uri uri(uriList[i]);
-        LOGD("GetDfsUriFromLocal begin, uri: %{private}s", uriList[i].c_str());
-        std::string distributedPath;
-        int ret = GetDistributedPath(uri, userId, distributedPath, bundleName, networkId);
-        if (ret != E_OK) {
-            return ret;
-        }
-        struct HmdfsDstInfo hdi;
-        InitHmdfsInfo(hdi, physicalPaths[i], distributedPath, bundleName);
-        ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-        if (ret != E_OK && GetMergePathFd(hdi, dirFd, userId) != E_OK) {
-            return errno;
-        }
-        HmdfsUriInfo dfsUriInfo;
-        SetHmdfsUriInfo(dfsUriInfo, uri, hdi.size, networkId, bundleName);
-        uriToDfsUriMaps.insert({uriList[i], dfsUriInfo});
-    }
-    LOGI("GetDfsUrisFromLocal successfully");
-    return E_OK;
-}
-
-int32_t RemoteFileShare::GetDfsUrisFromLocal(const std::vector<std::string> &uriList,
-                                             const int32_t &userId,
-                                             std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps)
-{
-    std::vector<std::string> otherUriList;
-    std::vector<std::string> mediaUriList;
-    int ret = UriCategoryByType(uriList, mediaUriList, otherUriList);
-    if (ret == E_OK && mediaUriList.size() != E_OK) {
-        ret = GetMediaDfsUrisFromLocal(mediaUriList, userId, uriToDfsUriMaps);
-    }
-    if (ret != E_OK) {
-        return ret;
-    }
-    std::string ioctlDir = SHARE_PATH_HEAD + std::to_string(userId) + LOWER_SHARE_PATH_MID;
-    UniqueFd dirFd(open(ioctlDir.c_str(), O_RDONLY));
-    if (dirFd < 0) {
-        LOGE("Open share path failed with %{public}d", errno);
-        return errno;
-    }
-    std::string networkId = GetLocalNetworkId();
-    for (const auto &uriStr : otherUriList) {
-        Uri uri(uriStr);
-        std::string bundleName = uri.GetAuthority();
-        LOGD("GetDfsUriFromLocal begin, uri: %{private}s", uriStr.c_str());
-        std::string physicalPath = GetPhysicalPath(uri, std::to_string(userId));
-        if (physicalPath == "") {
-            LOGE("Failed to get physical path");
-            return -EINVAL;
-        }
-        if (bundleName == FILE_MANAGER_AUTHORITY) {
-            HmdfsUriInfo dfsUriInfo;
-            (void)SetPublicDirHmdfsInfo(physicalPath, uriStr, dfsUriInfo, networkId);
-            uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
-            continue;
-        }
-
-        std::string distributedPath;
-        ret = GetDistributedPath(uri, userId, distributedPath, bundleName, networkId);
-        if (ret != E_OK) {
-            return ret;
-        }
-        struct HmdfsDstInfo hdi;
-        InitHmdfsInfo(hdi, physicalPath, distributedPath, bundleName);
-        ret = ioctl(dirFd, HMDFS_IOC_GET_DST_PATH, &hdi);
-        if (ret != E_OK && GetMergePathFd(hdi, dirFd, userId) != E_OK) {
-            return errno;
-        }
-        HmdfsUriInfo dfsUriInfo;
-        SetHmdfsUriInfo(dfsUriInfo, uri, hdi.size, networkId, bundleName);
-        uriToDfsUriMaps.insert({uriStr, dfsUriInfo});
-    }
-    LOGI("GetDfsUrisFromLocal successfully");
     return E_OK;
 }
 
