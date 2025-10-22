@@ -506,21 +506,26 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleGetCompatibilityInfo_Test_
         std::string extInfo = "test";
         std::string compatibilityInfo = "";
         int32_t scenario = BConstants::ExtensionScenario::BACKUP;
-        auto ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+        bool isExist = true;
+        auto ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, isExist, compatibilityInfo);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        isExist = false;
+        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, isExist, compatibilityInfo);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         scenario = BConstants::ExtensionScenario::RESTORE;
-        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, isExist, compatibilityInfo);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         scenario = BConstants::ExtensionScenario::INVALID;
-        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, isExist, compatibilityInfo);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_INVAL_ARG).GetCode());
 
         scenario = BConstants::ExtensionScenario::BACKUP;
         EXPECT_CALL(*extBackupMock, GetBackupCompatibilityInfo(_, _))
             .WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
-        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, compatibilityInfo);
+        ret = extExtension->HandleGetCompatibilityInfo(extInfo, scenario, isExist, compatibilityInfo);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);

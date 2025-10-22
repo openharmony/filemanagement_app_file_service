@@ -380,4 +380,9 @@ std::string SvcSessionManager::GetBackupScene(const std::string &bundleName)
 }
 
 void SvcSessionManager::SetBackupScene(const std::string &bundleName, const std::string &backupScene) {}
+
+bool SvcSessionManager::GetIsExisted(const std::string &bundleName)
+{
+    return true;
+}
 } // namespace OHOS::FileManagement::Backup

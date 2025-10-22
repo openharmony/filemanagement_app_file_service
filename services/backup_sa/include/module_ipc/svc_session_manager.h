@@ -570,6 +570,7 @@ public:
 
     void SetClearDataFlag(const std::string &bundleName, bool isClearData);
     bool GetClearDataFlag(const std::string &bundleName);
+    bool GetIsExisted(const std::string &bundleName);
 
     bool CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList);
 
