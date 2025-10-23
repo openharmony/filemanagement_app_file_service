@@ -408,7 +408,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetFullBundleInfos(int32_t
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo, requireCompatibility] =
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
-            HILOGI("Not allToBackup, bundleName = %{public}s", installedBundle.name.data());
+            HILOGD("Not allToBackup, bundleName = %{public}s", installedBundle.name.data());
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
                 installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly,
                 requireCompatibility, extName, restoreDeps, supportScene, extraInfo});
@@ -596,7 +596,7 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForLoca
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo, requireCompatibility] =
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
-            HILOGI("Not allToBackup, bundleName = %{public}s, appIndex = %{public}d",
+            HILOGD("Not allToBackup, bundleName = %{public}s, appIndex = %{public}d",
                 installedBundle.name.c_str(), installedBundle.appIndex);
             continue;
         }
@@ -630,7 +630,7 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForInde
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo, requireCompatibility] =
             GetAllowAndExtName(bundleExtInfo.extensionInfos_);
         if (!allToBackup) {
-            HILOGI("Not allToBackup, bundleName = %{public}s, appIndex = %{public}d",
+            HILOGD("Not allToBackup, bundleName = %{public}s, appIndex = %{public}d",
                 bundleExtInfo.bundleInfo_.name.c_str(), bundleExtInfo.bundleInfo_.appIndex);
             continue;
         }

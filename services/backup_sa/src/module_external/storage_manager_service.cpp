@@ -25,6 +25,7 @@
 #include <linux/fs.h>
 #include <linux/quota.h>
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
@@ -467,7 +468,7 @@ void StorageManagerService::SetExcludePathMap(std::string &excludePath, std::map
     }
     struct stat fileStatInfo = {0};
     if (stat(excludePath.c_str(), &fileStatInfo) != 0) {
-        HILOGE("SetExcludePathMap call stat error %{private}s, errno:%{public}d", excludePath.c_str(), errno);
+        HILOGE("stat error %{private}s, errno:%{public}d", GetAnonyPath(excludePath).c_str(), errno);
         return;
     }
     if (S_ISDIR(fileStatInfo.st_mode)) {
@@ -490,11 +491,11 @@ std::tuple<bool, bool> StorageManagerService::CheckIfDirForIncludes(const std::s
     // check whether the path exists
     struct stat fileStatInfo = {0};
     if (stat(path.c_str(), &fileStatInfo) != 0) {
-        HILOGE("CheckIfDirForIncludes call stat error %{public}s, fail errno:%{public}d", path.c_str(), errno);
+        HILOGD("call stat error %{private}s, errno:%{public}d", GetAnonyPath(path).c_str(), errno);
         return {false, false};
     }
     if (S_ISDIR(fileStatInfo.st_mode)) {
-        HILOGI("%{public}s exists and is a directory", path.c_str());
+        HILOGD("%{private}s exists and is a directory", GetAnonyPath(path).c_str());
         return {true, true};
     } else {
         std::string sandboxPath = path;
@@ -542,7 +543,7 @@ bool StorageManagerService::GetIncludesFileStats(const std::string &dir, BundleS
         folderStack.pop();
         DIR *dirPtr = opendir(filePath.c_str());
         if (dirPtr == nullptr) {
-            HILOGE("GetIncludesFileStats open file dir:%{private}s fail, errno:%{public}d", filePath.c_str(), errno);
+            HILOGE("open file dir:%{private}s fail, errno:%{public}d", GetAnonyPath(filePath).c_str(), errno);
             continue;
         }
         if (filePath.back() != FILE_SEPARATOR_CHAR) {
@@ -557,7 +558,7 @@ bool StorageManagerService::GetIncludesFileStats(const std::string &dir, BundleS
             std::string path = filePath + entry->d_name;
             struct stat fileInfo = {0};
             if (stat(path.c_str(), &fileInfo) != 0) {
-                HILOGE("GetIncludesFileStats call stat error %{private}s, errno:%{public}d", path.c_str(), errno);
+                HILOGE("call stat error %{private}s, errno:%{public}d", GetAnonyPath(path).c_str(), errno);
                 fileInfo.st_size = 0;
             }
             struct FileStat fileStat = {};

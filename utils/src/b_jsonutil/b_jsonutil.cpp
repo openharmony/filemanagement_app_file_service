@@ -66,7 +66,7 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
         HILOGE("bundleNames count is not equals bundleInfos count");
         return bundleNameDetailMap;
     }
-    HILOGI("Start BuildBundleInfos");
+    HILOGD("Start BuildBundleInfos");
     for (size_t i = 0; i < bundleNames.size(); i++) {
         std::string bundleName = bundleNames[i];
         if (bundleName.empty()) {
@@ -107,7 +107,7 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
         isClearDataFlags[bundleName] = isClearData;
         bundleNameDetailMap[bundleName] = bundleDetailInfos;
     }
-    HILOGI("End BuildBundleInfos");
+    HILOGD("End BuildBundleInfos");
     return bundleNameDetailMap;
 }
 
