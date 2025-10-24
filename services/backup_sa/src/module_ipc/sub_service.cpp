@@ -1713,7 +1713,7 @@ ErrCode Service::CreateRunningLock()
 {
     if (runningLock_ ==nullptr) {
         runningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock("runninglock",
-            PowerMgr::RunningLockType::RunningLockType::RUNNINGLOCK_BACKGROUND);
+            PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
         if (runningLock_ == nullptr) {
             HILOGE("Create running lock failed.");
             return -1;
