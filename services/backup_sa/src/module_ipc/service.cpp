@@ -362,7 +362,7 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
     failedBundles_.clear();
     successBundlesNum_ = 0;
     session_->Deactive(obj, force);
-    if(runningLock_ != nullptr) {
+    if (runningLock_ != nullptr) {
         ErrCode ret = runningLock_->Unlock();
         HILOGI("Create SessionRunningLock, errcode = %{public}d", ret);
     }
