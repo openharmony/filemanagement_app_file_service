@@ -57,6 +57,7 @@ ohos_fuzztest("BackupSaGetIncrementalLocalCapabilitiesFuzzTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   defines = [

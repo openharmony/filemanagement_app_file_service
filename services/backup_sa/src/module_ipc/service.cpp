@@ -362,6 +362,10 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
     failedBundles_.clear();
     successBundlesNum_ = 0;
     session_->Deactive(obj, force);
+    if(runningLock_ != nullptr) {
+        ErrCode ret = runningLock_->Unlock();
+        HILOGI("Create SessionRunningLock, errcode = %{public}d", ret);
+    }
 }
 
 void Service::PermissionCheckFailRadar(const std::string &info, const std::string &func)
@@ -490,6 +494,8 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
         TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
+        ErrCode err = CreateRunningLock();
+        HILOGI("Create SessionRunningLock, errcode = %{public}d.", err);
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
@@ -529,6 +535,8 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
         TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
+        ErrCode err = CreateRunningLock();
+        HILOGI("Create SessionRunningLock, errcode = %{public}d.", err);
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;

@@ -42,6 +42,7 @@
                 "napi",
                 "runtime_core",
                 "openssl",
+                "power_manager",
                 "safwk",
                 "samgr",
                 "storage_service",

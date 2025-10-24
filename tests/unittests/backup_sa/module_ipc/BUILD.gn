@@ -59,6 +59,7 @@ ohos_unittest("module_ipc_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   sanitize = {
@@ -139,6 +140,7 @@ ohos_unittest("backup_service_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   sanitize = {
@@ -224,6 +226,7 @@ ohos_unittest("backup_service_throw_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   sanitize = {
@@ -296,6 +299,7 @@ ohos_unittest("backup_service_session_test") {
     "samgr:dynamic_cache",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   defines = [
@@ -350,6 +354,7 @@ ohos_unittest("backup_service_scheduler_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   sanitize = {
@@ -424,6 +429,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   use_exceptions = true
@@ -500,6 +506,7 @@ ohos_unittest("backup_service_incremental_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   defines = [ "private=public" ]
@@ -583,6 +590,7 @@ ohos_unittest("backup_service_other_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "power_manager:powermgr_client",
   ]
 
   defines = [ "private=public" ]

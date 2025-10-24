@@ -23,6 +23,8 @@
 #include "b_json_clear_data_config_mock.h"
 #include "b_json_service_disposal_config_mock.h"
 #include "module_ipc/service.h"
+#include "power_mgr_client.h"
+#include "running_lock.h"
 #include "service_reverse_mock.h"
 #include "test_common.h"
 #include "test_manager.h"
@@ -59,6 +61,7 @@ public:
         BJsonClearDataConfigMock::config = nullptr;
         disposalMock_ = nullptr;
         BBJsonDisposalConfig::config = nullptr;
+        servicePtr_->runningLock_ = nullptr;
     };
 
     ErrCode Init(IServiceReverseType::Scenario scenario);
@@ -2648,5 +2651,21 @@ HWTEST_F(ServiceTest, Service_Update_Handle_Count_Test, testing::ext::TestSize.L
     servicePtr_->UpdateHandleCnt(1);
     EXPECT_EQ(totalStat_->failBundleCount_, 1);
     GTEST_LOG_(INFO) << "ServiceTest-end Service_Update_Handle_Count_Test";
+}
+
+/**
+ * @tc.number: Service_CreateRunningLock_Test
+ * @tc.name: Service_CreateRunningLock_Test
+ * @tc.desc: 测试 CreateRunningLock 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_CreateRunningLock_Test, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_CreateRunningLock_Test";
+    int ret = servicePtr_->CreateRunningLock();
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test";
 }
 } // namespace OHOS::FileManagement::Backup

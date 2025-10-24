@@ -29,6 +29,8 @@
 #include "iservice_reverse.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
+#include "power_mgr_client.h"
+#include "running_lock.h"
 #include "service_stub.h"
 #include "svc_session_manager.h"
 #include "system_ability.h"
@@ -737,6 +739,7 @@ private:
     void TotalStatEnd(ErrCode errCode);
     void UpdateHandleCnt(ErrCode errCode);
     void TotalStatReport();
+    ErrCode CreateRunningLock();
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -779,6 +782,7 @@ private:
     std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
     std::map<std::string, BundleBroadCastInfo> bundleBroadCastInfoMap_;
     std::shared_mutex extOnReleaseLock_;
+    std::shared_ptr<PowerMgr::RunningLock> runningLock_ = nullptr;
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;
