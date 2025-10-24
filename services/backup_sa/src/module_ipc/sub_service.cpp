@@ -1719,6 +1719,6 @@ ErrCode Service::CreateRunningLock()
             return -1;
         }
     }
-    return runningLock_->lock();
+    return runningLock_->Lock();
 }
 }
