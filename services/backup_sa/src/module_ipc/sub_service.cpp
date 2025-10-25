@@ -951,8 +951,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
         TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
-        ErrCode err = CreateRunningLock();
-        HILOGI("Create SessionRunningLock, errcode = %{public}d.", err);
+        (void)CreateRunningLock();
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
@@ -1004,8 +1003,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::str
         TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
         ClearFailedBundles();
         successBundlesNum_ = 0;
-        ErrCode err = CreateRunningLock();
-        HILOGI("Create SessionRunningLock, errcode = %{public}d.", err);
+        (void)CreateRunningLock();
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
@@ -1715,7 +1713,7 @@ ErrCode Service::CreateRunningLock()
         runningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock("runninglock",
             PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
         if (runningLock_ == nullptr) {
-            HILOGE("Create running lock failed.");
+            HILOGE("Create SessionRunningLock failed.");
             return -1;
         }
     }

@@ -494,8 +494,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
         TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
-        ErrCode err = CreateRunningLock();
-        HILOGI("Create SessionRunningLock, errcode = %{public}d.", err);
+        (void)CreateRunningLock();
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
@@ -535,8 +534,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
         TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
-        ErrCode err = CreateRunningLock();
-        HILOGI("Create SessionRunningLock, errcode = %{public}d.", err);
+        (void)CreateRunningLock();
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
