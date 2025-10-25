@@ -315,7 +315,7 @@ ErrCode Service::PublishFile(const BFileInfo &fileInfo)
 
 ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t errCode)
 {
-    HILOGI("Begin fileName =%{public}s, fd = %{public}d, errCode = %{public}d", fileName.c_str(), fd, errCode);
+    HILOGD("Begin fileName =%{public}s, fd = %{public}d, errCode = %{public}d", fileName.c_str(), fd, errCode);
     UniqueFd fdUnique(fd);
     return AppFileReady(fileName, std::move(fdUnique), errCode);
 }
@@ -761,7 +761,7 @@ void Service::NoticeClientFinish(const string &bundleName, ErrCode errCode)
 void Service::OnAllBundlesFinished(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("called begin.");
+    HILOGD("called begin.");
     if (session_->IsOnAllBundlesFinished()) {
         IServiceReverseType::Scenario scenario = session_->GetScenario();
         TotalStatEnd(errCode);
@@ -785,7 +785,7 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
             sched_->TryUnloadServiceTimer(true);
         }
     }
-    HILOGI("called end.");
+    HILOGD("called end.");
 }
 
 ErrCode Service::VerifySendRateParam()

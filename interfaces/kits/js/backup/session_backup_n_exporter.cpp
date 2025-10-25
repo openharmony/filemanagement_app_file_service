@@ -59,8 +59,6 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
-        HILOGI("callback function backup onFileReady errCode: %{public}d, bundle: %{public}s, file: %{public}s",
-            std::get<0>(errInfo), bundleName.c_str(), GetAnonyPath(fileName).c_str());
         NVal obj;
         ErrParam errorParam = [ errInfo ]() {
             return errInfo;

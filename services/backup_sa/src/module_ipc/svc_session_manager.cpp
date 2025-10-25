@@ -256,7 +256,7 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
     auto info = cache.GetExtManage();
 
     for (const auto &fileName : info) {
-        HILOGE("fileName %{public}s", GetAnonyPath(fileName).data());
+        HILOGD("fileName %{public}s", GetAnonyPath(fileName).data());
         OnBundleFileReady(bundleName, fileName);
     }
 
