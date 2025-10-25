@@ -318,7 +318,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0008, testing::ext::TestSize.
     int32_t uid = 100;
 
     string bundleNameA = "com.example.filesharea";
-    string file = "/data/service/el2/" + to_string(uid) + "/base/" + bundleNameA 
+    string file = "/data/service/el2/" + to_string(uid) + "/base/" + bundleNameA
         + "/rw/1025/docs/storage/User/currentUser/Download/test.txt";
     int32_t fd = open(file.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";

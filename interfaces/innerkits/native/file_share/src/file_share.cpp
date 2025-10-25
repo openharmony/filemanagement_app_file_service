@@ -326,8 +326,7 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
         string networkId = "";
         string delRPath = delPathPrefix + SHARE_R_PATH + bundleName + path;
         string delRWPath = delPathPrefix + SHARE_RW_PATH + bundleName + path;
-        if (!networkId.empty())
-        {
+        if (!networkId.empty()) {
             delRPath = delPathPrefix + SHARE_R_PATH + networkId + BACKSLASH + bundleName + path;
             delRWPath = delPathPrefix + SHARE_RW_PATH + networkId + BACKSLASH + bundleName + path;
         }
