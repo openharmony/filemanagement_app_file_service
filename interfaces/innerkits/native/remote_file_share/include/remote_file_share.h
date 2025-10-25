@@ -37,10 +37,6 @@ public:
     RemoteFileShare() {}
     static int CreateSharePath(const int &fd, std::string &sharePath,
                                const int &userId, const std::string &deviceId = SHARE_ALL_DEVICE);
-    static int32_t GetDfsUriFromLocal(const std::string &uriStr, const int32_t &userId, struct HmdfsUriInfo &hui);
-    static int32_t GetDfsUrisFromLocal(const std::vector<std::string> &uriList,
-                                       const int32_t &userId,
-                                       std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps);
     static int32_t GetDfsUrisDirFromLocal(const std::vector<std::string> &uriList, const int32_t &userId,
                                             std::unordered_map<std::string, HmdfsUriInfo> &uriToDfsUriMaps);
     static int32_t TransRemoteUriToLocal(const std::vector<std::string> &uriList,
