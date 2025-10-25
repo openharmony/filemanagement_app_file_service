@@ -1709,7 +1709,7 @@ void Service::TotalStatReport()
 
 ErrCode Service::CreateRunningLock()
 {
-    if (runningLock_ ==nullptr) {
+    if (runningLock_ == nullptr) {
         runningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock("runninglock",
             PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
         if (runningLock_ == nullptr) {
