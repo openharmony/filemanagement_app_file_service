@@ -323,15 +323,15 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
         Uri uri(sharePathList[i]);
         string path = SandboxHelper::Decode(uri.GetPath());
         string bundleName = uri.GetAuthority();
-        string networkId = "";
         string delRPath = delPathPrefix + SHARE_R_PATH + bundleName + path;
         string delRWPath = delPathPrefix + SHARE_RW_PATH + bundleName + path;
-        if (!networkId.empty()) {
-            delRPath = delPathPrefix + SHARE_R_PATH + networkId + BACKSLASH + bundleName + path;
-            delRWPath = delPathPrefix + SHARE_RW_PATH + networkId + BACKSLASH + bundleName + path;
-        }
+        string networkId = SandboxHelper::GetNetworkIdFromUri(sharePathList[i], networkId);
+        string delRPathWithNetId = delPathPrefix + SHARE_R_PATH + networkId + BACKSLASH + bundleName + path;
+        string delRWPathWithNetId = delPathPrefix + SHARE_RW_PATH + networkId + BACKSLASH + bundleName + path;
         DelSharePath(delRPath);
         DelSharePath(delRWPath);
+        DelSharePath(delRPathWithNetId);
+        DelSharePath(delRWPathWithNetId);
     }
 }
 

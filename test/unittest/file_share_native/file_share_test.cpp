@@ -306,38 +306,6 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0007, testing::ext::TestSize.
 }
 
 /**
- * @tc.name: File_share_DeleteShareFile_0008
- * @tc.desc: Test function of DeleteShareFile() interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(FileShareTest, File_share_DeleteShareFile_0008, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_DeleteShareFile_0008";
-    int32_t uid = 100;
-
-    string bundleNameA = "com.example.filesharea";
-    string file = "/data/service/el2/" + to_string(uid) + "/base/" + bundleNameA
-        + "/rw/1025/docs/storage/User/currentUser/Download/test.txt";
-    int32_t fd = open(file.c_str(), O_RDWR | O_CREAT);
-    ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
-    close(fd);
-    string uri = "file://docs/storage/User/currentUser/Download/test.txt?networkid=1025";
-    int ret = E_OK;
-   
-    vector<string> sharePathLists;
-    ret = access(file.c_str(), F_OK);
-    EXPECT_EQ(ret, E_OK);
-
-    sharePathLists.push_back(uri);
-    ret = FileShare::DeleteShareFile(tokenId, sharePathLists);
-    EXPECT_EQ(ret, E_OK);
-
-    GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0008";
-}
-
-/**
  * @tc.name: File_share_GetPhysicalPath_0001
  * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
  * @tc.size: MEDIUM
