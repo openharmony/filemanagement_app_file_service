@@ -298,6 +298,7 @@ ohos_shared_library("backup_sa") {
     "storage_service:storage_manager_sa_proxy",
     "data_share:datashare_consumer",
     "data_share:datashare_common",
+    "power_manager:powermgr_client",
   ]
 
   cflags_cc = [

@@ -52,6 +52,7 @@ ohos_fuzztest("BackupSaFuzzTest") {
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
+    "power_manager:powermgr_client",
   ]
 
   defines = [

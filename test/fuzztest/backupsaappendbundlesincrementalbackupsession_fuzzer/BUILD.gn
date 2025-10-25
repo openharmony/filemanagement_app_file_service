@@ -54,6 +54,7 @@ ohos_fuzztest("BackupSaAppendBundlesIncrementalBackupSessionFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "power_manager:powermgr_client",
   ]
 
   defines = [
