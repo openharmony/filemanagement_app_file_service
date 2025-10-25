@@ -60,6 +60,7 @@ const string FILE_PATH_HEAD = "/mnt/hmdfs/";
 const string FILE_PATH_MID = "/account/device_view/";
 const string FILE_MANAGER_BUNDLE_NAME = ".filemanager";
 const int32_t FM_LEN = 27;
+const int32_t EXIST = -1;
 }
 
 struct FileShareInfo {
@@ -102,8 +103,7 @@ static void GetProviderInfo(string uriStr, FileShareInfo &info)
     Uri uri(uriStr);
     info.providerBundleName_ = uri.GetAuthority();
     info.providerSandboxPath_ = SandboxHelper::Decode(uri.GetPath());
-    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.size() == FM_LEN
-        && CommonFunc::EndsWith(info.targetBundleName_, FILE_MANAGER_BUNDLE_NAME)) {
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) != EXIST) {
         info.providerSandboxPath_ = FILE_DEFAULT_PATH;
     }
 }
@@ -256,8 +256,7 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
         return ret;
     }
 
-    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.size() == FM_LEN
-        && CommonFunc::EndsWith(info.targetBundleName_, FILE_MANAGER_BUNDLE_NAME)) {
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) != EXIST) {
         ret = GetDocsDir(uri, info);
         if (ret != 0) {
             LOGE("Failed to get docs dir, errno: %{public}d", ret);
@@ -324,11 +323,15 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
         Uri uri(sharePathList[i]);
         string path = SandboxHelper::Decode(uri.GetPath());
         string bundleName = uri.GetAuthority();
-
+        string networkId = "";
         string delRPath = delPathPrefix + SHARE_R_PATH + bundleName + path;
-        DelSharePath(delRPath);
-
         string delRWPath = delPathPrefix + SHARE_RW_PATH + bundleName + path;
+        if (!networkId.empty())
+        {
+            delRPath = delPathPrefix + SHARE_R_PATH + networkId + BACKSLASH + bundleName + path;
+            delRWPath = delPathPrefix + SHARE_RW_PATH + networkId + BACKSLASH + bundleName + path;
+        }
+        DelSharePath(delRPath);
         DelSharePath(delRWPath);
     }
 }
