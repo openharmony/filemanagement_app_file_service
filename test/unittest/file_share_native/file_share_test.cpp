@@ -325,7 +325,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0008, testing::ext::TestSize.
     close(fd);
     string uri = "file://docs/storage/User/currentUser/Download/test.txt?networkid=1025";
     int ret = E_OK;
-    uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameB, 0);
+    uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameA, 0);
    
     vector<string> sharePathLists;
     ret = access(file.c_str(), F_OK);
