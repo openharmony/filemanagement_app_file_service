@@ -637,4 +637,51 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddPathMapForPat
     result = StorageManagerService::GetInstance().AddPathMapForPathWildCard(userId, name, phyPath, pathMap);
     EXPECT_EQ(result, false);
 }
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_WriteFileList_001
+ * @tc.number: WriteFileList_001
+ * @tc.desc: 测试 WriteFileList 函数返回值正常
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_WriteFileList_001,
+    testing::ext::TestSize.Level1)
+{
+    std::ofstream statFile;
+    fs::path tempPath = "/data/temp.txt";
+    std::string bundleName = "bundle";
+    try {
+        fs::path dirPath = tempPath.parent_path();
+        if (!fs::exists(dirPath)) {
+            fs::create_directories(dirPath);
+        }
+        fs::path canonicalPath = fs::weakly_canonical(fs::absolute(tempPath));
+        statFile.open(canonicalPath, std::ios::out | std::ios::trunc);
+        ASSERT_FALSE(!statFile.is_open()) << "file can not open";
+
+        struct FileStat fileStat = {.filePath = "/special;path/special;aaa;filename", .fileSize = 0,
+            .lastUpdateTime = 0, .mode = 0, .isDir = false, .isIncre = true};
+        struct FileStat fileStat2 = {.filePath = "/special\npath/special;aaa;filename", .fileSize = 0,
+            .lastUpdateTime = 0, .mode = 0, .isDir = false, .isIncre = true};
+        BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+            .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+        StorageManagerService::GetInstance().WriteFileList(statFile, fileStat, paras);
+        StorageManagerService::GetInstance().WriteFileList(statFile, fileStat2, paras);
+        statFile.close();
+
+        std::ifstream iStatFile;
+        iStatFile.open(canonicalPath);
+        ASSERT_FALSE(!iStatFile.is_open()) << "file can not open";
+        std::string line;
+        std::getline(iStatFile, line);
+        size_t pos = line.rfind(';');
+        ASSERT_TRUE(pos != std::string::npos);
+        std::string encodeFlag = line.substr(pos + 1);
+        ASSERT_FALSE(encodeFlag.empty());
+        EXPECT_EQ(std::stoi(encodeFlag), 1);
+        iStatFile.close();
+        fs::remove(canonicalPath);
+    } catch (const fs::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << '\n';
+    }
+}
 }
