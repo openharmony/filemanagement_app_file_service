@@ -120,6 +120,70 @@ ohos_unittest("b_error_ut_test") {
   use_exceptions = true
 }
 
+ohos_unittest("b_dir_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "b_filesystem/b_dir_test.cpp"
+  ]
+
+  include_dirs = [ "${path_backup}/utils/src/b_filesystem" ]
+
+  deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "jsoncpp:jsoncpp",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_file_hash_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "b_filesystem/b_file_hash_test.cpp",
+  ]
+
+  include_dirs = [ "${path_backup}/utils/src/b_filesystem" ]
+
+  deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "jsoncpp:jsoncpp",
+  ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("b_file_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -132,8 +196,6 @@ ohos_unittest("b_file_test") {
   module_out_path = path_module_out_tests
 
   sources = [
-    "b_filesystem/b_dir_test.cpp",
-    "b_filesystem/b_file_hash_test.cpp",
     "b_filesystem/b_file_test.cpp",
   ]
 
@@ -522,6 +584,8 @@ group("backup_utils_test") {
     ":b_anony_ut_test",
     ":b_error_test",
     ":b_error_ut_test",
+    ":b_dir_test",
+    ":b_file_hash_test",
     ":b_file_test",
     ":b_json_clear_data_test",
     ":b_json_other_test",

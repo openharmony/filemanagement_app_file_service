@@ -79,7 +79,7 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0101, testing::ext::TestSize.Level1)
  * @tc.desc: Test function of GetAnonyPath interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)

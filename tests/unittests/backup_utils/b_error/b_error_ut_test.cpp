@@ -30,7 +30,7 @@ public:
 /**
  * @tc.number: SUB_backup_b_error_construction_0500
  * @tc.name: b_error_construction_0500
- * @tc.desc: Test function of construction interface for SUCCESS.
+ * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
@@ -43,6 +43,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0500, testing::ext::TestSize.Level1)
         throw BError(BError::Codes::UTILS_INVAL_JSON_ENTITY);
         EXPECT_TRUE(false);
     } catch (const BError &e) {
+        EXPECT_EQ(e.GetCode(), BError::BackupErrorCode::E_INVAL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BErrorUtTest-an exception occurred by construction.";
@@ -66,6 +67,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0700, testing::ext::TestSize.Level1)
         throw BError(BError::Codes::UTILS_INVAL_FILE_HANDLE);
         EXPECT_TRUE(false);
     } catch (const BError &e) {
+        EXPECT_EQ(e.GetCode(), BError::BackupErrorCode::E_INVAL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BErrorUtTest-an exception occurred by construction.";
@@ -89,11 +91,12 @@ HWTEST_F(BErrorUtTest, b_error_construction_0900, testing::ext::TestSize.Level1)
         throw BError(BError::Codes::UTILS_INVAL_TARBALL_ARG);
         EXPECT_TRUE(false);
     } catch (const BError &e) {
+        EXPECT_EQ(e.GetCode(), BError::BackupErrorCode::E_UKERR);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BErrorUtTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BErrorTest-end b_error_construction_0900";
+    GTEST_LOG_(INFO) << "BErrorUtTest-end b_error_construction_0900";
 }
 
 /**
@@ -112,11 +115,12 @@ HWTEST_F(BErrorUtTest, b_error_construction_0200, testing::ext::TestSize.Level1)
         throw BError(BError::Codes::UTILS_INVAL_PROCESS_ARG);
         EXPECT_TRUE(false);
     } catch (const BError &e) {
+        EXPECT_EQ(e.GetCode(), BError::BackupErrorCode::E_UKERR);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BErrorUtTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BErrorTest-end b_error_construction_0200";
+    GTEST_LOG_(INFO) << "BErrorUtTest-end b_error_construction_0200";
 }
 
 /**
@@ -135,6 +139,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0400, testing::ext::TestSize.Level1)
         throw BError(BError::Codes::UTILS_INTERRUPTED_PROCESS);
         EXPECT_TRUE(false);
     } catch (const BError &e) {
+        EXPECT_EQ(e.GetCode(), BError::BackupErrorCode::E_UKERR);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BErrorUtTest-an exception occurred by construction.";
