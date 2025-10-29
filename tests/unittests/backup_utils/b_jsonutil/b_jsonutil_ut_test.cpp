@@ -58,6 +58,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext:
         std::string bundleName = "com.hos.app01:1";
         BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
         EXPECT_EQ("com.hos.app01", detailInfo.bundleName);
+        EXPECT_EQ(1, detailInfo.bundleIndex);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
@@ -81,6 +82,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext:
         std::string bundleName = "com.hos.app01";
         BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
         EXPECT_EQ("com.hos.app01", detailInfo.bundleName);
+        EXPECT_EQ(0, detailInfo.bundleIndex);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
