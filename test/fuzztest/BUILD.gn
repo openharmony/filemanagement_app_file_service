@@ -17,6 +17,11 @@ group("fuzztest") {
   deps = [
     # deps file
     "backupext_fuzzer:BackupExtFuzzTest",
+    "backuponfileready_fuzzer:BackupOnFileReadyFuzzTest",
+    "backuponallbundlesfinished_fuzzer:BackupOnAllBundlesFinishedFuzzTest",
+    "backuponbundlefinished_fuzzer:BackupOnBundleFinishedFuzzTest",
+    "backuponbundlestarted_fuzzer:BackupOnbundleStartedFuzzTest",
+    "backuponresultreport_fuzzer:BackupOnResultReportFuzzTest",
     "backupsa_fuzzer:BackupSaFuzzTest",
     "backupsaappdone_fuzzer:BackupSaAppDoneFuzzTest",
     "backupsaappendbundlesbackupsession_fuzzer:BackupSaAppendBundlesBackupSessionFuzzTest",
@@ -40,6 +45,7 @@ group("fuzztest") {
     "backupservicestub_fuzzer:BackupServiceStubFuzzTest",
     "fileshare_fuzzer:FileShareFuzzTest",
     "remotefileshare_fuzzer:RemoteFileShareFuzzTest",
+    "restoreonfileready_fuzzer:RestoreOnFileReadyFuzzTest",
     "servicereverse_fuzzer:ServiceReverseFuzzTest",
     "svcrestoredepsmanager_fuzzer:SvcRestoreDepsManagerFuzzTest",
   ]

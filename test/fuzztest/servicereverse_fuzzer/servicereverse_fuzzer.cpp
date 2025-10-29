@@ -68,95 +68,6 @@ bool BackupOnFileReadyFuzzTest(sptr<ServiceReverse> service, const uint8_t *data
     return true;
 }
 
-bool BackupOnBundleStartedFuzzTest(sptr<ServiceReverse> service, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int32_t)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-    MessageOption option;
-    uint32_t code = static_cast<uint32_t>(IServiceReverseIpcCode::COMMAND_BACKUP_ON_BUNDLE_STARTED);
-
-    try {
-        int pos = 0;
-        int32_t errCode = TypeCast<int32_t>(data, &pos);
-        msg.WriteInt32(errCode);
-        msg.WriteString(string(reinterpret_cast<const char*>(data + pos), size - pos));
-        service->OnRemoteRequest(code, msg, reply, option);
-    } catch (BError &err) {
-        // Only filter BError errors, Other results are not expected.
-    }
-    return true;
-}
-
-bool BackupOnResultReportFuzzTest(sptr<ServiceReverse> service, const uint8_t *data, size_t size)
-{
-    if (data == nullptr) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-    MessageOption option;
-    uint32_t code = static_cast<uint32_t>(IServiceReverseIpcCode::COMMAND_BACKUP_ON_RESULT_REPORT);
-
-    try {
-        int len = (size >> 1);
-        msg.WriteString(string(reinterpret_cast<const char*>(data), len));
-        msg.WriteString(string(reinterpret_cast<const char*>(data + len), size - len));
-        service->OnRemoteRequest(code, msg, reply, option);
-    } catch (BError &err) {
-        // Only filter BError errors, Other results are not expected.
-    }
-    return true;
-}
-
-bool BackupOnBundleFinishedFuzzTest(sptr<ServiceReverse> service, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int32_t)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-    MessageOption option;
-    uint32_t code = static_cast<uint32_t>(IServiceReverseIpcCode::COMMAND_BACKUP_ON_BUNDLE_FINISHED);
-
-    try {
-        int pos = 0;
-        int32_t errCode = TypeCast<int32_t>(data, &pos);
-        msg.WriteInt32(errCode);
-        msg.WriteString(string(reinterpret_cast<const char*>(data + pos), size - pos));
-        service->OnRemoteRequest(code, msg, reply, option);
-    } catch (BError &err) {
-        // Only filter BError errors, Other results are not expected.
-    }
-    return true;
-}
-
-bool BackupOnAllBundlesFinishedFuzzTest(sptr<ServiceReverse> service, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int32_t)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-    MessageOption option;
-    uint32_t code = static_cast<uint32_t>(IServiceReverseIpcCode::COMMAND_BACKUP_ON_ALL_BUNDLES_FINISHED);
-
-    try {
-        int32_t errCode = TypeCast<int32_t>(data);
-        msg.WriteInt32(errCode);
-        service->OnRemoteRequest(code, msg, reply, option);
-    } catch (BError &err) {
-        // Only filter BError errors, Other results are not expected.
-    }
-    return true;
-}
-
 bool BackupOnProcessInfoFuzzTest(sptr<ServiceReverse> service, const uint8_t *data, size_t size)
 {
     if (data == nullptr) {
@@ -258,37 +169,6 @@ bool RestoreOnAllBundlesFinishedFuzzTest(sptr<ServiceReverse> service, const uin
 
     try {
         int32_t errCode = TypeCast<int32_t>(data);
-        msg.WriteInt32(errCode);
-        service->OnRemoteRequest(code, msg, reply, option);
-    } catch (BError &err) {
-        // Only filter BError errors, Other results are not expected.
-    }
-    return true;
-}
-
-bool RestoreOnFileReadyFuzzTest(sptr<ServiceReverse> service, const uint8_t *data, size_t size)
-{
-    if (data == nullptr || size < sizeof(bool) + sizeof(int) + sizeof(int32_t)) {
-        return true;
-    }
-
-    MessageParcel msg;
-    MessageParcel reply;
-    MessageOption option;
-    uint32_t code = static_cast<uint32_t>(IServiceReverseIpcCode::COMMAND_RESTORE_ON_FILE_READY);
-
-    try {
-        int pos = 0;
-        int fd = TypeCast<int>(data, &pos);
-        bool fdFlag = TypeCast<bool>(data + pos, &pos);
-        int32_t errCode = TypeCast<int32_t>(data + pos, &pos);
-        int len = ((size - pos) >> 1);
-        msg.WriteString(string(reinterpret_cast<const char*>(data + pos), len));
-        msg.WriteString(string(reinterpret_cast<const char*>(data + pos + len), size - pos - len));
-        msg.WriteBool(fdFlag);
-        if (fdFlag) {
-            msg.WriteFileDescriptor(fd);
-        }
         msg.WriteInt32(errCode);
         service->OnRemoteRequest(code, msg, reply, option);
     } catch (BError &err) {
@@ -701,11 +581,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         return 0;
     }
     OHOS::OnRemoteRequestFuzzTest(incrementalRestoreService, data, size);
-    OHOS::BackupOnFileReadyFuzzTest(backupService, data, size);
-    OHOS::BackupOnBundleStartedFuzzTest(backupService, data, size);
-    OHOS::BackupOnResultReportFuzzTest(backupService, data, size);
-    OHOS::BackupOnBundleFinishedFuzzTest(backupService, data, size);
-    OHOS::BackupOnAllBundlesFinishedFuzzTest(backupService, data, size);
     OHOS::BackupOnProcessInfoFuzzTest(backupService, data, size);
     OHOS::BackupOnScanningInfoFuzzTest(backupService, data, size);
     OHOS::OnRemoteRequestFuzzTest(backupService, data, size);
@@ -713,7 +588,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RestoreOnBundleStartedFuzzTest(restoreService, data, size);
     OHOS::RestoreOnBundleFinishedFuzzTest(restoreService, data, size);
     OHOS::RestoreOnAllBundlesFinishedFuzzTest(restoreService, data, size);
-    OHOS::RestoreOnFileReadyFuzzTest(restoreService, data, size);
     OHOS::RestoreOnResultReportFuzzTest(restoreService, data, size);
     OHOS::RestoreOnProcessInfoFuzzTest(restoreService, data, size);
     OHOS::OnRemoteRequestFuzzTest(restoreService, data, size);
