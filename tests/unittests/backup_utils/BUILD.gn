@@ -452,46 +452,6 @@ ohos_unittest("b_json_other_test") {
   use_exceptions = true
 }
 
-ohos_unittest("b_jsonutil_other_test") {
-  module_out_path = path_module_out_tests
-
-  sources = [
-    "${path_backup}/tests/mock/cJson/src/cJsonMock.cpp",
-    "${path_backup}/tests/unittests/backup_utils/b_jsonutil/b_jsonutil_other_test.cpp",
-  ]
-  sources += backup_mock_parameter_src
-
-  include_dirs = [
-    "${path_backup}/utils",
-    "${path_backup}/tests/mock/cJson/include",
-    "${path_backup}/utils/src/b_jsonutil",
-  ]
-  include_dirs += backup_mock_parameter_include_dirs
-
-  deps = [
-    "${path_backup}/tests/utils:backup_test_utils",
-    "${path_backup}/utils/:backup_utils",
-  ]
-
-  external_deps = [
-    "cJSON:cjson",
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "jsoncpp:jsoncpp",
-  ]
-
-  defines = [
-    "LOG_TAG=\"app_file_service\"",
-    "LOG_DOMAIN=0xD004303",
-    "private = public",
-    "protected = public",
-  ]
-
-  use_exceptions = true
-}
-
 ohos_unittest("b_jsonutil_other_ut_test") {
   module_out_path = path_module_out_tests
 
@@ -659,7 +619,6 @@ group("backup_utils_test") {
     ":b_json_other_test",
     ":b_json_test",
     ":b_jsonutil_other_test",
-    ":b_jsonutil_other_ut_test",
     ":b_jsonutil_test",
     ":b_jsonutil_ut_test",
     ":b_process_test",
