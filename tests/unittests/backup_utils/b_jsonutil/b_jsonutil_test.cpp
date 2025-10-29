@@ -281,7 +281,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize
  * @tc.desc: Test function of BuildOnProcessRetInfo interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 1
+ * @tc.level Level 0
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilTest, b_jsonutil_BuildOnProcessRetInfo_0100, testing::ext::TestSize.Level1)
