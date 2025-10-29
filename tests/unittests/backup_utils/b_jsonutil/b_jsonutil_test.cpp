@@ -311,9 +311,9 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildOnProcessRetInfo_0100, testing::ext::T
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0100, testing::ext::TestSize.Level1)
+HWTEST_F(BJsonilTest, b_jsonutil_BuildExtensionErrInfo_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildExtensionErrInfo_0100";
+    GTEST_LOG_(INFO) << "BJsonilTest-begin BuildExtensionErrInfo_0100";
     try {
         std::string jsonStr;
         int errCode = 1;
@@ -326,9 +326,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildExtensionErrInfo_0100, testing::ext::Tes
         EXPECT_NE(jsonStr.find("type"), std::string::npos);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+        GTEST_LOG_(INFO) << "BJsonilTest-an exception occurred.";
     }
-    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildExtensionErrInfo_0100";
+    GTEST_LOG_(INFO) << "BJsonilTest-end BuildExtensionErrInfo_0100";
 }
 
 /**
