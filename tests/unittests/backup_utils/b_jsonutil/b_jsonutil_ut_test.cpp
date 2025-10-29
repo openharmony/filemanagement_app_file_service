@@ -48,7 +48,7 @@ public:
  * @tc.desc: Test function of ParseBundleNameIndexStr interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::TestSize.Level1)
@@ -71,7 +71,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext:
  * @tc.desc: Test function of ParseBundleNameIndexStr interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext::TestSize.Level1)
@@ -94,7 +94,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_ParseBundleNameIndexStr_0200, testing::ext:
  * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSize.Level1)
@@ -129,7 +129,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSi
  * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSize.Level1)
@@ -163,7 +163,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSi
  * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize.Level1)
@@ -197,7 +197,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSi
  * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSize.Level1)
@@ -230,7 +230,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSi
  * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0900, testing::ext::TestSize.Level1)
@@ -263,7 +263,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0900, testing::ext::TestSi
  * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_1000, testing::ext::TestSize.Level1)
@@ -296,7 +296,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_1000, testing::ext::TestSi
  * @tc.desc: Test function of FindBundleInfoByName interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_FindBundleInfoByName_0100, testing::ext::TestSize.Level1)
@@ -318,45 +318,12 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_FindBundleInfoByName_0100, testing::ext::Te
 }
 
 /**
- * @tc.number: b_jsonutil_BuildBundleInfos_0700
- * @tc.name: b_jsonutil_BuildBundleInfos_0700
- * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 0
- * @tc.require: I6F3GV
- */
-HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-begin BuildBundleInfos_0700";
-    try {
-        std::vector<std::string> bundleNames;
-        std::string bundleName = "bundle";
-        bundleNames.push_back(bundleName);
-        std::vector<std::string> bundleInfos;
-        std::string bundleInfo = {"{\"infos\":[{\"type\":\"testType\",\"details\":null}]}"};
-        bundleInfos.push_back(bundleInfo);
-        int32_t userId = TEST_USER_ID;
-        std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
-
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
-        EXPECT_FALSE(result.empty());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-end BuildBundleInfos_0700";
-}
-
-/**
  * @tc.number: b_jsonutil_BuildBundleInfos_0800
  * @tc.name: b_jsonutil_BuildBundleInfos_0800
  * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0800, testing::ext::TestSize.Level1)
@@ -384,105 +351,12 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0800, testing::ext::TestSi
 }
 
 /**
- * @tc.number: b_jsonutil_BuildBundleInfos_0900
- * @tc.name: b_jsonutil_BuildBundleInfos_0900
- * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 0
- * @tc.require: I6F3GV
- */
-HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0900, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-begin BuildBundleInfos_0900";
-    try {
-        std::vector<std::string> bundleNames;
-        std::string bundleName = "bundle";
-        bundleNames.push_back(bundleName);
-        std::vector<std::string> bundleInfos;
-        std::string bundleInfo = {"{\"infos\":[{\"type\":\"testType\",\"details\":[\"detail\"]}]}"};
-        bundleInfos.push_back(bundleInfo);
-        int32_t userId = TEST_USER_ID;
-        std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
-
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
-        EXPECT_FALSE(result.empty());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-end BuildBundleInfos_0900";
-}
-
-/**
- * @tc.number: b_jsonutil_BuildBundleInfos_1000
- * @tc.name: b_jsonutil_BuildBundleInfos_1000
- * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 0
- * @tc.require: I6F3GV
- */
-HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_1000, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-begin BuildBundleInfos_1000";
-    try {
-        std::vector<std::string> bundleNames;
-        std::string bundleName = "bundle";
-        bundleNames.push_back(bundleName);
-        std::vector<std::string> bundleInfos;
-        std::string bundleInfo = {"{\"infos\":[\"infos\"]}"};
-        bundleInfos.push_back(bundleInfo);
-        int32_t userId = TEST_USER_ID;
-        std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
-
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
-        EXPECT_FALSE(result.empty());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-end BuildBundleInfos_1000";
-}
-
-/**
- * @tc.number: b_jsonutil_FindBundleInfoByName_0100
- * @tc.name: b_jsonutil_FindBundleInfoByName_0100
- * @tc.desc: Test function of FindBundleInfoByName interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 0
- * @tc.require: I6F3GV
- */
-HWTEST_F(BJsonUtilUtTest, b_jsonutil_FindBundleInfoByName_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-begin FindBundleInfoByName_0100";
-    try {
-        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailsMap;
-        std::string bundleName = "bundle1";
-        std::string jobType = "type";
-        BJsonUtil::BundleDetailInfo bundleDetail;
-
-        bool result = BJsonUtil::FindBundleInfoByName(bundleNameDetailsMap, bundleName, jobType, bundleDetail);
-        EXPECT_EQ(false, result);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-end FindBundleInfoByName_0100";
-}
-
-/**
  * @tc.number: b_jsonutil_FindBundleInfoByName_0200
  * @tc.name: b_jsonutil_FindBundleInfoByName_0200
  * @tc.desc: Test function of FindBundleInfoByName interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_FindBundleInfoByName_0200, testing::ext::TestSize.Level1)
@@ -514,7 +388,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_FindBundleInfoByName_0200, testing::ext::Te
  * @tc.desc: Test function of FindBundleInfoByName interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_FindBundleInfoByName_0300, testing::ext::TestSize.Level1)
@@ -546,7 +420,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_FindBundleInfoByName_0300, testing::ext::Te
  * @tc.desc: Test function of BuildOnProcessRetInfo interface for SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildOnProcessRetInfo_0100, testing::ext::TestSize.Level1)

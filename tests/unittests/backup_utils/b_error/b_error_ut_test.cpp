@@ -33,7 +33,7 @@ public:
  * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorUtTest, b_error_construction_0500, testing::ext::TestSize.Level1)
@@ -57,7 +57,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0500, testing::ext::TestSize.Level1)
  * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorUtTest, b_error_construction_0700, testing::ext::TestSize.Level1)
@@ -81,7 +81,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0700, testing::ext::TestSize.Level1)
  * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorUtTest, b_error_construction_0900, testing::ext::TestSize.Level1)
@@ -105,7 +105,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0900, testing::ext::TestSize.Level1)
  * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorUtTest, b_error_construction_0200, testing::ext::TestSize.Level1)
@@ -129,7 +129,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0200, testing::ext::TestSize.Level1)
  * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 0
+ * @tc.level Level 1
  * @tc.require: I6F3GV
  */
 HWTEST_F(BErrorUtTest, b_error_construction_0400, testing::ext::TestSize.Level1)
