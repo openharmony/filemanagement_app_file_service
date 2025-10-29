@@ -276,6 +276,33 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize
 }
 
 /**
+ * @tc.number: b_jsonutil_BuildOnProcessRetInfo_0100
+ * @tc.name: b_jsonutil_BuildOnProcessRetInfo_0100
+ * @tc.desc: Test function of BuildOnProcessRetInfo interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildOnProcessRetInfo_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilUtTest-begin BuildOnProcessRetInfo_0100";
+    try {
+        std::string jsonStr;
+        std::string onProcessRet = "test result";
+
+        bool result = BJsonUtil::BuildOnProcessRetInfo(jsonStr, onProcessRet);
+        EXPECT_EQ(true, result);
+        EXPECT_NE(jsonStr.find("timeInfo"), std::string::npos);
+        EXPECT_NE(jsonStr.find("resultInfo"), std::string::npos);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilUtTest-end BuildOnProcessRetInfo_0100";
+}
+
+/**
  * @tc.number: b_jsonutil_BuildExtensionErrInfo_0100
  * @tc.name: b_jsonutil_BuildExtensionErrInfo_0100
  * @tc.desc: Test function of BuildExtensionErrInfo interface for SUCCESS.
