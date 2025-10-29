@@ -63,8 +63,8 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0101, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BAnonyUtTest-begin b_anony_GetAnonyPath_0101";
     try {
-        path = "//";
-        result = "//";
+        std::string path = "//";
+        std::string result = "//";
         EXPECT_EQ(GetAnonyPath(path), result);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -86,8 +86,8 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BAnonyUtTest-begin b_anony_GetAnonyPath_0102";
     try {
-        path = "test.txt";
-        result = "t******t.txt";
+        std::string path = "test.txt";
+        std::string result = "t******t.txt";
         EXPECT_EQ(GetAnonyPath(path), result);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -105,17 +105,17 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0103, testing::ext::TestSize.Level1)
+HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0103, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BAnonyTest-begin b_anony_GetAnonyPath_0103";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-begin b_anony_GetAnonyPath_0103";
     try {
-        path = "/*/*/shfkwam/xxf/x/xdf.db.xxx.xx";
-        result = "/******/******/s******m/x******f/******/x******f.db.xxx.xx";
+        std::string path = "/*/*/shfkwam/xxf/x/xdf.db.xxx.xx";
+        std::string result = "/******/******/s******m/x******f/******/x******f.db.xxx.xx";
         EXPECT_EQ(GetAnonyPath(path), result);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
+        GTEST_LOG_(INFO) << "BAnonyUtTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BAnonyTest-end b_anony_GetAnonyPath_0103";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-end b_anony_GetAnonyPath_0103";
 }
 }
