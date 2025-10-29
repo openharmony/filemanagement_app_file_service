@@ -84,7 +84,7 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0101, testing::ext::TestSize.Level1)
  */
 HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BAnonyUtTest-begin b_anony_GetAnonyPath_0100";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-begin b_anony_GetAnonyPath_0102";
     try {
         path = "downloads/../&^%&*#/IMGS.tar.lz4";
         result = "d******s/******/&******#/I******S.tar.lz4";
@@ -93,6 +93,6 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BAnonyTest-end b_error_GetAnonyPath_0100";
+    GTEST_LOG_(INFO) << "BAnonyTest-end b_error_GetAnonyPath_0102";
 }
 }

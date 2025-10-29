@@ -19,7 +19,7 @@
 #include "b_anony/b_anony.h"
 
 namespace OHOS::FileManagement::Backup {
-class BAnonyTest : public testing::Test {
+class BAnonyUtTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase() {};
@@ -36,18 +36,18 @@ public:
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0100, testing::ext::TestSize.Level1)
+HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BAnonyTest-begin b_anony_GetAnonyPath_0100";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-begin b_anony_GetAnonyPath_0100";
     try {
         std::string path = "/";
         std::string result = "/";
         EXPECT_EQ(GetAnonyPath(path), result);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
+        GTEST_LOG_(INFO) << "BAnonyUtTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BAnonyTest-end b_error_GetAnonyPath_0100";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-end b_anony_GetAnonyPath_0100";
 }
 
 /**
@@ -59,18 +59,18 @@ HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0100, testing::ext::TestSize.Level1)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0101, testing::ext::TestSize.Level1)
+HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0101, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BAnonyTest-begin b_anony_GetAnonyPath_0101";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-begin b_anony_GetAnonyPath_0101";
     try {
         path = "//";
         result = "//";
         EXPECT_EQ(GetAnonyPath(path), result);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
+        GTEST_LOG_(INFO) << "BAnonyUtTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BAnonyTest-end b_error_GetAnonyPath_0101";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-end b_anony_GetAnonyPath_0101";
 }
 
 /**
@@ -82,33 +82,18 @@ HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0101, testing::ext::TestSize.Level1)
  * @tc.level Level 0
  * @tc.require: I6F3GV
  */
-HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
+HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BAnonyTest-begin b_anony_GetAnonyPath_0102";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-begin b_anony_GetAnonyPath_0102";
     try {
         path = "test.txt";
         result = "t******t.txt";
         EXPECT_EQ(GetAnonyPath(path), result);
-        path = "/test.txt";
-        result = "/t******t.txt";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "/*/*/shfkwam/xxf/x/xdf.db.xxx.xx";
-        result = "/******/******/s******m/x******f/******/x******f.db.xxx.xx";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "/euxnems/ioio...xxx/sk.ppt";
-        result = "/e******s/i******x/******.ppt";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "/....../......";
-        result = "/.******./******......";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "downloads/../&^%&*#/IMGS.tar.lz4";
-        result = "d******s/******/&******#/I******S.tar.lz4";
-        EXPECT_EQ(GetAnonyPath(path), result);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
+        GTEST_LOG_(INFO) << "BAnonyUtTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BAnonyTest-end b_error_GetAnonyPath_0102";
+    GTEST_LOG_(INFO) << "BAnonyUtTest-end b_anony_GetAnonyPath_0102";
 }
 
 /**
@@ -131,6 +116,6 @@ HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0103, testing::ext::TestSize.Level1)
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BAnonyTest-end b_error_GetAnonyPath_0103";
+    GTEST_LOG_(INFO) << "BAnonyTest-end b_anony_GetAnonyPath_0103";
 }
 }
