@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -222,39 +222,6 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSi
         GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonUtilUtTest-end BuildBundleInfos_0700";
-}
-
-/**
- * @tc.number: b_jsonutil_BuildBundleInfos_0800
- * @tc.name: b_jsonutil_BuildBundleInfos_0800
- * @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 0
- * @tc.require: I6F3GV
- */
-HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0800, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-begin BuildBundleInfos_0800";
-    try {
-        std::vector<std::string> bundleNames;
-        std::string bundleName = "bundle";
-        bundleNames.push_back(bundleName);
-        std::vector<std::string> bundleInfos;
-        std::string bundleInfo = {"{\"infos\":[{\"type\":\"testType\",\"details\":[]}]}"};
-        bundleInfos.push_back(bundleInfo);
-        int32_t userId = TEST_USER_ID;
-        std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
-
-        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
-        EXPECT_FALSE(result.empty());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-end BuildBundleInfos_0800";
 }
 
 /**

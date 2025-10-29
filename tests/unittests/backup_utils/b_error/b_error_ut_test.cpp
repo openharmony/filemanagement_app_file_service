@@ -54,7 +54,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0500, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_error_construction_0700
  * @tc.name: b_error_construction_0700
- * @tc.desc: Test function of construction interface for SUCCESS.
+ * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
@@ -78,7 +78,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0700, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_error_construction_0900
  * @tc.name: b_error_construction_0900
- * @tc.desc: Test function of construction interface for SUCCESS.
+ * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
@@ -102,7 +102,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0900, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_error_construction_0200
  * @tc.name: b_error_construction_0200
- * @tc.desc: Test function of construction interface for SUCCESS.
+ * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
@@ -126,7 +126,7 @@ HWTEST_F(BErrorUtTest, b_error_construction_0200, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_error_construction_0400
  * @tc.name: b_error_construction_0400
- * @tc.desc: Test function of construction interface for SUCCESS.
+ * @tc.desc: Test function of construction interface for Throw SUCCESS.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 0
