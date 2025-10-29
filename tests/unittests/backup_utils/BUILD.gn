@@ -452,12 +452,12 @@ ohos_unittest("b_json_other_test") {
   use_exceptions = true
 }
 
-ohos_unittest("b_jsonutil_other_ut_test") {
+ohos_unittest("b_jsonutil_other_test") {
   module_out_path = path_module_out_tests
 
   sources = [
     "${path_backup}/tests/mock/cJson/src/cJsonMock.cpp",
-    "${path_backup}/tests/unittests/backup_utils/b_jsonutil/b_jsonutil_other_ut_test.cpp",
+    "${path_backup}/tests/unittests/backup_utils/b_jsonutil/b_jsonutil_other_test.cpp",
   ]
   sources += backup_mock_parameter_src
 
