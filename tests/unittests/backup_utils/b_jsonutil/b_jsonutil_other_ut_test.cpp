@@ -77,18 +77,19 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildExtensionErrInfo_0101, testing::ext::T
         std::string jsonStr;
         int errCode = 1;
         std::string errMsg = "error";
-        int cjson = 0;
+        cJSON* cjson = cJSON_CreateObject();
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
         bool result = BJsonUtil::BuildExtensionErrInfo(jsonStr, errCode, errMsg);
         EXPECT_FALSE(result);
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject())
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
+            .WillOnce(Return(cjson))
             .WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         result = BJsonUtil::BuildExtensionErrInfo(jsonStr, errCode, errMsg);
         EXPECT_FALSE(result);
+        cJSON_Delete(cjson);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
@@ -111,17 +112,18 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildExtensionErrInfo_0201, testing::ext::T
     try {
         std::string jsonStr;
         std::map<std::string, std::vector<int>> errFileInfo;
-        int cjson = 0;
+        cJSON* cjson = cJSON_CreateObject();
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
         bool result = BJsonUtil::BuildExtensionErrInfo(jsonStr, errFileInfo);
         EXPECT_FALSE(result);
 
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(cjson));
         EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         result = BJsonUtil::BuildExtensionErrInfo(jsonStr, errFileInfo);
         EXPECT_FALSE(result);
+        cJSON_Delete(cjson);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";

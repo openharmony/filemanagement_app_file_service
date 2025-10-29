@@ -644,7 +644,7 @@ ohos_unittest("b_radar_test") {
   use_exceptions = true
 }
 
-group("b_jsonutil_other_test") {
+group("backup_utils_test") {
   testonly = true
 
   deps = [
