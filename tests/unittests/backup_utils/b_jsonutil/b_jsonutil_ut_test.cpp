@@ -116,7 +116,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSi
         std::map<std::string, bool> isClearDataFlags;
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
             userId, isClearDataFlags);
-        EXPECT_EQ(isClearDataFlags.find(bundleName), isClearDataFlags.end());
+        EXPECT_NE(isClearDataFlags.find(bundleName), isClearDataFlags.end());
         EXPECT_EQ(isClearDataFlags[bundleName], false);
         EXPECT_FALSE(result.empty());
     } catch (...) {
@@ -151,7 +151,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSi
 
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
             userId, isClearDataFlags);
-        EXPECT_EQ(isClearDataFlags.find(bundleName), isClearDataFlags.end());
+        EXPECT_NE(isClearDataFlags.find(bundleName), isClearDataFlags.end());
         EXPECT_EQ(isClearDataFlags[bundleName], true);
         EXPECT_FALSE(result.empty());
     } catch (...) {
@@ -186,7 +186,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSi
 
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
             userId, isClearDataFlags);
-        EXPECT_EQ(isClearDataFlags.find(bundleName), isClearDataFlags.end());
+        EXPECT_NE(isClearDataFlags.find(bundleName), isClearDataFlags.end());
         EXPECT_EQ(isClearDataFlags[bundleName], true);
         EXPECT_FALSE(result.empty());
     } catch (...) {
