@@ -663,7 +663,8 @@ void StorageManagerService::WriteFileList(std::ofstream &statFile, struct FileSt
     }
     std::string fileLine = "";
     bool encodeFlag = false;
-    if (fileStat.filePath.find(LINE_SEP) != std::string::npos) {
+    if (fileStat.filePath.find(LINE_SEP) != std::string::npos ||
+        fileStat.filePath.find(FILE_CONTENT_SEPARATOR) != std::string::npos) {
         fileLine += AppFileService::SandboxHelper::Encode(fileStat.filePath) + FILE_CONTENT_SEPARATOR;
         encodeFlag = true;
     } else {
