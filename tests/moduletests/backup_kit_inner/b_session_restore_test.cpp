@@ -261,4 +261,84 @@ HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0500, testing::ext::T
     GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0500";
 }
 
+/**
+ * @tc.number: SUB_backup_b_session_restore_0600
+ * @tc.name: SUB_backup_b_session_restore_0600
+ * @tc.desc: 测试AppendBundles接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0600, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0600";
+    try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0600 restorePtr_ == nullptr";
+            return;
+        }
+        const string fileName = "1.tar";
+        TestManager tm("SUB_backup_b_session_restore_0600");
+        string filePath = tm.GetRootDirCurTest().append(fileName);
+        UniqueFd remoteCap(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        string bundleName = "";
+        vector<string> bundlesToRestore;
+        vector<string> detailInfos;
+        bundlesToRestore.emplace_back(bundleName);
+
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        auto ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore, detailInfos);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by AppendBundles.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0600";
+}
+
+/**
+ * @tc.number: SUB_backup_b_session_restore_0601
+ * @tc.name: SUB_backup_b_session_restore_0601
+ * @tc.desc: 测试AppendBundles接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BSessionRestoreTest, SUB_backup_b_session_restore_0601, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-begin SUB_backup_b_session_restore_0601";
+    try {
+        if (restorePtr_ == nullptr) {
+            GTEST_LOG_(INFO) << "SUB_backup_b_session_restore_0601 restorePtr_ == nullptr";
+            return;
+        }
+        const string fileName = "1.tar";
+        TestManager tm("SUB_backup_b_session_restore_0601");
+        string filePath = tm.GetRootDirCurTest().append(fileName);
+        UniqueFd remoteCap(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        string bundleName = "";
+        vector<string> bundlesToRestore;
+        bundlesToRestore.emplace_back(bundleName);
+        GTEST_LOG_(INFO) << "GetInstance is false";
+        SetMockGetInstance(false);
+        auto ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore);
+        EXPECT_NE(ret, ErrCode(BError::Codes::OK));
+        GTEST_LOG_(INFO) << "GetInstance is true";
+        SetMockGetInstance(true);
+        ret = restorePtr_->AppendBundles(move(remoteCap), bundlesToRestore);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BSessionRestoreTest-an exception occurred by AppendBundles.";
+    }
+    GTEST_LOG_(INFO) << "BSessionRestoreTest-end SUB_backup_b_session_restore_0601";
+}
 } // namespace OHOS::FileManagement::Backup
