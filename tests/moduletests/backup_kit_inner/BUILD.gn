@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
-ohos_unittest("b_session_test") {
+ohos_unittest("b_session_backup_test") {
   branch_protector_ret = "pac_ret"
 
   module_out_path = path_module_out_tests
@@ -27,8 +27,281 @@ ohos_unittest("b_session_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
     "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
     "b_session_backup_test.cpp",
+  ]
+  sources += backup_mock_proxy_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
+  include_dirs = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
+  ]
+  include_dirs += backup_mock_utils_include
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "protect=public",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_session_backup_ut_test") {
+  branch_protector_ret = "pac_ret"
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
+    "b_session_backup_ut_test.cpp",
+  ]
+  sources += backup_mock_proxy_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
+  include_dirs = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
+  ]
+  include_dirs += backup_mock_utils_include
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "protect=public",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_session_restore_async_test") {
+  branch_protector_ret = "pac_ret"
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
     "b_session_restore_async_test.cpp",
+  ]
+  sources += backup_mock_proxy_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
+  include_dirs = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
+  ]
+  include_dirs += backup_mock_utils_include
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "protect=public",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_session_restore_async_ut_test") {
+  branch_protector_ret = "pac_ret"
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
+    "b_session_restore_async_ut_test.cpp",
+  ]
+  sources += backup_mock_proxy_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
+  include_dirs = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
+  ]
+  include_dirs += backup_mock_utils_include
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "protect=public",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_session_restore_test") {
+  branch_protector_ret = "pac_ret"
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
     "b_session_restore_test.cpp",
+  ]
+  sources += backup_mock_proxy_src
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
+  include_dirs = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
+  ]
+  include_dirs += backup_mock_utils_include
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "protect=public",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  use_exceptions = true
+}
+
+ohos_unittest("b_session_restore_ut_test") {
+  branch_protector_ret = "pac_ret"
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_backup.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_session_restore_async.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
+    "b_session_restore_ut_test.cpp",
   ]
   sources += backup_mock_proxy_src
 
@@ -74,5 +347,12 @@ ohos_unittest("b_session_test") {
 group("session_test") {
   testonly = true
 
-  deps = [ ":b_session_test" ]
+  deps = [
+    ":b_session_backup_test",
+    ":b_session_backup_ut_test",
+    ":b_session_restore_test",
+    ":b_session_restore_ut_test",
+    ":b_session_restore_async_test",
+    ":b_session_restore_async_ut_test",
+  ]
 }
