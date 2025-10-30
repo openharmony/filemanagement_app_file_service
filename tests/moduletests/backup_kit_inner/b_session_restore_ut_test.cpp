@@ -405,4 +405,5 @@ HWTEST_F(BSessionRestoreUtTest, SUB_BSessionRestore_GetCompatibilityInfo_0000, t
     }
     GTEST_LOG_(INFO) << "BSessionRestoreUtTest-end SUB_BSessionRestore_GetCompatibilityInfo_0000";
 }
+
 } // namespace OHOS::FileManagement::Backup
