@@ -96,7 +96,10 @@ static uint32_t CheckOverLongPath(const string &path)
     uint32_t len = path.length();
     if (len >= PATH_MAX_LEN) {
         size_t found = path.find_last_of(BConstants::FILE_SEPARATOR_CHAR);
-        string sub = path.substr(found + 1);
+        string sub = "";
+        if (found != std::string::npos && found != path.length() - 1) {
+            sub = path.substr(found + 1);
+        }
         HILOGE("Path over long, length:%{public}d, fileName:%{private}s.", len, sub.c_str());
     }
     return len;
