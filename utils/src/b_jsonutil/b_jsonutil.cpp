@@ -220,6 +220,10 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
             cJSON_AddItemToArray(details, detail);
         }
         char *detailInfos = cJSON_Print(details);
+        if (detailInfos == nullptr) {
+            HILOGE("detailInfos print error");
+            return;
+        }
         bundleDetailInfo.detail = std::string(detailInfos);
         if (bundleDetailInfo.type.compare(BConstants::BROADCAST_TYPE) == 0) {
             cJSON *broadCastType = cJSON_GetObjectItem(infoItem, "broadcastType");

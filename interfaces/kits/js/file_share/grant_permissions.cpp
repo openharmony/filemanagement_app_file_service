@@ -122,7 +122,7 @@ static napi_status GetUriPoliciesArg(napi_env env, napi_value agrv, std::vector<
     for (uint32_t i = 0; i < count; i++) {
         napi_handle_scope scope;
         status = napi_open_handle_scope(env, &scope);
-        if (status != napi_ok) {
+        if (status != napi_ok || scope == nullptr) {
             return status;
         }
         status = GetUriPolicy(env, agrv, uriPolicies, i);
@@ -196,7 +196,7 @@ static napi_status GetPathPoliciesArg(napi_env env, napi_value agrv, std::vector
     for (uint32_t i = 0; i < count; i++) {
         napi_handle_scope scope;
         status = napi_open_handle_scope(env, &scope);
-        if (status != napi_ok) {
+        if (status != napi_ok || scope == nullptr) {
             LOGE("open handle scope failed");
             return status;
         }
