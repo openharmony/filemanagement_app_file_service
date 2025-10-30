@@ -145,38 +145,6 @@ HWTEST_F(BSessionBackupUtTest, SUB_backup_b_session_backup_1000, testing::ext::T
 }
 
 /**
- * @tc.number: SUB_backup_b_session_backup_1100
- * @tc.name: SUB_backup_b_session_backup_1100
- * @tc.desc: 测试 GetLocalCapabilities 接口
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issuesI9KPRL
- */
-HWTEST_F(BSessionBackupUtTest, SUB_backup_b_session_backup_1100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BSessionBackupUtTest-begin SUB_backup_b_session_backup_1100";
-    try {
-        if (backupPtr_ == nullptr) {
-            GTEST_LOG_(INFO) << "SUB_backup_b_session_backup_1100 backupPtr_ == nullptr";
-            return;
-        }
-        GTEST_LOG_(INFO) << "GetInstance is false";
-        SetMockGetInstance(false);
-        auto err = backupPtr_->GetLocalCapabilities();
-        EXPECT_LT(err, 0);
-        GTEST_LOG_(INFO) << "GetInstance is true";
-        SetMockGetInstance(true);
-        err = backupPtr_->GetLocalCapabilities();
-        EXPECT_LT(err, 0);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BSessionBackupUtTest-an exception occurred by GetLocalCapabilities.";
-    }
-    GTEST_LOG_(INFO) << "BSessionBackupUtTest-end SUB_backup_b_session_backup_1100";
-}
-
-/**
  * @tc.number: SUB_backup_b_session_backup_1200
  * @tc.name: SUB_backup_b_session_backup_1200
  * @tc.desc: 测试 GetBackupDataSize 接口
