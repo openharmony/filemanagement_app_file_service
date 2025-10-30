@@ -411,6 +411,34 @@ ohos_unittest("b_process_test") {
   use_exceptions = true
 }
 
+ohos_unittest("b_process_ut_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [ "b_process/b_process_ut_test.cpp" ]
+
+  include_dirs = [ "${path_backup}/utils/include" ]
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "jsoncpp:jsoncpp",
+  ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("b_json_other_test") {
   module_out_path = path_module_out_tests
 
@@ -622,6 +650,7 @@ group("backup_utils_test") {
     ":b_jsonutil_test",
     ":b_jsonutil_ut_test",
     ":b_process_test",
+    ":b_process_ut_test",
     ":b_radar_test",
     ":b_tarball_cmdline_test",
     ":b_tarball_factory_test",

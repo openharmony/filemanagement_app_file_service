@@ -30,7 +30,7 @@ public:
 /**
  * @tc.number: SUB_backup_b_anony_GetAnonyPath_0100
  * @tc.name: b_anony_GetAnonyPath_0100
- * @tc.desc: Test function of GetAnonyPath interface for SUCCESS.
+ * @tc.desc: Test function of GetAnonyPath interface for /.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -53,7 +53,7 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0100, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_anony_GetAnonyPath_0101
  * @tc.name: b_anony_GetAnonyPath_0101
- * @tc.desc: Test function of GetAnonyPath interface for SUCCESS.
+ * @tc.desc: Test function of GetAnonyPath interface for //.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -76,7 +76,7 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0101, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_anony_GetAnonyPath_0102
  * @tc.name: b_anony_GetAnonyPath_0102
- * @tc.desc: Test function of GetAnonyPath interface for SUCCESS.
+ * @tc.desc: Test function of GetAnonyPath interface for test.txt.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -99,7 +99,7 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_anony_GetAnonyPath_0103
  * @tc.name: b_anony_GetAnonyPath_0103
- * @tc.desc: Test function of GetAnonyPath interface for SUCCESS.
+ * @tc.desc: Test function of GetAnonyPath interface for /*/*/shfkwam/xxf/x/xdf.db.xxx.xx.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
