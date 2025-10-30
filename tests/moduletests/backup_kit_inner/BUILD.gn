@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
 
-ohos_unittest("b_session_backup_test") {
+ohos_unittest("b_session_test") {
   branch_protector_ret = "pac_ret"
 
   module_out_path = path_module_out_tests
@@ -348,7 +348,7 @@ group("session_test") {
   testonly = true
 
   deps = [
-    ":b_session_backup_test",
+    ":b_session_test",
     ":b_session_backup_ut_test",
     ":b_session_restore_test",
     ":b_session_restore_ut_test",
