@@ -151,11 +151,81 @@ ohos_unittest("backup_tool_restore_test") {
   use_exceptions = true
 }
 
+ohos_unittest("backup_tool_restore_sub_test") {
+  branch_protector_ret = "pac_ret"
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup_mock}/b_filesystem/b_file_mock.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_data.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_incremental_restore_session.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/b_session_restore_async_mock.cpp",
+    "${path_backup}/tests/mock/backup_kit_inner/b_session_restore_mock.cpp",
+    "${path_backup}/tools/backup_tool/src/tools_op.cpp",
+    "backup_tool/tools_op_incremental_restore_sub_test.cpp",
+    "backup_tool/tools_op_restore_async_sub_test.cpp",
+    "backup_tool/tools_op_restore_sub_test.cpp",
+  ]
+  sources += backup_mock_proxy_src
+
+  include_dirs = [
+    "${path_backup}/frameworks/native/backup_kit_inner/include",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner",
+    "${path_backup}/tools/backup_tool/include",
+    "${path_backup}/tools/backup_tool/src",
+  ]
+  include_dirs += backup_mock_utils_include
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  cflags = [ "--coverage" ]
+
+  ldflags = [ "--coverage" ]
+
+  cflags_cc = [ "--coverage" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "samgr:samgr_proxy",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private = public",
+  ]
+
+  use_exceptions = true
+}
+
 group("backup_tools_test") {
   testonly = true
 
   deps = [
     ":backup_tool_restore_test",
+    ":backup_tool_restore_sub_test",
     ":backup_tool_test",
   ]
 }
