@@ -108,7 +108,7 @@ HWTEST_F(BSessionBackupUtTest, SUB_backup_b_session_backup_0100, testing::ext::T
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BSessionBackupUtTest-an exception occurred by Callbacks.";
     }
-    GTEST_LOG_(INFO) << "BSessionBackupUtTest-end SUB_backup_b_session_backup_0400";
+    GTEST_LOG_(INFO) << "BSessionBackupUtTest-end SUB_backup_b_session_backup_0100";
 }
 
 /**

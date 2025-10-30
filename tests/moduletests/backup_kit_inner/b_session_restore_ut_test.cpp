@@ -111,6 +111,7 @@ HWTEST_F(BSessionRestoreUtTest, SUB_backup_b_session_restore_0600, testing::ext:
         TestManager tm("SUB_backup_b_session_restore_0600");
         string filePath = tm.GetRootDirCurTest().append(fileName);
         UniqueFd remoteCap(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        EXPECT_EQ(remoteCap.Get(), -1);
         string bundleName = "";
         vector<string> bundlesToRestore;
         vector<string> detailInfos;
@@ -153,6 +154,7 @@ HWTEST_F(BSessionRestoreUtTest, SUB_backup_b_session_restore_0601, testing::ext:
         TestManager tm("SUB_backup_b_session_restore_0601");
         string filePath = tm.GetRootDirCurTest().append(fileName);
         UniqueFd remoteCap(open(filePath.data(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR));
+        EXPECT_EQ(remoteCap.Get(), -1);
         string bundleName = "";
         vector<string> bundlesToRestore;
         bundlesToRestore.emplace_back(bundleName);
