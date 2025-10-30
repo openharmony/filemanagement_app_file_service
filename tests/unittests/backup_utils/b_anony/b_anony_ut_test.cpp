@@ -99,7 +99,7 @@ HWTEST_F(BAnonyUtTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_anony_GetAnonyPath_0103
  * @tc.name: b_anony_GetAnonyPath_0103
- * @tc.desc: Test function of GetAnonyPath interface for /*/*/shfkwam/xxf/x/xdf.db.xxx.xx.
+ * @tc.desc: Test function of GetAnonyPath interface for complex path.
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1

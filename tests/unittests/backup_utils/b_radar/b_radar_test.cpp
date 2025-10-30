@@ -49,6 +49,15 @@ protected:
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
 };
 
+/**
+ * @tc.number: backup_utils_BRadar_DURATION_0100
+ * @tc.name: backup_utils_BRadar_DURATION_0100
+ * @tc.desc: 测试DURATION
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
 HWTEST_F(BRadarTest, DURATION_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BRadarTest-begin DURATION_0100";
@@ -66,6 +75,15 @@ HWTEST_F(BRadarTest, DURATION_0100, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BRadarTest-end DURATION_0100";
 }
 
+/**
+ * @tc.number: backup_utils_BRadar_RadarErrorCode_0100
+ * @tc.name: backup_utils_BRadar_RadarErrorCode_0100
+ * @tc.desc: 测试RadarErrorCode
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
 HWTEST_F(BRadarTest, RadarErrorCode_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BRadarTest-begin RadarErrorCode_0100";
@@ -94,6 +112,15 @@ HWTEST_F(BRadarTest, RadarErrorCode_0100, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BRadarTest-end RadarErrorCode_0100";
 }
 
+/**
+ * @tc.number:backup_utils_BRadar_TOTAL_CONSTRUCTOR_0100
+ * @tc.name: backup_utils_BRadar_TOTAL_CONSTRUCTOR_0100
+ * @tc.desc: 测试TOTAL_CONSTRUCTOR
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
 HWTEST_F(BRadarTest, TOTAL_CONSTRUCTOR_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BRadarTest-begin TOTAL_CONSTRUCTOR_0100";
@@ -116,6 +143,15 @@ HWTEST_F(BRadarTest, TOTAL_CONSTRUCTOR_0100, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BRadarTest-end TOTAL_CONSTRUCTOR_0100";
 }
 
+/**
+ * @tc.number: backup_utils_BRadar_TOTAL_REPORT_0100
+ * @tc.name: backup_utils_BRadar_TOTAL_REPORT_0100
+ * @tc.desc: 测试TOTAL_REPORT
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
 HWTEST_F(BRadarTest, TOTAL_REPORT_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BRadarTest-begin TOTAL_REPORT_0100";
@@ -138,6 +174,15 @@ HWTEST_F(BRadarTest, TOTAL_REPORT_0100, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BRadarTest-end TOTAL_REPORT_0100";
 }
 
+/**
+ * @tc.number: backup_utils_BRadar_FileTypeStat001
+ * @tc.name: backup_utils_BRadar_FileTypeStat001
+ * @tc.desc: 测试FileTypeStat
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
 HWTEST_F(BRadarTest, FileTypeStat001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BRadarTest-begin FileTypeStat001";
@@ -172,9 +217,18 @@ HWTEST_F(BRadarTest, FileTypeStat001, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BRadarTest-end FileTypeStat001";
 }
 
-HWTEST_F(BRadarTest, FileSizeStat001, testing::ext::TestSize.Level1)
+/**
+ * @tc.number: backup_utils_BRadar_FileTypeStat002
+ * @tc.name: backup_utils_BRadar_FileTypeStat002
+ * @tc.desc: 测试FileTypeStat
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BRadarTest, FileSizeStat002, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BRadarTest-begin FileSizeStat001";
+    GTEST_LOG_(INFO) << "BRadarTest-begin FileSizeStat002";
     try {
         FileSizeStat fileSizeStat;
         EXPECT_EQ(fileSizeStat.GetListSize(), SIZE_DEF_COUNT);
@@ -203,9 +257,18 @@ HWTEST_F(BRadarTest, FileSizeStat001, testing::ext::TestSize.Level1)
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";
     }
-    GTEST_LOG_(INFO) << "BRadarTest-end FileSizeStat001";
+    GTEST_LOG_(INFO) << "BRadarTest-end FileSizeStat002";
 }
 
+/**
+ * @tc.number: backup_utils_BRadar_RADAR_APP_STAT_0100
+ * @tc.name: backup_utils_BRadar_RADAR_APP_STAT_0100
+ * @tc.desc: 测试RADAR_APP_STAT
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
 HWTEST_F(BRadarTest, RADAR_APP_STAT_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BRadarTest-begin RADAR_APP_STAT_0100";
