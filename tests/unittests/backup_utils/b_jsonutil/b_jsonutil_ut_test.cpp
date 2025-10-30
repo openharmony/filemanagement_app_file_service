@@ -53,7 +53,7 @@ public:
  */
 HWTEST_F(BJsonUtilUtTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-begin b_dir_GetDirFiles_0100";
+    GTEST_LOG_(INFO) << "BJsonUtilUtTest-begin b_jsonutil_ParseBundleNameIndexStr_0100";
     try {
         std::string bundleName = "com.hos.app01:1";
         BJsonUtil::BundleDetailInfo detailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
@@ -63,7 +63,7 @@ HWTEST_F(BJsonUtilUtTest, b_jsonutil_ParseBundleNameIndexStr_0100, testing::ext:
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilUtTest-an exception occurred.";
     }
-    GTEST_LOG_(INFO) << "BJsonUtilUtTest-end b_dir_GetDirFiles_0100";
+    GTEST_LOG_(INFO) << "BJsonUtilUtTest-end b_jsonutil_ParseBundleNameIndexStr_0100";
 }
 
 /**
