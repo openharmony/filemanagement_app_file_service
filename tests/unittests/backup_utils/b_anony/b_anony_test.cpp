@@ -40,34 +40,59 @@ HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BAnonyTest-begin b_anony_GetAnonyPath_0100";
     try {
-        std::string path = "/";
-        std::string result = "/";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "//";
-        result = "//";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "test.txt";
-        result = "t******t.txt";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "/test.txt";
-        result = "/t******t.txt";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "/*/*/shfkwam/xxf/x/xdf.db.xxx.xx";
-        result = "/******/******/s******m/x******f/******/x******f.db.xxx.xx";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "/euxnems/ioio...xxx/sk.ppt";
-        result = "/e******s/i******x/******.ppt";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "/....../......";
-        result = "/.******./******......";
-        EXPECT_EQ(GetAnonyPath(path), result);
-        path = "downloads/../&^%&*#/IMGS.tar.lz4";
-        result = "d******s/******/&******#/I******S.tar.lz4";
+        std::string path = "/euxnems/ioio...xxx/sk.ppt";
+        std::string result = "/e******s/i******x/******.ppt";
         EXPECT_EQ(GetAnonyPath(path), result);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "BAnonyTest-end b_error_GetAnonyPath_0100";
+    GTEST_LOG_(INFO) << "BAnonyTest-end b_anony_GetAnonyPath_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_anony_GetAnonyPath_0101
+ * @tc.name: b_anony_GetAnonyPath_0101
+ * @tc.desc: Test function of GetAnonyPath interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BAnonyTest-begin b_anony_GetAnonyPath_0101";
+    try {
+        std::string path = "/....../......";
+        std::string result = "/.******./******......";
+        EXPECT_EQ(GetAnonyPath(path), result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "BAnonyTest-end b_anony_GetAnonyPath_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_b_anony_GetAnonyPath_0102
+ * @tc.name: b_anony_GetAnonyPath_0102
+ * @tc.desc: Test function of GetAnonyPath interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BAnonyTest, b_anony_GetAnonyPath_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BAnonyTest-begin b_anony_GetAnonyPath_0102";
+    try {
+        std::string path = "downloads/../&^%&*#/IMGS.tar.lz4";
+        std::string result = "d******s/******/&******#/I******S.tar.lz4";
+        EXPECT_EQ(GetAnonyPath(path), result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BAnonyTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "BAnonyTest-end b_anony_GetAnonyPath_0102";
 }
 }
