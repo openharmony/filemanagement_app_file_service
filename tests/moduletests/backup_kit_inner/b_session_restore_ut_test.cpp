@@ -30,12 +30,39 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+static void OnFileReady(const BFileInfo &fileInfo, UniqueFd fd, int32_t errCode)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreUtTest OnFileReady OK";
+}
+
+static void OnBundleStarted(ErrCode err, const BundleName name)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreUtTest OnBundleStarted OK";
+}
+
+static void OnBundleFinished(ErrCode err, const BundleName name)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreUtTest OnBundleFinished OK";
+}
+
+static void OnAllBundlesFinished(ErrCode err)
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreUtTest OnAllBundlesFinished OK";
+}
+
+static void OnBackupServiceDied()
+{
+    GTEST_LOG_(INFO) << "BSessionRestoreUtTest OnBackupServiceDied OK";
+}
+
 class BSessionRestoreUtTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase() {};
     void SetUp() override;
     void TearDown() override;
+
+    void Init();
 
     unique_ptr<BSessionRestore> restorePtr_ = nullptr;
     BSessionRestore::Callbacks callbacks_;
@@ -52,6 +79,15 @@ void BSessionRestoreUtTest::SetUp()
 void BSessionRestoreUtTest::TearDown()
 {
     restorePtr_ = nullptr;
+}
+
+void BSessionRestoreUtTest::Init()
+{
+    callbacks_.onFileReady = OnFileReady;
+    callbacks_.onBundleStarted = OnBundleStarted;
+    callbacks_.onBundleFinished = OnBundleFinished;
+    callbacks_.onAllBundlesFinished = OnAllBundlesFinished;
+    callbacks_.onBackupServiceDied = OnBackupServiceDied;
 }
 
 /**
