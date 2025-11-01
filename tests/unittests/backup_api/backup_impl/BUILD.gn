@@ -100,11 +100,43 @@ ohos_unittest("backup_sa_impl_test") {
   use_exceptions = true
 }
 
+ohos_unittest("b_file_info_sub_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_kit_inner/src/b_file_info.cpp",
+    "b_file_info_sub_test.cpp",
+  ]
+  sources += backup_mock_parcel_src
+
+  include_dirs =
+      [ "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl" ]
+  include_dirs += backup_mock_parcel_include_dirs
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [ "hilog:libhilog" ]
+
+  use_exceptions = true
+}
+
 group("backup_impl_test") {
   testonly = true
 
   deps = [
     ":b_file_info_test",
+    ":b_file_info_sub_test",
     ":backup_sa_impl_test",
   ]
 }
