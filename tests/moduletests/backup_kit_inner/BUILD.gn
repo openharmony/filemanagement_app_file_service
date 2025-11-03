@@ -29,6 +29,9 @@ ohos_unittest("b_session_test") {
     "b_session_backup_test.cpp",
     "b_session_restore_async_test.cpp",
     "b_session_restore_test.cpp",
+    "b_session_backup_ut_test.cpp",
+    "b_session_restore_async_ut_test.cpp",
+    "b_session_restore_ut_test.cpp",
   ]
   sources += backup_mock_proxy_src
 
