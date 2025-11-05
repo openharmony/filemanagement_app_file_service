@@ -104,15 +104,6 @@
                     }
                 },
                 {
-                    "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native:storage_fileshare_native",
-                    "header": {
-                        "header_files": [
-                            "file_share.h"
-                        ],
-                        "header_base": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native/file_share/include"
-                    }
-                },
-                {
                     "name": "//foundation/filemanagement/app_file_service/interfaces/innerkits/native:fileuri_native",
                     "header": {
                         "header_files": [

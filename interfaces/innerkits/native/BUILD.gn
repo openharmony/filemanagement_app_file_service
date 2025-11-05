@@ -83,42 +83,6 @@ ohos_shared_library("fileshare_native") {
   subsystem_name = "filemanagement"
 }
 
-ohos_shared_library("storage_fileshare_native") {
-  branch_protector_ret = "pac_ret"
-
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
-  sources = [
-    "${app_file_service_path}/interfaces/common/src/json_utils.cpp",
-    "${app_file_service_path}/interfaces/common/src/sandbox_helper.cpp",
-    "${app_file_service_path}/interfaces/common/src/common_func.cpp",
-    "file_share/src/file_share.cpp",
-  ]
-
-  public_configs = [ ":file_share_config" ]
-
-  external_deps = [
-    "ability_base:zuri",
-    "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
-    "ipc:ipc_core",
-    "c_utils:utils",
-    "hilog:libhilog",
-    "json:nlohmann_json_static",
-    "samgr:samgr_proxy",
-  ]
-  part_name = "app_file_service"
-  subsystem_name = "filemanagement"
-}
-
 ohos_shared_library("fileuri_native") {
   branch_protector_ret = "pac_ret"
   sanitize = {
