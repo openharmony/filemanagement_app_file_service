@@ -132,10 +132,12 @@ ohos_unittest("b_dir_test") {
   module_out_path = path_module_out_tests
 
   sources = [
-    "b_filesystem/b_dir_test.cpp"
+    "b_filesystem/b_dir_test.cpp",
   ]
 
-  include_dirs = [ "${path_backup}/utils/src/b_filesystem" ]
+  include_dirs = [
+    "${path_backup}/utils/src/b_filesystem",
+  ]
 
   deps = [
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
@@ -147,8 +149,47 @@ ohos_unittest("b_dir_test") {
     "c_utils:utils",
     "hilog:libhilog",
     "jsoncpp:jsoncpp",
+    "googletest:gmock_main",
   ]
 
+  use_exceptions = true
+}
+
+ohos_unittest("b_dir_sub_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
+    "b_filesystem/b_dir_sub_test.cpp"
+  ]
+
+  include_dirs = [
+    "${path_backup}/utils/src/b_filesystem",
+    "${path_backup}/tests/mock/library_func_mock",
+  ]
+
+  deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "jsoncpp:jsoncpp",
+    "googletest:gmock_main",
+  ]
+
+  defines = [ "private=public" ]
   use_exceptions = true
 }
 
@@ -283,6 +324,7 @@ ohos_unittest("b_json_test") {
     "b_json/b_json_cached_entity_test.cpp",
     "b_json/b_json_entity_ext_manage_test.cpp",
     "b_json/b_json_entity_extension_config_test.cpp",
+    "b_json/b_json_entity_onbackupex_ret_test.cpp",
     "b_json/b_json_service_disposal_config_test.cpp",
     "b_json/b_report_entity_test.cpp",
   ]
@@ -573,7 +615,8 @@ ohos_unittest("b_utils_test") {
   module_out_path = path_module_out_tests
 
   sources = [
-    "b_utils\scan_file_singleton_test.cpp"
+    "b_utils\scan_file_singleton_test.cpp",
+    "b_utils\string_utils_test.cpp",
   ]
 
   include_dirs = [ "${path_backup}/utils/src/b_utils" ]
@@ -589,7 +632,7 @@ ohos_unittest("b_utils_test") {
     "hilog:libhilog",
     "jsoncpp:jsoncpp",
   ]
-
+  defines = [ "private = public" ]
   use_exceptions = true
 }
 
@@ -641,6 +684,7 @@ group("backup_utils_test") {
     ":b_error_test",
     ":b_error_ut_test",
     ":b_dir_test",
+    ":b_dir_sub_test",
     ":b_file_hash_test",
     ":b_file_test",
     ":b_json_clear_data_test",

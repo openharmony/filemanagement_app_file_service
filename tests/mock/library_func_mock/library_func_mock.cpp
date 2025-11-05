@@ -120,3 +120,18 @@ int Close(int fd)
 {
     return LibraryFunc::libraryFunc_->close(fd);
 }
+
+int Lstat(const char *pathname, struct stat *statbuf)
+{
+    return LibraryFunc::libraryFunc_->lstat(pathname, statbuf);
+}
+
+int Fstat(int fd, struct stat* buf)
+{
+    return LibraryFunc::libraryFunc_->fstat(fd, buf);
+}
+
+int Lseek(int fd, off_t offset, int whence)
+{
+    return LibraryFunc::libraryFunc_->lseek(fd, offset, whence);
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1213,5 +1213,255 @@ HWTEST_F(BJsonEntityExtensionConfigTest, backup_b_json_entity_extension_config_4
         GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-an exception occurred by GetDirList.";
     }
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end backup_b_json_entity_extension_config_4200";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_HAS_ARRAY_001
+ * @tc.name: EXT_CONFIG_HAS_ARRAY_001
+ * @tc.desc: Test function of HasArray
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_HAS_ARRAY_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_HAS_ARRAY_001";
+    GTEST_LOG_(INFO) << "1. test not obj";
+    string_view sv1 = R"(test)";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_FALSE(cache1.HasArray(BConstants::COMPATIBLE_DIR_MAPPING));
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_HAS_ARRAY_001";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_HAS_ARRAY_002
+ * @tc.name: EXT_CONFIG_HAS_ARRAY_002
+ * @tc.desc: Test function of HasArray
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_HAS_ARRAY_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_HAS_ARRAY_002";
+    GTEST_LOG_(INFO) << "2. test no key";
+    string_view sv1 = R"({"abc": 123})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_FALSE(cache1.HasArray(BConstants::COMPATIBLE_DIR_MAPPING));
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_HAS_ARRAY_002";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_HAS_ARRAY_003
+ * @tc.name: EXT_CONFIG_HAS_ARRAY_003
+ * @tc.desc: Test function of HasArray
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_HAS_ARRAY_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_HAS_ARRAY_003";
+    GTEST_LOG_(INFO) << "3. test content not array";
+    string_view sv1 = R"({"compatibleDirMapping": 123})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_FALSE(cache1.HasArray(BConstants::COMPATIBLE_DIR_MAPPING));
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_HAS_ARRAY_003";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_HAS_ARRAY_004
+ * @tc.name: EXT_CONFIG_HAS_ARRAY_004
+ * @tc.desc: Test function of HasArray
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_HAS_ARRAY_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_HAS_ARRAY_004";
+    GTEST_LOG_(INFO) << "4. test ok";
+    string_view sv1 = R"({"compatibleDirMapping": []})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_TRUE(cache1.HasArray(BConstants::COMPATIBLE_DIR_MAPPING));
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_HAS_ARRAY_004";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_001
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_001
+ * @tc.desc: Test function of GetCompatibleDirMapping fail 1
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_001";
+    GTEST_LOG_(INFO) << "1. test HasCompatibleDirMapping false";
+    string_view sv1 = R"({"compatibleDirMapping": 123})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_001";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_002
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_002
+ * @tc.desc: Test function of GetCompatibleDirMapping item fail 1
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_002";
+    GTEST_LOG_(INFO) << "2. test item not object";
+    string_view sv1 = R"({"compatibleDirMapping": ["abc"]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_002";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_003
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_003
+ * @tc.desc: Test function of GetCompatibleDirMapping item fail 2
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_003";
+    GTEST_LOG_(INFO) << "3. test item empty";
+    string_view sv1 = R"({"compatibleDirMapping": [{}]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_003";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_004
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_004
+ * @tc.desc: Test function of GetCompatibleDirMapping item fail 3
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_004";
+    GTEST_LOG_(INFO) << "4. test item not contain key backupDir";
+    string_view sv1 = R"({"compatibleDirMapping": [{"abc": 123}]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_004";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_005
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_005
+ * @tc.desc: Test function of GetCompatibleDirMapping item fail 4
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_005";
+    GTEST_LOG_(INFO) << "5. test item not contain key restoreDir";
+    string_view sv1 = R"({"compatibleDirMapping": [{"backupDir": "123"}]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_005";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_006
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_006
+ * @tc.desc: Test function of GetCompatibleDirMapping item fail 5
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_006";
+    GTEST_LOG_(INFO) << "6. test item restoreDir contain seperator";
+    string_view sv1 = R"({"compatibleDirMapping": [{"backupDir": "123", "restoreDir": "456||||"}]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+
+    string_view sv2 = R"({"compatibleDirMapping": [{"backupDir": "123", "restoreDir": "456*"}]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
+    auto cache2 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache2.GetCompatibleDirMapping().size(), 0);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_006";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007
+ * @tc.desc: Test function of GetCompatibleDirMapping item fail 6
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007";
+    GTEST_LOG_(INFO) << "6. test item backupDir contain seperator";
+    string_view sv1 = R"({"compatibleDirMapping": [{"backupDir": "123||||", "restoreDir": "456"}]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+
+    string_view sv2 = R"({"compatibleDirMapping": [{"backupDir": "123*", "restoreDir": "456"}]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv2);
+    auto cache2 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache2.GetCompatibleDirMapping().size(), 0);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_008
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_008
+ * @tc.desc: Test function of GetCompatibleDirMapping ok
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_008, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_008";
+    GTEST_LOG_(INFO) << "7. test all ok";
+    string_view sv1 = R"({"compatibleDirMapping": [{"backupDir": "123", "restoreDir": "456"}]})";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 1);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_008";
 }
 } // namespace OHOS::FileManagement::Backup

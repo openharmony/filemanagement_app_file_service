@@ -15,8 +15,6 @@
 
 #include "untar_file.h"
 
-#include <utime.h>
-
 #include "b_anony/b_anony.h"
 #include "b_filesystem/b_dir.h"
 #include "directory_ex.h"

@@ -26,6 +26,7 @@
 
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
+#include "b_filesystem/b_file.h"
 #include "ext_extension.cpp"
 #include "sub_ext_extension.cpp"
 
@@ -296,7 +297,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0601, testing::ext::TestSize.Level
         EXPECT_GT(fd, 0);
         close(fd);
         vector<struct ReportFileInfo> srcFiles;
-        WriteFile(fileName, srcFiles);
+        BFile::WriteFile(fileName, srcFiles);
         ifstream f(fileName);
         if (!f.is_open()) {
             throw BError(BError::Codes::EXT_INVAL_ARG, "open failed");
@@ -340,7 +341,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0602, testing::ext::TestSize.Level
         info.userTar = 1;
         info.encodeFlag = true;
         srcFiles.push_back(info);
-        WriteFile(fileName, srcFiles);
+        BFile::WriteFile(fileName, srcFiles);
         ifstream f(fileName);
         if (!f.is_open()) {
             throw BError(BError::Codes::EXT_INVAL_ARG, "open failed");
@@ -380,7 +381,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0603, testing::ext::TestSize.Level
         info.userTar = 1;
         info.encodeFlag = false;
         srcFiles.push_back(info);
-        WriteFile(fileName, srcFiles);
+        BFile::WriteFile(fileName, srcFiles);
         ifstream f(fileName);
         if (!f.is_open()) {
             throw BError(BError::Codes::EXT_INVAL_ARG, "open failed");

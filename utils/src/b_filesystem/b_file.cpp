@@ -17,6 +17,8 @@
 
 #include <cstring>
 #include <fcntl.h>
+#include <fstream>
+#include <iomanip>
 #include <libgen.h>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
@@ -25,6 +27,7 @@
 #include <unistd.h>
 
 #include "b_error/b_error.h"
+#include "b_json/b_report_entity.h"
 #include "filemgmt_libhilog.h"
 #include "securec.h"
 
@@ -222,11 +225,38 @@ bool BFile::EndsWith(const string &str, const string &suffix)
 uint64_t BFile::GetFileSize(const string &path, int32_t &error)
 {
     struct stat sta = {};
-    error = errno;
     if (stat(path.data(), &sta) == -1) {
+        error = errno;
         HILOGE("get file size fail error:%{public}s", strerror(error));
         return 0;
     }
     return sta.st_size;
+}
+
+
+void BFile::WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)
+{
+    fstream f;
+    f.open(filename.data(), ios::out);
+    if (!f) {
+        HILOGE("Failed to open file = %{private}s", filename.c_str());
+        return;
+    }
+
+    // 前面2行先填充进去
+    f << "version=1.0&attrNum=8" << endl;
+    f << "path;mode;dir;size;mtime;hash;usertar;encodeFlag" << endl;
+    for (const auto &item : srcFiles) {
+        string path = BReportEntity::EncodeReportItem(item.filePath, item.encodeFlag);
+        string str = path + ";" + item.mode + ";" + to_string(item.isDir) + ";" + to_string(item.size);
+        str += ";" + to_string(item.mtime) + ";" + item.hash + ";" + to_string(item.userTar)+ ";";
+        if (item.encodeFlag) {
+            str += std::to_string(1);
+        } else {
+            str += std::to_string(0);
+        }
+        f << str << endl;
+    }
+    f.close();
 }
 } // namespace OHOS::FileManagement::Backup

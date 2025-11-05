@@ -16,6 +16,8 @@
 #ifndef OHOS_FILEMGMT_BACKUP_BACKUP_UNTAR_FILE_H
 #define OHOS_FILEMGMT_BACKUP_BACKUP_UNTAR_FILE_H
 
+#include <utime.h>
+
 #include "tar_file.h"
 #include "b_json/b_report_entity.h"
 

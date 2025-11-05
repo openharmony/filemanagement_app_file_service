@@ -225,6 +225,7 @@ static inline std::string COMPATIBLE_DIR_MAPPING = "compatibleDirMapping";
 static inline std::string BACKUP_DIR = "backupDir";
 static inline std::string RESTORE_DIR = "restoreDir";
 static inline std::string BACKUP_RESTORE_DIR_SEPARATOR = "||||";
+static inline std::string DIR_WILDCARD = "*";
 constexpr size_t MAX_COMPAT_DIR_COUNT = 1000;
 
 // 特殊版本信息
