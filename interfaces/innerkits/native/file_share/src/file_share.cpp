@@ -467,5 +467,15 @@ int32_t FileShare::DeleteShareFile(uint32_t tokenId, const vector<string> &uriLi
     LOGI("Delete Share File Successfully!");
     return 0;
 }
+
+int32_t CreateShareFile(const vector<string> &uriList, uint32_t tokenId, uint32_t flag, vector<int32_t> &retList)
+{
+    return FileShare::CreateShareFile(uriList, tokenId, flag, retList);
+}
+
+int32_t DeleteShareFile(uint32_t tokenId, const vector<string> &uriList)
+{
+    return FileShare::DeleteShareFile(tokenId, uriList);
+}
 } // namespace AppFileService
 } // namespace OHOS
