@@ -39,7 +39,7 @@ static napi_value Export(napi_env env, napi_value exports)
             LOGE("INNER BUG. Failed to export class %{public}s for module backup", product->GetClassName().c_str());
             return nullptr;
         } else {
-            LOGI("Class %{public}s for module fileio has been exported", product->GetClassName().c_str());
+            LOGD("Class %{public}s for module fileio has been exported", product->GetClassName().c_str());
         }
     }
     return exports;
