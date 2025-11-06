@@ -26,11 +26,17 @@ ohos_unittest("file_share_test") {
   module_out_path = "app_file_service/app_file_service/file_share"
   resource_config_file =
       "${app_file_service_path}/test/unittest/resource/ohos_test.xml"
-  sources = [ "file_share_test.cpp" ]
+  sources = [
+    "${app_file_service_path}/tests/mock/accesstoken/src/accesstoken_kit_mock.cpp",
+    "${app_file_service_path}/tests/mock/library_func_mock/library_func_mock.cpp",
+    "file_share_test.cpp",
+  ]
 
   include_dirs = [
     "${app_file_service_path}/interfaces/innerkits/native/file_share/include",
     "${app_file_service_path}/interfaces/innerkits/native/file_share/src",
+    "${app_file_service_path}/tests/mock/accesstoken/include",
+    "${app_file_service_path}/tests/mock/library_func_mock",
   ]
 
   deps =
@@ -43,6 +49,8 @@ ohos_unittest("file_share_test") {
     "access_token:libaccesstoken_sdk",
     "app_file_service:fileshare_native",
     "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]

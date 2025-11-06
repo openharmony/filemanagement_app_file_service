@@ -21,7 +21,7 @@
 #include "ability_manager_client.h"
 #include "filemgmt_libhilog.h"
 #include "hisysevent.h"
-#include "extension_proxy.h"
+#include "iextension.h"
 #include "module_ipc/svc_session_manager.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -41,7 +41,7 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
         HILOGE("Failed to ability connect done, remote is nullptr");
         return;
     }
-    backupProxy_ = iface_cast<ExtensionProxy>(remoteObject);
+    backupProxy_ = iface_cast<IExtension>(remoteObject);
     if (backupProxy_ == nullptr) {
         HILOGE("Failed to ability connect done, backupProxy_ is nullptr");
         return;
