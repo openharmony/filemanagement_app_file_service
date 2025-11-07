@@ -507,7 +507,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (errCode == ERR_OK) {
             if (backupExRetInfo.size()) {
-                HILOGI("lytest... backupExtRet:%{public}s", backupExRetInfo.c_str());
+                HILOGD("backupExtRet:%{public}s", backupExRetInfo.c_str());
                 auto spendTime = extensionPtr->GetOnStartTimeCost();
                 if (spendTime >= BConstants::MAX_TIME_COST) {
                     AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
@@ -521,7 +521,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
                 BJsonCachedEntity<BJsonEntityOnBackupExRet> cachedEntity(backupExRetInfo);
                 auto entity = cachedEntity.Structuralize();
                 extensionPtr->compatibleDirs_ = entity.GetCompatibleDirs();
-                HILOGI("lytest... compatibleDirs size=%{public}zu", extensionPtr->compatibleDirs_.size());
+                HILOGI("compatibleDirs size=%{public}zu", extensionPtr->compatibleDirs_.size());
                 extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
                 extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
             }
@@ -1633,8 +1633,6 @@ void BackupExtExtension::DoBackUpTask()
             appStatistic_->bigFileCount_++;
             fdNum++;
         } else {
-            HILOGI("lytest... filname=%{public}s, filePath=%{public}s", fileInfo->filename_.c_str(),
-                fileInfo->filePath_.c_str());
             subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_, true);
             fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         }
@@ -1908,7 +1906,7 @@ set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& inclu
     const BJsonEntityExtensionConfig &usrConfig)
 {
     std::unordered_map<std::string, std::string> dirMapping = usrConfig.GetCompatibleDirMapping();
-    HILOGI("lytest... dirMapping config size:%{public}zu", dirMapping.size());
+    HILOGI("dirMapping config size:%{public}zu", dirMapping.size());
     if (dirMapping.size() == 0 || compatibleDirs_.size() == 0) {
         return {};
     }

@@ -84,7 +84,11 @@ static void ProcessFile(const std::string& backupPath, const std::string& restor
     int64_t& bigFileSize, int64_t& smallFileSize)
 {
     struct stat sta = {};
-    if (CheckOverLongPath(backupPath) >= PATH_MAX_LEN || stat(backupPath.data(), &sta) == -1) {
+    if (CheckOverLongPath(backupPath) >= PATH_MAX_LEN) {
+        return;
+    }
+    if (stat(backupPath.data(), &sta) == -1) {
+        HILOGE("stat file fail, errno=%{public}d", errno);
         return;
     }
     if (sta.st_size <= sizeBoundary) {
@@ -111,7 +115,7 @@ static tuple<ErrCode, int64_t, int64_t> ProcessSingleFile(const string &backupPa
 tuple<ErrCode, int64_t, int64_t> DirScanner::ScanDir(const string &backupPath, const vector<string> &excludes,
     off_t size)
 {
-    HILOGI("lytest...scan dir, path: %{public}s", backupPath.c_str());
+    HILOGD("scan dir, path: %{public}s", GetAnonyPath(backupPath).c_str());
     if (!filesystem::is_directory(backupPath)) {
         HILOGE("Invalid directory path: %{private}s", backupPath.c_str());
         return ProcessSingleFile(backupPath, "", size);
@@ -131,6 +135,10 @@ tuple<ErrCode, int64_t, int64_t> DirScanner::ScanDir(const string &backupPath, c
             continue;
         }
         unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(currentPath.c_str()), closedir};
+        if (dir == nullptr) {
+            HILOGE("openDir fail, path:%{public}s, errno:%{public}d", GetAnonyPath(currentPath).c_str(), errno);
+            continue;
+        }
         struct dirent *ptr = nullptr;
         while (!!(ptr = readdir(dir.get()))) {
             if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
@@ -153,8 +161,8 @@ tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &pat
     off_t size)
 {
     auto [backupPath, restorePath] = StringUtils::ParseMappingDir(path);
-    HILOGI("lytest...scan dir, path: %{public}s, restore:%{public}s", backupPath.c_str(), restorePath.c_str());
-
+    HILOGD("scan dir, path: %{public}s, restore:%{public}s", GetAnonyPath(backupPath).c_str(),
+        GetAnonyPath(restorePath).c_str());
     if (!filesystem::is_directory(backupPath)) {
         HILOGE("Invalid directory path: %{private}s", path.c_str());
         return ProcessSingleFile(backupPath, restorePath, size);
@@ -202,7 +210,6 @@ tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::st
     int64_t start = TimeUtils::GetTimeMS();
     ErrCode finalErrCode = ERR_OK;
     for (const auto &item : includes) {
-        HILOGI("lytest...ScanDir, path = %{public}s", item.c_str());
         auto [errCode, bigFileSize, smallFileSize] = ScanDir(item, excludes, BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
             HILOGI("big files: %{public}" PRId64 "; small files: %{public}" PRId64 "", bigFileSize, smallFileSize);
@@ -214,7 +221,7 @@ tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::st
         }
     }
     int64_t spendMilli = TimeUtils::GetSpendMS(start);
-    HILOGI("lytest... scan spend: %{public}" PRId64 ", bigfile: %{public}" PRId64 ", smallFile: %{public}" PRId64 "",
+    HILOGI("scan spend: %{public}" PRId64 ", bigfile: %{public}" PRId64 ", smallFile: %{public}" PRId64 "",
         spendMilli, totalBigFileSize, totalSmallFileSize);
     return {finalErrCode, totalBigFileSize, totalSmallFileSize};
 }
@@ -222,7 +229,7 @@ tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::st
 std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::string> &includes,
     const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes)
 {
-    HILOGI("lytest...scan all dirs inlcude:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
+    HILOGI("scan all dirs inlcude:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
         includes.size(), compatIncludes.size(), excludes.size());
     ErrCode errCode = ERR_OK;
     int64_t bigFileSize = 0;

@@ -49,6 +49,10 @@ public:
             HILOGE("Uninitialized JSon Object reference");
             return false;
         }
+        if (!obj_.isObject()) {
+            HILOGE("JSon value is not object");
+            return false;
+        }
         if (!obj_.isMember(key)) {
             HILOGE("'%{public}s' field not found", key.c_str());
             return false;

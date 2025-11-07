@@ -648,7 +648,6 @@ void BackupExtExtension::DoPacketOnce(const std::vector<std::shared_ptr<ISmallFi
 
 void BackupExtExtension::DoPacket()
 {
-    int64_t start = TimeUtils::GetTimeMS();
     string tarPath = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
     uint64_t totalSize = 0;
     uint32_t fileCount = 0;
@@ -674,8 +673,7 @@ void BackupExtExtension::DoPacket()
         DoPacketOnce(packFiles, tarPath, reportCb, totalTarUs);
     }
     appStatistic_->tarSpend_ = static_cast<uint32_t>(totalTarUs / MS_TO_US);
-    uint32_t packetSpend = TimeUtils::GetSpendMS(start);
-    HILOGI("lytest...TarSpend: %{public}u ms, packetSpend:%{public}u", appStatistic_->tarSpend_, packetSpend);
+    HILOGI("TarSpend: %{public}u ms", appStatistic_->tarSpend_);
 }
 
 ErrCode BackupExtExtension::CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig, int64_t &totalSize)
