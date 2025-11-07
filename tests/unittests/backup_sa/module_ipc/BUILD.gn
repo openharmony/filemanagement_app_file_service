@@ -59,7 +59,6 @@ ohos_unittest("module_ipc_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "power_manager:powermgr_client",
   ]
 
   sanitize = {
@@ -76,6 +75,11 @@ ohos_unittest("module_ipc_test") {
     "private = public",
   ]
 
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
+
   use_exceptions = true
 }
 
@@ -86,6 +90,7 @@ ohos_unittest("backup_service_test") {
 
   sources = [
     "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
+    "${path_backup_mock}/b_radar/src/runninglock_mock.cpp",
     "${path_backup_mock}/module_ipc/app_gallery_dispose_proxy_mock.cpp",
     "${path_backup_mock}/timer/timer_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_json_clear_data_config_mock.cpp",
@@ -109,6 +114,7 @@ ohos_unittest("backup_service_test") {
     "${path_backup}/services/backup_sa/src/module_ipc",
     "${path_backup}/tests/unittests/backup_api/backup_impl/include",
     "${path_backup_mock}/b_process/",
+    "${path_backup_mock}/b_radar/include",
     "${path_backup_mock}/module_ipc/include",
     "${path_backup_mock}/module_ipc",
     "${path_backup_mock}/common/include",
@@ -140,7 +146,6 @@ ohos_unittest("backup_service_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "power_manager:powermgr_client",
   ]
 
   sanitize = {
@@ -152,6 +157,12 @@ ohos_unittest("backup_service_test") {
   }
 
   defines = [ "private=public" ]
+
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
+
   use_exceptions = true
 
   cflags = [
@@ -226,7 +237,6 @@ ohos_unittest("backup_service_throw_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "power_manager:powermgr_client",
   ]
 
   sanitize = {
@@ -237,6 +247,12 @@ ohos_unittest("backup_service_throw_test") {
   }
 
   defines = [ "private=public" ]
+
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
+
   use_exceptions = true
 }
 
@@ -299,7 +315,6 @@ ohos_unittest("backup_service_session_test") {
     "samgr:dynamic_cache",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "power_manager:powermgr_client",
   ]
 
   defines = [
@@ -307,6 +322,11 @@ ohos_unittest("backup_service_session_test") {
     "LOG_DOMAIN=0xD004303",
     "private = public",
   ]
+
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
 
   use_exceptions = true
 }
@@ -354,7 +374,6 @@ ohos_unittest("backup_service_scheduler_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "power_manager:powermgr_client",
   ]
 
   sanitize = {
@@ -362,6 +381,11 @@ ohos_unittest("backup_service_scheduler_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+  }
+
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines = ["POWER_MANAGER_ENABLED"]
   }
 
   use_exceptions = true
@@ -429,8 +453,12 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "power_manager:powermgr_client",
   ]
+
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines = ["POWER_MANAGER_ENABLED"]
+  }
 
   use_exceptions = true
 }
@@ -506,10 +534,15 @@ ohos_unittest("backup_service_incremental_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "power_manager:powermgr_client",
   ]
 
   defines = [ "private=public" ]
+
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
+
   use_exceptions = true
 }
 
@@ -590,10 +623,15 @@ ohos_unittest("backup_service_other_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "power_manager:powermgr_client",
   ]
 
   defines = [ "private=public" ]
+
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
+
   use_exceptions = true
 }
 

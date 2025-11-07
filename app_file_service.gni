@@ -19,3 +19,10 @@ declare_args() {
     sandbox_manarer = true
   }
 }
+
+declare_args() {
+  power_mgr_enabled = false;
+  if (defined(global_parts_info.powermgr_power_manager)) {
+    power_mgr_enabled = true;
+  }
+}

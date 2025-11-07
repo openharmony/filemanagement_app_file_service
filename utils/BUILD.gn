@@ -77,6 +77,7 @@ ohos_shared_library("backup_utils") {
     "src/b_process/b_guard_signal.cpp",
     "src/b_process/b_process.cpp",
     "src/b_radar/b_radar.cpp",
+    "src/b_radar/radar_runninglock_statistic.cpp",
     "src/b_radar/radar_app_statistic.cpp",
     "src/b_radar/radar_total_statistic.cpp",
     "src/b_sa/b_sa_utils.cpp",
