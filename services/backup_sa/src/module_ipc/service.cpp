@@ -366,7 +366,7 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
     if (runningLock_ != nullptr) {
         ErrCode ret = runningLock_->UnLock();
         if (ret != ERROR_OK) {
-            std::string errMsg =std::to_string(ret);
+            std::string errMsg = std::to_string(ret);
             RunningLockRadarReport("StopAll-unlockRunningLock", errMsg,
                 static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_UNLOCK_FAIL));
         }

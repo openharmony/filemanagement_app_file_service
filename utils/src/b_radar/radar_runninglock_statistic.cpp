@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
- #include "b_radar/radar_runninglock_statistic.h"
- #include "b_radar/radar_const_inner.h"
- #include "filemgmt_libhilog.h"
- #include "hisysevent.h"
+#include "b_radar/radar_runninglock_statistic.h"
+#include "b_radar/radar_const_inner.h"
+#include "filemgmt_libhilog.h"
+#include "hisysevent.h"
 
- namespace OHOS::FileManagement::Backup {
+namespace OHOS::FileManagement::Backup {
 
 void ReportBackupRunningLock(const std::string &func, const std::string &errMsg, ErrCode errCode)
 {
     radarCode_ = errCode;
-    if (radarCode_ == ERROR_OK) return;
+    if (radarCode_ == ERROR_OK) {
+        return;
+    }
     RadarError err(MODULE_BACKUP, radarCode_);
     radarCode_ = err.GenCode();
     HiSysEventWrite(

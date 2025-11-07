@@ -21,8 +21,8 @@ declare_args() {
 }
 
 declare_args() {
-  power_mgr_enabled = false;
+  power_mgr_enabled = false
   if (defined(global_parts_info.powermgr_power_manager)) {
-    power_mgr_enabled = true;
+    power_mgr_enabled = true
   }
 }
