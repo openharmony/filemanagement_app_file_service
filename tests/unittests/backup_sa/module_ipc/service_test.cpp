@@ -1245,8 +1245,7 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0100, testing::ext::TestSiz
     EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _))
         .WillOnce(Return(testLock));
 
-    EXPECT_CALL(*runningLockMock_, Lock(_))
-        .WillOnce(Return(ERROR_OK);)
+    EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK));
     servicePtr_->CreateRunningLock();
     EXPECT_NE(servicePtr_->runningLock_, nullptr);
     EXPECT_EQ(servicePtr_->runningLockStatistic_->radarCode_, ERROR_OK);
@@ -1290,7 +1289,7 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0102, testing::ext::TestSiz
     );
     EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _))
         .WillOnce(Return(testLock));
-    EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(1);)
+    EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(1));
     servicePtr_->CreateRunningLock();
     EXPECT_EQ(servicePtr_->runningLock_, nullptr);
     GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0102";
@@ -1314,7 +1313,7 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0103, testing::ext::TestSiz
         RunningLockType::RUNNINGLLOCK_BACKGROUND
     );
     servicePtr_->runningLock_ = testLock;
-    EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK);)
+    EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK));
     servicePtr_->CreateRunningLock();
     EXPECT_NE(servicePtr_->runningLock_, nullptr);
     EXPECT_EQ(servicePtr_->runningLockStatistic_->radarCode_, ERROR_OK);
