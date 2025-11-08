@@ -324,8 +324,8 @@ HWTEST_F(BRadarTest, ReportBackupRunningLock, testing::ext::TestSize.Level1)
     runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>
         (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
     testCode = ERROR_OK;
-    runningLockStatistic_->ReportBackupRunningLock(test, testMsg, testCode)
-    retCode = 0;
+    runningLockStatistic_->ReportBackupRunningLock(test, testMsg, testCode);
+    resCode = 0;
     EXPECT_EQ(runningLockStatistic_->radarCode_, resCode);
     GTEST_LOG_(INFO) << "BRadarTest-end ReportBackupRunningLock";
 }
@@ -351,10 +351,10 @@ HWTEST_F(BRadarTest, ReportRestorepRunningLock, testing::ext::TestSize.Level1)
     EXPECT_EQ(runningLockStatistic_->radarCode_, resCode);
     
     runningLockStatistic_ = nullptr;
-    runningLockStatistic_ = std::make_shared<ReportRestorepRunningLock>
+    runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>
         (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
     testCode = ERROR_OK;
-    runningLockStatistic_->ReportRestorepRunningLock(test, testMsg, testCode)
+    runningLockStatistic_->ReportRestorepRunningLock(test, testMsg, testCode);
     retCode = 0;
     EXPECT_EQ(runningLockStatistic_->radarCode_, resCode);
     GTEST_LOG_(INFO) << "BRadarTest-end ReportRestorepRunningLock";
