@@ -17,7 +17,7 @@
 
 #include <gmock/gmock.h>
 #include "power_mgr_client.h"
-#include "runninglock.h"
+#include "running_lock.h"
 
 namespace OHOS::PowerMgr {
 class PPowerMgrClient {
