@@ -1713,7 +1713,7 @@ void Service::RunningLockRadarReport(const std::string &func, const std::string 
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
         runningLockStatistic_->ReportRestoreRunningLock(func, errMsg, errCode);
-    } else if(scenario == IServiceReverseType::Scenario::BACKUP) {
+    } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
         runningLockStatistic_->ReportBackupRunningLock(func, errMsg, errCode);
     }
 }
