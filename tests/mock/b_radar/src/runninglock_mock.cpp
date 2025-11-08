@@ -26,8 +26,8 @@ ErrCode RunningLock::Lock(int32_t timeOutMs)
     return RRunningLock::runninglock_->Lock(timeOutMs);
 }
 
-Errcode RunningLock::UnLock()
+ErrCode RunningLock::UnLock()
 {
-    return RRunningLock::runninglock_->Unlock();
+    return RRunningLock::runninglock_->UnLock();
 }
 };
