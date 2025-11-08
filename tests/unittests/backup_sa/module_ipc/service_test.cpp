@@ -1246,7 +1246,7 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0100, testing::ext::TestSiz
     auto testLock = std::make_shared<RunningLock>(
         testProxy,
         "testLock",
-        RunningLockType::RUNNINGLLOCK_BACKGROUND
+        RunningLockType::RUNNINGLOCK_BACKGROUND
     );
     EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _))
         .WillOnce(Return(testLock));
@@ -1316,7 +1316,7 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0103, testing::ext::TestSiz
     auto testLock = std::make_shared<RunningLock>(
         testProxy,
         "testLock",
-        RunningLockType::RUNNINGLLOCK_BACKGROUND
+        RunningLockType::RUNNINGLOCK_BACKGROUND
     );
     servicePtr_->runningLock_ = testLock;
     EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK));
