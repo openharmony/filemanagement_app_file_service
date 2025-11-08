@@ -745,7 +745,7 @@ private:
     void TotalStatEnd(ErrCode errCode);
     void UpdateHandleCnt(ErrCode errCode);
     void TotalStatReport();
-    ErrCode CreateRunningLock();
+    void CreateRunningLock();
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
