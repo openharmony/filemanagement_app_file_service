@@ -53,11 +53,13 @@ public:
         BJsonClearDataConfigMock::config = clearRecorderMock_;
         disposalMock_ = make_shared<BJsonDisposalConfigMock>();
         BBJsonDisposalConfig::config = disposalMock_;
+#ifdef POWER_MANAGER_ENABLED
         powerClientMock_ = std::make_shared<PowerMgrClientMock>();
         PowerMgrClientMock::powerMgrClient_ = powerClientMock_;
         runningLockMock_ = std::make_shared<RunningLockMock>();
         RunningLockMock::runninglock_ = runningLockMock_;
         servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+#endif
     };
     void TearDown()
     {
@@ -69,10 +71,12 @@ public:
         BJsonClearDataConfigMock::config = nullptr;
         disposalMock_ = nullptr;
         BBJsonDisposalConfig::config = nullptr;
+#ifdef POWER_MANAGER_ENABLED
         servicePtr_->runningLock_ = nullptr;
         servicePtr_->runningLockStatistic_ = nullptr;
         powerClientMock_ = nullptr;
         runningLockMock_ = nullptr;
+#endif
     };
 
     ErrCode Init(IServiceReverseType::Scenario scenario);
@@ -85,8 +89,10 @@ public:
     static inline shared_ptr<BJsonClearDataConfigMock> clearRecorderMock_ = nullptr;
     static inline std::shared_ptr<BJsonDisposalConfig> disposal_ = nullptr;
     static inline shared_ptr<BJsonDisposalConfigMock> disposalMock_ = nullptr;
+#ifdef POWER_MANAGER_ENABLED
     static inline shared_ptr<PowerMgrClientMock> powerClientMock_;
     static inline shared_ptr<RunningLockMock> runningLockMock_;
+#endif
     static inline bool boolVal_ = false;
     static inline int intVal_ = 0;
 };

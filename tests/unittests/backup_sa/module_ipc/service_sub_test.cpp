@@ -23,8 +23,11 @@
 #include "b_json_clear_data_config_mock.h"
 #include "b_json_service_disposal_config_mock.h"
 #include "module_ipc/service.h"
+#ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
 #include "running_lock.h"
+#include "runninglock_mock.h"
+#endif
 #include "service_reverse_mock.h"
 #include "test_common.h"
 #include "test_manager.h"
@@ -35,7 +38,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
-
+using namespace PowerMgr;
 class ServiceSubTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -50,6 +53,13 @@ public:
         BJsonClearDataConfigMock::config = clearRecorderMock_;
         disposalMock_ = make_shared<BJsonDisposalConfigMock>();
         BBJsonDisposalConfig::config = disposalMock_;
+#ifdef POWER_MANAGER_ENABLED
+        powerClientMock_ = std::make_shared<PowerMgrClientMock>();
+        PowerMgrClientMock::powerMgrClient_ = powerClientMock_;
+        runningLockMock_ = std::make_shared<RunningLockMock>();
+        RunningLockMock::runninglock_ = runningLockMock_;
+        servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+#endif
     };
     void TearDown()
     {
@@ -61,6 +71,12 @@ public:
         BJsonClearDataConfigMock::config = nullptr;
         disposalMock_ = nullptr;
         BBJsonDisposalConfig::config = nullptr;
+#ifdef POWER_MANAGER_ENABLED
+        servicePtr_->runningLock_ = nullptr;
+        servicePtr_->runningLockStatistic_ = nullptr;
+        powerClientMock_ = nullptr;
+        runningLockMock_ = nullptr;
+#endif
     };
 
     ErrCode Init(IServiceReverseType::Scenario scenario);
@@ -73,6 +89,10 @@ public:
     static inline shared_ptr<BJsonClearDataConfigMock> clearRecorderMock_ = nullptr;
     static inline std::shared_ptr<BJsonDisposalConfig> disposal_ = nullptr;
     static inline shared_ptr<BJsonDisposalConfigMock> disposalMock_ = nullptr;
+#ifdef POWER_MANAGER_ENABLED
+    static inline shared_ptr<PowerMgrClientMock> powerClientMock_;
+    static inline shared_ptr<RunningLockMock> runningLockMock_;
+#endif
     static inline bool boolVal_ = false;
     static inline int intVal_ = 0;
 };
