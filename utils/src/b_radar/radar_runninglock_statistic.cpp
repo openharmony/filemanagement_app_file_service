@@ -20,7 +20,7 @@
 
 namespace OHOS::FileManagement::Backup {
 
-void ReportBackupRunningLock(const std::string &func, const std::string &errMsg, ErrCode errCode)
+void RadarRunningLockStatistic::ReportBackupRunningLock(const std::string &func, const std::string &errMsg, ErrCode errCode)
 {
     radarCode_ = errCode;
     if (radarCode_ == ERROR_OK) {
@@ -42,7 +42,7 @@ void ReportBackupRunningLock(const std::string &func, const std::string &errMsg,
     );
 }
 
-void ReportRestoreRunningLock(const std::string &func, const std::string &errMsg, ErrCode errCode)
+void RadarRunningLockStatistic::ReportRestoreRunningLock(const std::string &func, const std::string &errMsg, ErrCode errCode)
 {
     radarCode_ = errCode;
     if (radarCode_ == ERROR_OK) {
