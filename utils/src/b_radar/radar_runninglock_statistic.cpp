@@ -40,7 +40,6 @@ void RadarRunningLockStatistic::ReportBackupRunningLock(const std::string &func,
         ERROR_CODE, radarCode_,
         BIZ_STAGE, "BIZ_STAGE_BACKUP",
         STAGE_RES, radarCode_ == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
-    );
 }
 
 void RadarRunningLockStatistic::ReportRestoreRunningLock(const std::string &func,
@@ -63,7 +62,6 @@ void RadarRunningLockStatistic::ReportRestoreRunningLock(const std::string &func
         ERROR_CODE, radarCode_,
         BIZ_STAGE, "BIZ_STAGE_RESTORE",
         STAGE_RES, radarCode_ == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
-    );
 }
 
 }
