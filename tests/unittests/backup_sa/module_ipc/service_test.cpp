@@ -23,7 +23,7 @@
 #include "b_json_clear_data_config_mock.h"
 #include "b_json_service_disposal_config_mock.h"
 #include "module_ipc/service.h"
-#ifdef power_mgr_enabled
+#ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
 #include "running_lock.h"
 #include "runninglock_mock.h"
@@ -57,7 +57,7 @@ public:
         PowerMgrClientMock::powerMgrClient_ = powerClientMock_;
         runningLockMock_ = std::make_shared<RunningLockMock>();
         RunningLockMock::runninglock_ = runningLockMock_;
-        servicePtr_->runningLockStatictic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+        servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
     };
     void TearDown()
     {
