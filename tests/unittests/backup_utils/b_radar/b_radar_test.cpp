@@ -322,7 +322,7 @@ HWTEST_F(BRadarTest, ReportBackupRunningLock, testing::ext::TestSize.Level1)
     
     runningLockStatistic_ = nullptr;
     runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>
-        (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
+        (static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL));
     testCode = ERROR_OK;
     runningLockStatistic_->ReportBackupRunningLock(test, testMsg, testCode);
     resCode = 0;
@@ -352,7 +352,7 @@ HWTEST_F(BRadarTest, ReportRestoreRunningLock, testing::ext::TestSize.Level1)
     
     runningLockStatistic_ = nullptr;
     runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>
-        (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
+        (static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL));
     testCode = ERROR_OK;
     runningLockStatistic_->ReportRestoreRunningLock(test, testMsg, testCode);
     resCode = 0;

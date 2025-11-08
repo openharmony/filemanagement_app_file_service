@@ -40,12 +40,12 @@ public:
     virtual ErrCode Lock(int32_t timesOutMs) = 0;
     virtual ErrCode UnLock() = 0;
 
-    static inline std::shared_ptr<RRunningLockj> runninglock_ = nullptr;
+    static inline std::shared_ptr<RRunningLock> runninglock_ = nullptr;
 };
 
 class RunningLockMock : public RRunningLock {
 public:
-    MOCK_METHOD(ErrCode, Lock, (int32_t timeOurMs));
+    MOCK_METHOD(ErrCode, Lock, (int32_t timeOutMs));
     MOCK_METHOD(ErrCode, UnLock, ());
 };
 };

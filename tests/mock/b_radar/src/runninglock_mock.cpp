@@ -21,9 +21,9 @@ std::shared_ptr<RunningLock> PowerMgrClient::CreateRunningLock(const std::string
     return PPowerMgrClient::powerMgrClient_->CreateRunningLock(name, type);
 }
 
-Errcode RunningLock::Lock(int32_t timeOutMs)
+ErrCode RunningLock::Lock(int32_t timeOutMs)
 {
-    return RRunningLock::runninglock_->lock(timeOutMs);
+    return RRunningLock::runninglock_->Lock(timeOutMs);
 }
 
 Errcode RunningLock::UnLock()
