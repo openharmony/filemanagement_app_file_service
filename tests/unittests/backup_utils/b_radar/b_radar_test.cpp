@@ -355,7 +355,7 @@ HWTEST_F(BRadarTest, ReportRestoreRunningLock, testing::ext::TestSize.Level1)
         (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
     testCode = ERROR_OK;
     runningLockStatistic_->ReportRestoreRunningLock(test, testMsg, testCode);
-    retCode = 0;
+    resCode = 0;
     EXPECT_EQ(runningLockStatistic_->radarCode_, resCode);
     GTEST_LOG_(INFO) << "BRadarTest-end ReportRestoreRunningLock";
 }
