@@ -130,8 +130,9 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
     detailInfos.emplace_back(json);
     string errMsg;
     ErrCode ret = 0;
+    int calls_num = 2;
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
+        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(calls_num)
             .WillRepeatedly(Return(nullptr));
         EXPECT_TRUE(servicePtr_ != nullptr);
         EXPECT_TRUE(remote_ != nullptr);
@@ -147,7 +148,7 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
+        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(calls_num)
             .WillRepeatedly(Return(nullptr));
         sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitBackupSession(srptr_);
