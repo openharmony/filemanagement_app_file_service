@@ -31,7 +31,7 @@ void RadarRunningLockStatistic::ReportBackupRunningLock(const std::string &func,
     radarCode_ = err.GenCode();
     HiSysEventWrite(
         DOMAIN,
-        BACKUP_RESTORE_STATISTIC,
+        BACKUP_RESTORE_RUNNINGLOCK_STATISTIC,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         BIZ_SCENE, "BIZ_SCENE_BACKUP",
         ORG_PKG, DOMAIN_NAME,
@@ -53,7 +53,7 @@ void RadarRunningLockStatistic::ReportRestoreRunningLock(const std::string &func
     radarCode_ = err.GenCode();
     HiSysEventWrite(
         DOMAIN,
-        BACKUP_RESTORE_STATISTIC,
+        BACKUP_RESTORE_RUNNINGLOCK_STATISTIC,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         BIZ_SCENE, "BIZ_SCENE_RESTORE",
         ORG_PKG, DOMAIN_NAME,
