@@ -1343,10 +1343,10 @@ HWTEST_F(ServiceTest, Service_RunningLockRadarReport_Backup, testing::ext::TestS
     EXPECT_EQ(ret, BError(BError::Codes::OK));
     const std::string test = "test";
     const std::string ErrMsg = "ErrMsg";
-    servicePtr_->runningLockStatistic = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+    servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
     int testCode = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
     servicePtr_->RunningLockRadarReport(test, ErrMsg, testCode);
-    EXPECT_NE(servicePtr_->runningLockStatistic->radarCode_, 0);
+    EXPECT_NE(servicePtr_->runningLockStatistic_->radarCode_, 0);
     GTEST_LOG_(INFO) << "ServiceTest-end Service_RunningLockRadarReport_Backup";
 }
 
