@@ -131,6 +131,8 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
     string errMsg;
     ErrCode ret = 0;
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
+        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
+            .WillRepeatedly(Return(nullptr));
         EXPECT_TRUE(servicePtr_ != nullptr);
         EXPECT_TRUE(remote_ != nullptr);
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
@@ -145,6 +147,8 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
+        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
+            .WillRepeatedly(Return(nullptr));
         sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitBackupSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
@@ -283,8 +287,6 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0100";
     try {
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         BFileInfo fileInfo {BUNDLE_NAME, "", 0};
@@ -315,8 +317,6 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0101, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0101";
     try {
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         BFileInfo fileInfo {BUNDLE_NAME, "", 0};
@@ -347,8 +347,6 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0102, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_PublishFile_0102";
     try {
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         BFileInfo fileInfo {BUNDLE_NAME, "", 0};
@@ -504,8 +502,6 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0100, testing::ext::TestSize.Level1)
         auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_AppDone_0100 BACKUP";
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
-            .WillRepeatedly(Return(nullptr));
         ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "ServiceTest-AppDone Branches";
@@ -539,8 +535,6 @@ HWTEST_F(ServiceTest, SUB_Service_AppDone_0101, testing::ext::TestSize.Level1)
         auto ret = servicePtr_->AppDone(BError(BError::Codes::OK));
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         GTEST_LOG_(INFO) << "SUB_Service_AppDone_0101 RESTORE";
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
-            .WillRepeatedly(Return(nullptr));
         ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         ret = servicePtr_->AppDone(BError(BError::Codes::OK));
@@ -672,8 +666,6 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0100, testing::ext::Test
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_LaunchBackupExtension_0100";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_LaunchBackupExtension_0100 RESTORE";
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(4)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
@@ -730,8 +722,6 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0100, testing::ext::TestSize.Lev
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetFileHandle_0100";
     try {
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
@@ -757,8 +747,6 @@ HWTEST_F(ServiceTest, SUB_Service_GetFileHandle_0101, testing::ext::TestSize.Lev
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetFileHandle_0101";
     try {
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(2)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
 
@@ -793,9 +781,6 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0100, testing::ext::Test
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0100";
     try {
-        GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0100 RESTORE";
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(4)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         string bundleName = BUNDLE_NAME;
@@ -827,8 +812,6 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0101, testing::ext::Test
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0101";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0101 RESTORE";
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(4)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         string bundleName = BUNDLE_NAME;
@@ -918,8 +901,6 @@ HWTEST_F(ServiceTest, SUB_Service_ExtStart_0101, testing::ext::TestSize.Level1)
     try {
         GTEST_LOG_(INFO) << "SUB_Service_ExtStart_0101 BACKUP";
         std::string bundleName = "123456";
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(4)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
@@ -1088,8 +1069,6 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectFailed_0100, testing::ext::TestSize.
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectFailed_0100";
     try {
         GTEST_LOG_(INFO) << "SUB_Service_ExtConnectFailed_0100 RESTORE";
-        EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(6)
-            .WillRepeatedly(Return(nullptr));
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         EXPECT_TRUE(servicePtr_ != nullptr);
@@ -1337,8 +1316,6 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0103, testing::ext::TestSiz
 HWTEST_F(ServiceTest, Service_RunningLockRadarReport_Backup, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin Service_RunningLockRadarReport_Backup";
-    EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _))
-        .WillOnce(Return(nullptr));
     ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
     EXPECT_EQ(ret, BError(BError::Codes::OK));
     const std::string test = "test";
@@ -1361,8 +1338,6 @@ HWTEST_F(ServiceTest, Service_RunningLockRadarReport_Backup, testing::ext::TestS
 HWTEST_F(ServiceTest, Service_RunningLockRadarReport_Restore, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin Service_RunningLockRadarReport_Restore";
-    EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _))
-        .WillOnce(Return(nullptr));
     ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
     EXPECT_EQ(ret, BError(BError::Codes::OK));
     const std::string test = "test";
