@@ -33,12 +33,12 @@ void RadarRunningLockStatistic::ReportBackupRunningLock(const std::string &func,
         DOMAIN,
         BACKUP_RESTORE_RUNNINGLOCK_STATISTIC,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        BIZ_SCENE, "BIZ_SCENE_BACKUP",
+        BIZ_SCENE, static_cast<int32_t>(BizScene::BACKUP),
         ORG_PKG, DOMAIN_NAME,
         FUNC, func,
         ERROR_MSG, errMsg,
         ERROR_CODE, radarCode_,
-        BIZ_STAGE, "BIZ_STAGE_BACKUP",
+        BIZ_STAGE, RUNNINGLOCK_STAGE,
         STAGE_RES, radarCode_ == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
 }
 
@@ -55,12 +55,12 @@ void RadarRunningLockStatistic::ReportRestoreRunningLock(const std::string &func
         DOMAIN,
         BACKUP_RESTORE_RUNNINGLOCK_STATISTIC,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        BIZ_SCENE, "BIZ_SCENE_RESTORE",
+        BIZ_SCENE, static_cast<int32_t>(BizScene::RESTORE),
         ORG_PKG, DOMAIN_NAME,
         FUNC, func,
         ERROR_MSG, errMsg,
         ERROR_CODE, radarCode_,
-        BIZ_STAGE, "BIZ_STAGE_RESTORE",
+        BIZ_STAGE, RUNNINGLOCK_STAGE,
         STAGE_RES, radarCode_ == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
 }
 

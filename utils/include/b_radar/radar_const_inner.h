@@ -21,6 +21,7 @@
 namespace OHOS::FileManagement::Backup {
 
 constexpr int32_t DEFAULT_STAGE = 1;
+constexpr int32_t RUNNINGLOCK_STAGE = 2;
 constexpr int32_t STAGE_RES_IDLE = 0;
 constexpr int32_t STAGE_RES_SUCCESS = 1;
 constexpr int32_t STAGE_RES_FAIL = 2;
