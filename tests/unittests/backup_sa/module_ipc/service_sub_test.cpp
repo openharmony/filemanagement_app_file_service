@@ -132,8 +132,10 @@ ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
     ErrCode ret = 0;
     int callsNum = 2;
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
+#ifdef POWER_MANAGER_ENABLED
         EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(callsNum)
             .WillRepeatedly(Return(nullptr));
+#endif
         EXPECT_TRUE(servicePtr_ != nullptr);
         EXPECT_TRUE(remote_ != nullptr);
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
@@ -148,8 +150,10 @@ ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
+#ifdef POWER_MANAGER_ENABLED
         EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(callsNum)
             .WillRepeatedly(Return(nullptr));
+#endif
         sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitBackupSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
