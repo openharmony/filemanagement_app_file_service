@@ -280,6 +280,41 @@ HWTEST_F(ServiceSubTest, SUB_Service_StopAll_0104, testing::ext::TestSize.Level1
 }
 
 /**
+ * @tc.number: SUB_Service_StopAll_0105
+ * @tc.name: SUB_Service_StopAll_0105
+ * @tc.desc: 测试 StopAll 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_StopAll_0105, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_StopAll_0105";
+    try {
+        wptr<IPowerMgr> testProxy;
+        auto testLock = std::make_shared<RunningLock>(
+            testProxy,
+            "testLock",
+            RunningLockType::RUNNINGLOCK_BACKGROUND
+        );
+        servicePtr_->runningLock_ = testLock;
+        EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK));
+        servicePtr_->CreateRunningLock();
+        EXPECT_CALL(*runningLockMock_, UnLock()).WillOnce(Return(1));
+        
+        SvcSessionManager::Impl impl_;
+        impl_.clientProxy = nullptr;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->StopAll(nullptr, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by StopAll.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_StopAll_0105";
+}
+
+/**
  * @tc.number: SUB_Service_OnStop_0100
  * @tc.name: SUB_Service_OnStop_0100
  * @tc.desc: 测试 OnStop 接口
