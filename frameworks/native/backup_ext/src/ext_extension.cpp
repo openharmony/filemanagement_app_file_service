@@ -485,8 +485,13 @@ ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const str
         }
     }
     auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("ServiceClient is null");
+        return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
+    }
     int reportRs = fdval < 0 ? proxy->AppFileReadyWithoutFd(filename, errCode) :
         proxy->AppFileReady(filename, fdval, errCode);
+    close(fdval);
     if (SUCCEEDED(reportRs)) {
         HILOGI("Report app file ready success, filename: %{public}s", filename.c_str());
         if (needDelete) {
@@ -495,7 +500,6 @@ ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const str
     } else {
         HILOGW("Report app file ready failed, ret: %{public}d, filename: %{public}s", reportRs, filename.c_str());
     }
-    close(fdval);
     return reportRs;
 }
 
@@ -627,6 +631,7 @@ std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wp
 void BackupExtExtension::DoPacketOnce(const std::vector<std::shared_ptr<ISmallFileInfo>>& packFiles, const string& path,
     std::function<void(std::string, int)> reportCb, uint64_t& totalTarSpend)
 {
+    ScanFileSingleton::GetInstance().WaitForPacketFlag();
     TarMap tarMap {};
     int64_t tarStartUs = TimeUtils::GetTimeUS();
     bool packetRs = TarFile::GetInstance().Packet(packFiles, "part", path, tarMap, reportCb);
@@ -659,6 +664,7 @@ void BackupExtExtension::DoPacket()
     appStatistic_->smallFileCount_ = allSmallFile.size();
     HILOGI("DoPacket begin, small file count: %{public}zu", allSmallFile.size());
     for (const auto &smallFile : allSmallFile) {
+        UpdateFileStat(smallFile->filePath_, smallFile->fileSize_);
         totalSize += smallFile->fileSize_;
         fileCount += 1;
         packFiles.emplace_back(smallFile);
@@ -676,7 +682,7 @@ void BackupExtExtension::DoPacket()
     HILOGI("TarSpend: %{public}u ms", appStatistic_->tarSpend_);
 }
 
-ErrCode BackupExtExtension::CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig, int64_t &totalSize)
+ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrConfig, int64_t &totalSize)
 {
     HILOGI("Start scanning files and calculate datasize");
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
@@ -695,6 +701,7 @@ ErrCode BackupExtExtension::CalculateDataSize(const BJsonEntityExtensionConfig &
     appStatistic_->scanFileSpend_.Start();
     auto [errCode, bigFileSize, smallFileSize] = BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes);
     appStatistic_->scanFileSpend_.End();
+    ScanFileSingleton::GetInstance().UpdateSmallFileSizeLimit(smallFileSize);
     if (errCode != 0) {
         HILOGE("scan dirs fail, err=%{public}d", errCode);
     }
@@ -860,7 +867,7 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
-            ptr->CalculateDataSizeTask(config);
+            ptr->ScanAllDirsTask(config);
             ptr->DoPacket(); // 关注点：大文件的传输如果速度较慢，会导致tar包挤压，手机空间会有所增加
             ScanFileSingleton::GetInstance().SetCompletedFlag(true);
         } catch (const BError &e) {

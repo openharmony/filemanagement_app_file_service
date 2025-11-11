@@ -1561,7 +1561,7 @@ void BackupExtExtension::RmBigFileReportForSpecialCloneCloud(const std::string &
     reportHashSrcPathMap_.erase(iter);
 }
 
-void BackupExtExtension::CalculateDataSizeTask(const string &config)
+void BackupExtExtension::ScanAllDirsTask(const string &config)
 {
     if (!StopExtTimer()) {
         throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to stop extTimer");
@@ -1570,7 +1570,7 @@ void BackupExtExtension::CalculateDataSizeTask(const string &config)
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
     auto cache = cachedEntity.Structuralize();
     DoBackupStart();
-    int32_t err = CalculateDataSize(cache, totalSize);
+    int32_t err = ScanAllDirs(cache, totalSize);
     if (err != ERR_OK) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to mkdir");
     }
@@ -1590,17 +1590,7 @@ void BackupExtExtension::AsyncDoBackup()
     auto dobackupTask = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
-        try {
-            ptr->DoBackUpTask();
-        } catch (const BError &e) {
-            HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
-            ScanFileSingleton::GetInstance().SetCompletedFlag(false);
-            ptr->AppDone(e.GetCode());
-        } catch (...) {
-            HILOGE("Failed to restore the ext bundle");
-            ScanFileSingleton::GetInstance().SetCompletedFlag(false);
-            ptr->AppDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
-        }
+        ptr->DoBackUpTask();
         ptr->DoClear();
     };
     doBackupPool_.AddTask([dobackupTask]() {
@@ -1631,6 +1621,7 @@ void BackupExtExtension::DoBackUpTask()
         if (fileInfo->isBigFile_) {
             subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_);
             appStatistic_->bigFileCount_++;
+            UpdateFileStat(fileInfo->filePath_, fileInfo->sta_.st_size);
             fdNum++;
         } else {
             subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_, true);
@@ -1921,7 +1912,7 @@ set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& inclu
     }
     set<string> compatibleIncludes;
     includes.erase(
-        std::remove_if(includes.begin(), includes.end(), [&compatibleIncludes, enabledCompatDirs](string path) {
+        std::remove_if(includes.begin(), includes.end(), [&compatibleIncludes, enabledCompatDirs](const string& path) {
             auto it = enabledCompatDirs.find(path);
             if (it != enabledCompatDirs.end()) {
                 compatibleIncludes.emplace(StringUtils::GenMappingDir(it->second, it->first));

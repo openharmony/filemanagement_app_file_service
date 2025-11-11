@@ -53,8 +53,7 @@ TarFile &TarFile::GetInstance()
     return instance;
 }
 
-bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap,
-    std::function<void(std::string, int)> reportCb)
+bool TarFile::InitBeforePacket(const string &tarFileName, const string &pkPath)
 {
     if (tarFileName.empty() || pkPath.empty()) {
         HILOGE("Invalid parameter");
@@ -67,9 +66,17 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
     if (pkPath[pkPath.length() - 1] == '/') {
         packagePath_ = packagePath_.substr(0, packagePath_.length() - 1);
     }
-
     HILOGI("Start Create  SplitTar files");
     CreateSplitTarFile();
+    return true;
+}
+
+bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap,
+    std::function<void(std::string, int)> reportCb)
+{
+    if (!InitBeforePacket(tarFileName, pkPath)) {
+        return false;
+    }
 
     size_t index = 0;
     for (const auto &filePath : srcFiles) {
@@ -89,15 +96,9 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
             index = 0;
         }
     }
-    HILOGI("Start Fill SplitTailBlocks");
+
     FillSplitTailBlocks();
-
     tarMap = tarMap_;
-
-    if (currentTarFile_ != nullptr) {
-        fclose(currentTarFile_);
-        currentTarFile_ = nullptr;
-    }
     HILOGI("End Packet files, pkPath is:%{public}s", pkPath.c_str());
     return true;
 }
@@ -105,30 +106,23 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
 bool TarFile::Packet(const std::vector<std::shared_ptr<ISmallFileInfo>> &srcFiles, const string &tarFileName,
     const string &pkPath, TarMap &tarMap, std::function<void(std::string, int)> reportCb)
 {
-    if (tarFileName.empty() || pkPath.empty()) {
-        HILOGE("Invalid parameter");
+    if (!InitBeforePacket(tarFileName, pkPath)) {
         return false;
     }
-    HILOGI("Start Packet files, tarFileName is:%{public}s", tarFileName.c_str());
-    ioBuffer_.resize(READ_BUFF_SIZE);
-    baseTarName_ = tarFileName;
-    packagePath_ = pkPath;
-    if (pkPath[pkPath.length() - 1] == '/') {
-        packagePath_ = packagePath_.substr(0, packagePath_.length() - 1);
-    }
-
-    HILOGI("Start Create  SplitTar files");
-    CreateSplitTarFile();
 
     size_t index = 0;
     for (const auto &fileInfo : srcFiles) {
+        if (fileInfo == nullptr) {
+            HILOGE("fileInfo is null");
+            continue;
+        }
         int err = BError::E_PACKET;
         rootPath_ = fileInfo->filePath_;
         if (!TraversalFile(rootPath_, err, fileInfo->GetRestorePath())) {
             HILOGE("ReportErr Failed to traversal file, file path is:%{public}s, err = %{public}d",
                 GetAnonyPath(rootPath_).c_str(), err);
             if (err != EACCES) {
-                reportCb("", err);
+                reportCb("add file fail, path=" + rootPath_ + ", restorePath=" + fileInfo->GetRestorePath(), err);
             }
         }
         index++;
@@ -138,15 +132,9 @@ bool TarFile::Packet(const std::vector<std::shared_ptr<ISmallFileInfo>> &srcFile
             index = 0;
         }
     }
-    HILOGI("Start Fill SplitTailBlocks");
+
     FillSplitTailBlocks();
-
     tarMap = tarMap_;
-
-    if (currentTarFile_ != nullptr) {
-        fclose(currentTarFile_);
-        currentTarFile_ = nullptr;
-    }
     HILOGI("End Packet files, pkPath is:%{public}s", pkPath.c_str());
     return true;
 }
@@ -472,6 +460,7 @@ bool TarFile::CompleteBlock(off_t size)
 
 bool TarFile::FillSplitTailBlocks()
 {
+    HILOGI("Start Fill SplitTailBlocks");
     if (currentTarFile_ == nullptr) {
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks currentTarFile_ is null");
     }
@@ -487,6 +476,8 @@ bool TarFile::FillSplitTailBlocks()
     int ret = stat(currentTarName_.c_str(), &staTar);
     if (ret != 0) {
         HILOGE("Failed to stat file %{public}s, err = %{public}d", currentTarName_.c_str(), errno);
+        fclose(currentTarFile_);
+        currentTarFile_ = nullptr;
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks Failed to stat file");
     }
 

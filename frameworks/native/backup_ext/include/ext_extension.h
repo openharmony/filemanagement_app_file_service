@@ -276,7 +276,7 @@ private:
      * @param bigFileInfo bigFileInfo
      * @param smallFiles smallFiles info
      */
-    ErrCode CalculateDataSize(const BJsonEntityExtensionConfig &usrConfig, int64_t &totalSize);
+    ErrCode ScanAllDirs(const BJsonEntityExtensionConfig &usrConfig, int64_t &totalSize);
 
     /**
      * @brief get increCallbackEx for execute onRestore with string param
@@ -379,7 +379,7 @@ private:
     void DoBackupStart();
     void DoBackupEnd();
     void UpdateTarStat(uint64_t tarFileSize);
-    void CalculateDataSizeTask(const string &config);
+    void ScanAllDirsTask(const string &config);
     void AsyncDoBackup();
     void DoBackUpTask();
 
@@ -388,16 +388,16 @@ private:
     void HandleExtOnRelease(bool isAppResultReport, ErrCode errCode);
     std::function<void(ErrCode, const std::string)> OnReleaseCallback(wptr<BackupExtExtension> obj);
     std::function<void(ErrCode, const std::string)> GetComInfoCallback(wptr<BackupExtExtension> obj);
-    void GetScanDirList(vector<string>& pathInclude, string type, const BJsonEntityExtensionConfig &usrConfig);
+    void GetScanDirList(vector<string> &pathInclude, string type, const BJsonEntityExtensionConfig &usrConfig);
     // 1.返回兼容性路径列表 2.从原路径列表中剔除兼容性路径
-    set<string> DivideIncludesByCompatInfo(vector<string>& pathInclude,
+    set<string> DivideIncludesByCompatInfo(vector<string> &pathInclude,
         const BJsonEntityExtensionConfig &usrConfig);
 private:
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
     void ReportAppStatistic(const std::string &func, ErrCode errCode);
-    ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>>& allFiles);
-    ErrCode ReportAppFileReady(const string& filename, const string& filePath, bool needDelete = false);
+    ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>> &allFiles);
+    ErrCode ReportAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
 
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;

@@ -35,4 +35,4 @@ public:
     static std::string GenHashName(const std::string &str);
 };
 } // namespace OHOS::FileManagement::Backup
-#endif // OHOS_FILEMGMT_BACKUP_STRING_UTIL_H
+#endif // OHOS_FILEMGMT_BACKUP_STRING_UTILS_H

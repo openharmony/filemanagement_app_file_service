@@ -226,6 +226,8 @@ private:
     bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName);
 
     bool ToAddFile(std::string &path, int &err, const std::string &restorePath = "");
+
+    bool InitBeforePacket(const std::string &tarFileName, const std::string &pkPath);
 private:
     uint32_t fileCount_ {0};
     TarMap tarMap_ {};

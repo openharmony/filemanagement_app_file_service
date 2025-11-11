@@ -26,6 +26,8 @@
 #include <sys/stat.h>
 #include <unordered_set>
 #include <vector>
+
+#include "b_radar/radar_app_statistic.h"
  
 namespace OHOS::FileManagement::Backup {
 class IFileInfo {
@@ -92,6 +94,10 @@ public:
 
     // 条件等待，等待文件被添加或者扫描完成
     void WaitForFiles();
+    void UpdateSmallFileSizeLimit(uint64_t allSmallFileSize);
+
+    void StartPacket();
+    void WaitForPacketFlag();
 private:
     // 私有构造函数，防止外部实例化
     ScanFileSingleton() {}
@@ -105,6 +111,11 @@ private:
     std::mutex mutexLock_;
     std::condition_variable waitFilesReady_;
     std::atomic<bool> isProcessCompleted_ = false;
+    std::atomic<uint64_t> currentTarSize_ = 0;
+    std::atomic<uint64_t> smallFileSizeLimit_ = 0;
+    std::atomic<bool> stopPacket_ = false;
+    std::mutex mutexPacket_;
+    std::condition_variable waitPacketFlag_;
 };
 } // namespace OHOS::FileManagement::ScanFileSingleton
 #endif // OHOS_FILEMGMT_BACKUP_SCAN_FILE_SINGLETON_H

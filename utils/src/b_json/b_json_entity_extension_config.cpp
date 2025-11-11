@@ -252,12 +252,8 @@ std::unordered_map<std::string, std::string> BJsonEntityExtensionConfig::GetComp
     }
     std::unordered_map<std::string, std::string> mapping;
     for (auto &&item : obj_[BConstants::COMPATIBLE_DIR_MAPPING]) {
-        if (!item.isObject()) {
-            HILOGE("item is not object");
-            continue;
-        }
-        if (item.empty()) {
-            HILOGE("Each item of array 'compatDirMapping' must be not empty");
+        if (!item.isObject() || item.empty()) {
+            HILOGE("item is not object or item empty");
             continue;
         }
         if (!item.isMember(BConstants::BACKUP_DIR) || !item[BConstants::BACKUP_DIR].isString()
@@ -278,6 +274,10 @@ std::unordered_map<std::string, std::string> BJsonEntityExtensionConfig::GetComp
         }
         if (backupDir.find(BConstants::BACKUP_RESTORE_DIR_SEPARATOR) != std::string::npos) {
             HILOGE("config compatDirMapping.backupDir contain separator!");
+            continue;
+        }
+        if (mapping.count(restoreDir) > 0) {
+            HILOGE("restoreDir repeat, retoreDir:%{public}s", GetAnonyPath(restoreDir).c_str());
             continue;
         }
         mapping.emplace(restoreDir, backupDir);

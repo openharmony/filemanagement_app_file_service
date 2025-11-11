@@ -46,7 +46,7 @@ public:
     bool HasArray(const std::string& key) const
     {
         if (obj_.isNull()) {
-            HILOGE("Uninitialized JSon Object reference");
+            HILOGE("Uninitialized Json Object reference");
             return false;
         }
         if (!obj_.isObject()) {
