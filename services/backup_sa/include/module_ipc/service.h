@@ -27,10 +27,13 @@
 #include "b_radar/radar_total_statistic.h"
 #include "b_radar/radar_app_statistic.h"
 #include "iservice_reverse.h"
+#include "b_radar/radar_runninglock_statistic.h"
 #include "iremote_stub.h"
 #include "module_sched/sched_scheduler.h"
+#ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
 #include "running_lock.h"
+#endif
 #include "service_stub.h"
 #include "svc_session_manager.h"
 #include "system_ability.h"
@@ -357,6 +360,9 @@ public:
         disposal_ = make_shared<BJsonDisposalConfig>();
         clearRecorder_ = make_shared<BJsonClearDataConfig>();
         sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
+#ifdef POWER_MANAGER_ENABLED
+        runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>();
+#endif
     };
     ~Service() override
     {
@@ -739,7 +745,10 @@ private:
     void TotalStatEnd(ErrCode errCode);
     void UpdateHandleCnt(ErrCode errCode);
     void TotalStatReport();
-    ErrCode CreateRunningLock();
+    void CreateRunningLock();
+#ifdef POWER_MANAGER_ENABLED
+    void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
+#endif
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -782,7 +791,11 @@ private:
     std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
     std::map<std::string, BundleBroadCastInfo> bundleBroadCastInfoMap_;
     std::shared_mutex extOnReleaseLock_;
+#ifdef POWER_MANAGER_ENABLED
+    std::shared_mutex runningLockMutex_;
     std::shared_ptr<PowerMgr::RunningLock> runningLock_ = nullptr;
+    std::shared_ptr<RadarRunningLockStatistic> runningLockStatistic_ = nullptr;
+#endif
 public:
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;

@@ -23,8 +23,11 @@
 #include "b_json_clear_data_config_mock.h"
 #include "b_json_service_disposal_config_mock.h"
 #include "module_ipc/service.h"
+#ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
 #include "running_lock.h"
+#include "runninglock_mock.h"
+#endif
 #include "service_reverse_mock.h"
 #include "test_common.h"
 #include "test_manager.h"
@@ -35,7 +38,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
-
+using namespace PowerMgr;
 class ServiceTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -50,6 +53,13 @@ public:
         BJsonClearDataConfigMock::config = clearRecorderMock_;
         disposalMock_ = make_shared<BJsonDisposalConfigMock>();
         BBJsonDisposalConfig::config = disposalMock_;
+#ifdef POWER_MANAGER_ENABLED
+        powerClientMock_ = std::make_shared<PowerMgrClientMock>();
+        PowerMgrClientMock::powerMgrClient_ = powerClientMock_;
+        runningLockMock_ = std::make_shared<RunningLockMock>();
+        RunningLockMock::runninglock_ = runningLockMock_;
+        servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+#endif
     };
     void TearDown()
     {
@@ -61,10 +71,16 @@ public:
         BJsonClearDataConfigMock::config = nullptr;
         disposalMock_ = nullptr;
         BBJsonDisposalConfig::config = nullptr;
+#ifdef POWER_MANAGER_ENABLED
         servicePtr_->runningLock_ = nullptr;
+        servicePtr_->runningLockStatistic_ = nullptr;
+        powerClientMock_ = nullptr;
+        runningLockMock_ = nullptr;
+#endif
     };
 
     ErrCode Init(IServiceReverseType::Scenario scenario);
+    void MockRunningLock();
 
     static inline sptr<Service> servicePtr_ = nullptr;
     static inline sptr<ServiceReverseMock> remote_ = nullptr;
@@ -74,6 +90,10 @@ public:
     static inline shared_ptr<BJsonClearDataConfigMock> clearRecorderMock_ = nullptr;
     static inline std::shared_ptr<BJsonDisposalConfig> disposal_ = nullptr;
     static inline shared_ptr<BJsonDisposalConfigMock> disposalMock_ = nullptr;
+#ifdef POWER_MANAGER_ENABLED
+    static inline shared_ptr<PowerMgrClientMock> powerClientMock_;
+    static inline shared_ptr<RunningLockMock> runningLockMock_;
+#endif
     static inline bool boolVal_ = false;
     static inline int intVal_ = 0;
 };
@@ -92,6 +112,14 @@ void ServiceTest::TearDownTestCase()
     remote_ = nullptr;
 }
 
+void ServiceTest::MockRunningLock()
+{
+#ifdef POWER_MANAGER_ENABLED
+    int callsNum = 2;
+    EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(callsNum)
+        .WillRepeatedly(Return(nullptr));
+#endif
+}
 ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
 {
     vector<string> bundleNames;
@@ -112,6 +140,7 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
     string errMsg;
     ErrCode ret = 0;
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
+        MockRunningLock();
         EXPECT_TRUE(servicePtr_ != nullptr);
         EXPECT_TRUE(remote_ != nullptr);
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
@@ -126,6 +155,7 @@ ErrCode ServiceTest::Init(IServiceReverseType::Scenario scenario)
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
+        MockRunningLock();
         sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitBackupSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
@@ -758,7 +788,6 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0100, testing::ext::Test
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0100";
     try {
-        GTEST_LOG_(INFO) << "SUB_Service_OnBackupExtensionDied_0100 RESTORE";
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         string bundleName = BUNDLE_NAME;
@@ -1187,19 +1216,144 @@ HWTEST_F(ServiceTest, Service_Update_Handle_Count_Test, testing::ext::TestSize.L
     GTEST_LOG_(INFO) << "ServiceTest-end Service_Update_Handle_Count_Test";
 }
 
+#ifdef POWER_MANAGER_ENABLED
 /**
- * @tc.number: Service_CreateRunningLock_Test
- * @tc.name: Service_CreateRunningLock_Test
- * @tc.desc: 测试 CreateRunningLock 接口
+ * @tc.number: Service_CreateRunningLock_Test_0100
+ * @tc.name: Service_CreateRunningLock_Test_0100
+ * @tc.desc: 测试 CreateRunningLock 接口 create success lock success
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(ServiceTest, Service_CreateRunningLock_Test, testing::ext::TestSize.Level1)
+HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceTest-begin Service_CreateRunningLock_Test";
-    int ret = servicePtr_->CreateRunningLock();
-    EXPECT_EQ(ret, 0);
-    GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test";
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_CreateRunningLock_Test_0100";
+    wptr<IPowerMgr> testProxy;
+    auto testLock = std::make_shared<RunningLock>(
+        testProxy,
+        "testLock",
+        RunningLockType::RUNNINGLOCK_BACKGROUND
+    );
+    EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _))
+        .WillOnce(Return(testLock));
+
+    EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK));
+    servicePtr_->CreateRunningLock();
+    EXPECT_NE(servicePtr_->runningLock_, nullptr);
+    EXPECT_EQ(servicePtr_->runningLockStatistic_->radarCode_, ERROR_OK);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0100";
 }
+
+/**
+ * @tc.number: Service_CreateRunningLock_Test_0101
+ * @tc.name: Service_CreateRunningLock_Test_0101
+ * @tc.desc: 测试 CreateRunningLock 接口 create fail
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_CreateRunningLock_Test_0101";
+    EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _))
+        .WillOnce(Return(nullptr));
+    servicePtr_->CreateRunningLock();
+    EXPECT_EQ(servicePtr_->runningLock_, nullptr);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0101";
+}
+
+/**
+ * @tc.number: Service_CreateRunningLock_Test_0102
+ * @tc.name: Service_CreateRunningLock_Test_0102
+ * @tc.desc: 测试 CreateRunningLock 接口 lock fail
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_CreateRunningLock_Test_0102";
+    wptr<IPowerMgr> testProxy;
+    auto testLock = std::make_shared<RunningLock>(
+        testProxy,
+        "testLock",
+        RunningLockType::RUNNINGLOCK_BACKGROUND
+    );
+    EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _))
+        .WillOnce(Return(testLock));
+    EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(1));
+    servicePtr_->CreateRunningLock();
+    EXPECT_EQ(servicePtr_->runningLock_, nullptr);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0102";
+}
+
+/**
+ * @tc.number: Service_CreateRunningLock_Test_0103
+ * @tc.name: Service_CreateRunningLock_Test_0103
+ * @tc.desc: 测试 CreateRunningLock 接口 no create lock success
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_CreateRunningLock_Test_0103";
+    wptr<IPowerMgr> testProxy;
+    auto testLock = std::make_shared<RunningLock>(
+        testProxy,
+        "testLock",
+        RunningLockType::RUNNINGLOCK_BACKGROUND
+    );
+    servicePtr_->runningLock_ = testLock;
+    EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK));
+    servicePtr_->CreateRunningLock();
+    EXPECT_NE(servicePtr_->runningLock_, nullptr);
+    EXPECT_EQ(servicePtr_->runningLockStatistic_->radarCode_, ERROR_OK);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0103";
+}
+
+/**
+ * @tc.number: Service_RunningLockRadarReport_Backup
+ * @tc.name: Service_RunningLockRadarReport_Backup
+ * @tc.desc: 测试 Service_RunningLockRadarReport_Backup
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_RunningLockRadarReport_Backup, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_RunningLockRadarReport_Backup";
+    ErrCode ret = Init(IServiceReverseType::Scenario::BACKUP);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    const std::string test = "test";
+    const std::string ErrMsg = "ErrMsg";
+    servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+    int testCode = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
+    servicePtr_->RunningLockRadarReport(test, ErrMsg, testCode);
+    EXPECT_NE(servicePtr_->runningLockStatistic_->radarCode_, 0);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_RunningLockRadarReport_Backup";
+}
+
+/**
+ * @tc.number: Service_RunningLockRadarReport_Restore
+ * @tc.name: Service_RunningLockRadarReport_Restore
+ * @tc.desc: 测试 Service_RunningLockRadarReport_Restore
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_RunningLockRadarReport_Restore, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_RunningLockRadarReport_Restore";
+    ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
+    EXPECT_EQ(ret, BError(BError::Codes::OK));
+    const std::string test = "test";
+    const std::string ErrMsg = "ErrMsg";
+    servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+    int testCode = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
+    servicePtr_->RunningLockRadarReport(test, ErrMsg, testCode);
+    EXPECT_NE(servicePtr_->runningLockStatistic_->radarCode_, 0);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_RunningLockRadarReport_Restore";
+}
+#endif
 } // namespace OHOS::FileManagement::Backup

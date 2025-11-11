@@ -362,10 +362,16 @@ void Service::StopAll(const wptr<IRemoteObject> &obj, bool force)
     failedBundles_.clear();
     successBundlesNum_ = 0;
     session_->Deactive(obj, force);
+#ifdef POWER_MANAGER_ENABLED
     if (runningLock_ != nullptr) {
         ErrCode ret = runningLock_->UnLock();
-        HILOGI("Create SessionRunningLock, errcode = %{public}d", ret);
+        if (ret != ERROR_OK) {
+            std::string errMsg = std::to_string(ret);
+            RunningLockRadarReport("StopAll-unlockRunningLock", errMsg,
+                static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_UNLOCK_FAIL));
+        }
     }
+#endif
 }
 
 void Service::PermissionCheckFailRadar(const std::string &info, const std::string &func)
@@ -494,7 +500,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
         TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
-        (void)CreateRunningLock();
+        CreateRunningLock();
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
@@ -534,7 +540,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
         TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
-        (void)CreateRunningLock();
+        CreateRunningLock();
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;

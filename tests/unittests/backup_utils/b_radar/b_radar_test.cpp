@@ -26,6 +26,7 @@
 
 #include "hisysevent_mock.h"
 #include "b_radar/radar_app_statistic.h"
+#include "b_radar/radar_runninglock_statistic.h"
 #include "b_radar/radar_total_statistic.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -43,10 +44,14 @@ public:
     {
         appStatistic_ = std::make_shared<RadarAppStatistic>();
     };
-    void TearDown() {};
+    void TearDown()
+    {
+        runningLockStatistic_ = nullptr;
+    };
 protected:
     std::shared_ptr<RadarAppStatistic> appStatistic_ = nullptr;
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
+    std::shared_ptr<RadarRunningLockStatistic> runningLockStatistic_ = nullptr;
 };
 
 /**
@@ -293,5 +298,65 @@ HWTEST_F(BRadarTest, RADAR_APP_STAT_0100, testing::ext::TestSize.Level1)
         GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BRadarTest-end RADAR_APP_STAT_0100";
+}
+
+/**
+ * @tc.number: backup_utils_BRadar_ReportBackupRunningLock
+ * @tc.name: backup_utils_BRadar_ReportBackupRunningLock
+ * @tc.desc: 测试RADAR_APP_STAT
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BRadarTest, ReportBackupRunningLock, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BRadarTest-begin ReportBackupRunningLock";
+    const std::string test = "test";
+    const std::string testMsg = "testMsg";
+    runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+    int testCode = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
+    runningLockStatistic_->ReportBackupRunningLock(test, testMsg, testCode);
+    int resCode = 484585481;
+    EXPECT_EQ(runningLockStatistic_->radarCode_, resCode);
+    
+    runningLockStatistic_ = nullptr;
+    runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>
+        (static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL));
+    testCode = ERROR_OK;
+    runningLockStatistic_->ReportBackupRunningLock(test, testMsg, testCode);
+    resCode = 0;
+    EXPECT_EQ(runningLockStatistic_->radarCode_, resCode);
+    GTEST_LOG_(INFO) << "BRadarTest-end ReportBackupRunningLock";
+}
+
+/**
+ * @tc.number: backup_utils_BRadar_ReportRestoreRunningLock
+ * @tc.name: backup_utils_BRadar_ReportRestoreRunningLock
+ * @tc.desc: 测试RADAR_APP_STAT
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BRadarTest, ReportRestoreRunningLock, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BRadarTest-begin ReportRestoreRunningLock";
+    const std::string test = "test";
+    const std::string testMsg = "testMsg";
+    runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+    int testCode = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
+    runningLockStatistic_->ReportRestoreRunningLock(test, testMsg, testCode);
+    int resCode = 484651017;
+    EXPECT_EQ(runningLockStatistic_->radarCode_, resCode);
+    
+    runningLockStatistic_ = nullptr;
+    runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>
+        (static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL));
+    testCode = ERROR_OK;
+    runningLockStatistic_->ReportRestoreRunningLock(test, testMsg, testCode);
+    resCode = 0;
+    EXPECT_EQ(runningLockStatistic_->radarCode_, resCode);
+    GTEST_LOG_(INFO) << "BRadarTest-end ReportRestoreRunningLock";
 }
 } // namespace OHOS::FileManagement::Backup

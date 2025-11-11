@@ -951,7 +951,7 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
         TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
-        (void)CreateRunningLock();
+        CreateRunningLock();
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
@@ -1003,7 +1003,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::str
         TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
         ClearFailedBundles();
         successBundlesNum_ = 0;
-        (void)CreateRunningLock();
+        CreateRunningLock();
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
         return ret;
@@ -1707,16 +1707,40 @@ void Service::TotalStatReport()
     }
 }
 
-ErrCode Service::CreateRunningLock()
+#ifdef POWER_MANAGER_ENABLED
+void Service::RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode)
 {
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
+    if (scenario == IServiceReverseType::Scenario::RESTORE) {
+        runningLockStatistic_->ReportRestoreRunningLock(func, errMsg, errCode);
+    } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
+        runningLockStatistic_->ReportBackupRunningLock(func, errMsg, errCode);
+    }
+}
+#endif
+
+void Service::CreateRunningLock()
+{
+#ifdef POWER_MANAGER_ENABLED
+    std::unique_lock<std::shared_mutex> lock(runningLockMutex_);
+    ErrCode ret = ERROR_OK;
+    std::string errMsg = "";
     if (runningLock_ == nullptr) {
         runningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock("runninglock",
             PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
         if (runningLock_ == nullptr) {
-            HILOGE("Create SessionRunningLock failed.");
-            return -1;
+            ret = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
+            RunningLockRadarReport("CreateRunningLock-create", errMsg, ret);
+            return;
         }
     }
-    return runningLock_->Lock();
+    ret = runningLock_->Lock();
+    if (ret != ERROR_OK) {
+        runningLock_ = nullptr;
+        errMsg = std::to_string(ret);
+        ret = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_LOCK_FAIL);
+        RunningLockRadarReport("CreateRunningLock-lock", errMsg, ret);
+    }
+#endif
 }
 }

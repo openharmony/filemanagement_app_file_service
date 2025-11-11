@@ -23,8 +23,11 @@
 #include "b_json_clear_data_config_mock.h"
 #include "b_json_service_disposal_config_mock.h"
 #include "module_ipc/service.h"
+#ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
 #include "running_lock.h"
+#include "runninglock_mock.h"
+#endif
 #include "service_reverse_mock.h"
 #include "test_common.h"
 #include "test_manager.h"
@@ -35,7 +38,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
-
+using namespace PowerMgr;
 class ServiceSubTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -50,6 +53,13 @@ public:
         BJsonClearDataConfigMock::config = clearRecorderMock_;
         disposalMock_ = make_shared<BJsonDisposalConfigMock>();
         BBJsonDisposalConfig::config = disposalMock_;
+#ifdef POWER_MANAGER_ENABLED
+        powerClientMock_ = std::make_shared<PowerMgrClientMock>();
+        PowerMgrClientMock::powerMgrClient_ = powerClientMock_;
+        runningLockMock_ = std::make_shared<RunningLockMock>();
+        RunningLockMock::runninglock_ = runningLockMock_;
+        servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
+#endif
     };
     void TearDown()
     {
@@ -61,9 +71,16 @@ public:
         BJsonClearDataConfigMock::config = nullptr;
         disposalMock_ = nullptr;
         BBJsonDisposalConfig::config = nullptr;
+#ifdef POWER_MANAGER_ENABLED
+        servicePtr_->runningLock_ = nullptr;
+        servicePtr_->runningLockStatistic_ = nullptr;
+        powerClientMock_ = nullptr;
+        runningLockMock_ = nullptr;
+#endif
     };
 
     ErrCode Init(IServiceReverseType::Scenario scenario);
+    void MockRunningLock();
 
     static inline sptr<Service> servicePtr_ = nullptr;
     static inline sptr<ServiceReverseMock> remote_ = nullptr;
@@ -73,6 +90,10 @@ public:
     static inline shared_ptr<BJsonClearDataConfigMock> clearRecorderMock_ = nullptr;
     static inline std::shared_ptr<BJsonDisposalConfig> disposal_ = nullptr;
     static inline shared_ptr<BJsonDisposalConfigMock> disposalMock_ = nullptr;
+#ifdef POWER_MANAGER_ENABLED
+    static inline shared_ptr<PowerMgrClientMock> powerClientMock_;
+    static inline shared_ptr<RunningLockMock> runningLockMock_;
+#endif
     static inline bool boolVal_ = false;
     static inline int intVal_ = 0;
 };
@@ -89,6 +110,15 @@ void ServiceSubTest::TearDownTestCase()
     GTEST_LOG_(INFO) << "TearDownTestCase enter";
     servicePtr_ = nullptr;
     remote_ = nullptr;
+}
+
+void ServiceSubTest::MockRunningLock()
+{
+#ifdef POWER_MANAGER_ENABLED
+    int callsNum = 2;
+    EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(callsNum)
+        .WillRepeatedly(Return(nullptr));
+#endif
 }
 
 ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
@@ -111,6 +141,7 @@ ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
     string errMsg;
     ErrCode ret = 0;
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
+        MockRunningLock();
         EXPECT_TRUE(servicePtr_ != nullptr);
         EXPECT_TRUE(remote_ != nullptr);
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
@@ -125,6 +156,7 @@ ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
+        MockRunningLock();
         sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitBackupSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
@@ -258,6 +290,43 @@ HWTEST_F(ServiceSubTest, SUB_Service_StopAll_0104, testing::ext::TestSize.Level1
     }
     GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_StopAll_0104";
 }
+
+#ifdef POWER_MANAGER_ENABLED
+/**
+ * @tc.number: SUB_Service_StopAll_0105
+ * @tc.name: SUB_Service_StopAll_0105
+ * @tc.desc: 测试 StopAll 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_StopAll_0105, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_StopAll_0105";
+    try {
+        wptr<IPowerMgr> testProxy;
+        auto testLock = std::make_shared<RunningLock>(
+            testProxy,
+            "testLock",
+            RunningLockType::RUNNINGLOCK_BACKGROUND
+        );
+        servicePtr_->runningLock_ = testLock;
+        EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK));
+        servicePtr_->CreateRunningLock();
+        EXPECT_CALL(*runningLockMock_, UnLock()).WillOnce(Return(1));
+
+        SvcSessionManager::Impl impl_;
+        impl_.clientProxy = nullptr;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->StopAll(nullptr, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by StopAll.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_StopAll_0105";
+}
+#endif
 
 /**
  * @tc.number: SUB_Service_OnStop_0100

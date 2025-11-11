@@ -21,6 +21,7 @@
 namespace OHOS::FileManagement::Backup {
 
 constexpr int32_t DEFAULT_STAGE = 1;
+constexpr int32_t RUNNINGLOCK_STAGE = 2;
 constexpr int32_t STAGE_RES_IDLE = 0;
 constexpr int32_t STAGE_RES_SUCCESS = 1;
 constexpr int32_t STAGE_RES_FAIL = 2;
@@ -30,6 +31,7 @@ constexpr char DOMAIN[] = "APP_FILE_SVC";
 const std::string DOMAIN_NAME = "APP_FILE_SVC";
 const std::string BACKUP_RESTORE_APP_STATISTIC = "BACKUP_RESTORE_APP_STATISTIC";
 const std::string BACKUP_RESTORE_STATISTIC = "BACKUP_RESTORE_STATISTIC";
+const std::string BACKUP_RESTORE_RUNNINGLOCK_STATISTIC = "BACKUP_RESTORE_RUNNINGLOCK_STATISTIC";
 
 const std::string ORG_PKG = "ORG_PKG";
 const std::string FUNC = "FUNC";

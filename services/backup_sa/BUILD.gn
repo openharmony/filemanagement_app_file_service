@@ -14,6 +14,7 @@
 import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
 import("//foundation/filemanagement/app_file_service/backup.gni")
+import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
 idl_gen_interface("backup_idl") {
   sources = [
@@ -298,8 +299,11 @@ ohos_shared_library("backup_sa") {
     "storage_service:storage_manager_sa_proxy",
     "data_share:datashare_consumer",
     "data_share:datashare_common",
-    "power_manager:powermgr_client",
   ]
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
 
   cflags_cc = [
     "-fdata-sections",

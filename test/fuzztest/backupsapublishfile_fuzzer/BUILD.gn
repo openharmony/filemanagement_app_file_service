@@ -51,7 +51,6 @@ ohos_fuzztest("BackupSaPublishFileFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "power_manager:powermgr_client",
   ]
 
   defines = [
@@ -60,6 +59,11 @@ ohos_fuzztest("BackupSaPublishFileFuzzTest") {
     "private=public",
   ]
 
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
+  
   use_exceptions = true
 }
 ###############################################################################
