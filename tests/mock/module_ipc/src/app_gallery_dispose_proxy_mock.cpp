@@ -25,10 +25,7 @@ sptr<AppGalleryDisposeProxy> AppGalleryDisposeProxy::appGalleryDisposeProxyInsta
 
 AppGalleryDisposeProxy::AppGalleryDisposeProxy() {}
 
-AppGalleryDisposeProxy::~AppGalleryDisposeProxy()
-{
-    appGalleryDisposeProxyInstance_ = nullptr;
-}
+AppGalleryDisposeProxy::~AppGalleryDisposeProxy() {}
 
 sptr<AppGalleryDisposeProxy> AppGalleryDisposeProxy::GetInstance()
 {
