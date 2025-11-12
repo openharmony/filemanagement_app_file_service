@@ -20,14 +20,15 @@
 #include <singleton.h>
 #include <string>
 #include <sys/mount.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 
+#include "accesstoken_kit_mock.h"
 #include "access_token_error.h"
-#include "accesstoken_kit.h"
 #include "file_share.cpp"
 #include "file_share.h"
 #include "ipc_skeleton.h"
+#include "library_func_mock.h"
+#include "library_func_undef.h"
 #include "log.h"
 #include "sandbox_helper.h"
 #include "uri.h"
@@ -36,17 +37,56 @@ namespace {
 using namespace std;
 using namespace OHOS::AppFileService;
 using namespace OHOS::Security::AccessToken;
+using namespace OHOS::FileManagement::Backup;
+using namespace testing;
 
 const int E_OK = 0;
 const string BUNDLE_A = "com.example.filesharea";
 
+int Open(const char *pathname, int mode)
+{
+    if (OHOS::AppFileService::LibraryFunc::libraryFunc_ == nullptr) {
+        return -1;
+    }
+    return OHOS::AppFileService::LibraryFunc::libraryFunc_->open(pathname, mode);
+}
+
+int Access(const char *pathname, int mode)
+{
+    if (OHOS::AppFileService::LibraryFunc::libraryFunc_ == nullptr) {
+        return -1;
+    }
+    return OHOS::AppFileService::LibraryFunc::libraryFunc_->access(pathname, mode);
+}
+
 class FileShareTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase() {};
+    static void SetUpTestCase(void);
+    static void TearDownTestCase();
     void SetUp() {};
     void TearDown() {};
+
+    static inline shared_ptr<AccessTokenKitMock> token = nullptr;
+    static inline shared_ptr<LibraryFuncMock> funcMock = nullptr;
 };
+
+void FileShareTest::SetUpTestCase()
+{
+    GTEST_LOG_(INFO) << "SetUpTestCase enter";
+    token = make_shared<AccessTokenKitMock>();
+    AccessTokenKitMock::token = token;
+    funcMock = make_shared<LibraryFuncMock>();
+    LibraryFuncMock::libraryFunc_ = funcMock;
+}
+
+void FileShareTest::TearDownTestCase()
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase enter";
+    LibraryFuncMock::libraryFunc_ = nullptr;
+    funcMock = nullptr;
+    AccessTokenKitMock::token = nullptr;
+    token = nullptr;
+}
 
 /**
  * @tc.name: file_share_test_0000
@@ -64,6 +104,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0000, testing::ext::TestSize.
 
     string bundleNameA = "com.example.filesharea";
     string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
+    EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
     int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
     close(fd);
@@ -75,6 +116,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0000, testing::ext::TestSize.
     int32_t flag = 3;
     vector<string> uriList(1, uri);
     vector<int32_t> retList;
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
     EXPECT_EQ(ret, E_OK);
 
@@ -83,6 +125,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0000, testing::ext::TestSize.
     uri.clear();
     uri = "file://" + bundleNameA + "/data/storage/el2/base/files/../files/test.txt";
     uriList.push_back(uri);
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(-EINVAL));
     ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
     EXPECT_EQ(ret, -EINVAL);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0000";
@@ -104,6 +147,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0001, testing::ext::TestSize.
 
     string bundleNameA = "com.example.filesharea";
     string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
+    EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
     int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
     close(fd);
@@ -115,6 +159,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0001, testing::ext::TestSize.
     int32_t flag = 3;
     vector<string> uriList(1, uri);
     vector<int32_t> retList;
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(-EINVAL));
     int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
     EXPECT_EQ(ret, -EINVAL);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0001";
@@ -135,6 +180,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0002, testing::ext::TestSize.
 
     string bundleNameA = "com.example.filesharea";
     string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
+    EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
     int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
     close(fd);
@@ -144,6 +190,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0002, testing::ext::TestSize.
     int32_t flag = 3;
     vector<string> uriList(1, uri);
     vector<int32_t> retList;
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(AccessTokenError::ERR_TOKENID_NOT_EXIST));
     int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
     EXPECT_EQ(ret, static_cast<int32_t>(AccessTokenError::ERR_TOKENID_NOT_EXIST));
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0002";
@@ -164,6 +211,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0003, testing::ext::TestSize.
 
     string bundleNameA = "com.example.filesharea";
     string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
+    EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
     int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
     close(fd);
@@ -175,6 +223,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0003, testing::ext::TestSize.
     int32_t flag = 3;
     vector<string> uriList(1, uri);
     vector<int32_t> retList;
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(-EINVAL));
     int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
     EXPECT_EQ(ret, -EINVAL);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0003";
@@ -195,6 +244,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0004, testing::ext::TestSize.
 
     string bundleNameA = "com.example.filesharea";
     string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
+    EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
     int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
     close(fd);
@@ -206,6 +256,7 @@ HWTEST_F(FileShareTest, File_share_CreateShareFile_0004, testing::ext::TestSize.
     int32_t flag = 4;
     vector<string> uriList(1, uri);
     vector<int32_t> retList;
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(-EINVAL));
     int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retList);
     EXPECT_EQ(ret, -EINVAL);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_CreateShareFile_0004";
@@ -230,6 +281,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0005, testing::ext::TestSize.
     string bundleNameA = "com.example.filesharea";
     string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
     sharePathList.push_back(uri);
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     int32_t ret = FileShare::DeleteShareFile(tokenId, sharePathList);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0005";
@@ -251,6 +303,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0006, testing::ext::TestSize.
     string bundleNameA = "com.example.filesharea";
     string uri = "file://" + bundleNameA + "/data/storage/el2/base/files/test.txt";
     sharePathList.push_back(uri);
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(-EINVAL));
     int32_t ret = FileShare::DeleteShareFile(tokenId, sharePathList);
     EXPECT_EQ(ret, -EINVAL);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0006";
@@ -271,6 +324,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0007, testing::ext::TestSize.
 
     string bundleNameA = "com.example.filesharea";
     string file = "/data/app/el2/" + to_string(uid) + "/base/" + bundleNameA + "/files/test.txt";
+    EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
     int32_t fd = open(file.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
     close(fd);
@@ -282,6 +336,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0007, testing::ext::TestSize.
     int32_t flag = 3;
     vector<string> uriList(1, uri);
     vector<int32_t> retLists;
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
     int32_t ret = FileShare::CreateShareFile(uriList, tokenId, flag, retLists);
     EXPECT_EQ(ret, E_OK);
 
@@ -293,6 +348,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0007, testing::ext::TestSize.
 
     string sharePath = "/data/service/el2/" + to_string(uid) + "/share/" + bundleNameB + "/rw/" + bundleNameA +
                        "/data/storage/el2/base/files/test.txt";
+    EXPECT_CALL(*funcMock, access(_, _)).WillOnce(Return(0)).WillOnce(Return(-1));
     ret = access(sharePath.c_str(), F_OK);
     EXPECT_EQ(ret, E_OK);
 
@@ -320,6 +376,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0008, testing::ext::TestSize.
     string bundleNameA = "com.example.filesharea";
     string file = "/data/service/el2/" + to_string(uid) + "/base/" + bundleNameA
         + "/rw/1025/docs/storage/User/currentUser/Download/test.txt";
+    EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
     int32_t fd = open(file.c_str(), O_RDWR | O_CREAT);
     ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
     close(fd);
@@ -328,10 +385,12 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0008, testing::ext::TestSize.
     uint32_t tokenId = AccessTokenKit::GetHapTokenID(uid, bundleNameA, 0);
    
     vector<string> sharePathLists;
+    EXPECT_CALL(*funcMock, access(_, _)).WillOnce(Return(0));
     ret = access(file.c_str(), F_OK);
     EXPECT_EQ(ret, E_OK);
 
     sharePathLists.push_back(uri);
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     ret = FileShare::DeleteShareFile(tokenId, sharePathLists);
     EXPECT_EQ(ret, E_OK);
 
