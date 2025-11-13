@@ -30,6 +30,7 @@ public:
         std::string detail;
         int bundleIndex;
         int32_t userId;
+        bool isBroadcastOnly;
     }BundleDetailInfo;
 
     typedef struct BundleDataSize {

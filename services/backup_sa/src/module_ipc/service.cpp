@@ -698,10 +698,15 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, session_->GetSessionUserId(),
             isClearDataFlags);
+        std::vector<BundleName> newBundleNames = HandleBroadcastOnlyBundles(bundleNameDetailMap, bundleNames);
+        if (newBundleNames.empty()) {
+            HILOGE("newBundleNames is empty.");
+            return BError(BError::Codes::OK);
+        }
         std::string oldBackupVersion;
-        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames, oldBackupVersion);
+        auto restoreInfos = GetRestoreBundleNames(move(fd), session_, newBundleNames, oldBackupVersion);
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
-        HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
+        HandleExceptionOnAppendBundles(session_, newBundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
             HILOGE("AppendBundlesRestoreSession failed, restoreBundleNames is empty.");
             return BError(BError::Codes::OK);
@@ -2097,18 +2102,6 @@ void Service::SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userI
     } else {
         session_->SetSessionUserId(GetUserIdDefault());
     }
-}
-
-void Service::SetBundleParam(const BJsonEntityCaps::BundleInfo &restoreInfo, std::string &bundleNameIndexInfo,
-    RestoreTypeEnum &restoreType)
-{
-    session_->SetBundleRestoreType(bundleNameIndexInfo, restoreType);
-    session_->SetBundleVersionCode(bundleNameIndexInfo, restoreInfo.versionCode);
-    session_->SetBundleVersionName(bundleNameIndexInfo, restoreInfo.versionName);
-    session_->SetBundleDataSize(bundleNameIndexInfo, restoreInfo.spaceOccupied);
-    session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
-    session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
-    session_->SetIsReadyLaunch(bundleNameIndexInfo);
 }
 
 void Service::ClearRecord()

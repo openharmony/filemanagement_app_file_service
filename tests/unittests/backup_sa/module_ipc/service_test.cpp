@@ -1356,4 +1356,44 @@ HWTEST_F(ServiceTest, Service_RunningLockRadarReport_Restore, testing::ext::Test
     GTEST_LOG_(INFO) << "ServiceTest-end Service_RunningLockRadarReport_Restore";
 }
 #endif
+
+/**
+ * @tc.number: Service_HandleBroadcastOnlyBundles_Test
+ * @tc.name: Service_HandleBroadcastOnlyBundles_Test
+ * @tc.desc: 测试 HandleBroadcastOnlyBundles 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_HandleBroadcastOnlyBundles_Test, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_HandleBroadcastOnlyBundles_Test";
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> testDetailInfoMap;
+    std::vector<BundleName> testBundleNames = {"testBundleName"};
+    std::vector<BundleName> testNewBundleNames;
+    std::vector<BJsonUtil::BundleDetailInfo> testDetailInfos;
+    testNewBundleNames = servicePtr_->HandleBroadcastOnlyBundles(testDetailInfoMap, testBundleNames);
+    EXPECT_FALSE(testNewBundleNames.empty());
+
+    BJsonUtil::BundleDetailInfo testDetailInfo;
+    testDetailInfo.type = BConstants::UNICAST_TYPE;
+    testDetailInfos.emplace_back(testDetailInfo);
+    testDetailInfoMap["testBundleName"] = testDetailInfos;
+    testNewBundleNames = servicePtr_->HandleBroadcastOnlyBundles(testDetailInfoMap, testBundleNames);
+    EXPECT_FALSE(testNewBundleNames.empty());
+
+    testDetailInfo.type = BConstants::BROADCAST_TYPE;
+    testDetailInfo.isBroadcastOnly = false;
+    testDetailInfos.emplace_back(testDetailInfo);
+    testDetailInfoMap["testBundleName"] = testDetailInfos;
+    testNewBundleNames = servicePtr_->HandleBroadcastOnlyBundles(testDetailInfoMap, testBundleNames);
+    EXPECT_FALSE(testNewBundleNames.empty());
+
+    testDetailInfo.isBroadcastOnly = true;
+    testDetailInfos.emplace_back(testDetailInfo);
+    testDetailInfoMap["testBundleName"] = testDetailInfos;
+    testNewBundleNames = servicePtr_->HandleBroadcastOnlyBundles(testDetailInfoMap, testBundleNames);
+    EXPECT_TRUE(testNewBundleNames.empty());
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_HandleBroadcastOnlyBundles_Test";
+}
 } // namespace OHOS::FileManagement::Backup

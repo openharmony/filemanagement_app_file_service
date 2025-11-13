@@ -749,6 +749,9 @@ private:
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
+    std::vector<BundleName> HandleBroadcastOnlyBundles(
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+        const std::vector<BundleName> &bundleNames);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
