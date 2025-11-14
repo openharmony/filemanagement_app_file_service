@@ -96,9 +96,9 @@ public:
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 #ifdef POWER_MANAGER_ENABLED
-    virtual bool RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode) = 0;
-    virtual bool CreateRunningLock() = 0;
+    virtual void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode) = 0;
 #endif
+    virtual void CreateRunningLock() = 0;
 public:
     BService() = default;
     virtual ~BService() = default;
