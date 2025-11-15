@@ -876,15 +876,20 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesRestoreSession_0200, TestSize.Lev
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         service->isOccupyingSession_.store(false);
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillRepeatedly(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
-        EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
-        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
-        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(infos));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_)).WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillRepeatedly(Return(bundleNameDetailMap));
+        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillRepeatedly(Return(infos));
         auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, bundleInfos, restoreType, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+
+        bundleNames.emplace_back("bundleTest");
+        ret = service->AppendBundlesRestoreSession(UniqueFd(-1), bundleNames, bundleInfos, restoreType, userId);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2564,7 +2569,6 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0200, testing::ext::TestSiz
         EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by CleanBundleTempDir.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CleanBundleTempDir_0200";
 }
@@ -2600,7 +2604,6 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0300, testing::ext::TestSiz
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by CleanBundleTempDir.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CleanBundleTempDir_0300";
 }
@@ -2637,7 +2640,6 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0000, testing::ext::TestSi
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExtDisconnect.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleExtDisconnect_0000";
 }
@@ -2673,7 +2675,6 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0100, testing::ext::TestSi
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExtDisconnect.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleExtDisconnect_0100";
 }
@@ -2704,7 +2705,6 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0200, testing::ext::TestSi
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExtDisconnect.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleExtDisconnect_0200";
 }
@@ -2752,7 +2752,6 @@ HWTEST_F(ServiceTest, SUB_Service_HandleExtDisconnect_0300, testing::ext::TestSi
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by HandleExtDisconnect.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_HandleExtDisconnect_0300";
 }

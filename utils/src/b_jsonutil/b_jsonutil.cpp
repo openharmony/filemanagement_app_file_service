@@ -185,6 +185,21 @@ bool BJsonUtil::HasUnicastInfo(std::string &bundleInfo)
     return false;
 }
 
+static void ParseBroadcastInfo(BJsonUtil::BundleDetailInfo &bundleDetailInfo, cJSON *infoItem)
+{
+    cJSON *broadCastType = cJSON_GetObjectItem(infoItem, "broadcastType");
+    if (broadCastType != nullptr && cJSON_IsString(broadCastType) && broadCastType->valuestring != nullptr) {
+        HILOGI("Parse broadCastType success");
+        bundleDetailInfo.broadCastType = broadCastType->valuestring;
+    }
+    bundleDetailInfo.isBroadcastOnly = false;
+    cJSON *isBroadcastOnly = cJSON_GetObjectItem(infoItem, "isBroadcastOnly");
+    if (isBroadcastOnly != nullptr && cJSON_IsBool(isBroadcastOnly)) {
+        HILOGI("Parse isBroadcastOnly success");
+        bundleDetailInfo.isBroadcastOnly = (isBroadcastOnly->type == cJSON_True) ? true : false;
+    }
+}
+
 static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
                                    std::vector<BJsonUtil::BundleDetailInfo> &bundleDetails,
                                    BJsonUtil::BundleDetailInfo bundleDetailInfo,
@@ -226,11 +241,7 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
         }
         bundleDetailInfo.detail = std::string(detailInfos);
         if (bundleDetailInfo.type.compare(BConstants::BROADCAST_TYPE) == 0) {
-            cJSON *broadCastType = cJSON_GetObjectItem(infoItem, "broadcastType");
-            if (broadCastType != nullptr && cJSON_IsString(broadCastType) && (broadCastType->valuestring != nullptr)) {
-                HILOGI("Parse broadCastType success");
-                bundleDetailInfo.broadCastType = broadCastType->valuestring;
-            }
+            ParseBroadcastInfo(bundleDetailInfo, infoItem);
         }
         bundleDetails.emplace_back(bundleDetailInfo);
         cJSON_free(detailInfos);

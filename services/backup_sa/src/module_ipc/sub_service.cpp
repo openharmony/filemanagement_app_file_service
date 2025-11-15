@@ -1743,4 +1743,45 @@ void Service::CreateRunningLock()
     }
 #endif
 }
+
+std::vector<BundleName> Service::HandleBroadcastOnlyBundles(
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+    const std::vector<BundleName> &bundleNames)
+{
+    std::vector<BundleName> excludeBroadcastOnlyBundles = bundleNames;
+    for (const auto &bundle : bundleNames) {
+        auto mIt = bundleNameDetailMap.find(bundle);
+        if (mIt == bundleNameDetailMap.end()) {
+            continue;
+        }
+        std::vector<BJsonUtil::BundleDetailInfo> detailInfos = mIt->second;
+        for (const BJsonUtil::BundleDetailInfo &detailInfo : detailInfos) {
+            if (detailInfo.type.compare(BConstants::BROADCAST_TYPE) != 0 || !detailInfo.isBroadcastOnly) {
+                continue;
+            }
+            bool notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(
+                detailInfo, START_TYPE);
+            auto vIt = std::find(excludeBroadcastOnlyBundles.begin(), excludeBroadcastOnlyBundles.end(), bundle);
+            if (vIt != excludeBroadcastOnlyBundles.end()) {
+                excludeBroadcastOnlyBundles.erase(vIt);
+            }
+            bundleNameDetailMap.erase(mIt);
+            HILOGI("broadcastOnly bundle %{public}s publish event result %{public}d", bundle.c_str(), notifyRet);
+            break;
+        }
+    }
+    return excludeBroadcastOnlyBundles;
+}
+
+void Service::SetBundleParam(const BJsonEntityCaps::BundleInfo &restoreInfo, std::string &bundleNameIndexInfo,
+    RestoreTypeEnum &restoreType)
+{
+    session_->SetBundleRestoreType(bundleNameIndexInfo, restoreType);
+    session_->SetBundleVersionCode(bundleNameIndexInfo, restoreInfo.versionCode);
+    session_->SetBundleVersionName(bundleNameIndexInfo, restoreInfo.versionName);
+    session_->SetBundleDataSize(bundleNameIndexInfo, restoreInfo.spaceOccupied);
+    session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
+    session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
+    session_->SetIsReadyLaunch(bundleNameIndexInfo);
+}
 }
