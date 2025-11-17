@@ -553,6 +553,18 @@ void Service::UpdateHandleCnt(ErrCode errCode)
         }
     }
 }
+
+#ifdef POWER_MANAGER_ENABLED
+void Service::RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode)
+{
+    BService::serviceMock->RunningLockRadarReport(func, errMsg, errCode);
+}
+#endif
+
+void Service::CreateRunningLock()
+{
+    BService::serviceMock->CreateRunningLock();
+}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {
