@@ -85,7 +85,6 @@ const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.worksta
 const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
 const std::string BACKUPSERVICE_WORK_STATUS_OFF = "false";
 const std::string BACKUP_PERMISSION = "ohos.permission.BACKUP";
-const int32_t MAX_TRY_CLEAR_DISPOSE_NUM = 3;
 const int IPC_ERROR = 29189;
 } // namespace
 
@@ -1429,33 +1428,6 @@ void Service::SendEndAppGalleryNotify(const BundleName &bundleName)
         return;
     }
     HILOGI("DeleteFromDisposalConfigFile OK, bundleName=%{public}s", bundleNameWithUserId.c_str());
-}
-
-void Service::TryToClearDispose(const BundleName &bundleName)
-{
-    auto [bundle, userId] = SplitBundleName(bundleName);
-    if (bundle.empty() || userId == -1) {
-        HILOGE("BundleName from disposal config is invalid, bundleName = %{public}s", bundleName.c_str());
-        if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
-            HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
-        }
-        return;
-    }
-    int32_t maxAtt = MAX_TRY_CLEAR_DISPOSE_NUM;
-    int32_t att = 0;
-    while (att < maxAtt) {
-        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundle, userId);
-        HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s, userId=%{public}d", disposeErr, bundle.c_str(),
-            userId);
-        if (disposeErr == DisposeErr::OK) {
-            if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
-                HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
-            }
-            break;
-        }
-        ++att;
-        HILOGI("Try to clear dispose, num = %{public}d", att);
-    }
 }
 
 void Service::SendErrAppGalleryNotify()
