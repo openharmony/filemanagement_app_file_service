@@ -1724,6 +1724,8 @@ void BackupExtExtension::UpdateOnStartTime()
     g_onStart = std::chrono::system_clock::now();
     appStatistic_->onBackupSpend_.Start();
     appStatistic_->onBackupexSpend_.Start();
+    appStatistic_->onRestoreSpend_.Start();
+    appStatistic_->onRestoreexSpend_.Start();
 }
 
 void BackupExtExtension::AsyncTaskOnBackup()
