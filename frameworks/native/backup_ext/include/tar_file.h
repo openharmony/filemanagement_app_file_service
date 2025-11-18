@@ -21,8 +21,10 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <utility>
 #include <unistd.h>
 #include <vector>
+#include "b_utils/scan_file_singleton.h"
 
 namespace OHOS::FileManagement::Backup {
 namespace {
@@ -91,7 +93,11 @@ public:
                 const std::string &pkPath,
                 TarMap &tarMap,
                 std::function<void(std::string, int)> reportCb);
-    
+    bool Packet(const std::vector<std::shared_ptr<ISmallFileInfo>> &srcFiles,
+                const std::string &tarFileName,
+                const std::string &pkPath,
+                TarMap &tarMap,
+                std::function<void(std::string, int)> reportCb);
     /**
      * @brief set packet mode
      *
@@ -113,7 +119,7 @@ private:
      * @return true 遍历成功
      * @return false 遍历失败
      */
-    bool TraversalFile(std::string &fileName, int &err);
+    bool TraversalFile(std::string &fileName, int &err, const std::string &restorePath = "");
 
     /**
      * @brief add files to the tar package
@@ -121,7 +127,7 @@ private:
      * @param filename 文件名
      * @param st 文件参数结构体
      */
-    bool AddFile(std::string &fileName, const struct stat &st, int &err);
+    bool AddFile(std::string &fileName, const struct stat &st, int &err, const std::string &restorePath = "");
 
     /**
      * @brief write files to content
@@ -219,7 +225,9 @@ private:
      */
     bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName);
 
-    bool ToAddFile(std::string &path, int &err);
+    bool ToAddFile(std::string &path, int &err, const std::string &restorePath = "");
+
+    bool InitBeforePacket(const std::string &tarFileName, const std::string &pkPath);
 private:
     uint32_t fileCount_ {0};
     TarMap tarMap_ {};

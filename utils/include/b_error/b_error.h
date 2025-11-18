@@ -99,6 +99,9 @@ public:
         EXT_BACKUP_UNPACKET_ERROR = 0x5010,
         EXT_TIMER_ERROR = 0x5011,
         EXT_CREATE_DIR_ERROR = 0x5012,
+        EXT_REPORT_FILE_READY_FAIL = 0x5013,
+        EXT_SCAN_DIR_FAIL = 0x5014,
+        EXT_CLIENT_IS_NULL = 0x5015,
 
         // 0x6000~0x6999 sa_ext错误
         SA_EXT_ERR_CALL = 0x6000,

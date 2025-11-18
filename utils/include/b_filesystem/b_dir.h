@@ -19,12 +19,14 @@
 #include <linux/stat.h>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <tuple>
 #include <unistd.h>
+#include <unordered_map>
 #include <vector>
 
 #include "b_json/b_report_entity.h"
@@ -32,8 +34,39 @@
 #include "errors.h"
 
 namespace OHOS::FileManagement::Backup {
+class IDirScanner {
+public:
+    virtual ~IDirScanner() {};
+    std::tuple<ErrCode, int64_t, int64_t> ScanAllDirs(const std::set<std::string> &includes,
+        const std::vector<std::string> &excludes);
+    virtual std::tuple<ErrCode, int64_t, int64_t> ScanDir(const std::string &path,
+        const std::vector<std::string> &excludes, off_t size = -1) = 0;
+};
+
+class DirScanner : public IDirScanner {
+public:
+    std::tuple<ErrCode, int64_t, int64_t> ScanDir(const std::string &path,
+        const std::vector<std::string> &excludes, off_t size = -1);
+};
+
+class CompatibleDirScanner : public IDirScanner {
+public:
+    std::tuple<ErrCode, int64_t, int64_t> ScanDir(const std::string &path,
+        const std::vector<std::string> &excludes, off_t size = -1);
+};
+
 class BDir {
 public:
+
+    /**
+     * @brief 从给定的includes和excludes目录及文件中获取所有有用大文件和其链接文件的集合
+     *
+     * @param includes 需要包含的文件及目录集合
+     * @param excludes 需要排除的文件及目录集合
+     * @return 错误码、大文件总大小、小文件总大小
+     */
+    static std::tuple<ErrCode, int64_t, int64_t> ScanAllDirs(const std::set<std::string> &includes,
+        const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes);
     /**
      * @brief 读取指定目录下所有文件(非递归)
      *
@@ -49,16 +82,6 @@ public:
      * @return 文件父目录是否已可用
      */
     static bool CheckAndCreateDirectory(const std::string &filePath);
-
-    /**
-     * @brief 从给定的includes和excludes目录及文件中获取所有有用大文件和其链接文件的集合
-     *
-     * @param includes 需要包含的文件及目录集合
-     * @param excludes 需要排除的文件及目录集合
-     * @return 错误码、大文件名集合
-     */
-    static std::tuple<ErrCode, std::map<std::string, struct stat>, std::map<std::string, size_t>> GetBigFiles(
-        const std::vector<std::string> &includes, const std::vector<std::string> &excludes);
 
     /**
      * @brief Get the Dirs object
@@ -106,6 +129,16 @@ public:
      * @brief 判断目录列表是否包含路径
      */
     static bool IsDirsMatch(const std::vector<std::string> &excludePaths, const std::string &path);
+
+    /**
+     * @brief 将包含通配符的路径转换成详细的路径列表
+     */
+    static std::set<std::string> ExpandPathWildcard(const std::vector<std::string> &vec, bool onlyPath);
+
+    /**
+     * @brief 将包含通配符的路径转换成详细的路径列表
+     */
+    static void PreDealExcludes(std::vector<std::string> &excludes);
 };
 } // namespace OHOS::FileManagement::Backup
 

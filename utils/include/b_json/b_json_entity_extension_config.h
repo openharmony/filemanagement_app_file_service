@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_B_JSON_ENTITY_EXTENSION_CONFIG_H
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "b_json/b_json_cached_entity.h"
@@ -110,6 +111,13 @@ public:
      * @return vector<std::string>
      */
     vector<std::string> GetDirList(Json::Value& jsonItem) const;
+
+    /**
+     * @brief Get compatibleDirMapping
+     *
+     * @return unordered_map<string, string> 兼容性恢复路径到备份路径的映射
+     */
+    std::unordered_map<std::string, std::string> GetCompatibleDirMapping() const;
 public:
     std::string GetJSonSource(std::string_view jsonFromRealWorld, std::any option);
 

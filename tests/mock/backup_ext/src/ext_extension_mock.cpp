@@ -39,11 +39,6 @@ ErrCode BackupExtExtension::HandleClear()
     return BExtExtension::extExtension->HandleClear();
 }
 
-ErrCode BackupExtExtension::BigFileReady(TarMap &bigFileInfo, sptr<IService> proxy, int backupedFileSize)
-{
-    return BExtExtension::extExtension->BigFileReady(bigFileInfo, proxy, backupedFileSize);
-}
-
 ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
 {
     return BExtExtension::extExtension->PublishFile(fileName);

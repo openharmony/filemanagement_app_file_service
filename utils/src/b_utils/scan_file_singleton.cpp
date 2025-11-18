@@ -13,9 +13,35 @@
  * limitations under the License.
  */
 #include "b_utils/scan_file_singleton.h"
+#include "b_resources/b_constants.h"
+#include "b_utils/string_utils.h"
 #include <filemgmt_libhilog.h>
 
 namespace OHOS::FileManagement::Backup {
+
+constexpr uint64_t MAX_TAR_SIZE = 5368709120; // 队列中可存储最大tar包总大小（5G）
+constexpr float MAX_TAR_PERCENT = 0.2; // 队列中可存储的tar文件占所有小文件的最大比例
+constexpr uint32_t MEGA_BYTE = 1048576; // 1M包含多少字节
+
+std::string FileInfo::GetRestorePath()
+{
+    return "";
+}
+
+std::string CompatibleFileInfo::GetRestorePath()
+{
+    return restorePath_;
+}
+
+std::string SmallFileInfo::GetRestorePath()
+{
+    return "";
+}
+
+std::string CompatibleSmallFileInfo::GetRestorePath()
+{
+    return restorePath_;
+}
 
 ScanFileSingleton& ScanFileSingleton::GetInstance()
 {
@@ -23,85 +49,112 @@ ScanFileSingleton& ScanFileSingleton::GetInstance()
     return instance;
 }
 
-ScanFileSingleton::~ScanFileSingleton()
+void ScanFileSingleton::AddBigFile(const std::string& filePath, const struct stat& sta, const std::string& restorePath)
 {
-    isCalculateCompleted_ = false;
-}
-
-void ScanFileSingleton::AddBigFile(const std::string& key, const struct stat& value)
-{
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    bigFileQueue_.push({key, value});
-    waitForFilesAddCv_.notify_all();
-}
-
-void ScanFileSingleton::AddSmallFile(const std::string& key, size_t value)
-{
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    smallFiles_[key] = value;
-}
-
-std::map<std::string, struct stat> ScanFileSingleton::GetAllBigFiles()
-{
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    std::map<std::string, struct stat> fileMap;
-    while (!bigFileQueue_.empty()) {
-        fileMap[bigFileQueue_.front().first] = bigFileQueue_.front().second;
-        bigFileQueue_.pop();
+    std::lock_guard<std::mutex> lock(pendingFileMutex_);
+    std::string hashName = StringUtils::GenHashName(filePath);
+    for (size_t i = 0; hashNameSet_.find(hashName) != hashNameSet_.end(); i++) {
+        hashName = StringUtils::GenHashName(filePath + std::to_string(i));
     }
-    return fileMap;
+    hashNameSet_.emplace(hashName);
+    if (restorePath.empty()) {
+        pendingFileQueue_.push(std::make_shared<FileInfo>(hashName, filePath, sta, true));
+    } else {
+        pendingFileQueue_.push(std::make_shared<CompatibleFileInfo>(hashName, filePath, sta, true, restorePath));
+    }
+    waitFilesReady_.notify_all();
 }
 
-bool ScanFileSingleton::GetCompletedFlag()
+void ScanFileSingleton::AddTarFile(const std::string& filename, const std::string& filePath, const struct stat& sta)
 {
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    return isCalculateCompleted_;
+    std::lock_guard<std::mutex> lock(pendingFileMutex_);
+    pendingFileQueue_.push(std::make_shared<FileInfo>(filename, filePath, sta, false));
+    currentTarSize_.fetch_add(sta.st_size);
+    if (currentTarSize_.load() > MAX_TAR_SIZE || currentTarSize_.load() > smallFileSizeLimit_.load()) {
+        HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",
+            static_cast<uint32_t>(currentTarSize_.load() / MEGA_BYTE));
+        stopPacket_.store(true);
+    }
+    waitFilesReady_.notify_all();
 }
 
-void ScanFileSingleton::SetCompletedFlag(bool value)
+std::shared_ptr<IFileInfo> ScanFileSingleton::GetFileInfo()
 {
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    isCalculateCompleted_ = value;
-    if (value) {
-        waitForFilesAddCv_.notify_all();
+    std::lock_guard<std::mutex> lock(pendingFileMutex_);
+    if (!pendingFileQueue_.empty()) {
+        std::shared_ptr<IFileInfo> fileInfo = pendingFileQueue_.front();
+        pendingFileQueue_.pop();
+        if (!fileInfo->isBigFile_) {
+            currentTarSize_.fetch_sub(fileInfo->sta_.st_size);
+            if (currentTarSize_.load() < MAX_TAR_SIZE && currentTarSize_.load() < smallFileSizeLimit_.load()) {
+                StartPacket();
+            }
+        }
+        return fileInfo;
+    }
+    return nullptr;
+}
+
+bool ScanFileSingleton::HasFileReady()
+{
+    std::lock_guard<std::mutex> lock(pendingFileMutex_);
+    return !pendingFileQueue_.empty();
+}
+
+void ScanFileSingleton::AddSmallFile(const std::string& filePath, size_t fileSize, const std::string& restorePath)
+{
+    std::lock_guard<std::mutex> lock(smallFileMutex_);
+    if (restorePath.empty()) {
+        smallFiles_.push_back(std::make_shared<SmallFileInfo>(filePath, fileSize));
+    } else {
+        smallFiles_.push_back(std::make_shared<CompatibleSmallFileInfo>(filePath, fileSize, restorePath));
     }
 }
 
-std::map<std::string, size_t> ScanFileSingleton::GetAllSmallFiles()
+std::vector<std::shared_ptr<ISmallFileInfo>> ScanFileSingleton::GetAllSmallFiles()
 {
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    return smallFiles_;
+    std::lock_guard<std::mutex> lock(smallFileMutex_);
+    if (!smallFiles_.empty()) {
+        auto allSmallInfo = move(smallFiles_);
+        smallFiles_ = {};
+        return allSmallInfo;
+    }
+    return {};
 }
 
-void ScanFileSingleton::SetIncludeSize(uint32_t includeSize)
+bool ScanFileSingleton::IsProcessCompleted()
 {
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    includeSize_ = includeSize;
+    return isProcessCompleted_.load();
 }
 
-void ScanFileSingleton::SetExcludeSize(uint32_t excludeSize)
+void ScanFileSingleton::SetCompletedFlag(bool isCompleted)
 {
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    excludeSize_ = excludeSize;
-}
-
-uint32_t ScanFileSingleton::GetIncludeSize()
-{
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    return includeSize_;
-}
-
-uint32_t ScanFileSingleton::GetExcludeSize()
-{
-    std::lock_guard<std::mutex> lock(mutexLock_);
-    return excludeSize_;
+    isProcessCompleted_.store(isCompleted);
+    if (isCompleted) {
+        waitFilesReady_.notify_all();
+    }
 }
 
 void ScanFileSingleton::WaitForFiles()
 {
-    HILOGI("calculate is uncompleted, need to wait");
     std::unique_lock<std::mutex> lock(mutexLock_);
-    waitForFilesAddCv_.wait(lock, [this] {return !bigFileQueue_.empty() || isCalculateCompleted_; });
+    waitFilesReady_.wait(lock, [this] {return HasFileReady() || IsProcessCompleted(); });
 }
 
+void ScanFileSingleton::StartPacket()
+{
+    stopPacket_.store(false);
+    waitPacketFlag_.notify_all();
+}
+
+void ScanFileSingleton::WaitForPacketFlag()
+{
+    std::unique_lock<std::mutex> lock(mutexPacket_);
+    waitPacketFlag_.wait(lock, [this] {return !HasFileReady() || !stopPacket_.load(); });
+}
+
+void ScanFileSingleton::UpdateSmallFileSizeLimit(uint64_t allSmallFileSize)
+{
+    smallFileSizeLimit_.store(static_cast<uint64_t>(allSmallFileSize * MAX_TAR_PERCENT));
+}
 } // namespace OHOS::FileManagement::Backup

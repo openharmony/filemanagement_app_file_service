@@ -116,210 +116,6 @@ HWTEST_F(BDirTest, b_dir_GetDirFiles_0104, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetDirFiles_0104";
 }
 
-
-/**
- * @tc.number: SUB_backup_b_dir_GetBigFiles_0100
- * @tc.name: b_dir_GetBigFiles_0100
- * @tc.desc: 测试GetBigFiles接口是否能成功获取大文件
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_GetBigFiles_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0100";
-    try {
-        TestManager tm("b_dir_GetBigFiles_0100");
-        string rootDir = tm.GetRootDirCurTest();
-        string filePath1 = rootDir + "a.txt";
-        string filePath2 = rootDir + "b.txt";
-        // 文件大小大于2M的文件属于大文件，因此这里创建大小为3MB文件和4MB的文件
-        auto [bFatalErr, ret] =
-            BProcess::ExecuteCmd({"dd", "if=/dev/urandom", ("of=" + filePath1).c_str(), "bs=1M", "count=3"});
-        EXPECT_FALSE(bFatalErr);
-        EXPECT_EQ(ret, 0);
-        tie(bFatalErr, ret) =
-            BProcess::ExecuteCmd({"dd", "if=/dev/urandom", ("of=" + filePath2).c_str(), "bs=1M", "count=4"});
-        EXPECT_FALSE(bFatalErr);
-        EXPECT_EQ(ret, 0);
-        vector<string> includes = {rootDir};
-        vector<string> excludes = {filePath2};
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
-        EXPECT_EQ(errCode, ERR_OK);
-        EXPECT_EQ(mpNameToStat.at(filePath1).st_size, 1024 * 1024 * 3);
-        EXPECT_EQ(mpNameToStat.find(filePath2), mpNameToStat.end());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0100";
-}
-
-/**
- * @tc.number: SUB_backup_b_dir_GetBigFiles_0200
- * @tc.name: b_dir_GetBigFiles_0200
- * @tc.desc: 测试GetBigFiles接口 分支逻辑
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_GetBigFiles_0200, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0200";
-    try {
-        vector<string> includes = {{}, {}};
-        vector<string> excludes = {{}};
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
-        EXPECT_EQ(errCode, ERR_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0200";
-}
-
-/**
- * @tc.number: SUB_backup_b_dir_GetBigFiles_0201
- * @tc.name: b_dir_GetBigFiles_0201
- * @tc.desc: 测试GetBigFiles接口 分支逻辑
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_GetBigFiles_0201, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0201";
-    try {
-        vector<string> includes = {"/data/"};
-        vector<string> excludes;
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
-        EXPECT_EQ(errCode, ERR_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0201";
-}
-
-/**
- * @tc.number: SUB_backup_b_dir_GetBigFiles_0202
- * @tc.name: b_dir_GetBigFiles_0202
- * @tc.desc: 测试GetBigFiles接口 分支逻辑
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_GetBigFiles_0202, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0202";
-    try {
-        vector<string> includes = {"/data/app/"};
-        vector<string> excludes;
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
-        EXPECT_EQ(errCode, ERR_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0202";
-}
-
-/**
- * @tc.number: SUB_backup_b_dir_GetBigFiles_0203
- * @tc.name: b_dir_GetBigFiles_0203
- * @tc.desc: 测试GetBigFiles接口 分支逻辑
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_GetBigFiles_0203, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0203";
-    try {
-        vector<string> includes;
-        vector<string> excludes;
-        const string str = "";
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
-        EXPECT_EQ(errCode, ERR_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0203";
-}
-
-/**
- * @tc.number: SUB_backup_b_dir_GetBigFiles_0300
- * @tc.name: b_dir_GetBigFiles_0300
- * @tc.desc: 测试GetBigFiles接口 分支逻辑
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_GetBigFiles_0300, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetBigFiles_0300";
-    try {
-        TestManager tm("b_dir_GetBigFiles_0300");
-        string preparedDir = tm.GetRootDirCurTest();
-        string cmdMkdir = string("mkdir -p ") + preparedDir + string("test/test1/test2");
-        system(cmdMkdir.c_str());
-        string touchFilePrefix = string("touch ") + preparedDir;
-        system(touchFilePrefix.append("a.txt").c_str());
-        system(touchFilePrefix.append("b.txt").c_str());
-        system(touchFilePrefix.append("c.txt").c_str());
-
-        touchFilePrefix = string("touch ") + preparedDir + string("test/");
-        system(touchFilePrefix.append("a.txt").c_str());
-        system(touchFilePrefix.append("b.txt").c_str());
-        system(touchFilePrefix.append("c.txt").c_str());
-        touchFilePrefix = string("touch ") + preparedDir + string("test/test1/test2");
-        system(touchFilePrefix.append("a.txt").c_str());
-        system(touchFilePrefix.append("b.txt").c_str());
-        system(touchFilePrefix.append("c.txt").c_str());
-        vector<string> includes = {preparedDir + string("/*"), preparedDir + string("test")};
-        vector<string> excludes = {preparedDir + string("/test/test1/test2"), {}};
-        auto [errCode, mpNameToStat, smallFiles] = BDir::GetBigFiles(includes, excludes);
-        EXPECT_EQ(errCode, ERR_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetBigFiles_0300";
-}
-
-/**
- * @tc.number: SUB_backup_b_dir_GetDirs_0100
- * @tc.name: b_dir_GetDirs_0100
- * @tc.desc: Test function of GetDirs interface for SUCCESS
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_GetDirs_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetDirs_0100";
-    try {
-        TestManager tm("b_dir_GetDirs_0100");
-        vector<string_view> paths;
-        vector<string> res = BDir::GetDirs(paths);
-        set<string> inc(paths.begin(), paths.end());
-        bool result = equal(inc.begin(), inc.end(), res.begin(), res.end());
-        EXPECT_EQ(1, result);
-        EXPECT_EQ(inc.size(), res.size());
-    } catch (...) {
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetDirs_0100";
-}
-
 /**
  * @tc.number: SUB_backup_b_dir_IsFilePathValid_0100
  * @tc.name: b_dir_IsFilePathValid_0100
@@ -364,31 +160,6 @@ HWTEST_F(BDirTest, b_dir_IsFilePathValid_0100, testing::ext::TestSize.Level1)
 }
 
 /**
- * @tc.number: SUB_backup_b_dir_GetFile_0100
- * @tc.name: b_dir_GetFile_0100
- * @tc.desc: Test function of GetFile interface for SUCCESS
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_GetFile_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetFile_0100";
-    try {
-        string path = "/";
-        auto [errCode, subFiles, subSmallFiles] = GetFile(path);
-        string pathData = "/data";
-        auto [errCode1, subFiles1, subSmallFiles1] = GetFile(pathData, PATH_MAX_LEN);
-        auto [errCode2, subFiles2, subSmallFiles2] = GetFile(pathData);
-        EXPECT_EQ(errCode, 0);
-    } catch (...) {
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetFile_0100";
-}
-
-/**
  * @tc.number: SUB_backup_b_dir_ExpandPathWildcard_0100
  * @tc.name: b_dir_ExpandPathWildcard_0100
  * @tc.desc: Test function of ExpandPathWildcard interface for SUCCESS
@@ -416,19 +187,19 @@ HWTEST_F(BDirTest, b_dir_ExpandPathWildcard_0100, testing::ext::TestSize.Level1)
         system(cmdTouchFile.c_str());
 
         std::vector<std::string> include = { dirCurrentUser };
-        std::set<std::string> res = ExpandPathWildcard(include, true);
+        std::set<std::string> res = BDir::ExpandPathWildcard(include, true);
         EXPECT_EQ(res.size(), 2); // 2: valid path number
         EXPECT_EQ(res.count(dirCurrentUser), 0);
 
         std::string testDir = dirCurrentUser + "appdata";
         include = { testDir };
-        res = ExpandPathWildcard(include, true);
+        res = BDir::ExpandPathWildcard(include, true);
         EXPECT_EQ(res.size(), 0);
 
         testDir = dirCurrentUser + "*.txt";
         include = { testDir };
 
-        res = ExpandPathWildcard(include, true);
+        res = BDir::ExpandPathWildcard(include, true);
         EXPECT_EQ(res.size(), 1); // 1: dirCurrentUser + "2.txt"
     } catch (...) {
         GTEST_LOG_(INFO) << "BDirTest-an ExpandPathWildcard_0100 exception occurred.";
@@ -465,12 +236,12 @@ HWTEST_F(BDirTest, b_dir_ExpandPathWildcard_0200, testing::ext::TestSize.Level1)
         system(cmdTouchFile.c_str());
 
         std::vector<std::string> include = { dirDefault };
-        std::set<std::string> res = ExpandPathWildcard(include, true);
+        std::set<std::string> res = BDir::ExpandPathWildcard(include, true);
         EXPECT_EQ(res.size(), 1); // 1: dirDefault
 
         std::string testDir = dirDefault + "*.txt";
         include = { testDir };
-        res = ExpandPathWildcard(include, true);
+        res = BDir::ExpandPathWildcard(include, true);
         EXPECT_EQ(res.size(), 1); // 1: dirCurrentUser + "2.txt"
     } catch (...) {
         GTEST_LOG_(INFO) << "BDirTest-an ExpandPathWildcard_0200 exception occurred.";
@@ -597,7 +368,7 @@ HWTEST_F(BDirTest, b_dir__PreDealExcludes_0100, testing::ext::TestSize.Level1)
             fourthEle,
             fifthEle
         };
-        PreDealExcludes(excludes);
+        BDir::PreDealExcludes(excludes);
         EXPECT_EQ(excludes.size(), 4); // 4: the size of excludes after preDeal
         EXPECT_EQ(excludes[0], firstEle); // 0: first idx
         EXPECT_EQ(excludes[1], fourthEle); // 1: second idx

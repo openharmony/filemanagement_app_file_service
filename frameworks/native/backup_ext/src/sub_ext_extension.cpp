@@ -47,11 +47,13 @@
 #include "b_filesystem/b_file.h"
 #include "b_filesystem/b_file_hash.h"
 #include "b_json/b_json_cached_entity.h"
+#include "b_json/b_json_entity_onbackupex_ret.h"
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_radar/b_radar.h"
 #include "b_tarball/b_tarball_factory.h"
 #include "b_utils/scan_file_singleton.h"
+#include "b_utils/string_utils.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "sandbox_helper.h"
@@ -505,6 +507,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (errCode == ERR_OK) {
             if (backupExRetInfo.size()) {
+                HILOGD("backupExtRet:%{public}s", backupExRetInfo.c_str());
                 auto spendTime = extensionPtr->GetOnStartTimeCost();
                 if (spendTime >= BConstants::MAX_TIME_COST) {
                     AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
@@ -515,6 +518,10 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
                 }
                 HILOGI("Will notify backup result report");
                 extensionPtr->FinishOnProcessTask();
+                BJsonCachedEntity<BJsonEntityOnBackupExRet> cachedEntity(backupExRetInfo);
+                auto entity = cachedEntity.Structuralize();
+                extensionPtr->compatibleDirs_ = entity.GetCompatibleDirs();
+                HILOGI("compatibleDirs size=%{public}zu", extensionPtr->compatibleDirs_.size());
                 extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
                 extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
             }
@@ -1554,20 +1561,16 @@ void BackupExtExtension::RmBigFileReportForSpecialCloneCloud(const std::string &
     reportHashSrcPathMap_.erase(iter);
 }
 
-void BackupExtExtension::CalculateDataSizeTask(const string &config)
+void BackupExtExtension::ScanAllDirsTask(const string &config)
 {
     if (!StopExtTimer()) {
         throw BError(BError::Codes::EXT_TIMER_ERROR, "Failed to stop extTimer");
     }
     int64_t totalSize = 0;
-    TarMap bigFileInfo;
-    map<string, size_t> smallFiles;
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
     auto cache = cachedEntity.Structuralize();
     DoBackupStart();
-    auto [err, includeSize, excludeSize] = CalculateDataSize(cache, totalSize, bigFileInfo, smallFiles);
-    ScanFileSingleton::GetInstance().SetIncludeSize(includeSize);
-    ScanFileSingleton::GetInstance().SetExcludeSize(excludeSize);
+    int32_t err = ScanAllDirs(cache, totalSize);
     if (err != ERR_OK) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "Failed to mkdir");
     }
@@ -1582,137 +1585,63 @@ void BackupExtExtension::CalculateDataSizeTask(const string &config)
     }
 }
 
-void BackupExtExtension::DoBackUpTask(const string &config)
+void BackupExtExtension::AsyncDoBackup()
 {
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(config);
-    auto cache = cachedEntity.Structuralize();
-    vector<string> endExcludes = {};
-    GetScanDirList(endExcludes, BConstants::EXCLUDES, cache);
-    PreDealExcludes(endExcludes);
+    auto dobackupTask = [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        ptr->DoBackUpTask();
+        ptr->DoClear();
+    };
+    doBackupPool_.AddTask([dobackupTask]() {
+        try {
+            dobackupTask();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
+        }
+    });
+}
 
-    int ret = 0;
-    TarMap fileBackupedInfo;
-    while (!ScanFileSingleton::GetInstance().GetCompletedFlag()) {
+void BackupExtExtension::DoBackUpTask()
+{
+    int ret = ERR_OK;
+    int fdNum = 0;
+    auto startTime = std::chrono::system_clock::now();
+    std::vector<std::shared_ptr<IFileInfo>> allFiles;
+    while (!ScanFileSingleton::GetInstance().IsProcessCompleted() || ScanFileSingleton::GetInstance().HasFileReady()) {
         ScanFileSingleton::GetInstance().WaitForFiles();
-        std::map<std::string, struct stat> incFiles = ScanFileSingleton::GetInstance().GetAllBigFiles();
-        if (incFiles.empty()) {
+        std::shared_ptr<IFileInfo> fileInfo = ScanFileSingleton::GetInstance().GetFileInfo();
+        if (fileInfo == nullptr) {
+            HILOGE("Get null file info!!");
             continue;
         }
-        map<string, struct stat> bigFiles = MatchFiles(incFiles, endExcludes);
-        TarMap bigFileInfo = convertFileToBigFiles(bigFiles);
-        ret = DoBackupBigFiles(bigFileInfo, fileBackupedInfo.size());
-        fileBackupedInfo.insert(bigFileInfo.begin(), bigFileInfo.end());
+        WaitToSendFd(startTime, fdNum);
+        int subRet = ERR_OK;
+        allFiles.push_back(fileInfo);
+        if (fileInfo->isBigFile_) {
+            subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_);
+            appStatistic_->bigFileCount_++;
+            UpdateFileStat(fileInfo->filePath_, fileInfo->sta_.st_size);
+            fdNum++;
+        } else {
+            subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_, true);
+            fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
+        }
+        if (subRet != ERR_OK) { // 后续错误码上报DFX
+            HILOGE("report file ready fail,filename=%{public}s, err=%{public}d", fileInfo->filename_.c_str(), subRet);
+            ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+        }
+        RefreshTimeInfo(startTime, fdNum);
     }
-
-    map<string, size_t> incSmallFiles = ScanFileSingleton::GetInstance().GetAllSmallFiles();
-    map<string, size_t> smallFiles = MatchFiles(incSmallFiles, endExcludes);
-
-    std::map<std::string, struct stat> incFiles = ScanFileSingleton::GetInstance().GetAllBigFiles();
-    map<string, struct stat> bigFiles = MatchFiles(incFiles, endExcludes);
-    TarMap bigFileInfo = convertFileToBigFiles(bigFiles);
-    uint32_t includeSize = ScanFileSingleton::GetInstance().GetIncludeSize();
-    uint32_t excludeSize = ScanFileSingleton::GetInstance().GetExcludeSize();
-
-    ret = DoBackup(bigFileInfo, fileBackupedInfo, smallFiles, includeSize, excludeSize);
+    int indexRet = IndexFileReady(allFiles); // 无需WaitToSendFd，sendRate=0时克隆实际还可以继续接收数据
+    if (indexRet != ERR_OK) {
+        HILOGE("report app file ready fail, err=%{public}d", indexRet);
+        ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+    }
     DoBackupEnd();
     ScanFileSingleton::GetInstance().SetCompletedFlag(false);
     AppDone(ret);
-    HILOGI("backup app done %{public}d", ret);
-}
-
-template <typename T>
-std::map<string, T> BackupExtExtension::MatchFiles(map<string, T> files, vector<string> endExcludes)
-{
-    auto isMatch = [](const vector<string> &s, const string &str) -> bool {
-        if (str.empty() || s.empty()) {
-            return false;
-        }
-        for (const string &item : s) {
-            if (fnmatch(item.data(), str.data(), FNM_LEADING_DIR) == 0) {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    std::map<std::string, T> excludesFiles;
-    for (const auto &item : files) {
-        if (!isMatch(endExcludes, item.first)) {
-            excludesFiles.emplace(item);
-        }
-    }
-    return excludesFiles;
-}
-
-int BackupExtExtension::DoBackupBigFiles(TarMap &bigFileInfo, uint32_t backupedFileSize)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Start do backup big files, bigFileInfo size: %{public}zu", bigFileInfo.size());
-    if (extension_ == nullptr) {
-        HILOGE("Failed to do backup big files, extension is nullptr.");
-        return EPERM;
-    }
-    if (extension_->GetExtensionAction() != BConstants::ExtensionAction::BACKUP) {
-        HILOGE("Failed to do backup big files, extension action is not back up.");
-        return EPERM;
-    }
-
-    auto proxy = ServiceClient::GetInstance();
-    if (proxy == nullptr) {
-        HILOGE("Failed to do backup big files, proxy is nullptr.");
-        return EPERM;
-    }
-
-    auto res = BigFileReady(bigFileInfo, proxy, backupedFileSize);
-    HILOGI("HandleBackup finish, ret = %{public}d", res);
-    return res;
-}
-
-TarMap BackupExtExtension::convertFileToBigFiles(std::map<std::string, struct stat> files)
-{
-    auto getStringHash = [](const TarMap &m, const string &str) -> string {
-        ostringstream strHex;
-        strHex << hex;
-
-        hash<string> strHash;
-        size_t szHash = strHash(str);
-        strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
-        string name = strHex.str();
-        for (int i = 0; m.find(name) != m.end(); ++i, strHex.str("")) {
-            szHash = strHash(str + to_string(i));
-            strHex << setfill('0') << setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
-            name = strHex.str();
-        }
-        return name;
-    };
-
-    TarMap bigFileInfo;
-    for (const auto& item : files) {
-        string md5Name = getStringHash(bigFileInfo, item.first);
-        if (!md5Name.empty()) {
-            bigFileInfo.emplace(md5Name, make_tuple(item.first, item.second, true));
-        }
-    }
-    return bigFileInfo;
-}
-
-void BackupExtExtension::PreDealExcludes(std::vector<std::string> &excludes)
-{
-    size_t lenEx = excludes.size();
-    int j = 0;
-    for (size_t i = 0; i < lenEx; ++i) {
-        if (!excludes[i].empty()) {
-            if (excludes[i].at(excludes[i].size() - 1) == BConstants::FILE_SEPARATOR_CHAR) {
-                excludes[i] += "*";
-            }
-            if (excludes[i].find(BConstants::FILE_SEPARATOR_CHAR) != string::npos &&
-                excludes[i].at(0) != BConstants::FILE_SEPARATOR_CHAR) {
-                excludes[i] = BConstants::FILE_SEPARATOR_CHAR + excludes[i];
-            }
-            excludes[j++] = excludes[i];
-        }
-    }
-    excludes.resize(j);
+    HILOGI("backup app done ret=%{public}d", ret);
 }
 
 ErrCode BackupExtExtension::GetIncrementalBackupFileHandle(int &fd, int &reportFd)
@@ -1964,4 +1893,35 @@ void BackupExtExtension::GetScanDirList(vector<string>& pathInclude, string type
     }
 }
 
+set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& includes,
+    const BJsonEntityExtensionConfig &usrConfig)
+{
+    std::unordered_map<std::string, std::string> dirMapping = usrConfig.GetCompatibleDirMapping();
+    HILOGI("dirMapping config size:%{public}zu", dirMapping.size());
+    if (dirMapping.size() == 0 || compatibleDirs_.size() == 0) {
+        return {};
+    }
+    std::unordered_map<std::string, std::string> enabledCompatDirs;
+    std::copy_if(dirMapping.begin(), dirMapping.end(), std::inserter(enabledCompatDirs, enabledCompatDirs.begin()),
+        [this](const pair<const string, string> item) {
+            return compatibleDirs_.find(item.first) != compatibleDirs_.end();
+        });
+    if (enabledCompatDirs.size() == 0) {
+        HILOGW("no compatibleDir enabled");
+        return {};
+    }
+    set<string> compatibleIncludes;
+    includes.erase(
+        std::remove_if(includes.begin(), includes.end(), [&compatibleIncludes, enabledCompatDirs](const string& path) {
+            auto it = enabledCompatDirs.find(path);
+            if (it != enabledCompatDirs.end()) {
+                compatibleIncludes.emplace(StringUtils::GenMappingDir(it->second, it->first));
+                return true;
+            }
+            return false;
+        }),
+        includes.end()
+    );
+    return compatibleIncludes;
+}
 } // namespace OHOS::FileManagement::Backup

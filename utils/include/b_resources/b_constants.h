@@ -220,6 +220,13 @@ static inline std::string BROADCAST_RESTORE_END = "restore_end";
 static inline std::string BROADCAST_RELEASE_BUNDLES = "release_bundles";
 static inline int DEFAULT_APPINDEX = 0;
 
+// 图库兼容性路径映射字段
+static inline std::string COMPATIBLE_DIR_MAPPING = "compatibleDirMapping";
+static inline std::string BACKUP_DIR = "backupDir";
+static inline std::string RESTORE_DIR = "restoreDir";
+static inline std::string BACKUP_RESTORE_DIR_SEPARATOR = "||||";
+constexpr size_t MAX_COMPAT_DIR_COUNT = 1000;
+
 // 特殊版本信息
 constexpr int DEFAULT_VERSION_CODE = 0;
 constexpr char VERSION_NAME_SEPARATOR_CHAR = '-';

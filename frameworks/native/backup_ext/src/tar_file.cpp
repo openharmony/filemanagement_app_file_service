@@ -27,6 +27,7 @@
 #include "b_error/b_error.h"
 #include "b_hiaudit/hi_audit.h"
 #include "b_resources/b_constants.h"
+#include "b_utils/string_utils.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
 #include "securec.h"
@@ -52,8 +53,7 @@ TarFile &TarFile::GetInstance()
     return instance;
 }
 
-bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap,
-    std::function<void(std::string, int)> reportCb)
+bool TarFile::InitBeforePacket(const string &tarFileName, const string &pkPath)
 {
     if (tarFileName.empty() || pkPath.empty()) {
         HILOGE("Invalid parameter");
@@ -66,9 +66,17 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
     if (pkPath[pkPath.length() - 1] == '/') {
         packagePath_ = packagePath_.substr(0, packagePath_.length() - 1);
     }
-
     HILOGI("Start Create  SplitTar files");
     CreateSplitTarFile();
+    return true;
+}
+
+bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap,
+    std::function<void(std::string, int)> reportCb)
+{
+    if (!InitBeforePacket(tarFileName, pkPath)) {
+        return false;
+    }
 
     size_t index = 0;
     for (const auto &filePath : srcFiles) {
@@ -88,20 +96,50 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
             index = 0;
         }
     }
-    HILOGI("Start Fill SplitTailBlocks");
+
     FillSplitTailBlocks();
-
     tarMap = tarMap_;
-
-    if (currentTarFile_ != nullptr) {
-        fclose(currentTarFile_);
-        currentTarFile_ = nullptr;
-    }
     HILOGI("End Packet files, pkPath is:%{public}s", pkPath.c_str());
     return true;
 }
 
-bool TarFile::ToAddFile(std::string &path, int &err)
+bool TarFile::Packet(const std::vector<std::shared_ptr<ISmallFileInfo>> &srcFiles, const string &tarFileName,
+    const string &pkPath, TarMap &tarMap, std::function<void(std::string, int)> reportCb)
+{
+    if (!InitBeforePacket(tarFileName, pkPath)) {
+        return false;
+    }
+
+    size_t index = 0;
+    for (const auto &fileInfo : srcFiles) {
+        if (fileInfo == nullptr) {
+            HILOGE("fileInfo is null");
+            continue;
+        }
+        int err = BError::E_PACKET;
+        rootPath_ = fileInfo->filePath_;
+        if (!TraversalFile(rootPath_, err, fileInfo->GetRestorePath())) {
+            HILOGE("ReportErr Failed to traversal file, file path is:%{public}s, err = %{public}d",
+                GetAnonyPath(rootPath_).c_str(), err);
+            if (err != EACCES) {
+                reportCb("add file fail, path=" + rootPath_ + ", restorePath=" + fileInfo->GetRestorePath(), err);
+            }
+        }
+        index++;
+        if (index >= WAIT_INDEX) {
+            HILOGD("Sleep to wait");
+            sleep(WAIT_TIME);
+            index = 0;
+        }
+    }
+
+    FillSplitTailBlocks();
+    tarMap = tarMap_;
+    HILOGI("End Packet files, pkPath is:%{public}s", pkPath.c_str());
+    return true;
+}
+
+bool TarFile::ToAddFile(std::string &path, int &err, const std::string &restorePath)
 {
     struct stat curFileStat {};
     auto ret = memset_s(&curFileStat, sizeof(curFileStat), 0, sizeof(curFileStat));
@@ -117,7 +155,7 @@ bool TarFile::ToAddFile(std::string &path, int &err)
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
-    if (!AddFile(path, curFileStat, err)) {
+    if (!AddFile(path, curFileStat, err, restorePath)) {
         HILOGE("Failed to add file to tar package, file path is:%{public}s", GetAnonyPath(path).c_str());
         AuditLog auditLog = {false, "AddFile failed", "ADD", "", 1, "FAILED", "TraversalFile",
             "Packet File", GetAnonyPath(path)};
@@ -127,25 +165,25 @@ bool TarFile::ToAddFile(std::string &path, int &err)
     return true;
 }
 
-bool TarFile::TraversalFile(string &filePath, int &err)
+bool TarFile::TraversalFile(string &backupPath, int &err, const std::string &restorePath)
 {
-    if (access(filePath.c_str(), F_OK) != 0) {
+    if (access(backupPath.c_str(), F_OK) != 0) {
         err = errno;
         HILOGE("File path does not exists, err = %{public}d", errno);
         AuditLog auditLog = {false, "access file failed", "ADD", "", 1, "FAILED", "TraversalFile",
-            "Packet File", GetAnonyPath(filePath)};
+            "Packet File", GetAnonyPath(backupPath)};
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
-    int fd = open(filePath.c_str(), O_RDONLY);
+    int fd = open(backupPath.c_str(), O_RDONLY);
     if (fd < 0 && errno == ERR_NO_PERMISSION) {
         HILOGI("noPermissionFlie, don't need to backup, path = %{public}s, err = %{public}d",
-            GetAnonyString(filePath).c_str(), errno);
+            GetAnonyString(backupPath).c_str(), errno);
         return true;
     } else if (fd > 0) {
         close(fd);
     }
-    if (!ToAddFile(filePath, err)) {
+    if (!ToAddFile(backupPath, err, restorePath)) {
         return false;
     }
     if (isReset_) {
@@ -282,21 +320,22 @@ static bool ReadyHeader(TarHeader &hdr, const string &fileName)
     return true;
 }
 
-bool TarFile::AddFile(string &fileName, const struct stat &st, int &err)
+bool TarFile::AddFile(string &fileName, const struct stat &st, int &err, const std::string &restorePath)
 {
     HILOGD("tar file %{public}s", fileName.c_str());
     currentFileName_ = fileName;
 
     TarHeader hdr;
-    if (!I2OcsConvert(st, hdr, fileName)) {
+    string writeFileName = restorePath.empty() ? fileName : restorePath;
+    if (!I2OcsConvert(st, hdr, writeFileName)) {
         HILOGE("Failed to I2OcsConvert");
         return false;
     }
-    if (!ReadyHeader(hdr, fileName)) {
+    if (!ReadyHeader(hdr, writeFileName)) {
         return false;
     }
-    if (fileName.length() >= TNAME_LEN) {
-        if (!WriteLongName(fileName, GNUTYPE_LONGNAME)) {
+    if (writeFileName.length() >= TNAME_LEN) {
+        if (!WriteLongName(writeFileName, GNUTYPE_LONGNAME)) {
             return false;
         }
     }
@@ -421,6 +460,7 @@ bool TarFile::CompleteBlock(off_t size)
 
 bool TarFile::FillSplitTailBlocks()
 {
+    HILOGI("Start Fill SplitTailBlocks");
     if (currentTarFile_ == nullptr) {
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks currentTarFile_ is null");
     }
@@ -436,6 +476,8 @@ bool TarFile::FillSplitTailBlocks()
     int ret = stat(currentTarName_.c_str(), &staTar);
     if (ret != 0) {
         HILOGE("Failed to stat file %{public}s, err = %{public}d", currentTarName_.c_str(), errno);
+        fclose(currentTarFile_);
+        currentTarFile_ = nullptr;
         throw BError(BError::Codes::EXT_BACKUP_PACKET_ERROR, "FillSplitTailBlocks Failed to stat file");
     }
 
