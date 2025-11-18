@@ -598,7 +598,7 @@ napi_value SessionRestoreNExporter::AppendBundles(napi_env env, napi_callback_in
     } else {
         HILOGI("The third param is call back");
         NVal cb(env, funcArg[NARG_POS::THIRD]);
-        const std::string taskName = "SessionRestore.AppendBundles"; 
+        const std::string taskName = "SessionRestore.AppendBundles";
         return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(className, cbExec, cbCompl).val_;
     }
 }
@@ -670,7 +670,7 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
         return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);
-        const std::string taskName = "SessionRestore.PublishFile"; 
+        const std::string taskName = "SessionRestore.PublishFile";
         return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(className, cbExec, cbCompl).val_;
     }
 }
@@ -747,7 +747,7 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
         return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);
-        const std::string taskName = "SessionRestore.GetFileHandle"; 
+        const std::string taskName = "SessionRestore.GetFileHandle";
         return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(className, cbExec, cbCompl).val_;
     }
 }
