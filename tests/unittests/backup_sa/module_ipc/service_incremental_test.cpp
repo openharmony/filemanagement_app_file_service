@@ -21,6 +21,10 @@
 #include "b_jsonutil_mock.h"
 #include "direct_ex_mock.h"
 #include "ipc_skeleton_mock.h"
+#ifdef POWER_MANAGER_ENABLED
+#include "power_mgr_client.h"
+#include "running_lock.h"
+#endif
 #include "sa_backup_connection_mock.h"
 #include "service_reverse_proxy_mock.h"
 #include "svc_backup_connection_mock.h"
@@ -91,6 +95,10 @@ public:
     virtual void BroadCastSingle(const std::string &bundleName, const std::string &broadCastType) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
+#ifdef POWER_MANAGER_ENABLED
+    virtual void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode) = 0;
+#endif
+    virtual void CreateRunningLock() = 0;
 public:
     BService() = default;
     virtual ~BService() = default;
@@ -153,6 +161,10 @@ public:
     MOCK_METHOD(void, SetBroadCastInfoMap, (const std::string &, (const std::map<std::string, std::string> &), int));
     MOCK_METHOD(void, BroadCastRestore, (const std::string &, const std::string &));
     MOCK_METHOD(void, BroadCastSingle, (const std::string &, const std::string &));
+#ifdef POWER_MANAGER_ENABLED
+    MOCK_METHOD(void, RunningLockRadarReport, (const std::string &, const std::string &, ErrCode));
+#endif
+    MOCK_METHOD(void, CreateRunningLock, ());
 public:
     MOCK_METHOD(bool, UpdateToRestoreBundleMap, (const string&, const string&));
 };
@@ -540,6 +552,18 @@ void Service::UpdateHandleCnt(ErrCode errCode)
             totalStatistic_->failBundleCount_++;
         }
     }
+}
+
+#ifdef POWER_MANAGER_ENABLED
+void Service::RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode)
+{
+    BService::serviceMock->RunningLockRadarReport(func, errMsg, errCode);
+}
+#endif
+
+void Service::CreateRunningLock()
+{
+    BService::serviceMock->CreateRunningLock();
 }
 } // namespace OHOS::FileManagement::Backup
 

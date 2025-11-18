@@ -344,6 +344,7 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
         HILOGE("Success to init a new incremental backup session");
         TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
         ClearFailedBundles();
+        CreateRunningLock();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
@@ -392,6 +393,7 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
     if (errCode == ERR_OK) {
         TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
         ClearFailedBundles();
+        CreateRunningLock();
         successBundlesNum_ = 0;
         ClearBundleRadarReport();
         ClearFileReadyRadarReport();
