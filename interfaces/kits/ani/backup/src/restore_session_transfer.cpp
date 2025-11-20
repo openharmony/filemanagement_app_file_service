@@ -109,7 +109,6 @@ ani_ref RestoreSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_clas
         HILOGE("aniEnv is null");
         return nullptr;
     }
-    // 1.2->1.1
     ani_status ret = ANI_ERROR;
     ani_long session {};
     if ((ret = aniEnv->Object_GetPropertyByName_Long(input, "session", &session)) != ANI_OK) {
@@ -134,6 +133,10 @@ ani_ref RestoreSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_clas
     entity->sessionSheet = move(incrSessionPtr);
     std::shared_ptr<GeneralCallbacks> callbackPtr(reinterpret_cast<GeneralCallbacks*>(callbacks));
     entity->callbacks = callbackPtr;
+    if ((entity->sessionWhole == nullptr && entity->sessionSheet == nullptr) || callbackPtr == nullptr) {
+        HILOGE("session or callbacks is invalid ptr");
+        return nullptr;
+    }
     napi_env jsEnv;
     if (!arkts_napi_scope_open(aniEnv, &jsEnv)) {
         HILOGE("Failed to arkts_napi_scope_open");

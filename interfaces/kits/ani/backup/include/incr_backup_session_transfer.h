@@ -21,15 +21,15 @@
 #include "native_engine/native_engine.h"
 
 namespace OHOS::FileManagement::Backup {
-class IncreBackupSessionTransfer {
+class IncrBackupSessionTransfer {
 public:
-    IncreBackupSessionTransfer() = default;
-    ~IncreBackupSessionTransfer() = default;
+    IncrBackupSessionTransfer() = default;
+    ~IncrBackupSessionTransfer() = default;
 
-    IncreBackupSessionTransfer(const IncreBackupSessionTransfer&) = delete;
-    IncreBackupSessionTransfer(IncreBackupSessionTransfer&&) = delete;
-    IncreBackupSessionTransfer& operator=(const IncreBackupSessionTransfer&) = delete;
-    IncreBackupSessionTransfer& operator=(IncreBackupSessionTransfer&&) = delete;
+    IncrBackupSessionTransfer(const IncrBackupSessionTransfer&) = delete;
+    IncrBackupSessionTransfer(IncrBackupSessionTransfer&&) = delete;
+    IncrBackupSessionTransfer& operator=(const IncrBackupSessionTransfer&) = delete;
+    IncrBackupSessionTransfer& operator=(IncrBackupSessionTransfer&&) = delete;
 
     static void Init(ani_env *aniEnv);
     static ani_object TransferStaticSession(ani_env *aniEnv, ani_class aniCls, ani_object input);

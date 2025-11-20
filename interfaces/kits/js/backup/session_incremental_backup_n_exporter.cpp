@@ -711,7 +711,7 @@ napi_value SessionIncrementalBackupNExporter::CleanBundleTempDir(napi_env env, n
 static NContextCBExec GetCompatibilityInfoCBExec(napi_env env, const NFuncArg &funcArg, string bundleName,
     string extInfo, shared_ptr<string> compatInfo)
 {
-    auto backupEntity = NClass::GetEntityOf<BackupEntity>(env, funcArg.GetThisVar());
+    auto backupEntity = NClass::GetEntityOf<IncrBackupEntity>(env, funcArg.GetThisVar());
     if (!(backupEntity && (backupEntity->session))) {
         HILOGE("Failed to get BackupSession entity.");
         return nullptr;
@@ -780,7 +780,7 @@ napi_value SessionIncrementalBackupNExporter::GetCompatibilityInfo(napi_env env,
     };
 
     NVal thisVar(env, funcArg.GetThisVar());
-    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+    return NAsyncWorkPromise(env, thisVar).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
 }
 
 bool SessionIncrementalBackupNExporter::Export()

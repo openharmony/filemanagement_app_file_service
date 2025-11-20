@@ -35,7 +35,7 @@ const char *BACKUP_SESSION_TRANSFER_CLASS_NAME = "@ohos.backup.transfer.backup.I
 const char *INCR_BACKUP_SESSION_CLASS_NAME = "@ohos.backup.transfer.backup.IncrementalBackupSession";
 }
 
-void IncreBackupSessionTransfer::Init(ani_env *aniEnv)
+void IncrBackupSessionTransfer::Init(ani_env *aniEnv)
 {
     HILOGD("Init transfer native method begin");
     if (aniEnv == nullptr) {
@@ -52,9 +52,9 @@ void IncreBackupSessionTransfer::Init(ani_env *aniEnv)
 
     std::array nativeFuncs = {
         ani_native_function { "transferStaticSession", nullptr,
-            reinterpret_cast<void*>(IncreBackupSessionTransfer::TransferStaticSession)},
+            reinterpret_cast<void*>(IncrBackupSessionTransfer::TransferStaticSession)},
         ani_native_function { "transferDynamicSession", nullptr,
-            reinterpret_cast<void*>(IncreBackupSessionTransfer::TransferDynamicSession)},
+            reinterpret_cast<void*>(IncrBackupSessionTransfer::TransferDynamicSession)},
     };
     status = aniEnv->Class_BindStaticNativeMethods(cls, nativeFuncs.data(), nativeFuncs.size());
     if (status != ANI_OK) {
@@ -64,7 +64,7 @@ void IncreBackupSessionTransfer::Init(ani_env *aniEnv)
     HILOGD("Init transfer native method end");
 }
 
-ani_object IncreBackupSessionTransfer::TransferStaticSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
+ani_object IncrBackupSessionTransfer::TransferStaticSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
 {
     HILOGD("Transfer incrBackupSession Static begin");
     if (aniEnv == nullptr) {
@@ -105,7 +105,7 @@ ani_object IncreBackupSessionTransfer::TransferStaticSession(ani_env *aniEnv, an
     return outObj;
 }
 
-ani_ref IncreBackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
+ani_ref IncrBackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
 {
     HILOGD("TransferDynamicSession start");
     if (aniEnv == nullptr) {
@@ -129,6 +129,10 @@ ani_ref IncreBackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_
     entity->session = move(sessionPtr);
     std::shared_ptr<GeneralCallbacks> callbackPtr(reinterpret_cast<GeneralCallbacks*>(callbacks));
     entity->callbacks = callbackPtr;
+    if (entity->session == nullptr || callbackPtr == nullptr) {
+        HILOGE("session or callbacks is invalid ptr");
+        return nullptr;
+    }
     napi_env jsEnv;
     if (!arkts_napi_scope_open(aniEnv, &jsEnv)) {
         HILOGE("Failed to arkts_napi_scope_open");

@@ -29,7 +29,7 @@ extern "C" {
         if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
             return ANI_ERROR;
         }
-        IncreBackupSessionTransfer::Init(env);
+        IncrBackupSessionTransfer::Init(env);
         IncrementalBackupSession::Init(env);
         BackupSession::Init(env);
         BackupSessionTransfer::Init(env);

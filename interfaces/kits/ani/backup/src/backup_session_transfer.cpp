@@ -125,6 +125,10 @@ ani_ref BackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_class
     entity->session = move(sessionPtr);
     std::shared_ptr<GeneralCallbacks> callbackPtr(reinterpret_cast<GeneralCallbacks*>(callbacks));
     entity->callbacks = callbackPtr;
+    if (entity->session == nullptr || callbackPtr == nullptr) {
+        HILOGE("session or callbacks is invalid ptr");
+        return nullptr;
+    }
     napi_env jsEnv;
     if (!arkts_napi_scope_open(aniEnv, &jsEnv)) {
         HILOGE("Failed to arkts_napi_scope_open");
