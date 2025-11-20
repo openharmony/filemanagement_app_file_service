@@ -58,15 +58,31 @@ namespace OHOS::AppFileService::ModuleFileUri {
     const string MODE_RW = "/rw/";
     const string MODE_R = "/r/";
     const int E_OK = 0;
+    string filePath = "/data/app/el2/100/base/com.example.fileshareb/files/";
 
     class FileUriTest : public testing::Test {
     public:
-        static void SetUpTestCase(void) {};
-        static void TearDownTestCase() {};
+        static void SetUpTestCase(void);
+        static void TearDownTestCase();
         void SetUp() {};
         void TearDown() {};
     };
 
+    void FileUriTest::SetUpTestCase()
+    {
+        GTEST_LOG_(INFO) << "SetUpTestCase enter";
+        string cmdMkdir = string("mkdir -p ") + filePath;
+        system(cmdMkdir.c_str());
+        string touchFile = string("touch ") + filePath + "test.txt";
+        system(touchFile.c_str());
+    }
+
+    void FileUriTest::TearDownTestCase()
+    {
+        GTEST_LOG_(INFO) << "TearDownTestCase enter";
+        string rmDir = string("rm -r ") + filePath;
+        system(rmDir.c_str());
+    }
     /**
      * @tc.name: file_uri_test_0000
      * @tc.desc: Test function of ToString() interface for SUCCESS.
@@ -207,9 +223,6 @@ namespace OHOS::AppFileService::ModuleFileUri {
         GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0003";
         int32_t uid = 100;
         string bundleB = "com.example.fileshareb";
-        string fileStr = "/data/app/el2/" + to_string(uid) + "/base/" + bundleB + "/files/test.txt";
-        int32_t fd = open(fileStr.c_str(), O_RDWR | O_CREAT);
-        ASSERT_TRUE(fd != -1) << "FileShareTest Create File Failed!";
 
         string actStr = "/data/storage/el2/base/files/test.txt";
         string uri = "file://" + bundleB + actStr;
@@ -230,7 +243,6 @@ namespace OHOS::AppFileService::ModuleFileUri {
         sharePathList.push_back(uri);
         ret = FileShare::DeleteShareFile(tokenId, sharePathList);
         EXPECT_EQ(ret, E_OK);
-        close(fd);
         GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0003";
     }
 
