@@ -1119,11 +1119,27 @@ HWTEST_F(ServiceTest, SUB_Service_TryToClearDispose_0000, TestSize.Level1)
         EXPECT_TRUE(true);
 
         bundleName = "100-test";
+        vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
+        service->TryToClearDispose(bundleName);
+        EXPECT_TRUE(true);
+
+        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
+        EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(false));
+        service->TryToClearDispose(bundleName);
+        EXPECT_TRUE(true);
+
+        BJsonEntityCaps::BundleInfo bundleInfo;
+        bundleInfos.emplace_back(bundleInfo);
+        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos));
         EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(true));
         service->TryToClearDispose(bundleName);
         EXPECT_TRUE(true);
 
+        EXPECT_CALL(*bms, GetBundleInfos(_, _)).WillOnce(Return(bundleInfos)).WillOnce(Return(bundleInfos))
+            .WillOnce(Return(bundleInfos));
         EXPECT_CALL(*gallery, EndRestore(_, _)).WillOnce(Return(DisposeErr::REQUEST_FAIL))
             .WillOnce(Return(DisposeErr::OK));
         EXPECT_CALL(*jdConfig, DeleteFromDisposalConfigFile(_)).WillOnce(Return(false));

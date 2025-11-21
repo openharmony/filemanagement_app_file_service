@@ -73,6 +73,7 @@ namespace {
 const int32_t MAX_FILE_READY_REPORT_TIME = 2;
 const int32_t WAIT_SCANNING_INFO_SEND_TIME = 5;
 const int ERR_SIZE = -1;
+const int32_t MAX_TRY_CLEAR_DISPOSE_NUM = 3;
 } // namespace
 
 void Service::AppendBundles(const std::vector<std::string> &bundleNames)
@@ -1783,5 +1784,48 @@ void Service::SetBundleParam(const BJsonEntityCaps::BundleInfo &restoreInfo, std
     session_->SetBundleUserId(bundleNameIndexInfo, session_->GetSessionUserId());
     session_->SetBackupExtName(bundleNameIndexInfo, restoreInfo.extensionName);
     session_->SetIsReadyLaunch(bundleNameIndexInfo);
+}
+
+void Service::TryToClearDispose(const BundleName &bundleName)
+{
+    auto [bundle, userId] = SplitBundleName(bundleName);
+    if (bundle.empty() || userId == -1) {
+        HILOGE("BundleName from disposal config is invalid, bundleName = %{public}s", bundleName.c_str());
+        if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
+            HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+        }
+        return;
+    }
+    try {
+        auto bundleInfo = BundleMgrAdapter::GetBundleInfos({ bundle }, userId);
+        if (bundleInfo.empty()) {
+            HILOGI("Not GetBundleInfos %{public}s, need to DeleteFromDisposalConfigFile", bundleName.c_str());
+            if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
+                HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+            }
+            return;
+        }
+    } catch (const BError &e) {
+        HILOGE("TryToClearDispose failed, errCode = %{public}d", e.GetCode());
+        return;
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return;
+    }
+    int32_t maxAtt = MAX_TRY_CLEAR_DISPOSE_NUM;
+    int32_t att = 0;
+    while (att < maxAtt) {
+        DisposeErr disposeErr = AppGalleryDisposeProxy::GetInstance()->EndRestore(bundle, userId);
+        HILOGI("EndRestore, code=%{public}d, bundleName=%{public}s, userId=%{public}d", disposeErr, bundle.c_str(),
+            userId);
+        if (disposeErr == DisposeErr::OK) {
+            if (!disposal_->DeleteFromDisposalConfigFile(bundleName)) {
+                HILOGE("DeleteFromDisposalConfigFile Failed, bundleName=%{public}s", bundleName.c_str());
+            }
+            break;
+        }
+        ++att;
+        HILOGI("Try to clear dispose, num = %{public}d", att);
+    }
 }
 }
