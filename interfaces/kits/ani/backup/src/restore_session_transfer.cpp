@@ -19,6 +19,7 @@
 #include <bit>
 #include <string>
 #include <sys/syscall.h>
+#include <tuple>
 #include <unistd.h>
 #include "interop_js/arkts_interop_js_api.h"
 #include "interop_js/arkts_esvalue.h"
@@ -102,29 +103,39 @@ ani_object RestoreSessionTransfer::TransferStaticSession(ani_env *aniEnv, ani_cl
     return outObj;
 }
 
-ani_ref RestoreSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
+static std::tuple<bool, ani_long, ani_long, ani_long> ParseDataFromEntity(ani_env *aniEnv, ani_object input)
 {
-    HILOGD("TransferDynamicSession start");
     if (aniEnv == nullptr) {
         HILOGE("aniEnv is null");
-        return nullptr;
+        return {false, 0, 0, 0};
     }
     ani_status ret = ANI_ERROR;
     ani_long session {};
     if ((ret = aniEnv->Object_GetPropertyByName_Long(input, "session", &session)) != ANI_OK) {
         HILOGE("get field session failed, ret:%{public}d", ret);
-        return nullptr;
+        return {false, 0, 0, 0};
     }
     ani_long incrSession {};
     if ((ret = aniEnv->Object_GetPropertyByName_Long(input, "incrSession", &incrSession)) != ANI_OK) {
         HILOGE("get field incrSession failed, ret:%{public}d", ret);
-        return nullptr;
+        return {false, 0, 0, 0};
     }
     ani_long callbacks {};
     if ((ret = aniEnv->Object_GetPropertyByName_Long(input, "callbacks", &callbacks)) != ANI_OK) {
         HILOGE("get field callbacks failed, ret:%{public}d", ret);
+        return {false, 0, 0, 0};
+    }
+    return {true, session, incrSession, callbacks};
+}
+
+ani_ref RestoreSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_class aniCls, ani_object input)
+{
+    HILOGD("TransferDynamicSession start");
+    auto [parseRet, session, incrSession, callbacks] = ParseDataFromEntity(aniEnv, input);
+    if (!parseRet) {
         return nullptr;
     }
+
     std::unique_ptr<RestoreEntity> entity = std::make_unique<RestoreEntity>();
     std::unique_ptr<BSessionRestore> sessionPtr(reinterpret_cast<BSessionRestore*>(session));
     entity->sessionWhole = move(sessionPtr);
