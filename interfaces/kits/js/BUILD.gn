@@ -121,7 +121,6 @@ ohos_shared_library("fileuri") {
   use_exceptions = true
 
   relative_install_dir = "module/file"
-
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
 }
@@ -145,11 +144,60 @@ ohos_shared_library("backup") {
   ]
 
   sources = [
-    "backup/general_callbacks.cpp",
     "backup/module.cpp",
-    "backup/parse_inc_info_from_js.cpp",
     "backup/prop_n_exporter.cpp",
     "backup/prop_n_operation.cpp",
+  ]
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/services/backup_sa:backup_sa_ipc",
+    "${path_backup}/utils:backup_utils",
+    "${app_file_service_path}/interfaces/kits/js:backup_inner",
+  ]
+
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    "-Os",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "napi:ace_napi",
+    "samgr:samgr_proxy",
+  ]
+}
+
+ohos_shared_library("backup_inner") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  subsystem_name = "filemanagement"
+  part_name = "app_file_service"
+
+  defines = [
+    "LOG_DOMAIN=0xD004306",
+    "LOG_TAG=\"BackupNAPI\"",
+  ]
+
+  sources = [
+    "backup/general_callbacks.cpp",
+    "backup/parse_inc_info_from_js.cpp",
     "backup/session_backup_n_exporter.cpp",
     "backup/session_incremental_backup_n_exporter.cpp",
     "backup/session_restore_n_exporter.cpp",
