@@ -41,6 +41,7 @@ void BackupSession::Init(ani_env *aniEnv)
     }
     ani_class clsCleaner = AniUtils::GetAniClsByName(aniEnv, RESTORE_SESSION_CLEANER_CLASS_NAME);
     if (clsCleaner == nullptr) {
+        HILOGE("cleaner is null");
         return;
     }
     std::array cleanNativeFuncs = {

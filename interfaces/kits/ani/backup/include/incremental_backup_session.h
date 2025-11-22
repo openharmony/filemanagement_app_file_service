@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef INCREMENTAL_BACKUP_SESSION__H
-#define INCREMENTAL_BACKUP_SESSION__H
+#ifndef INCREMENTAL_BACKUP_SESSION_H
+#define INCREMENTAL_BACKUP_SESSION_H
 
 #include <memory>
 #include <vector>
@@ -57,4 +57,4 @@ public:
     static void Clean(ani_env *aniEnv, ani_object object);
 };
 } // namespace OHOS::FileManagement::Backup
-#endif // INCREMENTAL_BACKUP_SESSION__H
+#endif // INCREMENTAL_BACKUP_SESSION_H

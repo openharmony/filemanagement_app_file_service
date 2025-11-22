@@ -31,7 +31,7 @@ public:
     static bool AniObjectToStdString(ani_env* env, ani_object obj, std::string& str);
     static std::optional<ani_string> StdStringToAniString(ani_env* env, const std::string& str);
     static bool AniArrayToStrVector(ani_env* env, ani_array arr, std::vector<std::string>& result);
-    static ani_class GetAniClsByName(ani_env* env, std::string className);
+    static ani_class GetAniClsByName(ani_env* env, const std::string& className);
 private:
     static std::unordered_map<std::string, ani_class> clsMap_;
     static std::mutex mapMutex_;

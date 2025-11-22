@@ -137,6 +137,9 @@ ani_ref BackupSessionTransfer::TransferDynamicSession(ani_env *aniEnv, ani_class
     napi_value napiEntity = SessionBackupNExporter::CreateByEntity(jsEnv, move(entity));
     if (napiEntity == nullptr) {
         HILOGE("Failed to create napi obj");
+        if (!arkts_napi_scope_close_n(jsEnv, 0, nullptr, nullptr)) {
+            HILOGE("Failed to arkts_napi_scope_close_n");
+        }
         return nullptr;
     }
     ani_ref outObj;

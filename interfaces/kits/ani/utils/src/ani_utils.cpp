@@ -79,7 +79,7 @@ bool AniUtils::AniArrayToStrVector(ani_env* env, ani_array arr, std::vector<std:
     return true;
 }
 
-ani_class AniUtils::GetAniClsByName(ani_env* env, std::string className)
+ani_class AniUtils::GetAniClsByName(ani_env* env, const std::string& className)
 {
     std::lock_guard<std::mutex> lock(mapMutex_);
     if (clsMap_.count(className) > 0) {

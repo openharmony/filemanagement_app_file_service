@@ -45,6 +45,7 @@ void IncrementalBackupSession::Init(ani_env *aniEnv)
 
     ani_class clsCleaner = AniUtils::GetAniClsByName(aniEnv, INCR_BACKUP_SESSION_CLEANER_CLASS_NAME);
     if (clsCleaner == nullptr) {
+        HILOGE("cleaner is null");
         return;
     }
     std::array cleanNativeFuncs = {
