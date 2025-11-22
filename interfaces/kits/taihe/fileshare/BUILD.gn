@@ -104,7 +104,7 @@ ohos_prebuilt_etc("file_share_etc") {
   module_install_dir = "framework"
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
-  deps = [":file_share_taihe_abc"]
+  deps = [ ":file_share_taihe_abc" ]
 }
 
 group("afs_fileshare_taihe") {
