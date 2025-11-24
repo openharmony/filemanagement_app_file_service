@@ -68,7 +68,9 @@ static napi_value AsyncCallback(napi_env env, const NFuncArg& funcArg)
     } else {
         HILOGI("called LocalCapabilities::Async::callback");
         NVal cb(env, funcArg[NARG_POS::FIRST]);
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_LOCALCAPABILITIES_NAME, cbExec, cbCompl).val_;
+        const std::string taskName = "LocalCapabilities.AsyncCallback";
+        return NAsyncWorkCallback(env, thisVar, cb, taskName)
+            .Schedule(PROCEDURE_LOCALCAPABILITIES_NAME, cbExec, cbCompl).val_;
     }
 }
 

@@ -553,7 +553,8 @@ napi_value SessionBackupNExporter::AppendBundles(napi_env env, napi_callback_inf
         return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(className, cbExec, cbCompl).val_;
+        const std::string taskName = "SessionBackup.AppendBundles";
+        return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(className, cbExec, cbCompl).val_;
     }
 }
 

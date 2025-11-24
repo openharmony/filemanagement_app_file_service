@@ -291,7 +291,8 @@ namespace ModuleFileShare {
             return NAsyncWorkPromise(env, thisVar).Schedule(GRANT_URI_NAME, cbExec, cbCompl).val_;
         } else {
             NVal cb(env, funcArg[NARG_POS::FOURTH]);
-            return NAsyncWorkCallback(env, thisVar, cb).Schedule(GRANT_URI_NAME, cbExec, cbCompl).val_;
+            const std::string taskName = "FileShare.GrantUriPermission";
+            return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(GRANT_URI_NAME, cbExec, cbCompl).val_;
         }
     }
 } // namespace ModuleFileShare

@@ -558,7 +558,8 @@ napi_value SessionIncrementalBackupNExporter::AppendBundles(napi_env env, napi_c
         return NAsyncWorkPromise(env, thisVar).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
+        const std::string taskName = "IncrementalSessionBackup.AppendBundles";
+        return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(CLASS_NAME, cbExec, cbCompl).val_;
     }
 }
 
