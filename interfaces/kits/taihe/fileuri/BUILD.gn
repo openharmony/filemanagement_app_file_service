@@ -18,12 +18,13 @@ import("//foundation/filemanagement/app_file_service/app_file_service.gni")
 
 part_name = "app_file_service"
 subsystem_name = "filemanagement"
-taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name/fileuri"
+taihe_generated_file_path =
+    "$taihe_file_path/out/$subsystem_name/$part_name/fileuri"
 
 copy_taihe_idl("copy_taihe") {
   sources = [
     "${app_file_service_path}/interfaces/kits/taihe/fileuri/idl/ohos.file.fileuri.taihe",
-    "${app_file_service_path}/interfaces/kits/taihe/fileuri/idl/ohos.fileuri.taihe"
+    "${app_file_service_path}/interfaces/kits/taihe/fileuri/idl/ohos.fileuri.taihe",
   ]
 }
 
@@ -55,13 +56,13 @@ taihe_shared_library("file_fileuri_taihe") {
     "${app_file_service_path}/interfaces/common/include",
     "${app_file_service_path}/interfaces/common/include/log.h",
     "${app_file_service_path}/interfaces/innerkits/native/file_uri/include",
-    "${app_file_service_path}/interfaces/kits/ndk/fileshare/include"
+    "${app_file_service_path}/interfaces/kits/ndk/fileshare/include",
   ]
 
   sources = get_target_outputs(":run_taihe")
   sources += [
     "src/ani_constructor.cpp",
-    "src/fileuri_taihe.cpp"
+    "src/fileuri_taihe.cpp",
   ]
 
   deps = [
@@ -70,9 +71,9 @@ taihe_shared_library("file_fileuri_taihe") {
   ]
 
   external_deps = [
-    "hilog:libhilog",
     "ability_base:want",
     "ability_base:zuri",
+    "hilog:libhilog",
   ]
 }
 
@@ -89,14 +90,12 @@ ohos_prebuilt_etc("file_fileuri_etc") {
   module_install_dir = "framework"
   part_name = "app_file_service"
   subsystem_name = "filemanagement"
-  deps = [
-    ":file_fileuri_taihe_abc",
-  ]
+  deps = [ ":file_fileuri_taihe_abc" ]
 }
 
 group("afs_fileuri_taihe") {
   deps = [
-    ":file_fileuri_taihe",
     ":file_fileuri_etc",
+    ":file_fileuri_taihe",
   ]
 }
