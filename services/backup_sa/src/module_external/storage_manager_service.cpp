@@ -647,7 +647,7 @@ bool StorageManagerService::ExcludeFilter(std::map<std::string, bool> &excludesM
             }
         } else {
             if (formatPath.compare(0, exclude->first.size(), exclude->first) == 0 &&
-                (formatPath.size() == exclude->first.size() || formatPath[exclude->first.size()] == '/')) {
+                (formatPath.size() == exclude->first.size() || formatPath[exclude->first.size() - 1] == '/')) {
                 return true;
             }
         }
