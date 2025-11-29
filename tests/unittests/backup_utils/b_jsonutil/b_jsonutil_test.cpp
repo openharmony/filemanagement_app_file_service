@@ -529,7 +529,12 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0100, testing::ext::TestS
         BJsonUtil::BundleDetailInfo detailInfo = {
             .bundleName = "bundle", .bundleIndex = 0, .userId = 100};
         std::string bundleInfo = R"({
-            "infos":[{"type":"broadcast","broadcastType":"restore_start","isBroadcastOnly":true,"details":[]}],
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"restore_start",
+                "isBroadcastOnly":true,
+                "details":[]
+            }],
             "backupScene":""
         })";
         std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
@@ -539,7 +544,12 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0100, testing::ext::TestS
         EXPECT_TRUE(bundleDetailInfos[0].isBroadcastOnly);
 
         bundleInfo = R"({
-            "infos":[{"type":"broadcast","broadcastType":"restore_start","isBroadcastOnly":"true","details":[]}],
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"restore_start",
+                "isBroadcastOnly":"true",
+                "details":[]
+            }],
             "backupScene":""
         })";
         bundleDetailInfos.clear();
@@ -570,7 +580,12 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0200, testing::ext::TestS
         BJsonUtil::BundleDetailInfo detailInfo = {
             .bundleName = "bundle", .bundleIndex = 0, .userId = 100};
         std::string bundleInfo = R"({
-            "infos":[{"type":"broadcast","broadcastType":"restore_start","isBroadcastOnly":false,"details":[]}],
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"restore_start",
+                "isBroadcastOnly":false,
+                "details":[]
+            }],
             "backupScene":""
         })";
         std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
@@ -580,7 +595,11 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0200, testing::ext::TestS
         EXPECT_FALSE(bundleDetailInfos[0].isBroadcastOnly);
 
         bundleInfo = R"({
-            "infos":[{"type":"broadcast","broadcastType":"restore_start","details":[]}],
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"restore_start",
+                "details":[]
+            }],
             "backupScene":""
         })";
         bundleDetailInfos.clear();
@@ -610,7 +629,11 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0300, testing::ext::TestS
         BJsonUtil::BundleDetailInfo detailInfo = {
             .bundleName = "bundle", .bundleIndex = 0, .userId = 100};
         std::string bundleInfo = R"({
-            "infos":[{"type":"broadcast","isBroadcastOnly":true,"details":[]}],
+            "infos":[{
+                "type":"broadcast",
+                "isBroadcastOnly":true,
+                "details":[]
+            }],
             "backupScene":""
         })";
         std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
@@ -620,7 +643,12 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0300, testing::ext::TestS
         EXPECT_TRUE(bundleDetailInfos[0].broadCastType.empty());
 
         bundleInfo = R"({
-            "infos":[{"type":"broadcast","broadcastType":123,"isBroadcastOnly":"true","details":[]}],
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":123,
+                "isBroadcastOnly":"true",
+                "details":[]
+            }],
             "backupScene":""
         })";
         bundleDetailInfos.clear();
@@ -629,7 +657,11 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0300, testing::ext::TestS
         EXPECT_TRUE(bundleDetailInfos[0].broadCastType.empty());
 
         bundleInfo = R"({
-            "infos":[{"type":"broadcast","broadcastType":"","details":[]}],
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"",
+                "details":[]
+            }],
             "backupScene":""
         })";
         bundleDetailInfos.clear();
