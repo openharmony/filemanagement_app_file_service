@@ -1415,7 +1415,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_006, 
 
     string_view sv2 = R"({"compatibleDirMapping": [{"backupDir": "123", "restoreDir": "456*"}]})";
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
-    auto cache2 = cachedEntity1.Structuralize();
+    auto cache2 = cachedEntity2.Structuralize();
     EXPECT_EQ(cache2.GetCompatibleDirMapping().size(), 0);
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_006";
 }
@@ -1432,15 +1432,15 @@ HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_006, 
 HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007";
-    GTEST_LOG_(INFO) << "6. test item backupDir contain seperator";
+    GTEST_LOG_(INFO) << "7. test item backupDir contain seperator";
     string_view sv1 = R"({"compatibleDirMapping": [{"backupDir": "123||||", "restoreDir": "456"}]})";
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
     auto cache1 = cachedEntity1.Structuralize();
     EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
 
     string_view sv2 = R"({"compatibleDirMapping": [{"backupDir": "123*", "restoreDir": "456"}]})";
-    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv2);
-    auto cache2 = cachedEntity1.Structuralize();
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(sv2);
+    auto cache2 = cachedEntity2.Structuralize();
     EXPECT_EQ(cache2.GetCompatibleDirMapping().size(), 0);
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007";
 }
@@ -1457,11 +1457,56 @@ HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_007, 
 HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_008, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_008";
-    GTEST_LOG_(INFO) << "7. test all ok";
+    GTEST_LOG_(INFO) << "8. test all ok";
     string_view sv1 = R"({"compatibleDirMapping": [{"backupDir": "123", "restoreDir": "456"}]})";
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
     auto cache1 = cachedEntity1.Structuralize();
     EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 1);
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_008";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_009
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_009
+ * @tc.desc: Test function of GetCompatibleDirMapping repeat key
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_009, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_009";
+    GTEST_LOG_(INFO) << "9. test all ok";
+    string sv1 = "{\"compatibleDirMapping\": [{\"backupDir\": \"123\", \"restoreDir\": \"456\"},"
+        "{\"backupDir\": \"123\", \"restoreDir\": \"456\"}]}";
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(sv1);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 1);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_009";
+}
+
+/**
+ * @tc.number: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010
+ * @tc.name: EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010
+ * @tc.desc: Test function of GetCompatibleDirMapping over max count
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010";
+    GTEST_LOG_(INFO) << "10. test all ok";
+    string config = R"({"compatibleDirMapping": [{"backupDir": "123", "restoreDir": "456"})";
+    for (int i = 0; i < BConstants::MAX_COMPAT_DIR_COUNT; i++) {
+        config.append(", {\"backupDir\": \"123\", \"restoreDir\": \"456" + to_string(i) + "\"}");
+    }
+    config.append("]}");
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(config);
+    auto cache1 = cachedEntity1.Structuralize();
+    EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+    GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010";
 }
 } // namespace OHOS::FileManagement::Backup
