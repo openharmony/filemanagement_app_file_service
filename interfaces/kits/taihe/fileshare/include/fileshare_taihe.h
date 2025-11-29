@@ -25,14 +25,27 @@
 namespace ANI::FileShare {
 
     ohos::fileshare::fileShare::PolicyInfo MakePolicyInfo(taihe::string_view uri, int32_t operationMode);
+    ohos::fileshare::fileShare::PathPolicyInfo MakePathPolicyInfo(taihe::string_view path,
+        ohos::fileshare::fileShare::OperationMode operationMode);
     void ActivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::PolicyInfo> policies);
     void DeactivatePermissionSync(taihe::array_view<ohos::fileshare::fileShare::PolicyInfo> policies);
     void GrantUriPermissionSync(taihe::string_view uri, taihe::string_view bundleName, uintptr_t flag);
+    taihe::array<bool> CheckPathPermissionSync(int32_t tokenID,
+        taihe::array_view<ohos::fileshare::fileShare::PathPolicyInfo> policies,
+        ohos::fileshare::fileShare::PolicyType policyType);
+    void GrantDecUriPermissionSync(taihe::array_view<ohos::fileshare::fileShare::PolicyInfo> policies,
+        taihe::string_view targetBundleName, int32_t appCloneIndex);
 
     struct PolicyErrorArgs {
         std::deque<OHOS::AppFileService::PolicyErrorResult> errorResults;
         int32_t errNo = 0;
         ~PolicyErrorArgs() = default;
+    };
+
+    struct PolicyInfoResultArgs {
+        std::vector<bool> resultData;
+        int32_t errNo = 0;
+        ~PolicyInfoResultArgs() = default;
     };
 
     struct UriPermissionInfo {

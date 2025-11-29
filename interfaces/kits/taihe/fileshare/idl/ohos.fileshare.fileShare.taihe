@@ -22,6 +22,16 @@ static { loadLibrary("file_share_taihe.z"); }
 enum OperationMode: i32 {
     READ_MODE = 1,
     WRITE_MODE = 2,
+    CREATE_MODE = 4,
+    DELETE_MODE = 8,
+    RENAME_MODE = 16,
+}
+
+enum PolicyErrorCode: i32 {
+    PERSISTENCE_FORBIDDEN = 1,
+    INVALID_MODE = 2,
+    INVALID_PATH = 3,
+    PERMISSION_NOT_PERSISTED = 4,
 }
 
 struct PolicyInfo {
@@ -29,7 +39,19 @@ struct PolicyInfo {
     operationMode: i32;
 }
 
+struct PathPolicyInfo {
+    path: String;
+    operationMode: OperationMode;
+}
+
+enum PolicyType: i32 {
+    TEMPORARY_TYPE = 0,
+    PERSISTENT_TYPE = 1,
+}
+
 function MakePolicyInfo(uri: String, operationMode: i32): PolicyInfo;
+
+function MakePathPolicyInfo(path: String, operationMode: OperationMode): PathPolicyInfo;
 
 @gen_promise("activatePermission")
 function ActivatePermissionSync(
@@ -49,3 +71,16 @@ function GrantUriPermissionSync(
     flag: @sts_type("wantConstant.Flags") Opaque,
 ): void;
 
+@gen_promise("checkPathPermission")
+function CheckPathPermissionSync(
+    tokenID: i32,
+    policies: Array<PathPolicyInfo>,
+    policyType: PolicyType,
+): Array<bool>;
+
+@gen_promise("grantUriPermission")
+function GrantDecUriPermissionSync(
+    policies: Array<PolicyInfo>,
+    targetBundleName: String,
+    appCloneIndex: i32,
+): void;
