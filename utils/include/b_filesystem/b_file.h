@@ -101,6 +101,8 @@ public:
      * @return file size in byte if path is valid
      */
     static uint64_t GetFileSize(const string &path, int32_t &error);
+
+    static void WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles);
 private:
 };
 } // namespace OHOS::FileManagement::Backup

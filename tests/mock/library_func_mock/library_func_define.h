@@ -26,7 +26,7 @@
 #define fopen Fopen
 #define fclose Fclose
 #define chmod Chmod
-#define utime Utime
+#define utime(filePath, time) Utime((filePath), (time))
 #define stat(pathname, statbuf) Stat(pathname, statbuf)
 #define ferror Ferror
 #define fflush Fflush
@@ -37,5 +37,9 @@
 #define read Read
 #define write Write
 #define close Close
+#define lstat(pathname, statbuf) Lstat(pathname, statbuf)
+#define fstat Fstat
+#define lseek Lseek
+
 
 #endif // FILEMANAGEMENT_APP_FILE_SERVICE_LIBRARY_FUNC_DEFINE_H

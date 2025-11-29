@@ -50,6 +50,9 @@ int Open(const char*, int, ...);
 ssize_t Read(int, void*, size_t);
 ssize_t Write(int, const void*, size_t);
 int Close(int);
+int Lstat(const char*, struct stat*);
+int Fstat(int fd, struct stat* buf);
+int Lseek(int fd, off_t offset, int whence);
 
 namespace OHOS {
 namespace AppFileService {
@@ -77,6 +80,9 @@ public:
     virtual ssize_t read(int, void*, size_t) = 0;
     virtual ssize_t write(int, const void*, size_t) = 0;
     virtual int close(int) = 0;
+    virtual int lstat(const char*, struct stat*) = 0;
+    virtual int fstat(int fd, struct stat* buf) = 0;
+    virtual int lseek(int fd, off_t offset, int whence) = 0;
 public:
     static inline std::shared_ptr<LibraryFunc> libraryFunc_ = nullptr;
 };
@@ -104,6 +110,9 @@ public:
     MOCK_METHOD(ssize_t, read, (int, void*, size_t));
     MOCK_METHOD(ssize_t, write, (int, const void*, size_t));
     MOCK_METHOD(int, close, (int));
+    MOCK_METHOD(int, lstat, (const char*, struct stat*));
+    MOCK_METHOD(int, fstat, (int fd, struct stat* buf));
+    MOCK_METHOD(int, lseek, (int fd, off_t offset, int whence));
 };
 } // namespace AppFileService
 } // namespace OHOS

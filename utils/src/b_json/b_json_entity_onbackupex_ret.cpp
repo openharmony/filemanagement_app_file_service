@@ -35,11 +35,16 @@ unordered_set<string> BJsonEntityOnBackupExRet::GetCompatibleDirs() const
 
     unordered_set<string> dirs;
     for (auto &&item : obj_[BConstants::COMPATIBLE_DIR_MAPPING]) {
-        if (!item.isString() || item.empty()) {
+        if (!item.isString()) {
             HILOGE("Each item of array 'compatibleDirMapping' must be of the type string");
             continue;
         }
-        dirs.emplace(item.asString());
+        auto dir = item.asString();
+        if (dir.empty()) {
+            HILOGE("Itme is empty string");
+            continue;
+        }
+        dirs.emplace(dir);
         if (dirs.size() > BConstants::MAX_COMPAT_DIR_COUNT) {
             HILOGE("mapping dirs count is over max size!");
             return {};

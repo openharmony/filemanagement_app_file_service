@@ -381,7 +381,7 @@ private:
     void UpdateTarStat(uint64_t tarFileSize);
     void ScanAllDirsTask(const string &config);
     void AsyncDoBackup();
-    void DoBackUpTask();
+    void DoBackupTask();
 
     void HandleExtDisconnect(bool isAppResultReport, ErrCode errCode);
     bool HandleGetExtOnRelease();
@@ -453,7 +453,8 @@ private:
     std::condition_variable getCompatibilityInfoCon_ {};
     std::atomic<bool> stopGetComInfo_ {false};
     std::string compatibilityInfo_ {};
-    std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并非
+    std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并发
+    std::mutex updateFileStatLock_;
 };
 } // namespace OHOS::FileManagement::Backup
 

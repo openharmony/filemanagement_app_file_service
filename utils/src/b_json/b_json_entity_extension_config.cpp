@@ -268,12 +268,14 @@ std::unordered_map<std::string, std::string> BJsonEntityExtensionConfig::GetComp
         }
         std::string restoreDir = item[BConstants::RESTORE_DIR].asString();
         std::string backupDir = item[BConstants::BACKUP_DIR].asString();
-        if (restoreDir.find(BConstants::BACKUP_RESTORE_DIR_SEPARATOR) != std::string::npos) {
-            HILOGE("config compatDirMapping.restoreDir contain separator!");
+        if (restoreDir.find(BConstants::BACKUP_RESTORE_DIR_SEPARATOR) != std::string::npos ||
+            restoreDir.find(BConstants::DIR_WILDCARD) != std::string::npos) {
+            HILOGE("config compatDirMapping.restoreDir contain invalid char!");
             continue;
         }
-        if (backupDir.find(BConstants::BACKUP_RESTORE_DIR_SEPARATOR) != std::string::npos) {
-            HILOGE("config compatDirMapping.backupDir contain separator!");
+        if (backupDir.find(BConstants::BACKUP_RESTORE_DIR_SEPARATOR) != std::string::npos ||
+            backupDir.find(BConstants::DIR_WILDCARD) != std::string::npos) {
+            HILOGE("config compatDirMapping.backupDir contain invalid char!");
             continue;
         }
         if (mapping.count(restoreDir) > 0) {

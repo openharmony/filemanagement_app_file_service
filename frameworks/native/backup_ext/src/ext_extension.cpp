@@ -442,7 +442,7 @@ ErrCode BackupExtExtension::IndexFileReady(const std::vector<std::shared_ptr<IFi
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
-    if (fd < 0) {
+    if (fd.Get() < 0) {
         HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_BACKUP.c_str(), errno);
         return BError::GetCodeByErrno(errno);
     }
@@ -487,6 +487,7 @@ ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const str
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("ServiceClient is null");
+        close(fdval);
         return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
     }
     int reportRs = fdval < 0 ? proxy->AppFileReadyWithoutFd(filename, errCode) :
@@ -694,6 +695,7 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     vector<string> excludes = {};
     GetScanDirList(includes, BConstants::INCLUDES, usrConfig);
     GetScanDirList(excludes, BConstants::EXCLUDES, usrConfig);
+    // 不用放在expand通配符之后，约束是compat的路径配置要与includes中某些路径配置完全一致
     auto compatibleIncludes = DivideIncludesByCompatInfo(includes, usrConfig);
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
     BDir::PreDealExcludes(excludes);
@@ -701,7 +703,7 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     appStatistic_->scanFileSpend_.Start();
     auto [errCode, bigFileSize, smallFileSize] = BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes);
     appStatistic_->scanFileSpend_.End();
-    ScanFileSingleton::GetInstance().UpdateSmallFileSizeLimit(smallFileSize);
+    ScanFileSingleton::GetInstance().UpdateLimitByTotalSize(smallFileSize + bigFileSize);
     if (errCode != 0) {
         HILOGE("scan dirs fail, err=%{public}d", errCode);
     }
@@ -1842,32 +1844,6 @@ void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
         allFiles.size(), smallFiles.size(), bigFiles.size());
 }
 
-static void WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)
-{
-    fstream f;
-    f.open(filename.data(), ios::out);
-    if (!f) {
-        HILOGE("Failed to open file = %{private}s", filename.c_str());
-        return;
-    }
-
-    // 前面2行先填充进去
-    f << "version=1.0&attrNum=8" << endl;
-    f << "path;mode;dir;size;mtime;hash;usertar;encodeFlag" << endl;
-    for (const auto &item : srcFiles) {
-        string path = BReportEntity::EncodeReportItem(item.filePath, item.encodeFlag);
-        string str = path + ";" + item.mode + ";" + to_string(item.isDir) + ";" + to_string(item.size);
-        str += ";" + to_string(item.mtime) + ";" + item.hash + ";" + to_string(item.userTar)+ ";";
-        if (item.encodeFlag) {
-            str += std::to_string(1);
-        } else {
-            str += std::to_string(0);
-        }
-        f << str << endl;
-    }
-    f.close();
-}
-
 /**
  * 增量tar包和简报信息回传
  */
@@ -1878,7 +1854,7 @@ ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
     string tarFile = bigFileInfo.begin()->first;
     string manageFile = GetReportFileName(tarFile);
     string file = string(INDEX_FILE_INCREMENTAL_BACKUP).append(manageFile);
-    WriteFile(file, srcFiles);
+    BFile::WriteFile(file, srcFiles);
 
     string tarName = string(INDEX_FILE_INCREMENTAL_BACKUP).append(tarFile);
     int fd = open(tarName.data(), O_RDONLY);
@@ -1935,7 +1911,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
             }
         }
         string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));
-        WriteFile(file, bigInfo);
+        BFile::WriteFile(file, bigInfo);
         int manifestFdval = open(file.data(), O_RDONLY);
         ErrCode ret = (fdval < 0 || manifestFdval < 0) ? proxy->AppIncrementalFileReadyWithoutFd(item.first, errCode) :
                       proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode);
@@ -1979,7 +1955,7 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     close(cachedEntity.GetFd().Release());
 
     string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append("all"));
-    WriteFile(file, srcFiles);
+    BFile::WriteFile(file, srcFiles);
     int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
     int manifestFdval = open(file.data(), O_RDONLY);
     ErrCode ret = (fdval < 0 || manifestFdval < 0) ?

@@ -94,7 +94,7 @@ public:
 
     // 条件等待，等待文件被添加或者扫描完成
     void WaitForFiles();
-    void UpdateSmallFileSizeLimit(uint64_t allSmallFileSize);
+    void UpdateLimitByTotalSize(uint64_t allSmallFileSize);
 
     void StartPacket();
     void WaitForPacketFlag();
@@ -112,7 +112,7 @@ private:
     std::condition_variable waitFilesReady_;
     std::atomic<bool> isProcessCompleted_ = false;
     std::atomic<uint64_t> currentTarSize_ = 0;
-    std::atomic<uint64_t> smallFileSizeLimit_ = 0;
+    std::atomic<uint64_t> percentSizeLimit_ = 0;
     std::atomic<bool> stopPacket_ = false;
     std::mutex mutexPacket_;
     std::condition_variable waitPacketFlag_;

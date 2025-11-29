@@ -34,7 +34,16 @@ public:
     IServiceMock() : code_(0) {}
     virtual ~IServiceMock() {}
 
-    MOCK_METHOD4(SendRequest, int(uint32_t, MessageParcel &, MessageParcel &, MessageOption &));
+    MOCK_METHOD(int, SendRequest, (uint32_t, MessageParcel &, MessageParcel &, MessageOption &));
+
+    MOCK_METHOD(ErrCode, AppFileReady, (const std::string &fileName, int, int32_t errCode));
+    MOCK_METHOD(ErrCode, AppFileReadyWithoutFd, (const std::string &fileName, int32_t errCode));
+    MOCK_METHOD(ErrCode, AppDone, (int32_t errCode));
+    MOCK_METHOD(ErrCode, AppIncrementalFileReady, (const std::string &, int, int, int32_t));
+    MOCK_METHOD(ErrCode, AppIncrementalFileReadyWithoutFd, (const std::string &, int32_t));
+    MOCK_METHOD(ErrCode, AppIncrementalDone, (ErrCode errCode));
+    MOCK_METHOD(ErrCode, GetExtOnRelease, (bool&));
+    MOCK_METHOD(ErrCode, ServiceResultReport, (const std::string&, BackupRestoreScenario, ErrCode));
 
     int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {
@@ -62,22 +71,24 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode InitRestoreSession(sptr<IServiceReverse> remote) override
+    ErrCode InitRestoreSession(const sptr<IServiceReverse>& remote) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode InitRestoreSession(sptr<IServiceReverse> remote, std::string &errMsg) override
+    ErrCode InitRestoreSessionWithErrMsg(const sptr<IServiceReverse>& remote, int32_t& errCode,
+        std::string &errMsg) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode InitBackupSession(sptr<IServiceReverse> remote) override
+    ErrCode InitBackupSession(const sptr<IServiceReverse>& remote) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode InitBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override
+    ErrCode InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, int32_t& errCode,
+        std::string &errMsg) override
     {
         return BError(BError::Codes::OK);
     }
@@ -87,12 +98,12 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    UniqueFd GetLocalCapabilities() override
+    ErrCode GetLocalCapabilities(int& fd) override
     {
         return UniqueFd(-1);
     }
 
-    UniqueFd GetLocalCapabilitiesForBundleInfos() override
+    ErrCode GetLocalCapabilitiesForBundleInfos(int& fd) override
     {
         return UniqueFd(-1);
     }
@@ -102,44 +113,23 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppFileReady(const std::string &fileName, UniqueFd fd, int32_t errCode) override
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode AppFileReadyWithoutFd(const std::string &fileName, int32_t errCode) override
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode AppDone(ErrCode errCode) override
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode ServiceResultReport(const std::string restoreRetInfo,
-        BackupRestoreScenario scenario, ErrCode errCode) override
-    {
-        return BError(BError::Codes::OK);
-    }
-
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
+    ErrCode AppendBundlesRestoreSessionDataByDetail(int fd,
                                         const std::vector<BundleName> &bundleNames,
                                         const std::vector<std::string> &detailInfos,
-                                        RestoreTypeEnum restoreType,
+                                        int32_t restoreType,
                                         int32_t userId) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppendBundlesRestoreSession(UniqueFd fd,
+    ErrCode AppendBundlesRestoreSessionData(int fd,
                                         const std::vector<BundleName> &bundleNames,
-                                        RestoreTypeEnum restoreType,
+                                        int32_t restoreType,
                                         int32_t userId) override
     {
         return BError(BError::Codes::OK);
@@ -161,12 +151,38 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode GetBackupInfo(BundleName &bundleName, std::string &result) override
+    ErrCode Release() override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode UpdateTimer(BundleName &bundleName, uint32_t timeout, bool &result) override
+    ErrCode CancelForResult(const std::string& bundleName, int32_t& result) override
+    {
+        result = BError(BError::Codes::OK);
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode GetAppLocalListAndDoIncrementalBackup() override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode GetBackupInfo(const std::string& bundleName, std::string& result) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode UpdateTimer(const std::string &bundleName, uint32_t timeout, bool &result) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result) override
     {
         return BError(BError::Codes::OK);
     }
@@ -186,43 +202,18 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode RefreshDataSize(int64_t totalsize) override
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode UpdateSendRate(std::string &bundleName, int32_t sendRate, bool &result) override
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode Release() override
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode CancelForResult(std::string bundleName, int32_t &result) override
-    {
-        result = BError(BError::Codes::OK);
-        return BError(BError::Codes::OK);
-    }
-
-    UniqueFd GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData> &bundleNames) override
+    ErrCode GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>& bundleNames, int& fd) override
     {
         return UniqueFd(-1);
     }
 
-    ErrCode GetAppLocalListAndDoIncrementalBackup() override
+    ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>& remote) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote) override
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode InitIncrementalBackupSession(sptr<IServiceReverse> remote, std::string &errMsg) override
+    ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, int32_t& errCode,
+        std::string &errMsg) override
     {
         return BError(BError::Codes::OK);
     }
@@ -232,7 +223,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppendBundlesIncrementalBackupSession(const std::vector<BIncrementalData> &bundlesToBackup,
+    ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData> &bundlesToBackup,
         const std::vector<std::string> &infos) override
     {
         return BError(BError::Codes::OK);
@@ -243,37 +234,22 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd) override
+    ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppIncrementalFileReady(const std::string &fileName, UniqueFd fd, UniqueFd manifestFd, int32_t errCode)
+    ErrCode ReportAppProcessInfo(const std::string& processInfo, BackupRestoreScenario sennario)
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppIncrementalFileReadyWithoutFd(const std::string &fileName, int32_t errCode)
+    ErrCode RefreshDataSize(int64_t totalsize) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppIncrementalDone(ErrCode errCode)
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode ReportAppProcessInfo(const std::string processInfo, const BackupRestoreScenario sennario)
-    {
-        return BError(BError::Codes::OK);
-    }
-
-    ErrCode GetBackupDataSize(bool isPreciseScan, std::vector<BIncrementalData> bundleNameList)
+    ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList)
     {
         return BError(BError::Codes::OK);
     }
@@ -281,7 +257,12 @@ public:
     ErrCode CleanBundleTempDir(const std::string &bundleName) override
     {
         return BError(BError::Codes::OK);
-    };
+    }
+
+    ErrCode HandleExtDisconnect(BackupRestoreScenario sennario, bool isAppResultReport, int32_t appErrCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
 
     ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo, std::string &compatInfo)
     {

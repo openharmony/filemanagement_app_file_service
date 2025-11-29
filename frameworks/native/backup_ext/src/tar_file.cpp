@@ -63,7 +63,7 @@ bool TarFile::InitBeforePacket(const string &tarFileName, const string &pkPath)
     ioBuffer_.resize(READ_BUFF_SIZE);
     baseTarName_ = tarFileName;
     packagePath_ = pkPath;
-    if (pkPath[pkPath.length() - 1] == '/') {
+    if (pkPath[pkPath.length() - 1] == '/' && pkPath != "/") {
         packagePath_ = packagePath_.substr(0, packagePath_.length() - 1);
     }
     HILOGI("Start Create  SplitTar files");
@@ -74,7 +74,7 @@ bool TarFile::InitBeforePacket(const string &tarFileName, const string &pkPath)
 bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, const string &pkPath, TarMap &tarMap,
     std::function<void(std::string, int)> reportCb)
 {
-    if (!InitBeforePacket(tarFileName, pkPath)) {
+    if (!InitBeforePacket(tarFileName, pkPath) || srcFiles.empty()) {
         return false;
     }
 
@@ -106,7 +106,7 @@ bool TarFile::Packet(const vector<string> &srcFiles, const string &tarFileName, 
 bool TarFile::Packet(const std::vector<std::shared_ptr<ISmallFileInfo>> &srcFiles, const string &tarFileName,
     const string &pkPath, TarMap &tarMap, std::function<void(std::string, int)> reportCb)
 {
-    if (!InitBeforePacket(tarFileName, pkPath)) {
+    if (!InitBeforePacket(tarFileName, pkPath) || srcFiles.empty()) {
         return false;
     }
 
@@ -131,6 +131,10 @@ bool TarFile::Packet(const std::vector<std::shared_ptr<ISmallFileInfo>> &srcFile
             sleep(WAIT_TIME);
             index = 0;
         }
+    }
+    if (index == 0) {
+        HILOGE("all files are invalid");
+        return false;
     }
 
     FillSplitTailBlocks();

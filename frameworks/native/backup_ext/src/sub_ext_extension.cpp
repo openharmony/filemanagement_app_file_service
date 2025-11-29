@@ -507,7 +507,6 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (errCode == ERR_OK) {
             if (backupExRetInfo.size()) {
-                HILOGD("backupExtRet:%{public}s", backupExRetInfo.c_str());
                 auto spendTime = extensionPtr->GetOnStartTimeCost();
                 if (spendTime >= BConstants::MAX_TIME_COST) {
                     AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
@@ -1062,6 +1061,7 @@ int BackupExtExtension::User0DoBackup(const BJsonEntityExtensionConfig &usrConfi
 
 void BackupExtExtension::UpdateFileStat(std::string filePath, uint64_t fileSize)
 {
+    std::lock_guard<std::mutex> lock(updateFileStatLock_);
     appStatistic_->UpdateFileDist(ExtractFileExt(filePath), fileSize);
     uint32_t dirDepth = 0;
     const char* pstr = filePath.c_str();
@@ -1590,7 +1590,7 @@ void BackupExtExtension::AsyncDoBackup()
     auto dobackupTask = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
-        ptr->DoBackUpTask();
+        ptr->DoBackupTask();
         ptr->DoClear();
     };
     doBackupPool_.AddTask([dobackupTask]() {
@@ -1602,7 +1602,7 @@ void BackupExtExtension::AsyncDoBackup()
     });
 }
 
-void BackupExtExtension::DoBackUpTask()
+void BackupExtExtension::DoBackupTask()
 {
     int ret = ERR_OK;
     int fdNum = 0;
@@ -1898,7 +1898,7 @@ set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& inclu
 {
     std::unordered_map<std::string, std::string> dirMapping = usrConfig.GetCompatibleDirMapping();
     HILOGI("dirMapping config size:%{public}zu", dirMapping.size());
-    if (dirMapping.size() == 0 || compatibleDirs_.size() == 0) {
+    if (dirMapping.size() == 0 || compatibleDirs_.size() == 0 || includes.size() == 0) {
         return {};
     }
     std::unordered_map<std::string, std::string> enabledCompatDirs;

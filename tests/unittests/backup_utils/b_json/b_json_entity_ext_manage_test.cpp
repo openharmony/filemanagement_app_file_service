@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@
 
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_ext_manage.h"
+#include "b_utils/scan_file_singleton.h"
 #include "test_manager.h"
 
 #include "src/b_json/b_json_entity_ext_manage.cpp"
@@ -116,6 +117,53 @@ struct stat GetFileStat(const string &pathTestFile)
         throw BError(errno);
     }
     return sta;
+}
+
+/**
+ * @tc.number: SET_EXT_MANAGE_001
+ * @tc.name: SET_EXT_MANAGE_001
+ * @tc.desc: Test function of SetExtManage
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonEntityExtManageTest, SET_EXT_MANAGE_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirSubTest-begin SET_EXT_MANAGE_001";
+
+    TestManager tm("SET_EXT_MANAGE_001");
+    // 预置文件数据
+    // 索引文件pathManageFile, 测试文件路径pathTestFile, filename
+    string root = tm.GetRootDirCurTest();
+    string pathManageFile = root + "manage.json";
+    string filename = "test.txt";
+    string pathTestFile = root + filename;
+    string restorePath = root + "restore/" + filename;
+    SaveStringToFile(pathTestFile, "hello world");
+    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(UniqueFd(open(pathManageFile.data(), O_RDONLY, 0)));
+    auto cache = cachedEntity.Structuralize();
+
+    // 生成一条有用数据并写入索引文件
+    std::vector<std::shared_ptr<IFileInfo>> infos;
+    struct stat sta = {};
+    sta = GetFileStat(pathTestFile);
+    std::shared_ptr<IFileInfo> item1 = std::make_shared<FileInfo>(filename, pathTestFile, sta, true);
+    std::shared_ptr<IFileInfo> item2 = std::make_shared<CompatibleFileInfo>(filename, pathTestFile, sta, false,
+        restorePath);
+    infos.push_back(item1);
+    infos.push_back(item2);
+
+    cache.SetExtManage(infos);
+
+    auto fileInfo = cache.GetExtManageInfo();
+    ASSERT_EQ(fileInfo.size(), 2ul);
+    EXPECT_TRUE(fileInfo[0].isBigFile);
+    EXPECT_EQ(fileInfo[0].fileName, pathTestFile);
+    EXPECT_EQ(fileInfo[1].fileName, restorePath);
+    EXPECT_FALSE(fileInfo[1].isBigFile);
+    EXPECT_TRUE(IsEqual(fileInfo[0].sta, sta));
+    GTEST_LOG_(INFO) << "BDirTest-end SET_EXT_MANAGE_001";
 }
 
 /**
