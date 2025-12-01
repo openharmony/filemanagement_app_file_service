@@ -512,4 +512,166 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_FindBroadCastInfoByName_0200, testing::ext::T
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end FindBroadCastInfoByName_0200";
 }
+
+/**
+ * @tc.number: b_jsonutil_ParseBundleInfoJson_0100
+ * @tc.name: b_jsonutil_ParseBundleInfoJson_0100
+ * @tc.desc: Test function of ParseBundleInfoJson interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin ParseBundleInfoJson_0100";
+    try {
+        BJsonUtil::BundleDetailInfo detailInfo = {
+            .bundleName = "bundle", .bundleIndex = 0, .userId = 100};
+        std::string bundleInfo = R"({
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"restore_start",
+                "isBroadcastOnly":true,
+                "details":[]
+            }],
+            "backupScene":""
+        })";
+        std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
+        bool isClearData = true;
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        ASSERT_TRUE(!bundleDetailInfos.empty());
+        EXPECT_TRUE(bundleDetailInfos[0].isBroadcastOnly);
+
+        bundleInfo = R"({
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"restore_start",
+                "isBroadcastOnly":"true",
+                "details":[]
+            }],
+            "backupScene":""
+        })";
+        bundleDetailInfos.clear();
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        ASSERT_TRUE(!bundleDetailInfos.empty());
+        EXPECT_FALSE(bundleDetailInfos[0].isBroadcastOnly);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end ParseBundleInfoJson_0100";
+}
+
+
+/**
+ * @tc.number: b_jsonutil_ParseBundleInfoJson_0200
+ * @tc.name: b_jsonutil_ParseBundleInfoJson_0200
+ * @tc.desc: Test function of ParseBundleInfoJson interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin ParseBundleInfoJson_0200";
+    try {
+        BJsonUtil::BundleDetailInfo detailInfo = {
+            .bundleName = "bundle", .bundleIndex = 0, .userId = 100};
+        std::string bundleInfo = R"({
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"restore_start",
+                "isBroadcastOnly":false,
+                "details":[]
+            }],
+            "backupScene":""
+        })";
+        std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
+        bool isClearData = true;
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        ASSERT_TRUE(!bundleDetailInfos.empty());
+        EXPECT_FALSE(bundleDetailInfos[0].isBroadcastOnly);
+
+        bundleInfo = R"({
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"restore_start",
+                "details":[]
+            }],
+            "backupScene":""
+        })";
+        bundleDetailInfos.clear();
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        ASSERT_TRUE(!bundleDetailInfos.empty());
+        EXPECT_FALSE(bundleDetailInfos[0].isBroadcastOnly);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end ParseBundleInfoJson_0200";
+}
+
+/**
+ * @tc.number: b_jsonutil_ParseBundleInfoJson_0300
+ * @tc.name: b_jsonutil_ParseBundleInfoJson_0300
+ * @tc.desc: Test function of ParseBundleInfoJson interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: NA
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin ParseBundleInfoJson_0300";
+    try {
+        BJsonUtil::BundleDetailInfo detailInfo = {
+            .bundleName = "bundle", .bundleIndex = 0, .userId = 100};
+        std::string bundleInfo = R"({
+            "infos":[{
+                "type":"broadcast",
+                "isBroadcastOnly":true,
+                "details":[]
+            }],
+            "backupScene":""
+        })";
+        std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
+        bool isClearData = true;
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        ASSERT_TRUE(!bundleDetailInfos.empty());
+        EXPECT_TRUE(bundleDetailInfos[0].broadCastType.empty());
+
+        bundleInfo = R"({
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":123,
+                "isBroadcastOnly":"true",
+                "details":[]
+            }],
+            "backupScene":""
+        })";
+        bundleDetailInfos.clear();
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        ASSERT_TRUE(!bundleDetailInfos.empty());
+        EXPECT_TRUE(bundleDetailInfos[0].broadCastType.empty());
+
+        bundleInfo = R"({
+            "infos":[{
+                "type":"broadcast",
+                "broadcastType":"",
+                "details":[]
+            }],
+            "backupScene":""
+        })";
+        bundleDetailInfos.clear();
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        ASSERT_TRUE(!bundleDetailInfos.empty());
+        EXPECT_TRUE(bundleDetailInfos[0].broadCastType.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end ParseBundleInfoJson_0300";
+}
 } // namespace OHOS::FileManagement::Backup
