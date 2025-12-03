@@ -104,7 +104,7 @@ public:
 private:
     static bool GetCurBundleExtenionInfo(BundleExtInfo &bundleExtInfo, sptr<AppExecFwk::IBundleMgr> bms,
         int32_t userId);
-    static void RefreshBundleIncrementalData(std::string bundle, std::vector<BIncrementalData> &bundleNames,
+    static void RefreshBundleIncrementalData(const std::string &bundle, std::vector<BIncrementalData> &bundleNames,
         const std::vector<BIncrementalData> &incrementalDataList);
 };
 } // namespace OHOS::FileManagement::Backup

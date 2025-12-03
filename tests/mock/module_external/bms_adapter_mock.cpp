@@ -127,4 +127,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppendBun
             "com.example.app2backup"});
     return bundleInfos;
 }
+
+std::string BundleMgrAdapter::GetBundleIndexName(const std::string &bundleName)
+{
+    return bundleName;
+}
 } // namespace OHOS::FileManagement::Backup

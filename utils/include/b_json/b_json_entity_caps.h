@@ -71,9 +71,6 @@ public:
 
     void SetIncreAppIndex(const bool isIncSupportAppIndex)
     {
-        if (obj_.isMember("increAppIndex")) {
-            obj_["increAppIndex"].clear();
-        }
         obj_["increAppIndex"] = isIncSupportAppIndex;
     }
 
