@@ -69,6 +69,14 @@ public:
         obj_["deviceType"] = deviceType;
     }
 
+    void SetIncreAppIndex(const bool isIncSupportAppIndex)
+    {
+        if (obj_.isMember("increAppIndex")) {
+            obj_["increAppIndex"].clear();
+        }
+        obj_["increAppIndex"] = isIncSupportAppIndex;
+    }
+
     void SetBundleInfos(std::vector<BundleInfo> bundleInfos, bool incre = false)
     {
         if (obj_.isMember("bundleInfos")) {

@@ -315,6 +315,7 @@ UniqueFd Service::GetLocalCapabilities()
         cache.SetBackupVersion(backupVersion);
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
+        cache.SetIncreAppIndex(true);
         auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(GetUserIdDefault());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
