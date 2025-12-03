@@ -975,7 +975,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*session, GetSessionCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, GetSessionActiveTime()).WillOnce(Return(""));
-        EXPECT_CALL(*jsonUtil, BuildInitSessionErrInfo(_, _, _)).WillOnce(Return(""));
+        EXPECT_CALL(*jsonUtil, BuildInitSessionErrInfo(_, _, _, _)).WillOnce(Return(""));
         service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
         EXPECT_EQ(errCode, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 

@@ -385,4 +385,9 @@ bool SvcSessionManager::GetIsExisted(const std::string &bundleName)
 {
     return true;
 }
+
+std::string SvcSessionManager::GetScenarioStr()
+{
+    return BackupSvcSessionManager::session->GetScenarioStr();
+}
 } // namespace OHOS::FileManagement::Backup

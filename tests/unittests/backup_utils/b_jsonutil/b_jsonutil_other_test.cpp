@@ -320,14 +320,15 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildInitSessionErrInfo_0701, testing::ext::T
         std::string callerName;
         std::string activeTime;
         int cjson = 0;
+        std::string scenario;
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
-        auto result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
+        auto result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime, scenario);
         EXPECT_EQ(result, "");
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
+        result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime, scenario);
         EXPECT_EQ(result, "");
 
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
@@ -342,7 +343,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildInitSessionErrInfo_0701, testing::ext::T
         EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
-        result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime);
+        result = BJsonUtil::BuildInitSessionErrInfo(userId, callerName, activeTime, scenario);
         EXPECT_EQ(result, "");
     } catch (...) {
         EXPECT_TRUE(false);

@@ -1407,4 +1407,29 @@ bool SvcSessionManager::GetIsExisted(const std::string &bundleName)
     }
     return true;
 }
+
+std::string SvcSessionManager::GetScenarioStr()
+{
+    shared_lock<shared_mutex> lock(lock_);
+    std::string scenario = "UNDEFINED";
+    if (!impl_.clientToken) {
+        HILOGE("Get scenario failed, No caller token was specified");
+        return scenario;
+    }
+    switch (impl_.scenario) {
+        case IServiceReverseType::Scenario::BACKUP:
+            scenario = "BACKUP";
+            break;
+        case IServiceReverseType::Scenario::RESTORE:
+            scenario = "RESTORE";
+            break;
+        case IServiceReverseType::Scenario::CLEAN:
+            scenario = "CLEAN";
+            break;
+        default:
+            scenario = "UNDEFINED";
+            break;
+    }
+    return scenario;
+}
 } // namespace OHOS::FileManagement::Backup

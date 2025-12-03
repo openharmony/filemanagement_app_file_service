@@ -960,7 +960,8 @@ ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::st
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
-                                                    session_->GetSessionActiveTime());
+                                                    session_->GetSessionActiveTime(),
+                                                    session_->GetScenarioStr());
         HILOGE("Active restore session error, Already have a session");
         return ret;
     }
@@ -1012,7 +1013,8 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::str
     if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
-                                                    session_->GetSessionActiveTime());
+                                                    session_->GetSessionActiveTime(),
+                                                    session_->GetScenarioStr());
         HILOGE("Active backup session error, Already have a session");
         return ret;
     }

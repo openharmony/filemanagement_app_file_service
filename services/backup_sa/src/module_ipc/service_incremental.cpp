@@ -402,7 +402,8 @@ ErrCode Service::InitIncrementalBackupSession(const sptr<IServiceReverse>& remot
     if (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
-                                                    session_->GetSessionActiveTime());
+                                                    session_->GetSessionActiveTime(),
+                                                    session_->GetScenarioStr());
         HILOGE("Active incremental backup session error, Already have a session");
         return errCode;
     }
