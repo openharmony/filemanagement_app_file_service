@@ -194,8 +194,8 @@ static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, 
     const vector<string> &includes, const vector<string> &excludes)
 {
     // backup_sa bundle path
-    string backupSaBundleDir = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
-        append(BundleMgrAdapter::GetBundleIndexName()).append("/");
+    string backupSaBundleDir = BConstants::GetSaBundleBackupRootDir(userId).
+        append(BundleMgrAdapter::GetBundleIndexName(bundleName)).append("/");
     if (access(backupSaBundleDir.data(), F_OK) != 0) {
         int32_t err = mkdir(backupSaBundleDir.data(), S_IRWXU | S_IRWXG);
         if (err != 0 && errno != EEXIST) {
@@ -317,7 +317,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         incrementalBackTimes.emplace_back(bundleNameTime.lastIncrementalTime);
     }
     vector<BJsonEntityCaps::BundleInfo> newBundleInfos {};
-    newBundleInfos.insert(newBundleInfos.end(), noBackupBundleInfos.begin(). noBackupBundleInfos.end());
+    newBundleInfos.insert(newBundleInfos.end(), noBackupBundleInfos.begin(), noBackupBundleInfos.end());
     if (!GenerateBundleStatsIncrease(userId, bundleNames, incrementalBackTimes, bundleInfos, newBundleInfos)) {
         HILOGE("Failed to get bundleStats result");
         return {};
@@ -723,7 +723,7 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppe
     return bundleInfos;
 }
 
-std::string GetBundleIndexName(std::string &bundleName)
+std::string BundleMgrAdapter::GetBundleIndexName(const std::string &bundleName)
 {
     BJsonUtil::BundleDetailInfo bundleDetail = BJsonUtil::ParseBundleNameIndexStr(bundleName);
     std::string bundleIndexName;

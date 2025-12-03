@@ -93,14 +93,14 @@ public:
 
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForAppendBundles(
         const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
-    
+
     /**
      * @brief Get the bundle index name used for bundle dir
      *
      * @param bundleName bundleName like BUNDLE_NAME:INDEX
      * @return bundle index name
      */
-    static std::string GetBundleIndexName(std::string &bundleName);
+    static std::string GetBundleIndexName(const std::string &bundleName);
 private:
     static bool GetCurBundleExtenionInfo(BundleExtInfo &bundleExtInfo, sptr<AppExecFwk::IBundleMgr> bms,
         int32_t userId);

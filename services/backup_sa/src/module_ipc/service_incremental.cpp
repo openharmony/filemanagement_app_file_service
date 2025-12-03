@@ -240,7 +240,7 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     auto newBundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
     RefreshBundleDataSize(newBundleInfos, bundleName, ptr);
     string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
-        append(BundleMgrAdapter::GetBundleIndexName()).
+        append(BundleMgrAdapter::GetBundleIndexName(bundleName)).
         append("/").append(BConstants::BACKUP_STAT_SYMBOL).append(to_string(lastTime));
     UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
     if (fdLocal < 0) {
@@ -1137,8 +1137,8 @@ ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)
 
 void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName)
 {
-    string backupSaBundleDir = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
-        append(BundleMgrAdapter::GetBundleIndexName()).append("/");
+    string backupSaBundleDir = BConstants::GetSaBundleBackupRootDir(userId).
+        append(BundleMgrAdapter::GetBundleIndexName(bundleName)).append("/");
     if (access(backupSaBundleDir.c_str(), F_OK) != ERR_OK) {
         HILOGD("ClearIncrementalStatFile, access dir failed errno = %{public}d", errno);
         return;
