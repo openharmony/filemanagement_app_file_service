@@ -31,6 +31,14 @@ struct FileStatInfo {
     std::string longName {};
 };
 
+enum UNTAR_RESULT {
+    DEFAULT_ERR = -1,
+    ERR_INVALID_TAR = -2,
+    ERR_INVALID_PATH = -3,
+    ERR_FSEEKO = -4,
+    ERR_PARSE_PAX = -5,
+};
+
 using ErrFileInfo = std::map<std::string, std::vector<int>>;
 using EndFileInfo = std::map<std::string, off_t>;
 
@@ -211,6 +219,8 @@ private:
     void MatchExtHeader(bool &isRightRes, FileStatInfo &info, bool &isFilter);
 
     void MatchDefault(bool &isRightRes, FileStatInfo &info);
+
+    bool UnTarFileInner(FILE *destFile);
 
 private:
     std::string rootPath_ {};

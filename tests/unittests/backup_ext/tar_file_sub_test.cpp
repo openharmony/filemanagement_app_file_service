@@ -545,6 +545,10 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_TraversalFile_0100, testing::ext::TestSize
         errno = ERR_NO_PERMISSION;
         EXPECT_TRUE(TarFile::GetInstance().TraversalFile(fileName, err));
 
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(-1));
+        errno = 128;
+        EXPECT_FALSE(TarFile::GetInstance().TraversalFile(fileName, err));
+
         EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(1));
         EXPECT_CALL(*funcMock, close(_)).WillRepeatedly(Return(0));
         EXPECT_CALL(*funcMock, lstat(_, _)).WillOnce(Return(-1));

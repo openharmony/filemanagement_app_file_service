@@ -186,6 +186,13 @@ bool TarFile::TraversalFile(string &backupPath, int &err, const std::string &res
         return true;
     } else if (fd > 0) {
         close(fd);
+    } else {
+        err = errno;
+        HILOGE("File open failed, err = %{public}d", errno);
+        AuditLog auditLog = {false, "open file failed", "ADD", "", 1, "FAILED", "TraversalFile",
+            "Packet File", GetAnonyPath(backupPath)};
+        HiAudit::GetInstance(false).Write(auditLog);
+        return false;
     }
     if (!ToAddFile(backupPath, err, restorePath)) {
         return false;
