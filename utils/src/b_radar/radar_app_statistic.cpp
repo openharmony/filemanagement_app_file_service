@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <vector>
+
 #include "b_radar/radar_app_statistic.h"
 #include "b_radar/radar_const_inner.h"
 #include "filemgmt_libhilog.h"
@@ -84,6 +86,30 @@ void FileSizeStat::UpdateStat(uint64_t fileSize)
     }
 }
 
+std::string FileErrorList::ToJsonString()
+{
+    std::string result = "[";
+    int32_t idx = 1;
+    for (auto item : fileList_) {
+        if (idx != 1) {
+            result += ",";
+        }
+        result += "{\"file" + std::to_string(idx) + "\":\"path\":\"" + item.first + "\",\"error\":" +
+            std::to_string(item.second) + "}";
+        idx++;
+    }
+    result += "]";
+    return result;
+}
+
+void FileErrorList::UpdateFileList(const std::string &fileName, int32_t errCode)
+{
+    if (fileList_.size() >= ERRLIST_MAX_SIZE) {
+        return;
+    }
+    fileList_.emplace_back(std::make_pair(fileName, errCode));
+}
+
 void RadarAppStatistic::ReportBackup(const std::string &func, int32_t errorCode, std::string errMsg)
 {
     HiSysEventWrite(
@@ -95,6 +121,7 @@ void RadarAppStatistic::ReportBackup(const std::string &func, int32_t errorCode,
         FUNC, func,
         CONCURRENT_ID, uniqId_,
         BIZ_SCENE, static_cast<int32_t>(BizScene::BACKUP),
+        BACKUP_ERROR_FILE, fileErrorList_.ToJsonString(),
         FILE_SIZE_DIST, fileSizeDist_.ToJsonString(),
         FILE_TYPE_DIST, fileTypeDist_.ToJsonString(),
         SMALL_FILE_COUNT, smallFileCount_,
@@ -137,6 +164,7 @@ void RadarAppStatistic::ReportRestore(const std::string &func, int32_t errorCode
         FUNC, func,
         CONCURRENT_ID, uniqId_,
         BIZ_SCENE, static_cast<int32_t>(BizScene::RESTORE),
+        RESTORE_ERROR_FILE, fileErrorList_.ToJsonString(),
         BIG_FILE_COUNT, bigFileCount_,
         BIG_FILE_SIZE, bigFileSize_,
         TAR_FILE_COUNT, tarFileCount_,
@@ -206,6 +234,11 @@ void RadarAppStatistic::ReportSA(const std::string &func, RadarError error)
         ERROR_CODE, error.GenCode(),
         BIZ_STAGE, DEFAULT_STAGE,
         STAGE_RES, error.error_ == 0 ? STAGE_RES_SUCCESS : STAGE_RES_FAIL);
+}
+
+void RadarAppStatistic::UpdateErrorFileList(const std::string &fileName, int32_t errCode)
+{
+    fileErrorList_.UpdateFileList(fileName, errCode);
 }
 
 } // namespace OHOS::FileManagement::Backup

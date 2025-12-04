@@ -622,6 +622,7 @@ std::function<void(std::string, int)> BackupExtExtension::ReportErrFileByProc(wp
             HILOGE("ReportErr ExtPtr is empty.");
             return;
         }
+        extPtr->appStatistic_->UpdateErrorFileList(msg, err);
         string jsonInfo;
         BJsonUtil::BuildOnProcessErrInfo(jsonInfo, msg, err);
         HILOGI("ReportErr Will notify err info.");
