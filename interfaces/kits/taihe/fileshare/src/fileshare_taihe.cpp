@@ -447,8 +447,8 @@ void GrantDecUriPermissionSync(taihe::array_view<ohos::fileshare::fileShare::Pol
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get uriPolicies");
-        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PARAMS),
-                                  GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PERM),
+                                  GetErrorMessage(OHOS::FileManagement::LibN::E_PERM));
         return;
     }
 
