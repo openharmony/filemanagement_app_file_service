@@ -326,8 +326,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     return newBundleInfos;
 }
 
-void BundleMgrAdapter::RefreshBundleIncrementalData(const std::string &bundle, std::vector<BIncrementalData> &bundleNames,
-    const std::vector<BIncrementalData> &incrementalDataList)
+void BundleMgrAdapter::RefreshBundleIncrementalData(const std::string &bundle,
+    std::vector<BIncrementalData> &bundleNames, const std::vector<BIncrementalData> &incrementalDataList)
 {
     auto it = std::find_if(incrementalDataList.begin(), incrementalDataList.end(),
         [&bundle](const BIncrementalData &info)->bool {
