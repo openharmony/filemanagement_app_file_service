@@ -31,12 +31,12 @@
 
 namespace ANI::FileShare {
 constexpr int32_t E_PERMISSION_DENIED = -1;
-constexpr int32_t READ_MODE = 0x01;
-constexpr int32_t WRITE_MODE = 0x02;
-constexpr int32_t CREATE_MODE = 0x04;
-constexpr int32_t DELETE_MODE = 0x08;
-constexpr int32_t RENAME_MODE = 0x10;
-constexpr int32_t ALL_VALID_MODES = READ_MODE | WRITE_MODE | CREATE_MODE | DELETE_MODE | RENAME_MODE;
+constexpr uint32_t READ_MODE = 0x01;
+constexpr uint32_t WRITE_MODE = 0x02;
+constexpr uint32_t CREATE_MODE = 0x04;
+constexpr uint32_t DELETE_MODE = 0x08;
+constexpr uint32_t RENAME_MODE = 0x10;
+constexpr uint32_t ALL_VALID_MODES = READ_MODE | WRITE_MODE | CREATE_MODE | DELETE_MODE | RENAME_MODE;
 const std::string MEDIA_FILE_URI_PHOTO_PREFEX = "file://media/Photo/";
 const std::string MEDIA_FILE_URI_AUDIO_PREFEX = "file://media/Audio/";
 const std::string MEDIA_FILE_URI_VIDEO_PREFEX = "file://media/video/";
@@ -447,8 +447,8 @@ void GrantDecUriPermissionSync(taihe::array_view<ohos::fileshare::fileShare::Pol
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get uriPolicies");
-        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PARAMS),
-                                  GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PERM),
+                                  GetErrorMessage(OHOS::FileManagement::LibN::E_PERM));
         return;
     }
 
