@@ -279,7 +279,7 @@ HWTEST_F(BmsAdapterTest, SUB_bms_adapter_RefreshBundleIncrementalData_test_0000,
         EXPECT_EQ(ret.lastIncrementalTime, 123);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by CreatBackupEnv.";
+        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by RefreshBundleIncrementalData.";
     }
     GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_RefreshBundleIncrementalData_test_0000";
 }
@@ -311,7 +311,7 @@ HWTEST_F(BmsAdapterTest, SUB_bms_adapter_GetBundleIndexName_test_0000, testing::
         EXPECT_NE(bundleIdxName, "bundlename");
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by CreatBackupEnv.";
+        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by GetBundleIndexName.";
     }
     GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_GetBundleIndexName_test_0000";
 }
@@ -350,7 +350,7 @@ HWTEST_F(BmsAdapterTest, SUB_bms_adapter_GetBundleInfosForIncremental_test_0000,
         EXPECT_EQ(bundleInfo.size(), 1);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by CreatBackupEnv.";
+        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by GetBundleInfosForIncremental.";
     }
     GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_GetBundleInfosForIncremental_test_0000";
 }

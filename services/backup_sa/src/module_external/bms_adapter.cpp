@@ -320,7 +320,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     newBundleInfos.insert(newBundleInfos.end(), noBackupBundleInfos.begin(), noBackupBundleInfos.end());
     if (!GenerateBundleStatsIncrease(userId, bundleNames, incrementalBackTimes, bundleInfos, newBundleInfos)) {
         HILOGE("Failed to get bundleStats result");
-        return {};
+        return newBundleInfos;
     }
     HILOGI("BundleMgrAdapter GetBundleInfosForIncremental end ");
     return newBundleInfos;
