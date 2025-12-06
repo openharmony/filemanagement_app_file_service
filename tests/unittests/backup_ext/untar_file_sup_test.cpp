@@ -749,6 +749,56 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseRegularFile_0200, testing::ext::T
 }
 
 /**
+ * @tc.number: SUB_Untar_File_ParseRegularFile_0300
+ * @tc.name: SUB_Untar_File_ParseRegularFile_0300
+ * @tc.desc: 测试 ParseRegularFile 接口 fread fwrite失败的场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseRegularFile_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_ParseRegularFile_0300";
+    try {
+        char c = '\0';
+        FileStatInfo info;
+        info.fullPath = "/test.txt";
+        UntarFile::GetInstance().tarFileSize_ = READ_BUFF_SIZE - 1;
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(reinterpret_cast<FILE*>(&c)));
+        EXPECT_CALL(*funcMock, fread(_, _, _, _))
+            .WillOnce(Return(READ_BUFF_SIZE - 3))
+            .WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _))
+            .WillOnce(Return(READ_BUFF_SIZE - 3));
+        EXPECT_CALL(*funcMock, fclose(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        auto ret = UntarFile::GetInstance().ParseRegularFile(info);
+        EXPECT_EQ(ret[info.fullPath].size(), 1);
+
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(reinterpret_cast<FILE*>(&c)));
+        EXPECT_CALL(*funcMock, fread(_, _, _, _))
+            .WillOnce(Return(READ_BUFF_SIZE - 1))
+            .WillOnce(Return(2));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _))
+            .WillOnce(Return(READ_BUFF_SIZE - 3))
+            .WillOnce(Return(0))
+            .WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fclose(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        ret = UntarFile::GetInstance().ParseRegularFile(info);
+        EXPECT_EQ(ret[info.fullPath].size(), 1);
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by ParseRegularFile.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_ParseRegularFile_0300";
+}
+
+/**
  * @tc.number: SUB_Untar_File_UnPacket_0100
  * @tc.name: SUB_Untar_File_UnPacket_0100
  * @tc.desc: 测试 UnPacket 接口

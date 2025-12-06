@@ -25,7 +25,6 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 const int32_t PATH_MAX_LEN = 4096;
 const int32_t OCTAL = 8;
-const int DEFAULT_ERR = -1;
 
 static bool IsEmptyBlock(const char *p)
 {
@@ -278,15 +277,15 @@ int UntarFile::DealIncreParseTarFileResult(const std::tuple<int, bool, ErrFileIn
     const off_t fileSize, const std::string &fileName, EndFileInfo &fileInfos, ErrFileInfo &errInfos)
 {
     auto [ret, isFilter, subErrInfo] = result;
-    if (ret != 0) {
-        HILOGE("Failed to parse incremental file by type flag");
-        return ret;
-    }
     if (!isFilter) {
         fileInfos[fileName] = fileSize;
     }
     if (!subErrInfo.empty()) {
         errInfos.merge(subErrInfo);
+    }
+    if (ret != 0) {
+        HILOGE("Failed to parse incremental file by type flag");
+        return ret;
     }
     return 0;
 }
@@ -419,7 +418,7 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
     if (!includes_.empty() && includes_.find(tmpFullPath) == includes_.end()) { // not in includes
         if (fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET) != 0) {
             HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
-            errFileInfo[info.fullPath].emplace_back(DEFAULT_ERR);
+            errFileInfo[info.fullPath].emplace_back(ERR_FSEEKO);
             return false;
         }
         isFilter = true;
@@ -428,10 +427,14 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
     info.fullPath = GenRealPath(rootPath_, info.fullPath);
     if (!BDir::IsFilePathValid(info.fullPath)) {
         HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
-        errFileInfo[info.fullPath].emplace_back(DEFAULT_ERR);
+        errFileInfo[info.fullPath].emplace_back(ERR_INVALID_PATH);
         return false;
     }
     errFileInfo = ParseRegularFile(info);
+    if (errFileInfo.find(info.fullPath) != errFileInfo.end() && errFileInfo[info.fullPath].size() > 0 &&
+        errFileInfo[info.fullPath][0] == ERR_INVALID_TAR) {
+        return false;
+    }
     isFilter = false;
     return true;
 }
@@ -453,7 +456,7 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::MatchIncrementalScenario(bool isFi
             info.fullPath = GenRealPath(rootPath_, info.fullPath);
             if (!BDir::IsFilePathValid(info.fullPath)) {
                 HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
-                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
+                return {DEFAULT_ERR, true, {{info.fullPath, {ERR_INVALID_PATH}}}};
             }
             errFileInfo = CreateDir(info.fullPath, info.mode);
             isFilter = false;
@@ -462,7 +465,7 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::MatchIncrementalScenario(bool isFi
             auto result = ReadLongName(info);
             if (!BDir::IsFilePathValid(info.fullPath)) {
                 HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
-                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
+                return {DEFAULT_ERR, true, {{info.fullPath, {ERR_INVALID_PATH}}}};
             }
             return {std::get<FIRST_PARAM>(result), isFilter, std::get<SECOND_PARAM>(result)};
             break;
@@ -473,13 +476,13 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::MatchIncrementalScenario(bool isFi
                 CheckLongName(LongName, info);
                 return {err, true, errFileInfo};
             }
-            return {err, isFilter, {{info.fullPath, {DEFAULT_ERR}}}};
+            return {err, isFilter, {{info.fullPath, {ERR_PARSE_PAX}}}};
             break;
         }
         default: {
             if (fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR) != 0) {
                 HILOGE("Failed to fseeko of %{private}s, err = %{public}d", info.fullPath.c_str(), errno);
-                return {DEFAULT_ERR, true, {{info.fullPath, {DEFAULT_ERR}}}};
+                return {DEFAULT_ERR, true, {{info.fullPath, {ERR_FSEEKO}}}};
             }
             break;
         }
@@ -502,25 +505,13 @@ ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
     ErrFileInfo errFileInfo;
     FILE *destFile = CreateFile(info.fullPath);
     if (destFile != nullptr) {
-        string destStr("");
-        destStr.resize(READ_BUFF_SIZE);
-        size_t remainSize = static_cast<size_t>(tarFileSize_);
-        size_t readBuffSize = READ_BUFF_SIZE;
-        while (remainSize > 0) {
-            if (remainSize < READ_BUFF_SIZE) {
-                readBuffSize = remainSize;
-            }
-            auto readSize = fread(&destStr[0], sizeof(char), readBuffSize, tarFilePtr_);
-            if (readSize != readBuffSize) {
-                readBuffSize = readSize;
-            }
-            size_t writeSize = 0;
-            do {
-                writeSize += fwrite(&destStr[writeSize], sizeof(char), readBuffSize - writeSize, destFile);
-            } while (writeSize < readBuffSize);
-            remainSize -= readBuffSize;
+        if (!UnTarFileInner(destFile)) {
+            errFileInfo[info.fullPath].emplace_back(ERR_INVALID_TAR);
+            HILOGE("UnTarFileInner fail path:%{public}s", GetAnonyPath(info.fullPath).c_str());
+            // 报错说明tar包有问题，直接fseeko跳转结束流程
+            fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
+            return errFileInfo;
         }
-        fclose(destFile);
         if (chmod(info.fullPath.data(), info.mode) != 0) {
             HILOGE("Failed to chmod of %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
             errFileInfo[info.fullPath].emplace_back(errno);
@@ -547,6 +538,41 @@ ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
         fseeko(tarFilePtr_, tarFileBlockCnt_ * BLOCK_SIZE, SEEK_CUR);
     }
     return errFileInfo;
+}
+
+bool UntarFile::UnTarFileInner(FILE *destFile)
+{
+    string destStr("");
+    destStr.resize(READ_BUFF_SIZE);
+    size_t remainSize = static_cast<size_t>(tarFileSize_);
+    size_t readBuffSize = READ_BUFF_SIZE;
+    size_t writeSize = READ_BUFF_SIZE;
+    while (remainSize > 0 && writeSize > 0) {
+        if (remainSize < READ_BUFF_SIZE) {
+            readBuffSize = remainSize;
+        }
+        auto readSize = fread(&destStr[0], sizeof(char), readBuffSize, tarFilePtr_);
+        if (readSize == 0 && readBuffSize > 0) {
+            HILOGE("Failed to fread");
+            (void)fclose(destFile);
+            return false;
+        }
+        if (readSize != readBuffSize) {
+            readBuffSize = readSize;
+        }
+        writeSize = 0;
+        size_t fwriteSize = 0;
+        do {
+            fwriteSize = fwrite(&destStr[writeSize], sizeof(char), readBuffSize - writeSize, destFile);
+            writeSize += fwriteSize;
+        } while (writeSize < readBuffSize && fwriteSize > 0);
+        remainSize -= writeSize;
+    }
+    (void)fclose(destFile);
+    if (remainSize > 0) {
+        return false;
+    }
+    return true;
 }
 
 bool UntarFile::VerifyChecksum(TarHeader &header)
