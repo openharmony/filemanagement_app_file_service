@@ -194,17 +194,8 @@ static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, 
     const vector<string> &includes, const vector<string> &excludes)
 {
     // backup_sa bundle path
-    BJsonUtil::BundleDetailInfo bundleDetail = BJsonUtil::ParseBundleNameIndexStr(bundleName);
-    string backupSaBundleDir;
-    if (bundleDetail.bundleIndex > 0) {
-        std::string bundleNameIndex  = "+clone-" + std::to_string(bundleDetail.bundleIndex) + "+" +
-            bundleDetail.bundleName;
-        backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
-            bundleNameIndex + BConstants::FILE_SEPARATOR_CHAR;
-    } else {
-        backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
-            bundleDetail.bundleName + BConstants::FILE_SEPARATOR_CHAR;
-    }
+    string backupSaBundleDir = BConstants::GetSaBundleBackupRootDir(userId).
+        append(BundleMgrAdapter::GetBundleIndexName(bundleName)).append("/");
     if (access(backupSaBundleDir.data(), F_OK) != 0) {
         int32_t err = mkdir(backupSaBundleDir.data(), S_IRWXU | S_IRWXG);
         if (err != 0 && errno != EEXIST) {
@@ -288,6 +279,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
     vector<std::string> bundleNames;
     vector<int64_t> incrementalBackTimes;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    vector<BJsonEntityCaps::BundleInfo> noBackupBundleInfos;
     auto bms = GetBundleManager();
     for (const auto &bundleNameTime : incrementalDataList) {
         auto bundleName = bundleNameTime.bundleName;
@@ -300,6 +292,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         struct BJsonEntityCaps::BundleBackupConfigPara backupPara;
         if (!GetBackupExtConfig(bundleExtInfo.extensionInfos_, backupPara)) {
             HILOGE("No backup extension ability found, bundleName:%{public}s", bundleName.c_str());
+            noBackupBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleExtInfo.bundleInfo_.name,
+                bundleExtInfo.bundleInfo_.appIndex, bundleExtInfo.bundleInfo_.versionCode,
+                bundleExtInfo.bundleInfo_.versionName, 0, 0, false, false, false, "", "", "", Json::Value()});
             continue;
         }
         if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
@@ -322,12 +317,27 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         incrementalBackTimes.emplace_back(bundleNameTime.lastIncrementalTime);
     }
     vector<BJsonEntityCaps::BundleInfo> newBundleInfos {};
+    newBundleInfos.insert(newBundleInfos.end(), noBackupBundleInfos.begin(), noBackupBundleInfos.end());
     if (!GenerateBundleStatsIncrease(userId, bundleNames, incrementalBackTimes, bundleInfos, newBundleInfos)) {
         HILOGE("Failed to get bundleStats result");
-        return {};
+        return newBundleInfos;
     }
     HILOGI("BundleMgrAdapter GetBundleInfosForIncremental end ");
     return newBundleInfos;
+}
+
+void BundleMgrAdapter::RefreshBundleIncrementalData(const std::string &bundle,
+    std::vector<BIncrementalData> &bundleNames, const std::vector<BIncrementalData> &incrementalDataList)
+{
+    auto it = std::find_if(incrementalDataList.begin(), incrementalDataList.end(),
+        [&bundle](const BIncrementalData &info)->bool {
+            return bundle == info.bundleName;
+        });
+    if (it == incrementalDataList.end()) {
+        bundleNames.emplace_back(BIncrementalData {bundle, 0});
+    } else {
+        bundleNames.emplace_back(*it);
+    }
 }
 
 vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(int32_t userId,
@@ -350,6 +360,14 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
             continue;
         }
+        if (installedBundle.appIndex > 0) {
+            HILOGI("Current bundle %{public}s is a twin application, index = %{public}d",
+                installedBundle.name.c_str(), installedBundle.appIndex);
+            std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(installedBundle.name,
+                installedBundle.appIndex);
+            RefreshBundleIncrementalData(bundleNameIndexInfo, bundleNames, extraIncreData);
+            continue;
+        }
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo, requireCompatibility] =
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
@@ -358,15 +376,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
                 requireCompatibility, extName, restoreDeps, supportScene, extraInfo});
             continue;
         }
-        auto it = std::find_if(extraIncreData.begin(), extraIncreData.end(),
-            [installedBundle](const BIncrementalData &info)->bool {
-                return installedBundle.name == info.bundleName;
-            });
-        if (it == extraIncreData.end()) {
-            bundleNames.emplace_back(BIncrementalData {installedBundle.name, 0});
-        } else {
-            bundleNames.emplace_back(*it);
-        }
+        RefreshBundleIncrementalData(installedBundle.name, bundleNames, extraIncreData);
     }
     auto bundleInfosNew = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, userId);
     auto bundleInfosSA = BundleMgrAdapter::GetBundleInfosForSA();
@@ -711,5 +721,17 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppe
         }
     }
     return bundleInfos;
+}
+
+std::string BundleMgrAdapter::GetBundleIndexName(const std::string &bundleName)
+{
+    BJsonUtil::BundleDetailInfo bundleDetail = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+    std::string bundleIndexName;
+    if (bundleDetail.bundleIndex > 0) {
+        bundleIndexName = "+clone-" + std::to_string(bundleDetail.bundleIndex) + "+" + bundleDetail.bundleName;
+    } else {
+        bundleIndexName = bundleDetail.bundleName;
+    }
+    return bundleIndexName;
 }
 } // namespace OHOS::FileManagement::Backup

@@ -141,6 +141,7 @@ BJsonCachedEntity<BJsonEntityCaps> Service::CreateJsonEntity(UniqueFd &fd,
     cache.SetBackupVersion(backupVersion);
     cache.SetSystemFullName(GetOSFullName());
     cache.SetDeviceType(GetDeviceType());
+    cache.SetIncreAppIndex(true);
     bundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(GetUserIdDefault(), bundleNames);
     cache.SetBundleInfos(bundleInfos, true);
     cachedEntity.Persist();
@@ -239,7 +240,8 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
     auto newBundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
     RefreshBundleDataSize(newBundleInfos, bundleName, ptr);
     string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
-        append(bundleName).append("/").append(BConstants::BACKUP_STAT_SYMBOL).append(to_string(lastTime));
+        append(BundleMgrAdapter::GetBundleIndexName(bundleName)).
+        append("/").append(BConstants::BACKUP_STAT_SYMBOL).append(to_string(lastTime));
     UniqueFd fdLocal(open(path.data(), O_RDWR, S_IRGRP | S_IWGRP));
     if (fdLocal < 0) {
         HILOGD("fdLocal open fail, error = %{public}d", errno);
@@ -1135,17 +1137,8 @@ ErrCode Service::Cancel(const std::string& bundleName, int32_t &result)
 
 void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName)
 {
-    BJsonUtil::BundleDetailInfo bundleDetail = BJsonUtil::ParseBundleNameIndexStr(bundleName);
-    string backupSaBundleDir;
-    if (bundleDetail.bundleIndex > 0) {
-        const std::string bundleNameIndex  = "+clone-" + std::to_string(bundleDetail.bundleIndex) + "+" +
-            bundleDetail.bundleName;
-        backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
-            bundleNameIndex + BConstants::FILE_SEPARATOR_CHAR;
-    } else {
-        backupSaBundleDir = BConstants::BACKUP_PATH_PREFIX + to_string(userId) + BConstants::BACKUP_PATH_SURFFIX +
-            bundleDetail.bundleName + BConstants::FILE_SEPARATOR_CHAR;
-    }
+    string backupSaBundleDir = BConstants::GetSaBundleBackupRootDir(userId).
+        append(BundleMgrAdapter::GetBundleIndexName(bundleName)).append("/");
     if (access(backupSaBundleDir.c_str(), F_OK) != ERR_OK) {
         HILOGD("ClearIncrementalStatFile, access dir failed errno = %{public}d", errno);
         return;

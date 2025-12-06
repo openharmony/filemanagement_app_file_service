@@ -245,4 +245,113 @@ HWTEST_F(BmsAdapterTest, SUB_bms_adapter_CreatBackupEnv_test_0000, testing::ext:
     }
     GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_CreatBackupEnv_test_0000";
 }
+
+/**
+ * @tc.number: SUB_bms_adapter_RefreshBundleIncrementalData_test_0000
+ * @tc.name: SUB_bms_adapter_RefreshBundleIncrementalData_test_0000
+ * @tc.desc: 测试 RefreshBundleIncrementalData 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BmsAdapterTest, SUB_bms_adapter_RefreshBundleIncrementalData_test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsAdapterTest-begin SUB_bms_adapter_RefreshBundleIncrementalData_test_0000";
+    try {
+        std::vector<BIncrementalData> bundleNameList;
+        std::vector<BIncrementalData> outBundleNames;
+        BIncrementalData data;
+        data.bundleName = BUNDLE_NAME;
+        data.lastIncrementalTime = 123;
+        bundleNameList.push_back(data);
+        string paraBundleName = "noMatchBundle";
+        BundleMgrAdapter::RefreshBundleIncrementalData(paraBundleName, outBundleNames, bundleNameList);
+        ASSERT_TRUE(!outBundleNames.empty());
+        BIncrementalData ret = outBundleNames[0];
+        EXPECT_EQ(ret.lastIncrementalTime, 0);
+        outBundleNames.clear();
+
+        paraBundleName = BUNDLE_NAME;
+        BundleMgrAdapter::RefreshBundleIncrementalData(paraBundleName, outBundleNames, bundleNameList);
+        ASSERT_TRUE(!outBundleNames.empty());
+        ret = outBundleNames[0];
+        EXPECT_EQ(ret.lastIncrementalTime, 123);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by RefreshBundleIncrementalData.";
+    }
+    GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_RefreshBundleIncrementalData_test_0000";
+}
+
+/**
+ * @tc.number: SUB_bms_adapter_GetBundleIndexName_test_0000
+ * @tc.name: SUB_bms_adapter_GetBundleIndexName_test_0000
+ * @tc.desc: 测试 GetBundleIndexName 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BmsAdapterTest, SUB_bms_adapter_GetBundleIndexName_test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsAdapterTest-begin SUB_bms_adapter_GetBundleIndexName_test_0000";
+    try {
+        string bundleName = "bundlename:1";
+        BJsonUtil::BundleDetailInfo info;
+        info.bundleIndex = 0;
+        info.bundleName = "bundlename";
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
+        string bundleIdxName = BundleMgrAdapter::GetBundleIndexName(bundleName);
+        EXPECT_EQ(bundleIdxName, "bundlename");
+
+        info.bundleIndex = 1;
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(info));
+        bundleIdxName = BundleMgrAdapter::GetBundleIndexName(bundleName);
+        EXPECT_NE(bundleIdxName, "bundlename");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by GetBundleIndexName.";
+    }
+    GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_GetBundleIndexName_test_0000";
+}
+
+/**
+ * @tc.number: SUB_bms_adapter_GetBundleInfosForIncremental_test_0000
+ * @tc.name: SUB_bms_adapter_GetBundleInfosForIncremental_test_0000
+ * @tc.desc: 测试 GetBundleInfosForIncremental 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BmsAdapterTest, SUB_bms_adapter_GetBundleInfosForIncremental_test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsAdapterTest-begin SUB_bms_adapter_GetBundleInfosForIncremental_test_0000";
+    try {
+        std::vector<BIncrementalData> bundleNameList;
+
+        BJsonUtil::BundleDetailInfo bundleDetailInfo;
+        AppExecFwk::BundleInfo info;
+        std::vector<AppExecFwk::BundleInfo> infos;
+        info.applicationInfo.codePath = "5";
+        info.name = "bundlename";
+        info.appIndex = 1;
+        infos.emplace_back(info);
+        info.appIndex = 0;
+        infos.emplace_back(info);
+        EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(bms)).WillOnce(Return(bms));
+        EXPECT_CALL(*bms, GetBundleInfos(_, _, _)).WillOnce(DoAll(SetArgReferee<1>(infos), Return(true)));
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundlename"));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleDetailInfo));
+        EXPECT_CALL(*bms, GetCloneBundleInfo(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*sam, GetExtensionSaIds(_, _)).WillOnce(Return(0));
+        auto bundleInfo = BundleMgrAdapter::GetBundleInfosForIncremental(100, bundleNameList);
+        EXPECT_EQ(bundleInfo.size(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by GetBundleInfosForIncremental.";
+    }
+    GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_GetBundleInfosForIncremental_test_0000";
+}
 } // namespace OHOS

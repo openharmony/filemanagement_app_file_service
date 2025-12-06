@@ -1055,6 +1055,7 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
         auto cache = cachedEntity.Structuralize();
         cache.SetSystemFullName(GetOSFullName());
         cache.SetDeviceType(GetDeviceType());
+        cache.SetIncreAppIndex(true);
         auto bundleInfos = BundleMgrAdapter::GetBundleInfosForLocalCapabilities(GetUserIdDefault());
         if (bundleInfos.size() == 0) {
             HILOGE("getBundleInfos failed, size = 0");
