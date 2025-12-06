@@ -46,6 +46,7 @@
 #include "b_filesystem/b_dir.h"
 #include "b_filesystem/b_file.h"
 #include "b_filesystem/b_file_hash.h"
+#include "b_hiaudit/hi_audit.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_onbackupex_ret.h"
 #include "b_jsonutil/b_jsonutil.h"
@@ -224,6 +225,10 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
     }
     for (const auto &it : errFileInfos_) {
         for (const auto &codeIt : it.second) {
+            AuditLog auditLog = {false, "errFileInfos_", "ADD", "", 1, "FAILED", "CheckRestoreFileInfos",
+                "Restore File", GetAnonyPath(it.first)};
+            HiAudit::GetInstance(false).Write(auditLog);
+            appStatistic_->UpdateErrorFileList(GetAnonyPath(it.first), codeIt);
             HILOGE("(Debug)  errfileInfos file = %{public}s -> %{public}d", GetAnonyPath(it.first).c_str(), codeIt);
         }
     }

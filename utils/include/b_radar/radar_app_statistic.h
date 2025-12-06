@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_RADAR_APP_STATISTIC_H
 
 #include <unordered_map>
+#include <utility>
 #include "b_resources/b_constants.h"
 #include "radar_const.h"
 
@@ -95,6 +96,24 @@ private:
     ItemInfo sizeInfoList_[SIZE_DEF_COUNT] = {{0, 0}};
 };
 
+class FileErrorList {
+public:
+    FileErrorList() {}
+    ~FileErrorList()
+    {
+        ClearFileList();
+    }
+
+    std::string ToJsonString();
+    void UpdateFileList(const std::string &fileName, int32_t errCode);
+    void ClearFileList()
+    {
+        fileList_.clear();
+    }
+private:
+    std::vector<std::pair<std::string, int>> fileList_;
+};
+
 class RadarAppStatistic {
 public:
     std::string appCaller_; // tool app
@@ -137,6 +156,7 @@ public:
 
     void SetUniqId(int64_t uniqId) { uniqId_ = uniqId; };
     void UpdateSendRateZeroSpend();
+    void UpdateErrorFileList(const std::string &fileName, int32_t errorCode);
     void UpdateFileDist(std::string fileExtension, uint64_t fileSize);
     void ReportBackup(const std::string &func, int32_t errorCode, std::string errMsg = "");
     void ReportBackup(const std::string &func, BError errCode);
@@ -148,6 +168,7 @@ public:
 private:
     FileSizeStat fileSizeDist_;
     FileTypeStat fileTypeDist_;
+    FileErrorList fileErrorList_;
     int64_t uniqId_ = 0;
     BizScene bizScene_ = BizScene::UNKNOWN;
 };

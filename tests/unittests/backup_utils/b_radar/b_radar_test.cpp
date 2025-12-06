@@ -301,6 +301,35 @@ HWTEST_F(BRadarTest, RADAR_APP_STAT_0100, testing::ext::TestSize.Level1)
 }
 
 /**
+ * @tc.number: backup_utils_BRadar_RADAR_UpdateErrorFileList_0100
+ * @tc.name: backup_utils_BRadar_RADAR_UpdateErrorFileList_0100
+ * @tc.desc: 测试RADAR_APP_STAT
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BRadarTest, RADAR_UpdateErrorFileList_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BRadarTest-begin RADAR_UpdateErrorFileList_0100";
+    try {
+        appStatistic_->UpdateErrorFileList("txt", 1);
+        EXPECT_EQ(appStatistic_->fileErrorList_.fileList_.size(), 1);
+        appStatistic_->UpdateErrorFileList("test", 1);
+        EXPECT_TRUE(appStatistic_->fileErrorList_.ToJsonString().find("test") !=
+            std::string::npos);
+        for (int i = 0; i <= 130; i++) {
+            appStatistic_->UpdateErrorFileList("txt", 1);
+        }
+        EXPECT_EQ(appStatistic_->fileErrorList_.fileList_.size(), 128);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BRadarTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BRadarTest-end RADAR_UpdateErrorFileList_0100";
+}
+
+/**
  * @tc.number: backup_utils_BRadar_ReportBackupRunningLock
  * @tc.name: backup_utils_BRadar_ReportBackupRunningLock
  * @tc.desc: 测试RADAR_APP_STAT

@@ -26,6 +26,7 @@ constexpr int32_t STAGE_RES_IDLE = 0;
 constexpr int32_t STAGE_RES_SUCCESS = 1;
 constexpr int32_t STAGE_RES_FAIL = 2;
 constexpr int32_t STAGE_RES_CANCEL = 3;
+constexpr int32_t ERRLIST_MAX_SIZE = 128;
 
 constexpr char DOMAIN[] = "APP_FILE_SVC";
 const std::string DOMAIN_NAME = "APP_FILE_SVC";
@@ -57,6 +58,8 @@ const std::string DIR_DEPTH = "DIR_DEPTH";
 const std::string MANAGE_JSON_SIZE = "MANAGE_JSON_SIZE";
 const std::string EXTENSION_CONNECT_SPEND = "EXTENSION_CONNECT_SPEND";
 const std::string GET_EXT_INFO_SPEND = "GET_EXT_INFO_SPEND";
+const std::string BACKUP_ERROR_FILE = "BACKUP_ERROR_FILE";
+const std::string RESTORE_ERROR_FILE = "RESTORE_ERROR_FILE";
 
 const std::string ON_BACKUP_SPEND = "ON_BACKUP_SPEND";
 const std::string ON_BACKUPEX_SPEND = "ON_BACKUPEX_SPEND";
