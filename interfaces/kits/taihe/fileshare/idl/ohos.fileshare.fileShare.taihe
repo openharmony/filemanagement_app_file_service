@@ -84,3 +84,9 @@ function GrantDecUriPermissionSync(
     targetBundleName: String,
     appCloneIndex: i32,
 ): void;
+
+@gen_promise("checkPersistentPermission")
+function CheckPersistentPermissionSync( policies: Array<PolicyInfo> ): Array<bool>;
+
+@gen_promise("revokePermission")
+function RevokePermissionSync( policies: Array<PolicyInfo> ): void;
