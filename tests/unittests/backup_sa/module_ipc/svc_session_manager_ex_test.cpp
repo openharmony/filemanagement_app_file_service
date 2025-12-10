@@ -440,3 +440,44 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetIsExisted_0100, testing
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetIsExisted_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_GetScenarioStr_0100
+ * @tc.name: SUB_backup_sa_session_GetScenarioStr_0100
+ * @tc.desc: 测试 GetScenarioStr 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetScenarioStr_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetScenarioStr_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.clientToken = 0;
+        std::string scenario = sessionManagerPtr_->GetScenarioStr();
+        EXPECT_EQ(scenario, "UNDEFINED");
+
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::BACKUP;
+        scenario = sessionManagerPtr_->GetScenarioStr();
+        EXPECT_EQ(scenario, "BACKUP");
+
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::RESTORE;
+        scenario = sessionManagerPtr_->GetScenarioStr();
+        EXPECT_EQ(scenario, "RESTORE");
+
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::CLEAN;
+        scenario = sessionManagerPtr_->GetScenarioStr();
+        EXPECT_EQ(scenario, "CLEAN");
+
+        sessionManagerPtr_->impl_.scenario = IServiceReverseType::Scenario::UNDEFINED;
+        scenario = sessionManagerPtr_->GetScenarioStr();
+        EXPECT_EQ(scenario, "UNDEFINED");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetScenarioStr.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetScenarioStr_0100";
+}

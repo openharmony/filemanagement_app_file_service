@@ -187,7 +187,8 @@ public:
      *
      * @return 拼接结果
      */
-    static std::string BuildInitSessionErrInfo(int32_t userId, std::string callerName, std::string activeTime);
+    static std::string BuildInitSessionErrInfo(int32_t userId, std::string callerName, std::string activeTime,
+        std::string scenario);
 
     /**
      * @brief 将已经扫描的结果转换成json串

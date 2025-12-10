@@ -585,6 +585,8 @@ public:
     void SetIsRestoreEnd(const std::string &bundleName);
 
     bool GetIsRestoreEnd(const std::string &bundleName);
+
+    std::string GetScenarioStr();
     
     /**
      * @brief Get the backupScene
