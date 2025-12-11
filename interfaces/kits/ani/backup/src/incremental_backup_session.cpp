@@ -150,14 +150,16 @@ bool IncrementalBackupSession::ParseIncrDataFromAniArray(ani_env *aniEnv, ani_ar
     if (arrSize == 0) {
         return false;
     }
+
+    ani_class incrementalDataCls = AniUtils::GetAniClsByName(aniEnv, B_INCREMENTAL_DATA_CLASS_NAME);
+    if (incrementalDataCls == nullptr) {
+        return false;
+    }
+
     for (ani_size idx = 0; idx < arrSize; idx++) {
         ani_ref item;
         if (ANI_OK != aniEnv->Array_Get(bundles, idx, &item)) {
             HILOGE("Array_Get fail, idx=%{public}zu", idx);
-            return false;
-        }
-        ani_class incrementalDataCls = AniUtils::GetAniClsByName(aniEnv, B_INCREMENTAL_DATA_CLASS_NAME);
-        if (incrementalDataCls == nullptr) {
             return false;
         }
         ani_boolean isIncrementalData = ANI_FALSE;

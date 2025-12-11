@@ -21,7 +21,6 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <utility>
 #include <unistd.h>
 #include <vector>
 #include "b_utils/scan_file_singleton.h"

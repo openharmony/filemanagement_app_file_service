@@ -1598,7 +1598,7 @@ void BackupExtExtension::AsyncDoBackup()
         ptr->DoBackupTask();
         ptr->DoClear();
     };
-    doBackupPool_.AddTask([dobackupTask]() {
+    doBackupPool_.AddTask([dobackupTask = std::move(dobackupTask)]() {
         try {
             dobackupTask();
         } catch (...) {
