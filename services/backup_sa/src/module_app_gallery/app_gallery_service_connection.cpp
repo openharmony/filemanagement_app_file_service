@@ -29,7 +29,7 @@ void AppGalleryConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &e
 {
     std::string uri = element.GetURI();
     HILOGI("OnAbilityConnectDone, uri = %{public}s", uri.c_str());
-    std::lock_guard<std::mutex> autoLock(appRemoteObjLock_);
+    std::unique_lock<std::mutex> uniqueLock(appRemoteObjLock_);
     appRemoteObj_ = remoteObject;
     conditionVal_.notify_one();
 }
@@ -38,13 +38,14 @@ void AppGalleryConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName
 {
     std::string uri = element.GetURI();
     HILOGI("OnAbilityDisconnectDone, uri = %{public}s", uri.c_str());
+    std::unique_lock<std::mutex> uniqueLock(appRemoteObjLock_);
     appRemoteObj_ = nullptr;
 }
 
 bool AppGalleryConnection::ConnectExtAbility(std::string abilityName)
 {
     HILOGI("ConnectExtAbility called, userId = %{public}d", userId);
-    std::lock_guard<std::mutex> autoLock(appRemoteObjLock_);
+    std::unique_lock<std::mutex> uniqueLock(appRemoteObjLock_);
     if (appRemoteObj_ != nullptr) {
         return true;
     }
@@ -58,12 +59,13 @@ bool AppGalleryConnection::ConnectExtAbility(std::string abilityName)
     Want want;
     want.SetElementName(appGalleryBundleName.c_str(), abilityName);
     auto ret = AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
-
-    std::unique_lock<std::mutex> uniqueLock(connectMutex);
-    conditionVal_.wait_for(uniqueLock, std::chrono::seconds(CONNECT_TIME));
-    if (ret != IAppGalleryService::ERR_OK || appRemoteObj_ == nullptr) {
+    if (ret != IAppGalleryService::ERR_OK) {
         HILOGE("ConnectExtAbility failed, ret=%{public}d, userId = %{public}d", ret, userId);
-        appRemoteObj_ = nullptr;
+        return false;
+    }
+    conditionVal_.wait_for(uniqueLock, std::chrono::seconds(CONNECT_TIME));
+    if (appRemoteObj_ == nullptr) {
+        HILOGE("ConnectExtAbility failed, ret=%{public}d, userId = %{public}d", ret, userId);
         return false;
     }
     HILOGI("ConnectExtAbility success, ret=%{public}d, userId = %{public}d", ret, userId);
@@ -72,6 +74,7 @@ bool AppGalleryConnection::ConnectExtAbility(std::string abilityName)
 
 sptr<IRemoteObject> AppGalleryConnection::GetRemoteObj()
 {
+    std::unique_lock<std::mutex> uniqueLock(appRemoteObjLock_);
     return appRemoteObj_;
 }
 } // namespace OHOS::FileManagement::Backup

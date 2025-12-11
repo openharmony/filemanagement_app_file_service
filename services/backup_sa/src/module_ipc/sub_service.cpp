@@ -766,10 +766,6 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
     if (session_->IsOnAllBundlesFinished()) {
         IServiceReverseType::Scenario scenario = session_->GetScenario();
         TotalStatEnd(errCode);
-        if (isInRelease_.load() && (scenario == IServiceReverseType::Scenario::RESTORE)) {
-            HILOGI("Will destory session info");
-            SessionDeactive();
-        }
         if (scenario == IServiceReverseType::Scenario::BACKUP && session_->GetIsIncrementalBackup()) {
             session_->GetServiceReverseProxy()->IncrementalBackupOnAllBundlesFinished(errCode);
         } else if (scenario == IServiceReverseType::Scenario::RESTORE &&
@@ -780,6 +776,10 @@ void Service::OnAllBundlesFinished(ErrCode errCode)
             session_->GetServiceReverseProxy()->BackupOnAllBundlesFinished(errCode);
         } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->RestoreOnAllBundlesFinished(errCode);
+        }
+        if (isInRelease_.load() && (scenario == IServiceReverseType::Scenario::RESTORE)) {
+            HILOGI("Will destory session info");
+            SessionDeactive();
         }
         if (!BackupPara().GetBackupOverrideBackupSARelease()) {
             HILOGI("Will unload backup sa");
@@ -1454,43 +1454,52 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
 
 ErrCode Service::HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppResultReport, ErrCode errCode)
 {
-    HILOGI("begin, scenario: %{public}d, isAppResultReport:%{public}d, errCode:%{public}d", scenario,
-        isAppResultReport, errCode);
-    std::string callerName;
-    auto ret = VerifyCallerAndGetCallerName(callerName);
-    if (ret != ERR_OK) {
-        HILOGE("HandleExtDisconnect VerifyCaller failed, get bundle failed, ret:%{public}d", ret);
-        if (isAppResultReport) {
+    try {
+        HILOGI("begin, scenario: %{public}d, isAppResultReport:%{public}d, errCode:%{public}d", scenario,
+            isAppResultReport, errCode);
+        std::string callerName;
+        auto ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("HandleExtDisconnect VerifyCaller failed, get bundle failed, ret:%{public}d", ret);
+            if (isAppResultReport) {
+                HandleCurBundleEndWork(callerName, scenario);
+                OnAllBundlesFinished(BError(BError::Codes::OK));
+            }
+            return ret;
+        }
+        if (isAppResultReport && (scenario == BackupRestoreScenario::FULL_RESTORE ||
+            scenario == BackupRestoreScenario::INCREMENTAL_RESTORE)) {
             HandleCurBundleEndWork(callerName, scenario);
+            OnAllBundlesFinished(BError(BError::Codes::OK));
+        } else if (!isAppResultReport) {
+            bool isIncBackup = true;
+            if (scenario == BackupRestoreScenario::FULL_BACKUP || scenario == BackupRestoreScenario::FULL_RESTORE) {
+                isIncBackup = false;
+            }
+            std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
+            if (mutexPtr == nullptr) {
+                HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
+                return BError(BError::Codes::SA_INVAL_ARG);
+            }
+            std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
+            ret = HandleCurAppDone(errCode, callerName, isIncBackup);
+            if (ret != ERR_OK) {
+                HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
+                return ret;
+            }
+            RemoveExtensionMutex(callerName);
+            RemoveExtOnRelease(callerName);
             OnAllBundlesFinished(BError(BError::Codes::OK));
         }
         return ret;
+    } catch (const BError &e) {
+        HILOGE("AppIncrementalFileReady exception");
+        return e.GetCode();
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
     }
-    if (isAppResultReport && (scenario == BackupRestoreScenario::FULL_RESTORE ||
-        scenario == BackupRestoreScenario::INCREMENTAL_RESTORE)) {
-        HandleCurBundleEndWork(callerName, scenario);
-        OnAllBundlesFinished(BError(BError::Codes::OK));
-    } else if (!isAppResultReport) {
-        bool isIncBackup = true;
-        if (scenario == BackupRestoreScenario::FULL_BACKUP || scenario == BackupRestoreScenario::FULL_RESTORE) {
-            isIncBackup = false;
-        }
-        std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(callerName);
-        if (mutexPtr == nullptr) {
-            HILOGE("extension mutex ptr is nullptr, bundleName:%{public}s", callerName.c_str());
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        std::lock_guard<std::mutex> lock(mutexPtr->callbackMutex);
-        ret = HandleCurAppDone(errCode, callerName, isIncBackup);
-        if (ret != ERR_OK) {
-            HILOGE("Handle current app done error, bundleName:%{public}s", callerName.c_str());
-            return ret;
-        }
-        RemoveExtensionMutex(callerName);
-        RemoveExtOnRelease(callerName);
-        OnAllBundlesFinished(BError(BError::Codes::OK));
-    }
-    return ret;
+    
 }
 
 ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
