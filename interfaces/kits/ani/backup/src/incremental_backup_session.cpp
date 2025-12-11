@@ -65,9 +65,9 @@ void IncrementalBackupSession::Init(ani_env *aniEnv)
     std::array nativeFuncs = {
         ani_native_function {"getLocalCapabilities", ":i",
             reinterpret_cast<void*>(IncrementalBackupSession::GetLocalCapabilities)},
-        ani_native_function {"getBackupDataSize", "zC{escompat.Array}:i",
+        ani_native_function {"getBackupDataSize", "zC{std.core.Array}:i",
             reinterpret_cast<void*>(IncrementalBackupSession::GetBackupDataSize)},
-        ani_native_function {"appendBundles", "C{escompat.Array}:i",
+        ani_native_function {"appendBundles", "C{std.core.Array}:i",
             reinterpret_cast<void*>(IncrementalBackupSession::AppendBundles)},
         ani_native_function {"release", ":i",
             reinterpret_cast<void*>(IncrementalBackupSession::Release)},
