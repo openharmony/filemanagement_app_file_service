@@ -99,17 +99,10 @@ private:
 class FileErrorList {
 public:
     FileErrorList() {}
-    ~FileErrorList()
-    {
-        ClearFileList();
-    }
+    ~FileErrorList() {}
 
     std::string ToJsonString();
     void UpdateFileList(const std::string &fileName, int32_t errCode);
-    void ClearFileList()
-    {
-        fileList_.clear();
-    }
 private:
     std::vector<std::pair<std::string, int>> fileList_;
 };

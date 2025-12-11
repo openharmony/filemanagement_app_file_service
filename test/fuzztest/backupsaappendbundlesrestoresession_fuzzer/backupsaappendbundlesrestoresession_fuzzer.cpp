@@ -59,7 +59,7 @@ bool CmdAppendBundlesRestoreSessionFuzzTest(const uint8_t *data, size_t size)
     int32_t userId = 0;
     if (size >= len + sizeof(int32_t)) {
         userId = *(reinterpret_cast<const int32_t *>(data + len));
-        paramString += "userId:" + to_string(type) + ',';
+        paramString += "userId:" + to_string(userId) + ',';
         datas.WriteInt32(userId);
         len += sizeof(int32_t);
     }

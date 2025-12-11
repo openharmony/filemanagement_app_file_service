@@ -1396,7 +1396,6 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0100, TestSize.Level1)
         ASSERT_TRUE(service != nullptr);
         std::string bundleName = "";
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
-        // EXPECT_CALL(*session, UpdateDfxInfo(_, _)).WillOnce(Return());
         auto ret = service->LaunchBackupExtension(bundleName);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
 
@@ -1461,10 +1460,8 @@ HWTEST_F(ServiceTest, SUB_Service_LaunchBackupExtension_0200, TestSize.Level1)
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
         EXPECT_CALL(*session, GetServiceSchedAction(_)).WillOnce(Return(BConstants::ServiceSchedAction::START));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
-        // EXPECT_CALL(*session, UpdateDfxInfo(_, _)).WillOnce(Return());
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
-        // EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         auto ret = service->LaunchBackupExtension(bundleName);
@@ -1740,7 +1737,6 @@ HWTEST_F(ServiceTest, SUB_Service_BackupSA_0000, TestSize.Level1)
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(false));
-        // EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
         ret = service->BackupSA(bundleName);
         EXPECT_EQ(ret, BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode());
@@ -1947,7 +1943,6 @@ HWTEST_F(ServiceTest, SUB_Service_DoTimeout_0000, TestSize.Level1)
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
-            // .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
@@ -2142,10 +2137,8 @@ HWTEST_F(ServiceTest, SUB_Service_ClearResidualBundleData_0000, TestSize.Level1)
         EXPECT_CALL(*session, GetScenario())
             .WillOnce(Return(IServiceReverseType::Scenario::CLEAN))
             .WillOnce(Return(IServiceReverseType::Scenario::CLEAN));
-            // .WillOnce(Return(IServiceReverseType::Scenario::CLEAN));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(true));
-        // EXPECT_CALL(*param, GetBackupOverrideBackupSARelease()).WillOnce(Return(true));
         auto res = service->ClearResidualBundleData(bundleName);
         EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
 
@@ -2320,8 +2313,6 @@ HWTEST_F(ServiceTest, SUB_Service_GetSupportBackupBundleNames_0100, testing::ext
         bool isIncBackup = false;
         const std::vector<std::string> srcBundleNames;
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("")).WillOnce(Return(""));
-        // EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
-        // EXPECT_CALL(*srProxy, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return(0));
         auto res = service->GetSupportBackupBundleNames(backupInfos, isIncBackup, srcBundleNames);
@@ -2329,10 +2320,8 @@ HWTEST_F(ServiceTest, SUB_Service_GetSupportBackupBundleNames_0100, testing::ext
 
         isIncBackup = true;
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("")).WillOnce(Return(""));
-        // EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
         EXPECT_CALL(*srProxy, IncrementalBackupOnBundleStarted(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
-        // EXPECT_CALL(*srProxy, BackupOnBundleStarted(_, _)).WillOnce(Return(0));
         res = service->GetSupportBackupBundleNames(backupInfos, isIncBackup, srcBundleNames);
         EXPECT_EQ(res.size(), 1);
     } catch (...) {
@@ -2359,13 +2348,9 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0000, testing::ext::TestSize.L
         auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
-        // EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        // EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
-        EXPECT_CALL(*session, CreateBackupConnection(_)).WillOnce(Return(connectPtr));
-        // EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
-        // EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         auto res = service->TryToConnectExt(bundleName, connectPtr);
         EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -2393,9 +2378,7 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0100, testing::ext::TestSize.L
         auto callConnected = [](const string &&bundleName) {};
         auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        // EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        // EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
-        EXPECT_CALL(*session, CreateBackupConnection(_)).WillRepeatedly(Return(nullptr));
+        EXPECT_CALL(*session, CreateBackupConnection(_)).WillOnce(Return(nullptr));
         auto res = service->TryToConnectExt(bundleName, connectPtr);
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
@@ -2422,17 +2405,14 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0200, testing::ext::TestSize.L
         auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
-        // EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
-        EXPECT_CALL(*session, CreateBackupConnection(_)).WillOnce(Return(connectPtr));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
         EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillRepeatedly(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::XTS_UID));
-        // EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
-        // EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         auto res = service->TryToConnectExt(bundleName, connectPtr);
         EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -2459,14 +2439,12 @@ HWTEST_F(ServiceTest, SUB_Service_TryToConnectExt_0300, testing::ext::TestSize.L
         auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, bundleName));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
-        // EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        // EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
         EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillRepeatedly(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::XTS_UID));
-        // EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _))
             .WillOnce(Return(BError(BError::Codes::SA_BOOT_EXT_FAIL).GetCode()));
@@ -2564,7 +2542,6 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0200, testing::ext::TestSiz
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
-        // EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         auto res = service->CleanBundleTempDir(bundleName);
         EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -2599,7 +2576,6 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0300, testing::ext::TestSiz
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
         EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
-        // EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         auto res = service->CleanBundleTempDir(bundleName);
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {

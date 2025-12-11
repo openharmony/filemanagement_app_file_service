@@ -488,7 +488,8 @@ std::string BJsonUtil::ParseBackupVersion()
     return backupVersion;
 }
 
-std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, std::string callerName, std::string activeTime)
+std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, std::string callerName, std::string activeTime,
+    std::string scenario)
 {
     cJSON *info = cJSON_CreateObject();
     if (info == nullptr) {
@@ -505,6 +506,7 @@ std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, std::string calle
     cJSON_AddStringToObject(sessionInfoObject, "userId", to_string(userId).c_str());
     cJSON_AddStringToObject(sessionInfoObject, "name", callerName.c_str());
     cJSON_AddStringToObject(sessionInfoObject, "activeTime", activeTime.c_str());
+    cJSON_AddStringToObject(sessionInfoObject, "scenario", scenario.c_str());
     cJSON_AddItemToObject(info, "sessionInfo", sessionInfoObject);
     char *jsonStr = cJSON_Print(info);
     if (jsonStr == nullptr) {

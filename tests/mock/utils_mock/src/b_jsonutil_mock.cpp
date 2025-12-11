@@ -73,9 +73,9 @@ bool BJsonUtil::BuildBundleInfoJson(int32_t userId, string &detailInfo)
     return BBJsonUtil::jsonUtil->BuildBundleInfoJson(userId, detailInfo);
 }
 
-std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, string callerName, string activeTime)
+std::string BJsonUtil::BuildInitSessionErrInfo(int32_t userId, string callerName, string activeTime, string scenario)
 {
-    return BBJsonUtil::jsonUtil->BuildInitSessionErrInfo(userId, callerName, activeTime);
+    return BBJsonUtil::jsonUtil->BuildInitSessionErrInfo(userId, callerName, activeTime, scenario);
 }
 
 bool BJsonUtil::WriteToStr(std::vector<BundleDataSize> &bundleDataList, size_t listSize, std::string scanning,
