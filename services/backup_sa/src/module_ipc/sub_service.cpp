@@ -664,7 +664,7 @@ void Service::ExtConnectDied(const string &callName)
         session_->StopExtTimer(callName);
         auto backUpConnection = session_->GetExtConnection(callName);
         if (backUpConnection != nullptr) {
-             AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_ABILITY_MGR_SVC,
+            AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_ABILITY_MGR_SVC,
                 backUpConnection->GetError()));
             if (backUpConnection->IsExtAbilityConnected()) {
                 backUpConnection->DisconnectBackupExtAbility();
