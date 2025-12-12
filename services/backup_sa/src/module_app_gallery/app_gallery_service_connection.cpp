@@ -63,8 +63,8 @@ bool AppGalleryConnection::ConnectExtAbility(std::string abilityName)
         HILOGE("ConnectExtAbility failed, ret=%{public}d, userId = %{public}d", ret, userId);
         return false;
     }
-    conditionVal_.wait_for(uniqueLock, std::chrono::seconds(CONNECT_TIME), [this] {
-        return appRemoteObj_ != nullptr; });
+    conditionVal_.wait_for(uniqueLock, std::chrono::seconds(CONNECT_TIME),
+        [this] { return appRemoteObj_ != nullptr; });
     if (appRemoteObj_ == nullptr) {
         HILOGE("ConnectExtAbility failed, ret=%{public}d, userId = %{public}d", ret, userId);
         return false;
