@@ -1499,7 +1499,6 @@ ErrCode Service::HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppR
         HILOGE("Unexpected exception");
         return EPERM;
     }
-    
 }
 
 ErrCode Service::GetExtOnRelease(bool &isExtOnRelease)
