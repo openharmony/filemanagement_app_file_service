@@ -40,7 +40,8 @@ public:
         }
 
         ani_class cls;
-        if (ANI_OK != env->Namespace_FindClass(ns, clsName, &cls)) {
+        const std::string fullClsName = std::string(nsName).append(".").append(clsName);
+        if (ANI_OK != env->FindClass(fullClsName.c_str(), &cls)) {
             std::cerr << "[ANI] Not found class " << clsName << std::endl;
             return nullobj;
         }
