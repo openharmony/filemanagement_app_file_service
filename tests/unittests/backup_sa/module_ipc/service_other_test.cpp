@@ -386,7 +386,6 @@ HWTEST_F(ServiceTest, SUB_Service_OnStart_0100, TestSize.Level1)
         service->isOccupyingSession_ = false;
 
         EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
-        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNames));
         service->OnStart();
         EXPECT_TRUE(true);
 

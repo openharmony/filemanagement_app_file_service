@@ -213,10 +213,7 @@ void Service::OnStart()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("SA OnStart Begin.");
-    std::vector<std::string> bundleNameList;
-    if (disposal_ != nullptr) {
-        bundleNameList = disposal_->GetBundleNameFromConfigFile();
-    }
+    std::vector<std::string> bundleNameList = GetCurUsrDispBundleName();
     std::vector<std::string> residualBundleNameList;
     if (clearRecorder_ != nullptr) {
         residualBundleNameList = clearRecorder_->GetAllClearBundleRecords();
@@ -1438,7 +1435,7 @@ void Service::SendErrAppGalleryNotify()
     if (scenario != IServiceReverseType::Scenario::RESTORE) {
         return;
     }
-    vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
+    vector<string> bundleNameList = GetCurUsrDispBundleName();
     if (bundleNameList.empty()) {
         HILOGI("End, All disposal pasitions have been cleared");
         return;
@@ -1452,7 +1449,7 @@ void Service::SendErrAppGalleryNotify()
 void Service::ClearDisposalOnSaStart()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    vector<string> bundleNameList = disposal_->GetBundleNameFromConfigFile();
+    vector<string> bundleNameList = GetCurUsrDispBundleName();
     if (!bundleNameList.empty()) {
         for (vector<string>::iterator it = bundleNameList.begin(); it != bundleNameList.end(); ++it) {
             string bundleName = *it;

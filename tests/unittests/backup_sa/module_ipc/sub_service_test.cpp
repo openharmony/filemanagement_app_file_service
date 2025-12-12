@@ -2476,3 +2476,57 @@ HWTEST_F(ServiceTest, SUB_Service_BroadCastSingle_0000, testing::ext::TestSize.L
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_BroadCastSingle_0000";
 }
+
+/**
+ * @tc.number: SUB_Service_GetCurrentActiveAccountUserId_0000
+ * @tc.name: SUB_Service_GetCurrentActiveAccountUserId_0000
+ * @tc.desc: 测试 GetCurrentActiveAccountUserId 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetCurrentActiveAccountUserId_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetCurrentActiveAccountUserId_0000";
+    try {
+        auto userId = service->GetCurrentActiveAccountUserId();
+        EXPECT_EQ(userId, 100);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetCurrentActiveAccountUserId.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetCurrentActiveAccountUserId_0000";
+}
+ 
+/**
+ * @tc.number: SUB_Service_GetCurUsrDispBundleName_0000
+ * @tc.name: SUB_Service_GetCurUsrDispBundleName_0000
+ * @tc.desc: 测试 GetCurUsrDispBundleName 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetCurUsrDispBundleName_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetCurUsrDispBundleName_0000";
+    try {
+        auto disposal = service->disposal_;
+        service->disposal_ = nullptr;
+        auto bundleName = service->GetCurUsrDispBundleName();
+        EXPECT_EQ(bundleName.size(), 0);
+ 
+        service->disposal_ = disposal;
+        vector<string> bundleNameList;
+        bundleNameList.emplace_back("101-bundleName1");
+        bundleNameList.emplace_back("100-bundleName2");
+        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNameList));
+        bundleName = service->GetCurUsrDispBundleName();
+        EXPECT_EQ(bundleName.size(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetCurUsrDispBundleName.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetCurUsrDispBundleName_0000";
+}
