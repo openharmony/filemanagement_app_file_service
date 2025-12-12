@@ -23,6 +23,7 @@
 #include "b_error/b_error.h"
 #include "element_name.h"
 #include "ext_extension_mock.h"
+#include "include/svc_extension_proxy_mock.h"
 #include "message_parcel_mock.h"
 #include "module_ipc/svc_backup_connection.h"
 
@@ -88,11 +89,40 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_OnAbilityConnectDone_0100
         EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(nullptr));
         backupCon_->OnAbilityConnectDone(element, remoteObject, resultCode);
         EXPECT_TRUE(true);
+
+        sptr<SvcExtensionProxyMock> svcProxy = sptr(new SvcExtensionProxyMock());
+        EXPECT_CALL(*castMock, iface_cast(_)).WillOnce(Return(svcProxy));
+        backupCon_->OnAbilityConnectDone(element, remoteObject, resultCode);
+        EXPECT_NE(backupCon_->GetBackupExtProxy(), nullptr);
+        backupCon_->backupProxy_ = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SvcBackupConnectionTest-an exception occurred by OnAbilityConnectDone.";
     }
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_OnAbilityConnectDone_0100";
+}
+
+/**
+ * @tc.number: SUB_BackupConnection_GenErrorByStatus_0100
+ * @tc.name: SUB_BackupConnection_GenErrorByStatus_0100
+ * @tc.desc: 测试 GenErrorByStatus
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_GenErrorByStatus_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-begin SUB_BackupConnection_GenErrorByStatus_0100";
+    int resultCode = -1;
+    AppExecFwk::ElementName element;
+    EXPECT_TRUE(backupCon_ != nullptr);
+    backupCon_->GenErrorByStatus(resultCode, true);
+    EXPECT_EQ(backupCon_->error_.GetRawCode(), BError::Codes::EXT_ABILITY_DIED);
+
+    backupCon_->GenErrorByStatus(resultCode, false);
+    EXPECT_EQ(backupCon_->error_.GetRawCode(), BError::Codes::SA_BOOT_EXT_TIMEOUT);
+    GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_GenErrorByStatus_0100";
 }
 
 /**

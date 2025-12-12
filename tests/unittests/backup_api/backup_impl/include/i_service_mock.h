@@ -44,6 +44,8 @@ public:
     MOCK_METHOD(ErrCode, AppIncrementalDone, (ErrCode errCode));
     MOCK_METHOD(ErrCode, GetExtOnRelease, (bool&));
     MOCK_METHOD(ErrCode, ServiceResultReport, (const std::string&, BackupRestoreScenario, ErrCode));
+    MOCK_METHOD(ErrCode, GetLocalCapabilities, (int& fd));
+    MOCK_METHOD(ErrCode, GetLocalCapabilitiesForBundleInfos, (int& fd));
 
     int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {
@@ -96,16 +98,6 @@ public:
     ErrCode Start() override
     {
         return BError(BError::Codes::OK);
-    }
-
-    ErrCode GetLocalCapabilities(int& fd) override
-    {
-        return UniqueFd(-1);
-    }
-
-    ErrCode GetLocalCapabilitiesForBundleInfos(int& fd) override
-    {
-        return UniqueFd(-1);
     }
 
     ErrCode PublishFile(const BFileInfo &fileInfo) override
@@ -239,7 +231,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode ReportAppProcessInfo(const std::string& processInfo, BackupRestoreScenario sennario)
+    ErrCode ReportAppProcessInfo(const std::string& processInfo, BackupRestoreScenario scenario)
     {
         return BError(BError::Codes::OK);
     }

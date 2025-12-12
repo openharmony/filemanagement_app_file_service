@@ -252,6 +252,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoPacketOnce_Test_0100, testing::ext
     };
     extExtension_->DoPacketOnce(srcFiles, path, reportCb, totalTarSpend);
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 0);
+    fclose(tmpFile);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_DoPacketOnce_Test_0100";
 }
 
@@ -445,7 +446,11 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0200, testing::ext
     EXPECT_CALL(*funcMock_, lseek(_, _, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*funcMock_, read(_, _, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*funcMock_, stat(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillRepeatedly(
+        [](const std::string &fileName, int fd, int32_t errCode) -> int {
+            ScanFileSingleton::GetInstance().SetCompletedFlag(true);
+            return 0;
+    });
     GTEST_LOG_(INFO) << "2. test ok";
     extExtension_->DoBackupTask();
     EXPECT_EQ(ret, 0);
@@ -576,11 +581,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_AsyncDoBackup_Test_0100, testing::ex
         errno = EPERM;
         return -1;
     });
-    int ret = 0;
-    EXPECT_CALL(*serviceMock_, AppDone(_)).WillRepeatedly([&ret](int err) -> int {
-        ret = err;
-        return 0;
-    });
+    EXPECT_CALL(*serviceMock_, AppDone(_)).WillRepeatedly(Return(0));
     extExtension_->AsyncDoBackup();
     this_thread::sleep_for(chrono::seconds(5));
     EXPECT_FALSE(ScanFileSingleton::GetInstance().IsProcessCompleted());

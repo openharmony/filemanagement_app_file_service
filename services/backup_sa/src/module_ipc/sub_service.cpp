@@ -663,10 +663,12 @@ void Service::ExtConnectDied(const string &callName)
         session_->StopFwkTimer(callName);
         session_->StopExtTimer(callName);
         auto backUpConnection = session_->GetExtConnection(callName);
-        if (backUpConnection != nullptr && backUpConnection->IsExtAbilityConnected()) {
-            backUpConnection->DisconnectBackupExtAbility();
+        if (backUpConnection != nullptr) {
             AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_ABILITY_MGR_SVC,
                 backUpConnection->GetError()));
+            if (backUpConnection->IsExtAbilityConnected()) {
+                backUpConnection->DisconnectBackupExtAbility();
+            }
         }
         bool needCleanData = session_->GetClearDataFlag(callName);
         if (!needCleanData || SAUtils::IsSABundleName(callName)) {

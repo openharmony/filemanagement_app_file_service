@@ -1141,7 +1141,7 @@ HWTEST_F(ServiceSubTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize
 {
     GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_ExtConnectDied_0100";
     try {
-        std::string callName = "123456";
+        std::string callName = "ExtConnectDied_0100";
         ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
         SvcSessionManager::Impl impl_;
@@ -1150,9 +1150,10 @@ HWTEST_F(ServiceSubTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize
         auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
-        impl_.backupExtNameMap[BUNDLE_NAME] = extInfo;
+        impl_.backupExtNameMap[callName] = extInfo;
         impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
+        extInfo.backUpConnection->isConnected_.store(false);
         servicePtr_->ExtConnectDied(callName);
         extInfo.backUpConnection->isConnected_.store(true);
         servicePtr_->ExtConnectDied(callName);
@@ -1163,6 +1164,38 @@ HWTEST_F(ServiceSubTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize
         GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by ExtConnectDied.";
     }
     GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_ExtConnectDied_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_ExtConnectDied_0200
+ * @tc.name: SUB_Service_ExtConnectDied_0200
+ * @tc.desc: 测试 ExtConnectDied 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I8ZIMJ
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_ExtConnectDied_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_ExtConnectDied_0200";
+    try {
+        std::string callName = "ExtConnectDied_0200";
+        ErrCode ret = Init(IServiceReverseType::Scenario::RESTORE);
+        EXPECT_EQ(ret, BError(BError::Codes::OK));
+        SvcSessionManager::Impl impl_;
+        impl_.clientToken = 1;
+        BackupExtInfo extInfo {};
+        extInfo.backUpConnection = nullptr;
+        impl_.backupExtNameMap[callName] = extInfo;
+        impl_.scenario = IServiceReverseType::Scenario::RESTORE;
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->ExtConnectDied(callName);
+        EXPECT_EQ(servicePtr_->session_->GetServiceSchedAction(callName), BConstants::ServiceSchedAction::WAIT);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by ExtConnectDied.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_ExtConnectDied_0200";
 }
 
 /**

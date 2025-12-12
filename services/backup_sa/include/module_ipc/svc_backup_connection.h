@@ -93,7 +93,7 @@ public:
     uint32_t GetConnectSpan() { return connectSpend_.GetSpan(); }
 
     BError& GetError() { return error_; }
-public:
+
     SvcBackupConnection(std::function<void(const std::string &&, bool)> callDied,
                         std::function<void(const std::string &&)> callConnected,
                         std::string bundleNameIndexInfo)
@@ -103,6 +103,8 @@ public:
     ~SvcBackupConnection() override {};
 
 private:
+    void GenErrorByStatus(int errCode, bool hasConnected);
+
     std::mutex mutex_;
     std::mutex waitMutex_;
     std::condition_variable condition_;

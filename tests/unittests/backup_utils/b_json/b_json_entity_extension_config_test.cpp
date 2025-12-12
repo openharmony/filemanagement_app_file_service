@@ -1498,7 +1498,7 @@ HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_009, 
 HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-begin EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010";
-    GTEST_LOG_(INFO) << "10. test all ok";
+    GTEST_LOG_(INFO) << "10. test over max count and meet max count";
     string config = R"({"compatibleDirMapping": [{"backupDir": "123", "restoreDir": "456"})";
     for (int i = 0; i < BConstants::MAX_COMPAT_DIR_COUNT; i++) {
         config.append(", {\"backupDir\": \"123\", \"restoreDir\": \"456" + to_string(i) + "\"}");
@@ -1507,6 +1507,15 @@ HWTEST_F(BJsonEntityExtensionConfigTest, EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010, 
     BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity1(config);
     auto cache1 = cachedEntity1.Structuralize();
     EXPECT_EQ(cache1.GetCompatibleDirMapping().size(), 0);
+
+    config = R"({"compatibleDirMapping": [{"backupDir": "123", "restoreDir": "456"})";
+    for (int i = 0; i < BConstants::MAX_COMPAT_DIR_COUNT - 1; i++) {
+        config.append(", {\"backupDir\": \"123\", \"restoreDir\": \"456" + to_string(i) + "\"}");
+    }
+    config.append("]}");
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity2(config);
+    auto cache2 = cachedEntity2.Structuralize();
+    EXPECT_GT(cache2.GetCompatibleDirMapping().size(), 0);
     GTEST_LOG_(INFO) << "BJsonEntityExtensionConfigTest-end EXT_CONFIG_GET_COMPAT_DIR_MAPPING_010";
 }
 } // namespace OHOS::FileManagement::Backup

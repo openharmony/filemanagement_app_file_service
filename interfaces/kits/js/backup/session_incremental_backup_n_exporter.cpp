@@ -867,6 +867,7 @@ napi_value SessionIncrementalBackupNExporter::CreateByEntity(napi_env env, std::
         NVal::DeclareNapiFunction("release", Release),
         NVal::DeclareNapiFunction("cancel", Cancel),
         NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
+        NVal::DeclareNapiFunction("getCompatibilityInfo", GetCompatibilityInfo),
     };
     auto [defRet, constroctor] = NClass::DefineClass(env, NAPI_CLASS_NAME, ConstructorFromEntity, std::move(props));
     if (!defRet) {
@@ -896,13 +897,11 @@ napi_value SessionIncrementalBackupNExporter::CreateByEntity(napi_env env, std::
     }
     size_t argc = 1;
     napi_value args[1] = { napiEntity };
-    
     napi_status napiStatus = napi_new_instance(env, constroctor, argc, args, &instance);
     if (napi_status::napi_ok != napiStatus) {
         HILOGE("Failed to napi_new_instance, status=%{public}d", napiStatus);
         return nullptr;
     }
-    HILOGD("CreateByEntity end");
     return instance;
 }
 

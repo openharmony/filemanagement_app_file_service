@@ -41,7 +41,7 @@ unordered_set<string> BJsonEntityOnBackupExRet::GetCompatibleDirs() const
         }
         auto dir = item.asString();
         if (dir.empty()) {
-            HILOGE("Itme is empty string");
+            HILOGE("Item is empty string");
             continue;
         }
         dirs.emplace(dir);
