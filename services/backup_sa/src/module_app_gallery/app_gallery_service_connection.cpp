@@ -49,18 +49,17 @@ bool AppGalleryConnection::ConnectExtAbility(std::string abilityName)
     if (appRemoteObj_ != nullptr) {
         return true;
     }
- 
+
     auto appGalleryBundleName = BundleMgrAdapter::GetAppGalleryBundleName();
     if (appGalleryBundleName.empty()) {
         HILOGE("ConnectExtAbility GetAppGalleryBundleName failed, userId = %{public}d", userId);
         return false;
     }
- 
+
     Want want;
     want.SetElementName(appGalleryBundleName.c_str(), abilityName);
     auto ret = AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
- 
- 
+
     conditionVal_.wait_for(uniqueLock, std::chrono::seconds(CONNECT_TIME));
     if (ret != IAppGalleryService::ERR_OK || appRemoteObj_ == nullptr) {
         HILOGE("ConnectExtAbility failed, ret=%{public}d, userId = %{public}d", ret, userId);
