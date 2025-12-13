@@ -200,25 +200,25 @@ private:
 template <>
 inline bool UnionAccessor::IsInstanceOfType<bool>()
 {
-    return IsInstanceOf("Lstd/core/Boolean;");
+    return IsInstanceOf("std.core.Boolean");
 }
 
 template <>
 inline bool UnionAccessor::IsInstanceOfType<int>()
 {
-    return IsInstanceOf("Lstd/core/Int;");
+    return IsInstanceOf("std.core.Int");
 }
 
 template <>
 inline bool UnionAccessor::IsInstanceOfType<double>()
 {
-    return IsInstanceOf("Lstd/core/Double;");
+    return IsInstanceOf("std.core.Double");
 }
 
 template <>
 inline bool UnionAccessor::IsInstanceOfType<std::string>()
 {
-    return IsInstanceOf("Lstd/core/String;");
+    return IsInstanceOf("std.core.String");
 }
 
 template <>
