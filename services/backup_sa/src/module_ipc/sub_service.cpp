@@ -1841,6 +1841,7 @@ int32_t Service::GetCurrentActiveAccountUserId()
         HILOGE("QueryActiveOsAccountIds error, err is %{public}d", result);
         return BConstants::DEFAULT_USER_ID;
     }
+    // index0为当前用户的userid，例如处于隐私空间则获取对应的userid
     int osAccountId = osAccounts[0];
     HILOGI("Current active account userId=%{public}d", osAccountId);
     return osAccountId;
