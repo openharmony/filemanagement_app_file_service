@@ -937,7 +937,7 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseTarFile_0100, testing::ext::TestS
         header.typeFlag = 'y';
         memcpy_s(&header.magic, sizeof(header.magic), TMAGIC.c_str(), TMAGIC.length());
         memcpy_s(&header.chksum, sizeof(header.chksum), sum.c_str(), sum.length());
-        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(EPERM));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(WithArgs<0>(Invoke([&header](void* buff) {
             memcpy_s(buff, BLOCK_SIZE, &header, sizeof(header));
@@ -946,12 +946,12 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseTarFile_0100, testing::ext::TestS
         tie(ret, info, err) = UntarFile::GetInstance().ParseTarFile(rootPath);
         EXPECT_EQ(ret, 0);
 
-        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(WithArgs<0>(Invoke([&header](void* buff) {
             memcpy_s(buff, BLOCK_SIZE, &header, sizeof(header));
             return BLOCK_SIZE;
-        }))).WillOnce(Return(0)).WillOnce(Return(0));
+        }))).WillOnce(Return(0));
         tie(ret, info, err) = UntarFile::GetInstance().ParseTarFile(rootPath);
         EXPECT_EQ(ret, 0);
     } catch (...) {
@@ -1032,7 +1032,7 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalTarFile_0100, testing:
         header.typeFlag = 'y';
         memcpy_s(&header.magic, sizeof(header.magic), TMAGIC.c_str(), TMAGIC.length());
         memcpy_s(&header.chksum, sizeof(header.chksum), sum.c_str(), sum.length());
-        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(EPERM));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(WithArgs<0>(Invoke([&header](void* buff) {
             memcpy_s(buff, BLOCK_SIZE, &header, sizeof(header));
@@ -1041,12 +1041,12 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalTarFile_0100, testing:
         tie(ret, info, err) = UntarFile::GetInstance().ParseIncrementalTarFile(rootPath);
         EXPECT_EQ(ret, 0);
 
-        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(WithArgs<0>(Invoke([&header](void* buff) {
             memcpy_s(buff, BLOCK_SIZE, &header, sizeof(header));
             return BLOCK_SIZE;
-        }))).WillOnce(Return(0)).WillOnce(Return(0));
+        }))).WillOnce(Return(0));
         tie(ret, info, err) = UntarFile::GetInstance().ParseIncrementalTarFile(rootPath);
         EXPECT_EQ(ret, 0);
     } catch (...) {

@@ -302,14 +302,12 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppendBundlesRestoreSession_0100, t
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         auto ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, {}, RESTORE_DATA_WAIT_SEND, 0);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
-        EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillOnce(Return());
         ret = service->AppendBundlesRestoreSession(UniqueFd(-1), {}, {}, RESTORE_DATA_WAIT_SEND, 0);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {

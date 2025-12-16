@@ -43,6 +43,7 @@ bool CmdAppendBundlesRestoreSessionFuzzTest(const uint8_t *data, size_t size)
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
     size_t len = 0;
+    string paramString = "";
     if (size >= len + sizeof(int)) {
         int fd = *(reinterpret_cast<const int *>(data + len));
         datas.WriteFileDescriptor(UniqueFd(fd));
@@ -52,20 +53,25 @@ bool CmdAppendBundlesRestoreSessionFuzzTest(const uint8_t *data, size_t size)
     if (size >= len + sizeof(int32_t)) {
         type = *(reinterpret_cast<const int32_t *>(data + len));
         datas.WriteInt32(type);
+        paramString += "type:" + to_string(type) + ',';
         len += sizeof(int32_t);
     }
     int32_t userId = 0;
     if (size >= len + sizeof(int32_t)) {
         userId = *(reinterpret_cast<const int32_t *>(data + len));
+        paramString += "userId:" + to_string(userId) + ',';
         datas.WriteInt32(userId);
         len += sizeof(int32_t);
     }
+    paramString += "bundleNames:";
     if (size > len) {
         vector<string> bundleNames;
         string baseStr(reinterpret_cast<const char*>(data + len), size - len);
+        paramString += baseStr + ',';
         bundleNames.push_back(baseStr);
         datas.WriteStringVector(bundleNames);
     }
+    HILOGI("CmdAppendBundlesRestoreSessionFuzzTest paramString:%{public}s", paramString.c_str());
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;

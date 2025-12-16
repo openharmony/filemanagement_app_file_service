@@ -146,7 +146,6 @@ HWTEST_F(FilePermissionTest, PersistPermission_test_0000, testing::ext::TestSize
     deque<struct PolicyErrorResult> errorResults;
     vector<uint32_t> resultCodes;
     resultCodes.push_back(PolicyErrorCode::INVALID_PATH);
-    EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
     EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*sandboxMock_, PersistPolicy(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(resultCodes), Return(SANDBOX_MANAGER_OK)));

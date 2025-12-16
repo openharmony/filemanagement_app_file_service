@@ -224,7 +224,6 @@ HWTEST_F(BDirSubTest, B_DIR_DirScanner_ScanDir_002, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_DirScanner_ScanDir_002";
     GTEST_LOG_(INFO) << "2. match excludes";
-    EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Return(-1));
     std::string backupPath = "/tmp";
     off_t sizeBoundary = 10;
     vector<string> excludes = {"/tmp"};
@@ -274,7 +273,6 @@ HWTEST_F(BDirSubTest, B_DIR_DirScanner_ScanDir_004, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_DirScanner_ScanDir_004";
     GTEST_LOG_(INFO) << "4. empty directory";
-    EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Return(-1));
     std::string backupPath = "/tmp";
     off_t sizeBoundary = 10;
     vector<string> excludes;
@@ -347,7 +345,6 @@ HWTEST_F(BDirSubTest, B_DIR_CompatibleDirScanner_ScanDir_002, testing::ext::Test
 {
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_CompatibleDirScanner_ScanDir_002";
     GTEST_LOG_(INFO) << "2. match excludes";
-    EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Return(-1));
     std::string backupPath = "/tmp||||/retstore||||";
     off_t sizeBoundary = 10;
     vector<string> excludes = {"/tmp"};
@@ -397,7 +394,6 @@ HWTEST_F(BDirSubTest, B_DIR_CompatibleDirScanner_ScanDir_004, testing::ext::Test
 {
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_CompatibleDirScanner_ScanDir_004";
     GTEST_LOG_(INFO) << "4. empty directory";
-    EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Return(-1));
     std::string backupPath = "/tmp||||/retstore||||";
     off_t sizeBoundary = 10;
     vector<string> excludes;

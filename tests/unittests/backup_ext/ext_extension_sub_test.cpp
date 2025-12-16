@@ -604,11 +604,9 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleExtOnRelease_Test_0100, te
         EXPECT_TRUE(true);
 
         extExtension->isOnReleased_.store(false);
-        EXPECT_CALL(*extBackupMock, OnRelease(_, _)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
         extExtension->HandleExtOnRelease(false, BError(BError::Codes::OK).GetCode());
         EXPECT_TRUE(true);
 
-        EXPECT_CALL(*extBackupMock, OnRelease(_, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         extExtension->needAppResultReport_.store(false);
         extExtension->HandleExtOnRelease(false, BError(BError::Codes::OK).GetCode());
         EXPECT_TRUE(true);

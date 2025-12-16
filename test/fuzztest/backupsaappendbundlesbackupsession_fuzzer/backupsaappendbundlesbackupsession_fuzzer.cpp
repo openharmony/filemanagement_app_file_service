@@ -44,10 +44,13 @@ bool CmdAppendBundlesBackupSessionFuzzTest(const uint8_t *data, size_t size)
     if (size > 0) {
         vector<string> bundleNames;
         string param(reinterpret_cast<const char*>(data), size);
+        string paramString = "";
         for (size_t i = 0; i < size; i++) {
             string name = param + to_string(i);
+            paramString += name + ',';
             bundleNames.push_back(name);
         }
+        HILOGI("CmdAppendBundlesBackupSessionFuzzTest paramString:%{public}s", paramString.c_str());
         datas.WriteStringVector(bundleNames);
     }
     MessageParcel reply;
