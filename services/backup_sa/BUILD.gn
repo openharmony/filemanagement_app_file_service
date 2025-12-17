@@ -294,6 +294,7 @@ ohos_shared_library("backup_sa") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",

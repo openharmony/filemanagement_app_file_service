@@ -62,6 +62,7 @@
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
 #include "module_notify/notify_work_service.h"
+#include "os_account_manager.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "system_ability_definition.h"
@@ -1840,5 +1841,39 @@ void Service::TryToClearDispose(const BundleName &bundleName)
         ++att;
         HILOGI("Try to clear dispose, num = %{public}d", att);
     }
+}
+
+int32_t Service::GetCurrentActiveAccountUserId()
+{
+    std::vector<int> osAccounts;
+    ErrCode result = AccountSA::OsAccountManager::QueryActiveOsAccountIds(osAccounts);
+    if (result != ERR_OK || osAccounts.empty()) {
+        HILOGE("QueryActiveOsAccountIds error, err is %{public}d", result);
+        return BConstants::DEFAULT_USER_ID;
+    }
+    // index0为当前用户的userid，例如处于隐私空间则获取对应的userid
+    int osAccountId = osAccounts[0];
+    HILOGI("Current active account userId=%{public}d", osAccountId);
+    return osAccountId;
+}
+ 
+std::vector<std::string> Service::GetCurUsrDispBundleName()
+{
+    std::vector<std::string> bundleNameList;
+    if (disposal_ == nullptr) {
+        return bundleNameList;
+    }
+    bundleNameList = disposal_->GetBundleNameFromConfigFile();
+    auto curUserId = GetCurrentActiveAccountUserId();
+    for (auto it = bundleNameList.begin(); it != bundleNameList.end();) {
+        auto [bundle, userId] = SplitBundleName(*it);
+        if (userId != curUserId) {
+            HILOGI("Residual disposal:%{public}s is not curUserId", it->c_str());
+            it = bundleNameList.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return bundleNameList;
 }
 }

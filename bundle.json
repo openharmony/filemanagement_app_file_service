@@ -41,6 +41,7 @@
                 "jsoncpp",
                 "napi",
                 "runtime_core",
+                "os_account",
                 "openssl",
                 "power_manager",
                 "safwk",

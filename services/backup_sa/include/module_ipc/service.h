@@ -752,6 +752,8 @@ private:
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);
+    std::vector<std::string> GetCurUsrDispBundleName();
+    int32_t GetCurrentActiveAccountUserId();
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
