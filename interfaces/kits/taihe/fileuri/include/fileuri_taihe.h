@@ -24,6 +24,7 @@
 #include "uri.h"
 
 namespace ANI::FileUri {
+using  FileUri = OHOS::AppFileService::ModuleFileUri::FileUri;
 
 class FileUriInner {
 public:
@@ -31,9 +32,16 @@ public:
 
     FileUriInner(taihe::string_view name);
 
+    ::taihe::string getFullDirectoryUri();
+
+    bool isRemoteUri();
+
+    ::taihe::string toString();
+
     std::string getName();
 
 private:
+    FileUri realFileUri_;
     OHOS::Uri uri_;
 };
 
