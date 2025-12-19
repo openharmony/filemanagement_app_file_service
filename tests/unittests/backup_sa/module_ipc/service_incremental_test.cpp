@@ -1426,28 +1426,33 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalDone_0000,
         BJsonUtil::BundleDetailInfo bundleInfo;
         bundleInfo.bundleIndex = 0;
         bundleInfo.bundleName = "bundleName";
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         auto ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         service->backupExtMutexMap_.clear();
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         ret = service->AppIncrementalDone(BError(BError::Codes::SA_INVAL_ARG).GetCode());
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         ret = service->AppIncrementalDone(errCode);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -2192,9 +2197,11 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_ClearIncrementalStatFile
         BJsonUtil::BundleDetailInfo bundleInfo;
         bundleInfo.bundleIndex = 1;
         bundleInfo.bundleName = "com.example.app2backup";
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
 
         bundleInfo.bundleIndex = 0;
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
         EXPECT_EQ(bundleInfo.bundleIndex, 0);
     } catch (...) {
@@ -2227,10 +2234,11 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_ClearIncrementalStatFile
         string cmdMkdir = string("mkdir -p ") + path;
         int ret = system(cmdMkdir.c_str());
         EXPECT_EQ(ret, 0);
-
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
         
         EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillOnce(Return(false));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
         EXPECT_EQ(bundleInfo.bundleIndex, 0);
         string cmdRmdir = string("rm -r ") + path;
