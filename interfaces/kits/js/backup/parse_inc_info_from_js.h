@@ -29,8 +29,8 @@ public:
                               bool &isPreciseScan, std::vector<BIncrementalData> &bundleNames);
 
     static std::tuple<bool, int, unsigned int, unsigned int> ParseFsRequestConfig(const LibN::NVal &FsRequestConfig);
-    static bool VerifyFsRequestConfigParam(LibN::NFuncArg &funcArg,
-        int &triggerType, unsigned int &writeSize, unsigned int &waitTime, napi_env env);
+    static bool VerifyFsRequestConfigParam(napi_env env, LibN::NFuncArg &funcArg,
+        int &triggerType, unsigned int &writeSize, unsigned int &waitTime);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif //INTERFACES_KITS_JS_SRC_MOD_BACKUP_PARSE_INCREMENT_INFO_FROM_JS_H
