@@ -583,8 +583,8 @@ public:
     static void TearDownTestCase();
     void SetUp()
     {
-        dlFuncMock = std::make_shared<DlfunMock>();
-        DlfunMock::dlFunc_ = dlFuncMock;
+        dlFuncMock = std::make_shared<DlfcnMock>();
+        DlfcnMock::dlFunc_ = dlFuncMock;
     };
     void TearDown()
     {
@@ -2319,7 +2319,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, T
  * @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, TestSize.Level1)
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_DealWithGcErrcode_0101, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_DealWithGcErrcode_0101";
     try {
