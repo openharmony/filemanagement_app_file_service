@@ -1193,7 +1193,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
-    std::shared_ptr<GcprogressInfo> gcProgress = std::make_shared<GcprogressInfo>();
+    std::shared_ptr<GcProgressInfo> gcProgress = std::make_shared<GcProgressInfo>();
     CallbackFunc cb = [&](int status, int errcode, unsigned int percent, unsigned int gap) {
         std::lock_guard<std::mutex> lock(gcMtx_);
         UpdateGcProgress(gcProgress, status, errcode, percent, gap);

@@ -482,7 +482,7 @@ ohos_unittest("backup_service_incremental_test") {
 
   sources = [
     "${path_backup_mock}/accesstoken/accesstoken_kit_mock.cpp",
-    "${path_backup_mock}/dlfcn/src/dlfcn_mock.cpp"
+    "${path_backup_mock}/dlfcn/src/dlfcn_mock.cpp",
     "${path_backup_mock}/module_external/src/bms_adapter_mock.cpp",
     "${path_backup_mock}/module_external/src/sms_adapter_mock.cpp",
     "${path_backup_mock}/module_ipc/service_stub_mock.cpp",

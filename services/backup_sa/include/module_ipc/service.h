@@ -40,7 +40,7 @@
 #include "thread_pool.h"
 
 namespace OHOS::FileManagement::Backup {
-using CallbcakFunc = std::function<int (int, int, unsigned int, unsigned int)>;
+using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
 typedf int (CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
 
 struct ExtensionMutexInfo {
