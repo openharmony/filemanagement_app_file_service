@@ -161,7 +161,7 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
 }
 
 bool Parse::VerifyFsRequestConfigParam(napi_env env, LibN::NFuncArg &funcArg,
-    int &triggerType, unsigned int &writeSize, unsigned int &waitTime, napi_env env)
+    int &triggerType, unsigned int &writeSize, unsigned int &waitTime)
 {
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);

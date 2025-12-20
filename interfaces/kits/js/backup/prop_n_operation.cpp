@@ -368,7 +368,7 @@ napi_value PropNOperation::fileSystemServiceRequest(napi_env env, napi_callback_
     int triggerType;
     unsigned int writeSize;
     unsigned int waitTime;
-    if (!Parse::VerifyFsRequestConfigParam(funcArg, triggerType, writeSize, waitTime, env)) {
+    if (!Parse::VerifyFsRequestConfigParam(env, funcArg, triggerType, writeSize, waitTime)) {
         return nullptr;
     }
     HILOGI("get parameter:%{public}d, %{public}d, %{public}d", triggerType, writeSize, waitTime);
