@@ -32,5 +32,6 @@ private:
 };
 
 const std::string PROCEDURE_LOCALCAPABILITIES_NAME = "getLocalCapalities";
+const std::string PROCEDURE_GARBAGE_COLLECTION_NAME = "fileSystemServiceRequest";
 } // namespace OHOS::FileManagement::Backup
 #endif // INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_LOCAL_CAPABILITIES_H

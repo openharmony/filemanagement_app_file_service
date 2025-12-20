@@ -260,6 +260,10 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+    Errcode StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+    {
+        return BError(BError::Codes::OK); 
+    }
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_I_SERVICE_MOCK_H

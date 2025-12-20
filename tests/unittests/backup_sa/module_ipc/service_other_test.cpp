@@ -173,6 +173,11 @@ void Service::CreateDirIfNotExist(const std::string&) {}
 void SvcSessionManager::UpdateDfxInfo(const std::string &bundleName, uint64_t uniqId) {}
 
 void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName) {}
+
+Errcode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+{
+    return BError(BError::Codes::OK); 
+}
 }
 
 class BThreadPool {

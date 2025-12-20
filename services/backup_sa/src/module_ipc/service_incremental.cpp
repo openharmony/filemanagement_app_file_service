@@ -1151,4 +1151,75 @@ void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName)
     }
 }
 
+void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
+    int status, int errcode, unsigned int percent, unsigned int gap)
+{
+    gcProgress->errcode.store(errcode, std::memory_order_relaxed);
+    gcProgress->percent.store(percent, std::memory_order_relaxed);
+    gcProgress->gap.store(gap, std::memory_order_relaxed);
+    gcProgress->status.store(status, std::memory_order_release);
+    HILOGI("Get GC progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
+        status, errcode, percent, gap);
+}
+
+ErrCode Service::DealWithGcErrcode(int GcErrCode)
+{
+    if (GcErrCode == 0) {
+        return ERROR_OK;
+    } else if (GcErrCode == GC_DEVICE_INCOMPATIBLE) {
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
+    } else if (GcErrCode == GC_TASK_TIMEOUT) {
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
+    } else {
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED);
+    }
+}
+
+ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+{
+    std::string bundleName = GetCallerName();
+    if (bundleName != BConstants::BUNDLE_DATA_CLONE) {
+        HILOGE("Caller: %{public}s has no permission", bundleName.data());
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
+    }
+    void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
+    if (!handle) {
+        HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL); 
+    }
+    CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
+    if (!func) {
+        HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
+        dlclose(handle);
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+    }
+    std::shared_ptr<GcprogressInfo> gcProgress = std::make_shared<GcprogressInfo>();
+    CallbackFunc cb = [&](int status, int errcode, unsigned int percent, unsigned int gap) {
+        std::lock_guard<std::mutex> lock(gcMtx_);
+        UpdateGcProgress(gcProgress, status, errcode, percent, gap);
+        if (status == 0 || status == 1 || status == 8) {
+            gcVariable_.notify_one();
+        }
+        return ERROR_OK;
+    };
+    int ret = func(triggerType, writeSize, waitTime, cb);
+    if (ret != 0) {
+        HILOGE("CallDeviceTaskRequest failed, errno = %{public}d" ,ret);
+        dlclose(handle);
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
+    }
+    std::unique_lock<std::mutex> lock(GcMtx_);
+    auto timeout = gcVariable_.wait_for(lock, std::chrono::seconds(GC_MAX_WAIT_TIME_S));
+    auto resCode = gcProgress->status.load(std::memory_order_acquire);
+    HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
+        resCode, gcProgress->errcode.load(std::memory_order_relaxed),
+        gcProgress->percent.load(std::memory_order_relaxed), gcProgress->gap.load(std::memory_order_relaxed));
+    if (timeout ==std::cv_status::timeout) {
+        dlclose(handle);
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_MISSION_TIMEOUT);
+    } else {
+        dlclose(handle);
+        return DealWithGcErrcode(resCode);
+    }
+}
 } // namespace OHOS::FileManagement::Backup

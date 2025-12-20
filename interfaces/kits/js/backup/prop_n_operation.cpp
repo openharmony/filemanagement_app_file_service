@@ -350,4 +350,45 @@ napi_value PropNOperation::DoGetBackupVersion(napi_env env, napi_callback_info i
     HILOGI("DoGetBackupVersion success with result: %{public}s", result.c_str());
     return nResult;
 }
+
+napi_value PropNOperation::fileSystemServiceRequest(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGI("Called fileSystemServiceRequest Begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, cbinfo);
+    int triggerType;
+    unsigned int writeSize;
+    unsigned int waitTime;
+    if (!Parse::VerifyFsRequestConfigParam(funcArg, triggerType, writeSize, waitTime, env)) {
+        return nullptr;
+    }
+    HILOGI("get parameter:%{public}d, %{public}d, %{public}d", triggerType, writeSize, waitTime);
+    auto GCErrCode = std::make_shared<ErrCode>();
+
+    auto cbExec = [GCType {triggerType}, GCSize {writeSize}, GCWaitTime {waitTime}, GCErrCode]() -> NError {
+        ServiceClient::InvaildInstance();
+        auto proxy = ServiceClient::GetInstance();
+        if (!proxy) {
+            HILOGE("Called fileSystemServiceRequest cbExec, failed to get proxy");
+            return NError(ERRNO_NOERR);
+        }
+        *GCErrCode = proxy->StartCleanData(GCType, GCSize, GCWaitTime);
+        HILOGI("fileSystemServiceRequest cbExec success %{public}", *GCErrCode);
+        return NError(errno);
+    };
+    auto cbCompl = [GCErrCode](napi_env env, NError err) -> NVal {
+        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateInt32(env, *GCErrCode);
+    };
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_GARBAGE_COLLECTION_NAME, cbExec, cbCompl).val_;
+}
 } // namespace OHOS::FileManagement::Backup

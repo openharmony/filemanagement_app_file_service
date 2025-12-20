@@ -28,6 +28,7 @@ bool PropNExporter::Export()
         NVal::DeclareNapiFunction("updateTimer", PropNOperation::DoUpdateTimer),
         NVal::DeclareNapiFunction("updateSendRate", PropNOperation::DoUpdateSendRate),
         NVal::DeclareNapiFunction("getBackupVersion", PropNOperation::DoGetBackupVersion),
+        NVal::DeclareNapiFunction("fileSystemServiceRequest", PropNOperation::fileSystemServiceRequest),
     });
 }
 
