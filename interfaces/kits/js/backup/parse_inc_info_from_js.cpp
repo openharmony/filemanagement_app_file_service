@@ -137,7 +137,7 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
 
     LibN::NVal writeSize_ = FsRequestConfig.GetProp("writeSize");
     if (writeSize_.val_ != nullptr) {
-        auto [succ, tm] = writeSize_.ToUInt32();
+        auto [succ, tm] = writeSize_.ToUint32();
         if (succ) {
             writeSize = tm;
         } else {
@@ -148,7 +148,7 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
 
     LibN::NVal waitTime_ = FsRequestConfig.GetProp("waitTime");
     if (waitTime_.val_ != nullptr) {
-        auto [succ, tm] = waitTime_.ToUInt32();
+        auto [succ, tm] = waitTime_.ToUint32();
         if (succ) {
             waitTime = tm;
         } else {
