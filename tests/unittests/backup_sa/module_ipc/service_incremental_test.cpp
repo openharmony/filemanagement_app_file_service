@@ -2291,22 +2291,16 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_ClearIncrementalStatFile
  */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_UpdateGcprogress_0101";
-    try {
-        std::shared_ptr<GcProgressInfo> testGCProgressInfo = std::make_shared<GcProgressInfo>();
-        int testStatus = 0;
-        int testErrcode = 2;
-        unsigned int testPercent = 3;
-        unsigned int testGap = 4;
-        service->UpdateGcprogress(testGCProgressInfo, testStatus, testErrcode, testPercent, testGap);
-        EXPECT_EQ(testGCProgressInfo->status.load(), testStatus);
-        EXPECT_EQ(testGCProgressInfo->errcode.load(), testErrcode);
-        EXPECT_EQ(testGCProgressInfo->percent.load(), testPercent);
-        EXPECT_EQ(testGCProgressInfo->gap.load(), testGap);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by UpdateGcprogress.";
-    }
+    std::shared_ptr<GcProgressInfo> testGCProgressInfo = std::make_shared<GcProgressInfo>();
+    int testStatus = 0;
+    int testErrcode = 2;
+    unsigned int testPercent = 3;
+    unsigned int testGap = 4;
+    service->UpdateGcprogress(testGCProgressInfo, testStatus, testErrcode, testPercent, testGap);
+    EXPECT_EQ(testGCProgressInfo->status.load(), testStatus);
+    EXPECT_EQ(testGCProgressInfo->errcode.load(), testErrcode);
+    EXPECT_EQ(testGCProgressInfo->percent.load(), testPercent);
+    EXPECT_EQ(testGCProgressInfo->gap.load(), testGap);
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_UpdateGcprogress_0101";
 }
 
@@ -2354,7 +2348,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_DealWithGcErrcode_0101, 
  * @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, TestSize.Level1)
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0101, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0101";
     int testTriggerType = 0;
@@ -2377,7 +2371,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, T
  * @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0102, TestSize.Level1)
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0102, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0102";
     int testTriggerType = 0;
@@ -2399,7 +2393,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0102, T
  * @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0103, TestSize.Level1)
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0103, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0103";
     int testTriggerType = 0;
@@ -2423,7 +2417,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0103, T
  * @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0104, TestSize.Level1)
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0104, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0104";
     int testTriggerType = 0;
@@ -2447,7 +2441,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0104, T
  * @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0105, TestSize.Level1)
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0105, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0105";
     int testTriggerType = 0;

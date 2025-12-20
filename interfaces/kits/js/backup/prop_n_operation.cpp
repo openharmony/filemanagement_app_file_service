@@ -379,11 +379,11 @@ napi_value PropNOperation::fileSystemServiceRequest(napi_env env, napi_callback_
         auto proxy = ServiceClient::GetInstance();
         if (!proxy) {
             HILOGE("Called fileSystemServiceRequest cbExec, failed to get proxy");
-            return NError(ERRNO_NOERR);
+            return NError(errno)
         }
         *GCErrCode = proxy->StartCleanData(GCType, GCSize, GCWaitTime);
         HILOGI("fileSystemServiceRequest cbExec success %{public}", *GCErrCode);
-        return NError(errno);
+        return NError(ERRNO_NOERR);
     };
     auto cbCompl = [GCErrCode](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateInt32(env, *GCErrCode);
