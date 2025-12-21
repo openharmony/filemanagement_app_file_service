@@ -24,7 +24,8 @@ const std::string FILE_SCHEME_PREFIX_TAIHE = "file://";
 const std::string FILE_FILEURI_FAILED = "";
 
 FileUriInner::FileUriInner(taihe::string_view name)
-    : uri_((std::string(name.c_str()).find(FILE_SCHEME_PREFIX_TAIHE) == 0) ? std::string(name.c_str())
+    : realFileUri_(std::string(name)),
+    uri_((std::string(name.c_str()).find(FILE_SCHEME_PREFIX_TAIHE) == 0) ? std::string(name.c_str())
     : OHOS::AppFileService::CommonFunc::GetUriFromPath(std::string(name.c_str())))
 {
 }
@@ -40,6 +41,22 @@ std::string FileUriInner::getName()
         return FILE_FILEURI_FAILED;
     }
     return sandboxPath.substr(posLast + 1);
+}
+
+::taihe::string FileUriInner::getFullDirectoryUri()
+{
+    std::string dirUri = realFileUri_.GetFullDirectoryUri();
+    return ::taihe::string(dirUri);
+}
+
+bool FileUriInner::isRemoteUri()
+{
+    return realFileUri_.IsRemoteUri();
+}
+
+::taihe::string FileUriInner::toString()
+{
+    return ::taihe::string(realFileUri_.ToString());
 }
 
 ohos::file::fileuri::FileUriInner createFileUri(taihe::string_view name)

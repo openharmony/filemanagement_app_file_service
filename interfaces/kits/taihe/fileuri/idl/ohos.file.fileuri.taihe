@@ -22,6 +22,9 @@ static { loadLibrary("file_fileuri_taihe.z"); }
 @class
 interface FileUriInner {
     @get getName(): String;
+    getFullDirectoryUri(): String;
+    isRemoteUri(): bool;
+    toString(): String;
 }
 
 function createFileUri(name: String): FileUriInner;
@@ -38,6 +41,15 @@ export class FileUri extends uri.URI{
     }
     get name(): string {
         return this.inner.name;
+    }
+    getFullDirectoryUri(): string {
+        return this.inner.getFullDirectoryUri();
+    }
+    isRemoteUri(): boolean {
+        return this.inner.isRemoteUri();
+    }
+    toString(): string {
+        return this.inner.toString();
     }
 }
 
