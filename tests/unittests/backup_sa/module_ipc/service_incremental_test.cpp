@@ -605,8 +605,8 @@ public:
     static inline shared_ptr<ServiceMock> srvMock = nullptr;
     static inline shared_ptr<DirectoryFuncMock> directMock = nullptr;
 
-    int gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4);
-    int gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4);
+    static int gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4);
+    static int gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4);
 };
 
 void ServiceIncrementalTest::SetUpTestCase(void)
