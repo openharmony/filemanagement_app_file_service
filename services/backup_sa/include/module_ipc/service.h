@@ -41,7 +41,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
-typedf int (CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
+typedef int (CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
 
 struct ExtensionMutexInfo {
     std::string bundleName;
@@ -766,7 +766,8 @@ private:
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
     ErrCode DealWithGcErrcode(int GcErrCode);
-    void UpdateGcProgress(std::shared_ptr<GcProgressInfo> GcProgress, int status, int errcode, unsigned int percent, unsigned int gap); 
+    void UpdateGcProgress(std::shared_ptr<GcProgressInfo> GcProgress, int status, int errcode,
+        unsigned int percent, unsigned int gap); 
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);

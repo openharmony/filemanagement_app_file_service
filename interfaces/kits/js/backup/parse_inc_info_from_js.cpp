@@ -180,7 +180,8 @@ bool Parse::VerifyFsRequestConfigParam(napi_env env, LibN::NFuncArg &funcArg,
     }
     triggerType = triggerType_;
     if (triggerType != 0) {
-        NError(BError(BError::Codes::SA_INVAL_ARG, "Invalid parameter for device garbage collection.").GetCode()).ThrowErr(env);
+        NError(BError(BError::Codes::SA_INVAL_ARG, "Invalid parameter for device garbage collection.")
+            .GetCode()).ThrowErr(env);
         return false;
     }
     writeSize = writeSize_;

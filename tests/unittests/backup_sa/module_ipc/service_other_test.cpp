@@ -174,7 +174,7 @@ void SvcSessionManager::UpdateDfxInfo(const std::string &bundleName, uint64_t un
 
 void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName) {}
 
-Errcode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
     return BError(BError::Codes::OK); 
 }

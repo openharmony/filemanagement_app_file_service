@@ -267,7 +267,7 @@ ErrCode ServiceProxy::GetCompatibilityInfo(const std::string &bundleName, const 
     return BError(BError::Codes::OK);
 }
 
-Errcode ServiceProxy::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+ErrCode ServiceProxy::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
     return BError(BError::Codes::OK); 
 }
