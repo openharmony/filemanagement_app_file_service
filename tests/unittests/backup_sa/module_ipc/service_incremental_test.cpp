@@ -2296,7 +2296,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, T
     int testErrcode = 2;
     unsigned int testPercent = 3;
     unsigned int testGap = 4;
-    service->UpdateGcprogress(testGCProgressInfo, testStatus, testErrcode, testPercent, testGap);
+    service->UpdateGcProgress(testGCProgressInfo, testStatus, testErrcode, testPercent, testGap);
     EXPECT_EQ(testGCProgressInfo->status.load(), testStatus);
     EXPECT_EQ(testGCProgressInfo->errcode.load(), testErrcode);
     EXPECT_EQ(testGCProgressInfo->percent.load(), testPercent);
