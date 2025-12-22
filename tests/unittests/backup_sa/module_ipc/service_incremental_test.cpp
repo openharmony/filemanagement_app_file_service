@@ -573,7 +573,7 @@ using namespace std;
 using namespace testing;
 using namespace testing::ext;
 using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
-typedef int (CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
+typedef int (*CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
 
 constexpr int32_t SERVICE_ID = 5203;
 
