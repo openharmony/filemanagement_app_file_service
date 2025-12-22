@@ -1193,10 +1193,9 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
-    std::shared_ptr<GcProgressInfo> gcProgress = std::make_shared<GcProgressInfo>();
     CallbackFunc cb = [&](int status, int errcode, unsigned int percent, unsigned int gap) {
         std::lock_guard<std::mutex> lock(gcMtx_);
-        UpdateGcProgress(gcProgress, status, errcode, percent, gap);
+        UpdateGcProgress(gcProgress_, status, errcode, percent, gap);
         if (status == 0 || status == 1 || status == 8) {
             gcVariable_.notify_one();
         }
@@ -1210,10 +1209,10 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     }
     std::unique_lock<std::mutex> lock(gcMtx_);
     auto timeout = gcVariable_.wait_for(lock, std::chrono::seconds(GC_MAX_WAIT_TIME_S));
-    auto resCode = gcProgress->errcode.load(std::memory_order_acquire);
+    auto resCode = gcProgress_->errcode.load(std::memory_order_acquire);
     HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
-        gcProgress->status.load(std::memory_order_relaxed), resCode,
-        gcProgress->percent.load(std::memory_order_relaxed), gcProgress->gap.load(std::memory_order_relaxed));
+        gcProgress_->status.load(std::memory_order_relaxed), resCode,
+        gcProgress_->percent.load(std::memory_order_relaxed), gcProgress_->gap.load(std::memory_order_relaxed));
     if (timeout ==std::cv_status::timeout) {
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_MISSION_TIMEOUT);

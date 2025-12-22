@@ -828,6 +828,7 @@ public:
     std::string scannedInfo_;
     std::condition_variable gcVariable_;
     std::mutex gcMtx_;
+    std::shared_ptr<GcProgressInfo> gcProgress_ = std::make_shared<GcProgressInfo>();
 };
 } // namespace OHOS::FileManagement::Backup
 
