@@ -41,7 +41,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
-typedef int (CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
+typedef int (*CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
 
 struct ExtensionMutexInfo {
     std::string bundleName;
