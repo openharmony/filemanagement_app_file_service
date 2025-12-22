@@ -1188,7 +1188,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL); 
     }
     CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
-    if (!func) {
+    if (func == nullptr) {
         HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);

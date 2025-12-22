@@ -260,7 +260,7 @@ public:
     {
         return BError(BError::Codes::OK);
     }
-    Errcode StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+    ErrCode StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
     {
         return BError(BError::Codes::OK); 
     }

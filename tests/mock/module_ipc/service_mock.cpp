@@ -467,7 +467,7 @@ void Service::BroadCastRestore(const std::string &bundleName, const std::string 
 
 void Service::BroadCastSingle(const std::string &bundleName, const std::string &broadCastType) {}
 
-Errcode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
     return BError(BError::Codes::OK); 
 }
