@@ -2355,7 +2355,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0101, Tes
     unsigned int testWriteSize = 1000;
     unsigned int testWaitTime = 180;
     
-    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(".dataclone"));
+    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(BConstants::BUNDLE_DATA_CLONE));
     EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(nullptr));
     auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
     EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL));
@@ -2400,7 +2400,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0103, Tes
     unsigned int testWriteSize = 1000;
     unsigned int testWaitTime = 180;
     void *handle = &testTriggerType;
-    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(".dataclone"));
+    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(BConstants::BUNDLE_DATA_CLONE));
     EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(handle));
     EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(nullptr));
     auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
@@ -2424,7 +2424,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0104, Tes
     unsigned int testWriteSize = 1000;
     unsigned int testWaitTime = 180;
     void *handle = &testTriggerType;
-    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(".dataclone"));
+    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(BConstants::BUNDLE_DATA_CLONE));
     EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(handle));
     EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(reinterpret_cast<void *>(gcFuncMock1)));
     auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
@@ -2448,7 +2448,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0105, Tes
     unsigned int testWriteSize = 1000;
     unsigned int testWaitTime = 180;
     void *handle = &testTriggerType;
-    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(".dataclone"));
+    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(BConstants::BUNDLE_DATA_CLONE));
     EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(handle));
     EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(reinterpret_cast<void *>(gcFuncMock2)));
     auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
