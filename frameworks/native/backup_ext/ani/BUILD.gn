@@ -14,27 +14,26 @@
 import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 
-if (support_jsapi) {
-  group("backup_ext_ani_package") {
-    deps = [
-      ":backup_ext_abc_etc",
-    ]
-  }
+group("backup_ext_ani_package") {
+  deps = [ ":backup_ext_abc_etc" ]
+}
 
-  generate_static_abc("backup_ext_abc") {
-    base_url = "./ets"
-    files = [ "./ets/@ohos.application.BackupExtensionAbility.ets" ]
-    dst_file = "$target_out_dir/backup_ext.abc"
-    out_puts = [ "$target_out_dir/backup_ext.abc" ]
-    is_boot_abc = "True"
-    device_dst_file = "/system/framework/backup_ext.abc"
-  }
+generate_static_abc("backup_ext_abc") {
+  base_url = "./ets"
+  files = [
+    "./ets/@ohos.application.BackupExtensionAbility.ets",
+    "./ets/@ohos.file.BackupExtensionContext.ets",
+  ]
+  dst_file = "$target_out_dir/backup_ext.abc"
+  out_puts = [ "$target_out_dir/backup_ext.abc" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/backup_ext.abc"
+}
 
-  ohos_prebuilt_etc("backup_ext_abc_etc") {
-    source = "$target_out_dir/backup_ext.abc"
-    module_install_dir = "framework"
-    subsystem_name = "filemanagement"
-    part_name = "app_file_service"
-    deps = [ ":backup_ext_abc" ]
-   }
+ohos_prebuilt_etc("backup_ext_abc_etc") {
+  source = "$target_out_dir/backup_ext.abc"
+  module_install_dir = "framework"
+  subsystem_name = "filemanagement"
+  part_name = "app_file_service"
+  deps = [ ":backup_ext_abc" ]
 }
