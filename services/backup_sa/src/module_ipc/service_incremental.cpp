@@ -1154,10 +1154,10 @@ void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName)
 void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
     int status, int errcode, unsigned int percent, unsigned int gap)
 {
-    gcProgress->errcode.store(errcode, std::memory_order_relaxed);
+    gcProgress->status.store(status, std::memory_order_relaxed);
     gcProgress->percent.store(percent, std::memory_order_relaxed);
     gcProgress->gap.store(gap, std::memory_order_relaxed);
-    gcProgress->status.store(status, std::memory_order_release);
+    gcProgress->errcode.store(errcode, std::memory_order_release);
     HILOGI("Get GC progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
         status, errcode, percent, gap);
 }
@@ -1210,9 +1210,9 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     }
     std::unique_lock<std::mutex> lock(gcMtx_);
     auto timeout = gcVariable_.wait_for(lock, std::chrono::seconds(GC_MAX_WAIT_TIME_S));
-    auto resCode = gcProgress->status.load(std::memory_order_acquire);
+    auto resCode = gcProgress->errcode.load(std::memory_order_acquire);
     HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
-        resCode, gcProgress->errcode.load(std::memory_order_relaxed),
+        gcProgress->status.load(std::memory_order_relaxed), resCode,
         gcProgress->percent.load(std::memory_order_relaxed), gcProgress->gap.load(std::memory_order_relaxed));
     if (timeout ==std::cv_status::timeout) {
         dlclose(handle);
