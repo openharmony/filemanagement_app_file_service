@@ -2321,16 +2321,16 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_DealWithGcErrcode_0101, 
         auto res = service->DealWithGcErrcode(testCode);
         EXPECT_EQ(res, ERROR_OK);
 
-        int testCode = -7;
-        auto res = service->DealWithGcErrcode(testCode);
+        testCode = -7;
+        res = service->DealWithGcErrcode(testCode);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE));
         
-        int testCode = -16;
-        auto res = service->DealWithGcErrcode(testCode);
+        testCode = -16;
+        res = service->DealWithGcErrcode(testCode);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT));
 
-        int testCode = 1;
-        auto res = service->DealWithGcErrcode(testCode);
+        testCode = 1;
+        res = service->DealWithGcErrcode(testCode);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED));
     } catch (...) {
         EXPECT_TRUE(false);
