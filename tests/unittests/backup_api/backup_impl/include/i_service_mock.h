@@ -262,7 +262,7 @@ public:
     }
     ErrCode StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
     {
-        return BError(BError::Codes::OK); 
+        return BError(BError::Codes::OK);
     }
 };
 } // namespace OHOS::FileManagement::Backup

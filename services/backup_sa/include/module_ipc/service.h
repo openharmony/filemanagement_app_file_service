@@ -72,8 +72,6 @@ const int GC_TASK_TIMEOUT = -16;
 const int GC_MAX_WAIT_TIME_S = 180;
 constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 
-
-
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);
 
@@ -767,7 +765,7 @@ private:
 #endif
     ErrCode DealWithGcErrcode(int GcErrCode);
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> GcProgress, int status, int errcode,
-        unsigned int percent, unsigned int gap); 
+        unsigned int percent, unsigned int gap);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);

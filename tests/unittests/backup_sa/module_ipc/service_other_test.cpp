@@ -176,7 +176,7 @@ void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName)
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
-    return BError(BError::Codes::OK); 
+    return BError(BError::Codes::OK);
 }
 }
 

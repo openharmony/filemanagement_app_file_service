@@ -1185,7 +1185,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
     if (!handle) {
         HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL); 
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
     }
     CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
     if (func == nullptr) {
@@ -1203,7 +1203,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     };
     int ret = func(triggerType, writeSize, waitTime, cb);
     if (ret != 0) {
-        HILOGE("CallDeviceTaskRequest failed, errno = %{public}d" ,ret);
+        HILOGE("CallDeviceTaskRequest failed, errno = %{public}d", ret);
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }

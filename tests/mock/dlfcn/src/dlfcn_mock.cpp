@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- #include "dlfcn_mock.h"
+#include "dlfcn_mock.h"
 using namespace OHOS::FileManagement::Backup;
 void *dlopen(const char *file, int mode)
 {
