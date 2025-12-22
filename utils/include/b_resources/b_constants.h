@@ -165,7 +165,7 @@ static inline std::string EXTENSION_RESTORE = "restore";
 // 路径校验
 static inline std::string PATH_ABSOLUTE = "../";
 // 克隆应用bundleName
-static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
+static inline std::string BUNDLE_DATA_CLONE = "com.huawei.hmos.dataclone";
 // 多用户场景应用备份数据路径
 static inline std::string GetSaBundleBackupDir(int32_t userId)
 {
