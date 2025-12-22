@@ -66,6 +66,12 @@ struct GcProgressInfo {
     std::atomic<unsigned int> gap;
 };
 
+enum class GcStatus {
+    TASK_DONE = 0,
+    TASK_FAILED = 1,
+    DEVICE_GC_FAILED = 8,
+};
+
 const int INVALID_FD = -1;
 const int GC_DEVICE_INCOMPATIBLE = -7;
 const int GC_TASK_TIMEOUT = -16;

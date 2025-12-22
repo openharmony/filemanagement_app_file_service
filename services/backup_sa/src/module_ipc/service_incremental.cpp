@@ -1154,9 +1154,9 @@ void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName)
 void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
     int status, int errcode, unsigned int percent, unsigned int gap)
 {
-    gcProgress->status.store(status, std::memory_order_relaxed);
-    gcProgress->percent.store(percent, std::memory_order_relaxed);
-    gcProgress->gap.store(gap, std::memory_order_relaxed);
+    gcProgress->status.store(status, std::memory_order_release);
+    gcProgress->percent.store(percent, std::memory_order_release);
+    gcProgress->gap.store(gap, std::memory_order_release);
     gcProgress->errcode.store(errcode, std::memory_order_release);
     HILOGI("Get GC progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
         status, errcode, percent, gap);
@@ -1196,13 +1196,13 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     CallbackFunc cb = [&](int status, int errcode, unsigned int percent, unsigned int gap) {
         std::lock_guard<std::mutex> lock(gcMtx_);
         UpdateGcProgress(gcProgress_, status, errcode, percent, gap);
-        if (status == 0 || status == 1 || status == 8) {
+        if (status == GcStatus::TASK_DONE || status == GcStatus::TASK_FAILED || status == GcStatus::DEVICE_GC_FAILED) {
             gcVariable_.notify_one();
         }
         return ERROR_OK;
     };
     int ret = func(triggerType, writeSize, waitTime, cb);
-    if (ret != 0) {
+    if (ret != ERROR_OK) {
         HILOGE("CallDeviceTaskRequest failed, errno = %{public}d", ret);
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
@@ -1211,8 +1211,8 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     auto timeout = gcVariable_.wait_for(lock, std::chrono::seconds(GC_MAX_WAIT_TIME_S));
     auto resCode = gcProgress_->errcode.load(std::memory_order_acquire);
     HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
-        gcProgress_->status.load(std::memory_order_relaxed), resCode,
-        gcProgress_->percent.load(std::memory_order_relaxed), gcProgress_->gap.load(std::memory_order_relaxed));
+        gcProgress_->status.load(std::memory_order_acquire), resCode,
+        gcProgress_->percent.load(std::memory_order_acquire), gcProgress_->gap.load(std::memory_order_acquire));
     if (timeout ==std::cv_status::timeout) {
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_MISSION_TIMEOUT);
