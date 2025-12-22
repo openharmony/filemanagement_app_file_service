@@ -663,14 +663,14 @@ void ServiceIncrementalTest::TearDownTestCase()
 
 int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
 {
-    thread mockFuncThread([argv4]()) {
+    thread mockFuncThread([argv4]() {
         this_thread::sleep_for(std::chrono::seconds(3));
         int testStatus = 0;
         int testErrcode = 1;
         unsigned int testPercent = 2;
         unsigned int testGap = 3;
         argv4(testStatus, testErrcode, testPercent, testGap);
-    }
+    });
     mockFuncThread.detach();
     return 0;
 }
