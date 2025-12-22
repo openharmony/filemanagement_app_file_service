@@ -123,7 +123,7 @@ ErrCode ExtBackupAni::CallEtsOnRestore()
             return EINVAL;
         }
     }
-    const std::string className = "L@ohos/application/BackupExtensionAbility/BundleVersionInner;";
+    const std::string className = "@ohos.application.BackupExtensionAbility.BundleVersionInner";
     ani_object bundleVersionObj = AniObjectUtils::Create(env, className.c_str());
     if (nullptr == bundleVersionObj) {
         HILOGE("Failed to Create the BundleVersionInner");
