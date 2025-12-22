@@ -120,9 +120,9 @@ bool Parse::VerifyAndParseParams(napi_env env, LibN::NFuncArg &funcArg,
 
 std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(const LibN::NVal &FsRequestConfig)
 {
-    int triggerType;
-    unsigned int writeSize;
-    unsigned int waitTime;
+    int triggerType = -1;
+    unsigned int writeSize = 0;
+    unsigned int waitTime = 0;
 
     LibN::NVal triggerType_ = FsRequestConfig.GetProp("triggerType");
     if (triggerType_.val_ != nullptr) {
