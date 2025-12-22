@@ -572,7 +572,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
 using namespace testing::ext;
-using CallbcakFunc = std::function<int (int, int, unsigned int, unsigned int)>;
+using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
 typedef int (CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
 
 constexpr int32_t SERVICE_ID = 5203;
@@ -605,8 +605,8 @@ public:
     static inline shared_ptr<ServiceMock> srvMock = nullptr;
     static inline shared_ptr<DirectoryFuncMock> directMock = nullptr;
 
-    int gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbcakFunc argv4);
-    int gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbcakFunc argv4);
+    int gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4);
+    int gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4);
 };
 
 void ServiceIncrementalTest::SetUpTestCase(void)
@@ -661,7 +661,7 @@ void ServiceIncrementalTest::TearDownTestCase()
     directMock = nullptr;
 }
 
-int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbcakFunc argv4)
+int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
 {
     thread mockFuncThread([argv4]()) {
         this_thread::sleep_for(std::chrono::seconds(3));
@@ -675,7 +675,7 @@ int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned 
     return 0;
 }
 
-int ServiceIncrementalTest::gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbcakFunc argv4)
+int ServiceIncrementalTest::gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
 {
     int testStatus = 0;
     int testErrcode = 1;
