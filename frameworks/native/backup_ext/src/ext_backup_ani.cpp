@@ -392,7 +392,7 @@ ErrCode ExtBackupAni::GetBackupInfo(std::function<void(ErrCode, const std::strin
 
 ErrCode ExtBackupAni::OnProcess(std::function<void(ErrCode, const std::string)> callback)
 {
-    HILOGI("BackupExtensionAbility(JS) OnProcess begin.");
+    HILOGI("BackupExtensionAbility(ETS) OnProcess begin.");
     BExcepUltils::BAssert(etsAbilityObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
                           "The app does not provide the OnProcess interface.");
     std::string result;
