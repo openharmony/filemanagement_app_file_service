@@ -665,8 +665,6 @@ void ServiceIncrementalTest::TearDownTestCase()
 int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
 {
     thread mockFuncThread([argv4]() {
-        int threadSleepTime = 3;
-        this_thread::sleep_for(std::chrono::seconds(threadSleepTime));
         int testStatus = 0;
         int testErrcode = 1;
         unsigned int testPercent = 2;
@@ -680,8 +678,6 @@ int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned 
 int ServiceIncrementalTest::gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
 {
     thread mockFuncThread([argv4]() {
-        int threadSleepTime = 3;
-        this_thread::sleep_for(std::chrono::seconds(threadSleepTime));
         int testStatus = 0;
         int testErrcode = 1;
         unsigned int testPercent = 2;
