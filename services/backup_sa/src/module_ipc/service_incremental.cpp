@@ -1216,11 +1216,10 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
         gcProgress_->status.load(std::memory_order_acquire), resCode,
         gcProgress_->percent.load(std::memory_order_acquire), gcProgress_->gap.load(std::memory_order_acquire));
-    if (timeout ==std::cv_status::timeout) {
-        dlclose(handle);
+    dlclose(handle);
+    if (timeout == std::cv_status::timeout) {
         return static_cast<ErrCode>(BError::BackupErrorCode::E_MISSION_TIMEOUT);
     } else {
-        dlclose(handle);
         return DealWithGcErrcode(resCode);
     }
 }
