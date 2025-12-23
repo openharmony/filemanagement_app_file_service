@@ -1204,13 +1204,13 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         }
         return ERROR_OK;
     };
+    std::unique_lock<std::mutex> lock(gcMtx_);
     int ret = func(triggerType, writeSize, waitTime, cb);
     if (ret != ERROR_OK) {
         HILOGE("CallDeviceTaskRequest failed, errno = %{public}d", ret);
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }
-    std::unique_lock<std::mutex> lock(gcMtx_);
     auto timeout = gcVariable_.wait_for(lock, std::chrono::seconds(GC_MAX_WAIT_TIME_S));
     auto resCode = gcProgress_->errcode.load(std::memory_order_acquire);
     HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",

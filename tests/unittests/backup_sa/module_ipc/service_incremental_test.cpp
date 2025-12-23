@@ -589,6 +589,7 @@ public:
     void TearDown()
     {
         dlFuncMock = nullptr;
+        DlfcnMock::dlFunc_ = nullptr;
     };
 
     static inline shared_ptr<DlfcnMock> dlFuncMock = nullptr;
@@ -678,12 +679,18 @@ int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned 
 
 int ServiceIncrementalTest::gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
 {
-    int testStatus = 0;
-    int testErrcode = 1;
-    unsigned int testPercent = 2;
-    unsigned int testGap = 3;
-    argv4(testStatus, testErrcode, testPercent, testGap);
-    return 1;
+    thread mockFuncThread([argv4]() {
+        int threadSleepTime = 3;
+        this_thread::sleep_for(std::chrono::seconds(threadSleepTime));
+        int testStatus = 0;
+        int testErrcode = 1;
+        unsigned int testPercent = 2;
+        unsigned int testGap = 3;
+        argv4(testStatus, testErrcode, testPercent, testGap);
+    });
+    mockFuncThread.detach();
+    int mockRes = -1;
+    return mockRes;
 }
 /**
  * @tc.number: SUB_ServiceIncremental_GetLocalCapabilitiesIncremental_0000
@@ -2294,9 +2301,9 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, T
 {
     std::shared_ptr<GcProgressInfo> testGCProgressInfo = std::make_shared<GcProgressInfo>();
     int testStatus = 0;
-    int testErrcode = 2;
-    unsigned int testPercent = 3;
-    unsigned int testGap = 4;
+    int testErrcode = 1;
+    unsigned int testPercent = 2;
+    unsigned int testGap = 3;
     service->UpdateGcProgress(testGCProgressInfo, testStatus, testErrcode, testPercent, testGap);
     EXPECT_EQ(testGCProgressInfo->status.load(), testStatus);
     EXPECT_EQ(testGCProgressInfo->errcode.load(), testErrcode);
