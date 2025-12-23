@@ -1158,7 +1158,7 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
     gcProgress->percent.store(percent, std::memory_order_release);
     gcProgress->gap.store(gap, std::memory_order_release);
     gcProgress->errcode.store(errcode, std::memory_order_release);
-    HILOGI("Get GC progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
+    HILOGD("Get GC progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
         status, errcode, percent, gap);
 }
 
@@ -1185,7 +1185,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
     if (!handle) {
         HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
     CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
     if (func == nullptr) {

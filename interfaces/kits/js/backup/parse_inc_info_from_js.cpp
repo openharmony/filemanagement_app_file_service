@@ -120,7 +120,7 @@ bool Parse::VerifyAndParseParams(napi_env env, LibN::NFuncArg &funcArg,
 
 std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(const LibN::NVal &FsRequestConfig)
 {
-    int triggerType = -1;
+    int triggerType = 0;
     unsigned int writeSize = 0;
     unsigned int waitTime = 0;
 
@@ -131,7 +131,7 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
             triggerType = tm;
         } else {
             HILOGE("First argument doesn't have proper TriggerType.");
-            return { false, triggerType, writeSize, waitTime};
+            return {false, triggerType, writeSize, waitTime};
         }
     }
 
@@ -142,7 +142,7 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
             writeSize = tm;
         } else {
             HILOGE("First argument doesn't have proper writeSize.");
-            return { false, triggerType, writeSize, waitTime};
+            return {false, triggerType, writeSize, waitTime};
         }
     }
 
@@ -153,11 +153,11 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
             waitTime = tm;
         } else {
             HILOGE("First argument doesn't have proper waitTime.");
-            return { false, triggerType, writeSize, waitTime};
+            return {false, triggerType, writeSize, waitTime};
         }
     }
 
-    return { true, triggerType, writeSize, waitTime};
+    return {true, triggerType, writeSize, waitTime};
 }
 
 bool Parse::VerifyFsRequestConfigParam(napi_env env, LibN::NFuncArg &funcArg,
@@ -179,7 +179,7 @@ bool Parse::VerifyFsRequestConfigParam(napi_env env, LibN::NFuncArg &funcArg,
         return false;
     }
     triggerType = triggerType_;
-    if (triggerType != 0) {
+    if (triggerType != DEVICE_GARBAGE_COLLECTION) {
         NError(BError(BError::Codes::SA_INVAL_ARG, "Invalid parameter for device garbage collection.")
             .GetCode()).ThrowErr(env);
         return false;

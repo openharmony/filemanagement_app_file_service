@@ -276,6 +276,9 @@ constexpr uint8_t INDEX = 3;
 constexpr int INVALID_TIMEOUT_VALUE = -1;
 static inline std::string FILE_BACKUP_RESTORE_EVENTS = "FILE_BACKUP_RESTORE_EVENTS";
 static inline std::string FILE_BACKUP_RESTORE_STATISTIC = "FILE_BACKUP_RESTORE_STATISTIC";
+
+// Garbage collection
+constexpr int32_t DEVICE_GARBAGE_COLLECTION = 0;
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H
