@@ -767,8 +767,8 @@ private:
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
     ErrCode DealWithGcErrcode(bool status, int GcErrCode);
-    void UpdateGcProgress(std::shared_ptr<GcProgressInfo> GcProgress, int status, int errcode,
-        unsigned int percent, unsigned int gap);
+    void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
+        std::tuple<int, int, unsigned int, unsigned int> progressData);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);
