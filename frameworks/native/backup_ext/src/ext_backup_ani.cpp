@@ -231,6 +231,8 @@ void ExtBackupAni::BindContext(std::shared_ptr<AppExecFwk::AbilityInfo> &ability
     }
     if ((status = env->Object_SetField_Ref(etsAbilityObj_->aniObj, field, contextGlobalRef)) != ANI_OK) {
         HILOGE("Object_SetField_Ref failed, status : %{public}d", status);
+        env->GlobalReference_Delete(contextGlobalRef);
+        contextGlobalRef = nullptr;
         return;
     }
     HILOGE("BindContext End");

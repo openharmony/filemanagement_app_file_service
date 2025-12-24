@@ -79,10 +79,6 @@ ani_object CreateExtBackupETSContext(ani_env *env, std::shared_ptr<ExtBackupCont
     }
     std::unique_ptr<ExtBackupContextETS> workContext =
         std::make_unique<ExtBackupContextETS>(context);
-    if (workContext == nullptr) {
-        HILOGE("Failed to create ExtBackupContextETS");
-        return nullptr;
-    }
     auto distributeContextPtr = new std::weak_ptr<ExtBackupContext> (
         workContext->GetAbilityContext());
     if (distributeContextPtr == nullptr) {
