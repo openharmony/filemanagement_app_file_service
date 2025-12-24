@@ -130,7 +130,7 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
         if (succ) {
             triggerType = tm;
         } else {
-            HILOGE("First argument doesn't have proper TriggerType.");
+            HILOGE("Convert triggerType failed.");
             return {false, triggerType, writeSize, waitTime};
         }
     }
@@ -141,7 +141,7 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
         if (succ) {
             writeSize = tm;
         } else {
-            HILOGE("First argument doesn't have proper writeSize.");
+            HILOGE("Convert writeSize failed.");
             return {false, triggerType, writeSize, waitTime};
         }
     }
@@ -152,7 +152,7 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
         if (succ) {
             waitTime = tm;
         } else {
-            HILOGE("First argument doesn't have proper waitTime.");
+            HILOGE("Convert waitTime failed.");
             return {false, triggerType, writeSize, waitTime};
         }
     }

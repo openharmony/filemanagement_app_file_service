@@ -2300,7 +2300,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, T
     int testErrcode = 1;
     unsigned int testPercent = 2;
     unsigned int testGap = 3;
-    service->UpdateGcProgress(testGCProgressInfo, testStatus, testErrcode, testPercent, testGap);
+    service->UpdateGcProgress(testGCProgressInfo, std::make_tuple(testStatus, testErrcode, testPercent, testGap));
     EXPECT_EQ(testGCProgressInfo->status.load(), testStatus);
     EXPECT_EQ(testGCProgressInfo->errcode.load(), testErrcode);
     EXPECT_EQ(testGCProgressInfo->percent.load(), testPercent);
@@ -2321,21 +2321,27 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_DealWithGcErrcode_0101, 
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_DealWithGcErrcode_0101";
     try {
-        int testCode = 0;
-        auto res = service->DealWithGcErrcode(testCode);
+        int testCode = BConstants::GC_DEVICE_OK;
+        bool testStatus = true;
+        auto res = service->DealWithGcErrcode(testStatus, testCode);
         EXPECT_EQ(res, ERROR_OK);
 
-        testCode = -7;
-        res = service->DealWithGcErrcode(testCode);
+        testCode = BConstants::GC_DEVICE_INCOMPATIBLE;
+        res = service->DealWithGcErrcode(testStatus, testCode);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE));
         
-        testCode = -16;
-        res = service->DealWithGcErrcode(testCode);
+        testCode = BConstants::GC_TASK_TIMEOUT;
+        res = service->DealWithGcErrcode(testStatus, testCode);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT));
 
-        testCode = 1;
-        res = service->DealWithGcErrcode(testCode);
+        testCode = 1; // 其余错误码
+        res = service->DealWithGcErrcode(testStatus, testCode);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED));
+
+        testCode = BConstants::GC_DEVICE_OK;
+        testStatus = false;
+        res = service->DealWithGcErrcode(testStatus, testCode);
+        EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by DealWithGcErrcode.";
