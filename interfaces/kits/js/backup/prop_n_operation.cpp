@@ -351,7 +351,7 @@ napi_value PropNOperation::DoGetBackupVersion(napi_env env, napi_callback_info i
     return nResult;
 }
 
-napi_value PropNOperation::fileSystemServiceRequest(napi_env env, napi_callback_info cbinfo)
+napi_value PropNOperation::FileSystemServiceRequest(napi_env env, napi_callback_info cbinfo)
 {
     HILOGI("Called fileSystemServiceRequest Begin");
     if (!SAUtils::CheckBackupPermission()) {
@@ -371,7 +371,7 @@ napi_value PropNOperation::fileSystemServiceRequest(napi_env env, napi_callback_
     if (!Parse::VerifyFsRequestConfigParam(env, funcArg, triggerType, writeSize, waitTime)) {
         return nullptr;
     }
-    HILOGI("get parameter:%{public}d, %{public}d, %{public}d", triggerType, writeSize, waitTime);
+    HILOGI("get parameter:%{public}d, %{public}u, %{public}u", triggerType, writeSize, waitTime);
     auto GCErrCode = std::make_shared<ErrCode>();
 
     auto cbExec = [GCType {triggerType}, GCSize {writeSize}, GCWaitTime {waitTime}, GCErrCode]() -> NError {

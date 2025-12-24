@@ -26,7 +26,7 @@ public:
     static napi_value DoUpdateTimer(napi_env env, napi_callback_info info);
     static napi_value DoUpdateSendRate(napi_env env, napi_callback_info info);
     static napi_value DoGetBackupVersion(napi_env env, napi_callback_info info);
-    static napi_value fileSystemServiceRequest(napi_env env, napi_callback_info cbinfo);
+    static napi_value FileSystemServiceRequest(napi_env env, napi_callback_info cbinfo);
 private:
     static bool UpdateTimer(std::string &bundleName, uint32_t timeout);
     static bool UpdateSendRate(std::string &bundleName, int32_t sendRate);
