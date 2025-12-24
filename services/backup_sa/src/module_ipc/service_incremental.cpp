@@ -1213,7 +1213,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }
-    gcVariable_.wait_for(lock, std::chrono::seconds(GC_MAX_WAIT_TIME_S),
+    gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
         [this]{ return isGcTaskDone_.load(std::memory_order_acquire); });
     auto resCode = gcProgress_->errcode.load(std::memory_order_acquire);
     HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
