@@ -1182,7 +1182,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         HILOGE("Caller: %{public}s has no permission", bundleName.data());
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
-    void *handle = dlopen(BConstants::FILE_SYSTEM_CLIENT_SO.dats(), RTLD_LAZY);
+    void *handle = dlopen(BConstants::FILE_SYSTEM_CLIENT_SO.data(), RTLD_LAZY);
     if (!handle) {
         HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
