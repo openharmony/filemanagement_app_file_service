@@ -278,7 +278,12 @@ static inline std::string FILE_BACKUP_RESTORE_EVENTS = "FILE_BACKUP_RESTORE_EVEN
 static inline std::string FILE_BACKUP_RESTORE_STATISTIC = "FILE_BACKUP_RESTORE_STATISTIC";
 
 // Garbage collection
-constexpr int32_t DEVICE_GARBAGE_COLLECTION = 0;
+constexpr int DEVICE_GARBAGE_COLLECTION = 0;
+constexpr int GC_DEVICE_OK = 0;
+constexpr int GC_DEVICE_INCOMPATIBLE = -7;
+constexpr int GC_TASK_TIMEOUT = -16;
+constexpr int GC_MAX_WAIT_TIME_S = 180;
+static inline std::string FILE_SYSTEM_CLIENT_SO = "/system/lib64/libioqos_service_client.z.so";
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H

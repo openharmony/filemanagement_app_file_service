@@ -1162,14 +1162,14 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         status, errcode, percent, gap);
 }
 
-ErrCode Service::DealWithGcErrcode(int GcErrCode)
+ErrCode Service::DealWithGcErrcode(bool status, int GcErrCode)
 {
-    if (GcErrCode == 0) {
-        return ERROR_OK;
-    } else if (GcErrCode == GC_DEVICE_INCOMPATIBLE) {
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
-    } else if (GcErrCode == GC_TASK_TIMEOUT) {
+    if (GcErrCode == BConstants::GC_TASK_TIMEOUT || status == false) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
+    } else if (GcErrCode == BConstants::GC_DEVICE_INCOMPATIBLE) {
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
+    } else if (GcErrCode == BConstants::GC_DEVICE_OK) {
+        return ERROR_OK;
     } else {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED);
     }
@@ -1182,7 +1182,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         HILOGE("Caller: %{public}s has no permission", bundleName.data());
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
-    void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
+    void *handle = dlopen(BConstants::FILE_SYSTEM_CLIENT_SO.dats(), RTLD_LAZY);
     if (!handle) {
         HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
@@ -1193,6 +1193,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
+    gcProgress_ = std::make_shared<GcProgressInfo>();
     CallbackFunc cb = [&](int status, int errcode, unsigned int percent, unsigned int gap) {
         std::lock_guard<std::mutex> lock(gcMtx_);
         UpdateGcProgress(gcProgress_, status, errcode, percent, gap);
@@ -1200,6 +1201,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         if (gcStatus == GcStatus::TASK_DONE ||
             gcStatus == GcStatus::TASK_FAILED ||
             gcStatus == GcStatus::DEVICE_GC_FAILED) {
+            isGcTaskDone_.store(true, std::memory_order_release);
             gcVariable_.notify_one();
         }
         return ERROR_OK;
@@ -1211,16 +1213,13 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }
-    auto timeout = gcVariable_.wait_for(lock, std::chrono::seconds(GC_MAX_WAIT_TIME_S));
+    gcVariable_.wait_for(lock, std::chrono::seconds(GC_MAX_WAIT_TIME_S),
+        [this]{ return isGcTaskDone_.load(std::memory_order_acquire); });
     auto resCode = gcProgress_->errcode.load(std::memory_order_acquire);
     HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
         gcProgress_->status.load(std::memory_order_acquire), resCode,
         gcProgress_->percent.load(std::memory_order_acquire), gcProgress_->gap.load(std::memory_order_acquire));
     dlclose(handle);
-    if (timeout == std::cv_status::timeout) {
-        return static_cast<ErrCode>(BError::BackupErrorCode::E_MISSION_TIMEOUT);
-    } else {
-        return DealWithGcErrcode(resCode);
-    }
+    return DealWithGcErrcode(isGcTaskDone_.load(), resCode);
 }
 } // namespace OHOS::FileManagement::Backup

@@ -73,9 +73,6 @@ enum class GcStatus {
 };
 
 const int INVALID_FD = -1;
-const int GC_DEVICE_INCOMPATIBLE = -7;
-const int GC_TASK_TIMEOUT = -16;
-const int GC_MAX_WAIT_TIME_S = 180;
 constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
@@ -769,7 +766,7 @@ private:
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
-    ErrCode DealWithGcErrcode(int GcErrCode);
+    ErrCode DealWithGcErrcode(bool status, int GcErrCode);
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> GcProgress, int status, int errcode,
         unsigned int percent, unsigned int gap);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
@@ -832,7 +829,8 @@ public:
     std::string scannedInfo_;
     std::condition_variable gcVariable_;
     std::mutex gcMtx_;
-    std::shared_ptr<GcProgressInfo> gcProgress_ = std::make_shared<GcProgressInfo>();
+    std::shared_ptr<GcProgressInfo> gcProgress_ = nullptr;
+    std::atomic<bool> isGcTaskDone_ = {false};
 };
 } // namespace OHOS::FileManagement::Backup
 
