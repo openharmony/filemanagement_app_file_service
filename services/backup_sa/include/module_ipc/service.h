@@ -766,7 +766,7 @@ private:
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
-    ErrCode DealWithGcErrcode(bool status, int GcErrCode);
+    ErrCode DealWithGcErrcode(bool isTastDone, int GcErrCode);
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         std::tuple<int, int, unsigned int, unsigned int> progressData);
     std::vector<BundleName> HandleBroadcastOnlyBundles(

@@ -1163,9 +1163,9 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         status, errcode, percent, gap);
 }
 
-ErrCode Service::DealWithGcErrcode(bool status, int GcErrCode)
+ErrCode Service::DealWithGcErrcode(bool isTastDone, int GcErrCode)
 {
-    if (GcErrCode == BConstants::GC_TASK_TIMEOUT || status == false) {
+    if (GcErrCode == BConstants::GC_TASK_TIMEOUT || isTastDone == false) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
     } else if (GcErrCode == BConstants::GC_DEVICE_INCOMPATIBLE) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
@@ -1215,7 +1215,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
-        [this]{ return isGcTaskDone_.load(std::memory_order_acquire); });
+        [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
     auto resCode = gcProgress_->errcode.load(std::memory_order_acquire);
     HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
         gcProgress_->status.load(std::memory_order_acquire), resCode,

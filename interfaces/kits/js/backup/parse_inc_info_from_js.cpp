@@ -124,9 +124,9 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
     unsigned int writeSize = 0;
     unsigned int waitTime = 0;
 
-    LibN::NVal triggerType_ = FsRequestConfig.GetProp("triggerType");
-    if (triggerType_.val_ != nullptr) {
-        auto [succ, tm] = triggerType_.ToInt32();
+    LibN::NVal triggerTypeVal = FsRequestConfig.GetProp("triggerType");
+    if (triggerTypeVal.val_ != nullptr) {
+        auto [succ, tm] = triggerTypeVal.ToInt32();
         if (succ) {
             triggerType = tm;
         } else {
@@ -135,9 +135,9 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
         }
     }
 
-    LibN::NVal writeSize_ = FsRequestConfig.GetProp("writeSize");
-    if (writeSize_.val_ != nullptr) {
-        auto [succ, tm] = writeSize_.ToUint32();
+    LibN::NVal writeSizeVal = FsRequestConfig.GetProp("writeSize");
+    if (writeSizeVal.val_ != nullptr) {
+        auto [succ, tm] = writeSizeVal.ToUint32();
         if (succ) {
             writeSize = tm;
         } else {
@@ -146,9 +146,9 @@ std::tuple<bool, int, unsigned int, unsigned int> Parse::ParseFsRequestConfig(co
         }
     }
 
-    LibN::NVal waitTime_ = FsRequestConfig.GetProp("waitTime");
-    if (waitTime_.val_ != nullptr) {
-        auto [succ, tm] = waitTime_.ToUint32();
+    LibN::NVal waitTimeVal = FsRequestConfig.GetProp("waitTime");
+    if (waitTimeVal.val_ != nullptr) {
+        auto [succ, tm] = waitTimeVal.ToUint32();
         if (succ) {
             waitTime = tm;
         } else {
@@ -172,17 +172,20 @@ bool Parse::VerifyFsRequestConfigParam(napi_env env, LibN::NFuncArg &funcArg,
         NError(BError(BError::Codes::SDK_INVAL_ARG, "First argument is not an object.").GetCode()).ThrowErr(env);
         return false;
     }
-    auto [succ, triggerType, writeSize, waitTime] = ParseFsRequestConfig(FsRequestConfig);
+    auto [succ, convertedTriggerType, convertedWriteSize, convertedWaitTime] = ParseFsRequestConfig(FsRequestConfig);
     if (!succ) {
         HILOGE("ParseFsRequestConfig failed.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "ParseFsRequestConfig failed.").GetCode()).ThrowErr(env);
         return false;
     }
-    if (triggerType != BConstants::DEVICE_GARBAGE_COLLECTION) {
+    if (convertedTriggerType != BConstants::DEVICE_GARBAGE_COLLECTION) {
         NError(BError(BError::Codes::SA_INVAL_ARG, "Invalid parameter for device garbage collection.")
             .GetCode()).ThrowErr(env);
         return false;
     }
+    triggerType = convertedTriggerType;
+    writeSize = convertedWriteSize;
+    waitTime = convertedWaitTime;
     return true;
 }
 } // namespace OHOS::FileManagement::Backup
