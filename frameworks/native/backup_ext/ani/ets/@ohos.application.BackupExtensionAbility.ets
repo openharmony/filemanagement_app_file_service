@@ -76,8 +76,6 @@ export default class BackupExtensionAbility {
   }
 
   onRelease(scenario: int): Promise<void> {
-    return new Promise<void>((resolve: (a: undefined) => void,
-      reject: (err: Error) => void): void => {
-    });
+    return Promise.resolve();
   }
 }
