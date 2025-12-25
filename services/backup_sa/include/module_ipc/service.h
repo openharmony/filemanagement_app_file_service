@@ -775,7 +775,7 @@ private:
 #endif
     ErrCode DealWithGcErrcode(bool isTastDone, int GcErrCode);
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
-        GcProgressInfoUpdate progressData)
+        GcProgressInfoUpdate progressData);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);
