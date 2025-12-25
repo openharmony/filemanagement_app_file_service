@@ -2300,7 +2300,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_UpdateGcprogress_0101, T
     int testErrcode = 1;
     unsigned int testPercent = 2;
     unsigned int testGap = 3;
-    service->UpdateGcProgress(testGCProgressInfo, std::make_tuple(testStatus, testErrcode, testPercent, testGap));
+    GcProgressInfoUpdate testData{testStatus, testErrcode, testPercent, testGap};
+    service->UpdateGcProgress(testGCProgressInfo, testData);
     EXPECT_EQ(testGCProgressInfo->status.load(), testStatus);
     EXPECT_EQ(testGCProgressInfo->errcode.load(), testErrcode);
     EXPECT_EQ(testGCProgressInfo->percent.load(), testPercent);

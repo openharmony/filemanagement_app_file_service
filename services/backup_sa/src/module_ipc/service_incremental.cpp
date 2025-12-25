@@ -1152,7 +1152,7 @@ void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName)
 }
 
 void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
-    std::tuple<int, int, unsigned int, unsigned int> progressData)
+    GcProgressInfoUpdate progressData)
 {
     auto [status, errcode, percent, gap] = progressData;
     gcProgress->status.store(status, std::memory_order_relaxed);
@@ -1204,7 +1204,8 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     }
     CallbackFunc cb = [&](int status, int errcode, unsigned int percent, unsigned int gap) {
         std::lock_guard<std::mutex> lock(gcMtx_);
-        UpdateGcProgress(gcProgress_, std::make_tuple(status, errcode, percent, gap));
+        GcProgressInfoUpdate progressData{status, errcode, percent, gap};
+        UpdateGcProgress(gcProgress_, progressInfo);
         auto gcStatus = static_cast<GcStatus>(status);
         if (gcStatus == GcStatus::TASK_DONE || gcStatus == GcStatus::TASK_FAILED ||
             gcStatus == GcStatus::DEVICE_GC_FAILED) {

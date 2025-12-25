@@ -66,6 +66,13 @@ struct GcProgressInfo {
     std::atomic<unsigned int> gap;
 };
 
+struct GcProgressInfoUpdate {
+    int status;
+    int errcode;
+    unsigned int percent;
+    unsigned int gap;
+};
+
 enum class GcStatus {
     TASK_DONE = 0,
     TASK_FAILED = 1,
