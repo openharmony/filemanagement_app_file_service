@@ -1163,9 +1163,9 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         status, errcode, percent, gap);
 }
 
-ErrCode Service::DealWithGcErrcode(bool isTastDone, int GcErrCode)
+ErrCode Service::DealWithGcErrcode(bool isTaskDone, int GcErrCode)
 {
-    if (GcErrCode == BConstants::GC_TASK_TIMEOUT || isTastDone == false) {
+    if (GcErrCode == BConstants::GC_TASK_TIMEOUT || isTaskDone == false) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
     } else if (GcErrCode == BConstants::GC_DEVICE_INCOMPATIBLE) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);

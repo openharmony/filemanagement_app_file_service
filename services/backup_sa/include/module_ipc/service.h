@@ -41,7 +41,7 @@
 
 namespace OHOS::FileManagement::Backup {
 using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
-typedef int (*CallDeviceTaskRequest)(int, uint32_t, uint32_t, CallbackFunc);
+typedef int (*CallDeviceTaskRequest)(int, unsigned int, unsigned int, CallbackFunc);
 
 struct ExtensionMutexInfo {
     std::string bundleName;
@@ -773,7 +773,7 @@ private:
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
-    ErrCode DealWithGcErrcode(bool isTastDone, int GcErrCode);
+    ErrCode DealWithGcErrcode(bool isTaskDone, int GcErrCode);
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         GcProgressInfoUpdate progressData);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
