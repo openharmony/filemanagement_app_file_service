@@ -1205,7 +1205,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     CallbackFunc cb = [&](int status, int errcode, unsigned int percent, unsigned int gap) {
         std::lock_guard<std::mutex> lock(gcMtx_);
         GcProgressInfoUpdate progressData{status, errcode, percent, gap};
-        UpdateGcProgress(gcProgress_, progressInfo);
+        UpdateGcProgress(gcProgress_, progressData);
         auto gcStatus = static_cast<GcStatus>(status);
         if (gcStatus == GcStatus::TASK_DONE || gcStatus == GcStatus::TASK_FAILED ||
             gcStatus == GcStatus::DEVICE_GC_FAILED) {
