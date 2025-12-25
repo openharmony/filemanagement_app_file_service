@@ -1155,11 +1155,11 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
     std::tuple<int, int, unsigned int, unsigned int> progressData)
 {
     auto [status, errcode, percent, gap] = progressData;
-    gcProgress->status.store(status, std::memory_order_release);
-    gcProgress->percent.store(percent, std::memory_order_release);
-    gcProgress->gap.store(gap, std::memory_order_release);
+    gcProgress->status.store(status, std::memory_order_relaxed);
+    gcProgress->percent.store(percent, std::memory_order_relaxed);
+    gcProgress->gap.store(gap, std::memory_order_relaxed);
     gcProgress->errcode.store(errcode, std::memory_order_release);
-    HILOGD("Get GC progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
+    HILOGD("Get GC progress, status %{public}d, errcode: %{public}u, progress: %{public}u, gap: %{public}d",
         status, errcode, percent, gap);
 }
 
@@ -1178,9 +1178,13 @@ ErrCode Service::DealWithGcErrcode(bool isTastDone, int GcErrCode)
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
-    std::string bundleName = GetCallerName();
-    if (bundleName != BConstants::BUNDLE_DATA_CLONE) {
-        HILOGE("Caller: %{public}s has no permission", bundleName.data());
+    ErrCode err = VerifyCaller();
+    if (err != ERR_OK) {
+        HILOGE("StartCleanData fail, Verify caller failed, errCode:%{public}d", err);
+        return err;
+    }
+    if (GetCallerName() != BConstants::BUNDLE_DATA_CLONE) {
+        HILOGE("Wrong Caller has no permission");
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
     void *handle = dlopen(BConstants::FILE_SYSTEM_CLIENT_SO.data(), RTLD_LAZY);
@@ -1194,13 +1198,14 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         dlclose(handle);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
-    gcProgress_ = std::make_shared<GcProgressInfo>();
+    if (gcProgress_ == nullptr) {
+        gcProgress_ = std::make_shared<GcProgressInfo>();
+    }
     CallbackFunc cb = [&](int status, int errcode, unsigned int percent, unsigned int gap) {
         std::lock_guard<std::mutex> lock(gcMtx_);
         UpdateGcProgress(gcProgress_, std::make_tuple(status, errcode, percent, gap));
         auto gcStatus = static_cast<GcStatus>(status);
-        if (gcStatus == GcStatus::TASK_DONE ||
-            gcStatus == GcStatus::TASK_FAILED ||
+        if (gcStatus == GcStatus::TASK_DONE || gcStatus == GcStatus::TASK_FAILED ||
             gcStatus == GcStatus::DEVICE_GC_FAILED) {
             isGcTaskDone_.store(true, std::memory_order_release);
             gcVariable_.notify_one();
@@ -1217,9 +1222,6 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
         [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
     auto resCode = gcProgress_->errcode.load(std::memory_order_acquire);
-    HILOGI("GC task final progress, status %{public}d, errcode: %{public}d, progress: %{public}d, gap: %{public}d",
-        gcProgress_->status.load(std::memory_order_acquire), resCode,
-        gcProgress_->percent.load(std::memory_order_acquire), gcProgress_->gap.load(std::memory_order_acquire));
     dlclose(handle);
     return DealWithGcErrcode(isGcTaskDone_.load(), resCode);
 }
