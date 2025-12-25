@@ -32,7 +32,7 @@ export class BundleVersionInner implements BundleVersion {
 export default class BackupExtensionAbility {
   public context: BackupExtensionContext = {};
 
-  private async etsCallOnBackupEx(backupInfo: string): string {
+  private etsCallOnBackupEx(backupInfo: string): string {
     let p = this.onBackupEx(backupInfo);
     if (p instanceof Promise) {
         return await(p as Promise<string>);
@@ -41,7 +41,7 @@ export default class BackupExtensionAbility {
     }
   }
 
-  private async etsCallOnRestoreEx(bundleVersion: BundleVersion, restoreInfo: string): string {
+  private etsCallOnRestoreEx(bundleVersion: BundleVersion, restoreInfo: string): string {
     let p = this.onRestoreEx(bundleVersion, restoreInfo);
     if (p instanceof Promise) {
         return await(p as Promise<string>);
@@ -50,7 +50,7 @@ export default class BackupExtensionAbility {
     }
   }
 
-  private async etsCallOnRelease(scenario: int): void {
+  private etsCallOnRelease(scenario: int): void {
     let p = this.onRelease(scenario);
     return await(p as Promise<void>);
   }
