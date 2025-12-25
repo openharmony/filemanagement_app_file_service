@@ -1183,8 +1183,9 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         HILOGE("StartCleanData fail, Verify caller failed, errCode:%{public}d", err);
         return err;
     }
-    if (GetCallerName() != BConstants::BUNDLE_DATA_CLONE) {
-        HILOGE("Wrong Caller has no permission");
+    string bundleName = GetCallerName();
+    if (bundleName != BConstants::BUNDLE_DATA_CLONE) {
+        HILOGE("Wrong Caller: %{public}s has no permission", bundleName.data());
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
     void *handle = dlopen(BConstants::FILE_SYSTEM_CLIENT_SO.data(), RTLD_LAZY);
