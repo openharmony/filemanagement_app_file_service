@@ -1215,6 +1215,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         return ERROR_OK;
     };
     std::unique_lock<std::mutex> lock(gcMtx_);
+    isGcTaskDone_.store(false, std::memory_order_release);
     int ret = func(triggerType, writeSize, waitTime, cb);
     if (ret != ERROR_OK) {
         HILOGE("CallDeviceTaskRequest failed, errno = %{public}d", ret);
