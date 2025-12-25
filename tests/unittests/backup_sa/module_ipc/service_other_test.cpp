@@ -50,16 +50,13 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd)
 {
     return BError(BError::Codes::OK);
 }
-ErrCode Service::AppIncrementalFileReady(const std::string &fileName,
-                                         int fd,
-                                         int manifestFd,
-                                         int32_t appIncrementalFileReadyErrCode)
+ErrCode Service::AppIncrementalFileReady(const std::string &fileName, int fd,
+    int manifestFd, int32_t appIncrementalFileReadyErrCode)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppIncrementalFileReadyWithoutFd(const std::string &fileName,
-                                                  int32_t appIncrementalFileReadyErrCode)
+ErrCode Service::AppIncrementalFileReadyWithoutFd(const std::string &fileName, int32_t appIncrementalFileReadyErrCode)
 {
     return BError(BError::Codes::OK);
 }
