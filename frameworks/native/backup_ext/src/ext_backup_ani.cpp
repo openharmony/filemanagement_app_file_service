@@ -186,7 +186,6 @@ void ExtBackupAni::UpdateExtBackupObj(
 void ExtBackupAni::BindContext(std::shared_ptr<AppExecFwk::AbilityInfo> &abilityInfo,
     const std::string &moduleName, const std::string &srcPath)
 {
-    HILOGE("BindContext call");
     UpdateExtBackupObj(abilityInfo, moduleName, srcPath);
     if (etsAbilityObj_ == nullptr) {
         HILOGE("etsAbilityObj_ is null");
@@ -235,7 +234,6 @@ void ExtBackupAni::BindContext(std::shared_ptr<AppExecFwk::AbilityInfo> &ability
         contextGlobalRef = nullptr;
         return;
     }
-    HILOGE("BindContext End");
 }
 
 ExtBackupAni *ExtBackupAni::Create(const std::unique_ptr<AbilityRuntime::Runtime> &runtime)
