@@ -40,6 +40,9 @@
 #include "thread_pool.h"
 
 namespace OHOS::FileManagement::Backup {
+using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
+typedef int (*CallDeviceTaskRequest)(int, unsigned int, unsigned int, CallbackFunc);
+
 struct ExtensionMutexInfo {
     std::string bundleName;
     std::mutex callbackMutex;
@@ -55,6 +58,27 @@ struct BundleBroadCastInfo {
     std::map<std::string, std::string> broadCastInfoMap = {};
     int userId = 0;
 };
+
+struct GcProgressInfo {
+    std::atomic<int> status;
+    std::atomic<int> errcode;
+    std::atomic<unsigned int> percent;
+    std::atomic<unsigned int> gap;
+};
+
+struct GcProgressInfoUpdate {
+    int status;
+    int errcode;
+    unsigned int percent;
+    unsigned int gap;
+};
+
+enum class GcStatus {
+    TASK_DONE = 0,
+    TASK_FAILED = 1,
+    DEVICE_GC_FAILED = 8,
+};
+
 const int INVALID_FD = -1;
 constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 
@@ -132,7 +156,7 @@ public:
     ErrCode GetExtOnRelease(bool &isExtOnRelease) override;
     ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo,
         std::string &compatInfo) override;
-
+    ErrCode StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime) override;
     // 以下都是非IPC接口
 public:
     void OnStart() override;
@@ -749,6 +773,9 @@ private:
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
+    ErrCode DealWithGcErrcode(bool isTaskDone, int GcErrCode);
+    void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
+        GcProgressInfoUpdate progressData);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);
@@ -807,6 +834,10 @@ public:
     std::atomic<uint32_t> successBundlesNum_ {0};
     std::vector<BJsonUtil::BundleDataSize> bundleDataSizeList_;
     std::string scannedInfo_;
+    std::condition_variable gcVariable_;
+    std::mutex gcMtx_;
+    std::shared_ptr<GcProgressInfo> gcProgress_ = nullptr;
+    std::atomic<bool> isGcTaskDone_ = {false};
 };
 } // namespace OHOS::FileManagement::Backup
 

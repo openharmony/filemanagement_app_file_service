@@ -50,16 +50,13 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd)
 {
     return BError(BError::Codes::OK);
 }
-ErrCode Service::AppIncrementalFileReady(const std::string &fileName,
-                                         int fd,
-                                         int manifestFd,
-                                         int32_t appIncrementalFileReadyErrCode)
+ErrCode Service::AppIncrementalFileReady(const std::string &fileName, int fd,
+    int manifestFd, int32_t appIncrementalFileReadyErrCode)
 {
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppIncrementalFileReadyWithoutFd(const std::string &fileName,
-                                                  int32_t appIncrementalFileReadyErrCode)
+ErrCode Service::AppIncrementalFileReadyWithoutFd(const std::string &fileName, int32_t appIncrementalFileReadyErrCode)
 {
     return BError(BError::Codes::OK);
 }
@@ -173,6 +170,11 @@ void Service::CreateDirIfNotExist(const std::string&) {}
 void SvcSessionManager::UpdateDfxInfo(const std::string &bundleName, uint64_t uniqId) {}
 
 void Service::ClearIncrementalStatFile(int32_t userId, const string &bundleName) {}
+
+ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+{
+    return BError(BError::Codes::OK);
+}
 }
 
 class BThreadPool {

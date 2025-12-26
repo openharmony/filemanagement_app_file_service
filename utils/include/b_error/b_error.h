@@ -133,6 +133,8 @@ public:
         E_CONFLICT = 13500013,
         E_INCOMPATIBLE = 13500014,
         E_FORCE_TIMEOUT = 13500015,
+        E_MISSION_TIMEOUT = 13500016,
+        E_GC_FAILED = 13500017,
     };
 
 public:

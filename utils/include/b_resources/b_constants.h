@@ -164,7 +164,6 @@ static inline std::string EXTENSION_BACKUP = "backup";
 static inline std::string EXTENSION_RESTORE = "restore";
 // 路径校验
 static inline std::string PATH_ABSOLUTE = "../";
-
 // 多用户场景应用备份数据路径
 static inline std::string GetSaBundleBackupDir(int32_t userId)
 {
@@ -275,6 +274,16 @@ constexpr uint8_t INDEX = 3;
 constexpr int INVALID_TIMEOUT_VALUE = -1;
 static inline std::string FILE_BACKUP_RESTORE_EVENTS = "FILE_BACKUP_RESTORE_EVENTS";
 static inline std::string FILE_BACKUP_RESTORE_STATISTIC = "FILE_BACKUP_RESTORE_STATISTIC";
+
+// Garbage collection
+constexpr int DEVICE_GARBAGE_COLLECTION = 0;
+constexpr int GC_DEVICE_OK = 0;
+constexpr int GC_DEVICE_INCOMPATIBLE = -7;
+constexpr int GC_TASK_TIMEOUT = -16;
+constexpr int GC_MAX_WAIT_TIME_S = 180;
+static inline std::string FILE_SYSTEM_CLIENT_SO = "/system/lib64/libioqos_service_client.z.so";
+// 克隆应用bundleName
+static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H

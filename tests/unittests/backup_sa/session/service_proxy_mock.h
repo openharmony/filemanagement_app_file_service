@@ -79,6 +79,7 @@ public:
         ErrCode errCode));
     MOCK_METHOD1(GetExtOnRelease, ErrCode(bool &isExtOnRelease));
     MOCK_METHOD3(GetCompatibilityInfo, ErrCode(const std::string&, const std::string&, std::string&));
+    MOCK_METHOD3(StartCleanData, ErrCode(int, unsigned int, unsigned int));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

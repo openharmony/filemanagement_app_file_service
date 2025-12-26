@@ -78,4 +78,5 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 43] void AppFileReadyWithoutFd([in]String fileName, [in] int appFileReadyErrCode);
     [ipccode 44] void AppIncrementalFileReadyWithoutFd([in] String fileName, [in] int appIncrementalFileReadyErrCode);
     [ipccode 45] void GetCompatibilityInfo([in] String bundleName, [in] String extInfo, [out] String compatInfo);
+    [ipccode 46] void StartCleanData([in] int triggerType, [in] unsigned int WriteSize, [in] unsigned int waitTime);
  }

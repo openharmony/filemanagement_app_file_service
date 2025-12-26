@@ -26,11 +26,13 @@ public:
     static napi_value DoUpdateTimer(napi_env env, napi_callback_info info);
     static napi_value DoUpdateSendRate(napi_env env, napi_callback_info info);
     static napi_value DoGetBackupVersion(napi_env env, napi_callback_info info);
+    static napi_value FileSystemServiceRequest(napi_env env, napi_callback_info cbinfo);
 private:
     static bool UpdateTimer(std::string &bundleName, uint32_t timeout);
     static bool UpdateSendRate(std::string &bundleName, int32_t sendRate);
 };
 
 const std::string PROCEDURE_LOCALCAPABILITIES_NAME = "getLocalCapalities";
+const std::string PROCEDURE_GARBAGE_COLLECTION_NAME = "fileSystemServiceRequest";
 } // namespace OHOS::FileManagement::Backup
 #endif // INTERFACES_KITS_JS_SRC_MOD_BACKUP_PROPERTIES_LOCAL_CAPABILITIES_H
