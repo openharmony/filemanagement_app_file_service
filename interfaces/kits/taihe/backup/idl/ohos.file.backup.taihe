@@ -1,0 +1,179 @@
+/*
+* Copyright (c) 2025 Huawei Device Co., Ltd.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+@!namespace("@ohos.file.backup", "backup")
+
+@!sts_inject("""
+static { loadLibraryWithPermissionCheck("file_backup_taihe.z", "@ohos.file.backup") }
+""")
+
+@!sts_inject_into_module("import { AsyncCallback, Callback } from '@ohos.base';")
+
+struct FileMeta {
+  bundleName: String;
+  uri: String;
+}
+
+struct FileData {
+  fd: i32;
+}
+
+struct IncrementalBackupTime {
+  bundleName: String;
+  lastIncrementalTime: i64;
+}
+
+struct FileManifestData {
+  manifestFd: i32;
+}
+
+struct BackupParams {
+  parameters: Optional<String>;
+}
+
+struct BackupPriority {
+  priority: Optional<i32>;
+}
+
+struct IncrementalBackupData {
+    @extends incrementalBackupTime : IncrementalBackupTime;
+    @extends fileManifestData : FileManifestData;
+    @extends backupParams : BackupParams;
+    @extends backupPriority : BackupPriority;
+}
+
+struct File {
+    @extends fileMeta : FileMeta;
+    @extends fileData : FileData;
+    @extends fileManifestData : FileManifestData;
+}
+
+function getBackupVersion(): String;
+
+@gen_async("getLocalCapabilities")
+@gen_promise("getLocalCapabilities")
+function GetLocalCapabilitiesSync1(): FileData;
+
+@gen_promise("getLocalCapabilities")
+function GetLocalCapabilitiesSync2(dataList: Array<IncrementalBackupTime>): FileData;
+
+function getBackupInfo(bundleToBackup: String): String;
+
+function updateTimer(bundleName: String, timeout: i32): bool;
+
+function updateSendRate(bundleName: String, sendRate: i32): bool;
+
+@!sts_inject("""
+type OnBackupSizeReport = (reportInfo: string) => void;
+type BundlePara = undefined | string;
+type OnProcess = (bundleName: string, process: string) => void;
+type OnResultReport = (bundleName: string, result: string) => void;
+interface GeneralCallbacks {
+    onFileReady: AsyncCallback<File>;
+    onBundleBegin: AsyncCallback<string, BundlePara>;
+    onBundleEnd: AsyncCallback<string, BundlePara>;
+    onAllBundlesEnd: AsyncCallback<undefined>;
+    onBackupServiceDied: Callback<undefined>;
+    onResultReport: OnResultReport;
+    onProcess: OnProcess;
+    onBackupSizeReport?: OnBackupSizeReport;
+}
+""")
+
+@class
+interface SessionBackup{
+
+  @gen_promise("getLocalCapabilities")
+  GetLocalCapabilitiesSync(): FileData;
+
+  @gen_promise("getBackupDataSize")
+  GetBackupDataSizeSync(isPreciseScan: bool, dataList: Array<IncrementalBackupTime>): void;
+
+  @gen_promise("appendBundles")
+  AppendBundlesSync1(bundlesToBackup: Array<String>, infos: Optional<Array<String>>): void;
+
+  @gen_async("appendBundles")
+  AppendBundlesSync2(bundlesToBackup: Array<String>): void;
+
+  @gen_promise("release")
+  ReleaseSync(): void;
+
+  cancel(bundleName: String): i32;
+
+  @gen_promise("cleanBundleTempDir")
+  CleanBundleTempDirSync(bundleName: String): bool;
+}
+
+@ctor("SessionBackup")
+function CreateSessionBackup(callbacks: @sts_type("GeneralCallbacks") Opaque): SessionBackup;
+
+@class
+interface SessionRestore{
+
+   @gen_promise("getLocalCapabilities")
+   GetLocalCapabilitiesSync(): FileData;
+
+   @gen_promise("appendBundles")
+   AppendBundlesSync1(remoteCapabilitiesFd: i32, bundlesToBackup: Array<String>, infos: Optional<Array<String>>): void;
+
+   @gen_async("appendBundles")
+   AppendBundlesSync2(remoteCapabilitiesFd: i32, bundlesToBackup: Array<String>): void;
+
+   @gen_async("publishFile")
+   @gen_promise("publishFile")
+   PublishFileSync(fileMeta: FileMeta): void;
+
+   @gen_async("getFileHandle")
+   @gen_promise("getFileHandle")
+   GetFileHandleSync(fileMeta: FileMeta): void;
+
+   @gen_promise("release")
+   ReleaseSync(): void;
+
+   cancel(bundleName: String): i32;
+
+   @gen_promise("cleanBundleTempDir")
+   CleanBundleTempDirSync(bundleName: String): bool;
+}
+
+@ctor("SessionRestore")
+function CreateSessionRestore(callbacks: @sts_type("GeneralCallbacks") Opaque): SessionRestore;
+
+@class
+interface IncrementalBackupSession {
+   @gen_promise("getLocalCapabilities")
+   GetLocalCapabilitiesSync(): FileData;
+
+   @gen_promise("getBackupDataSize")
+   GetBackupDataSizeSync(isPreciseScan: bool, dataList: Array<IncrementalBackupTime>): void;
+
+   @gen_promise("appendBundles")
+   AppendBundlesSync(bundlesToBackup: Array<IncrementalBackupData>): void;
+
+   @gen_promise("appendBundles")
+   AppendBundlesSync2(bundlesToBackup: Array<IncrementalBackupData>, infos: Array<String>): void;
+
+   @gen_promise("release")
+   ReleaseSync(): void;
+
+   cancel(bundleName: String): i32;
+
+   @gen_promise("cleanBundleTempDir")
+   CleanBundleTempDirSync(bundleName: String): bool;
+
+}
+
+@ctor("IncrementalBackupSession")
+function CreateIncrementalBackupSession(callbacks: @sts_type("GeneralCallbacks") Opaque): IncrementalBackupSession;

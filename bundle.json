@@ -79,7 +79,8 @@
                     "//foundation/filemanagement/app_file_service/interfaces/kits/ndk/fileshare/src:ohfileshare",
                     "//foundation/filemanagement/app_file_service/frameworks/native/backup_ext/ani:backup_ext_ani_package",
                     "//foundation/filemanagement/app_file_service/interfaces/kits/taihe/fileuri:afs_fileuri_taihe",
-                    "//foundation/filemanagement/app_file_service/interfaces/kits/taihe/fileshare:afs_fileshare_taihe"
+                    "//foundation/filemanagement/app_file_service/interfaces/kits/taihe/fileshare:afs_fileshare_taihe",
+                    "//foundation/filemanagement/app_file_service/interfaces/kits/taihe/backup:afs_backup_taihe"
                 ],
                 "service_group": [
                     "//foundation/filemanagement/app_file_service:tgt_backup_extension",
