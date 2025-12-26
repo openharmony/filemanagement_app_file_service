@@ -132,6 +132,7 @@ ohos_unittest("tar_file_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_ets.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
@@ -211,6 +212,7 @@ ohos_unittest("untar_file_sup_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_ets.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
@@ -294,6 +296,7 @@ ohos_unittest("untar_file_test") {
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_ets.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_js.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_loader.cpp",
@@ -500,7 +503,6 @@ ohos_unittest("installd_un_tar_file_test") {
   use_exceptions = true
 }
 
-
 ohos_unittest("ext_extension_new_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -515,11 +517,11 @@ ohos_unittest("ext_extension_new_test") {
   module_out_path = path_module_out_tests
 
   sources = [
-    "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
-    "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
-    "${path_backup}/tests/mock/backup_ext/src/ext_backup_js_mock.cpp",
-    "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/installd_un_tar_file.cpp",
+    "${path_backup}/tests/mock/backup_ext/src/ext_backup_js_mock.cpp",
+    "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
+    "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
+    "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
     "ext_extension_new_test.cpp",
   ]
 
@@ -597,14 +599,14 @@ ohos_unittest("ext_extension_sub_test") {
   module_out_path = path_module_out_tests
 
   sources = [
-    "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
+    "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_js_mock.cpp",
+    "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
     "${path_backup}/tests/mock/backup_ext/src/ext_extension_mock.cpp",
     "${path_backup}/tests/mock/backup_kit_inner/service_proxy_mock.cpp",
     "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
     "${path_backup}/tests/utils/src/test_manager.cpp",
-    "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
-    "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
     "ext_extension_sub_test.cpp",
   ]
 
@@ -745,11 +747,11 @@ group("backup_ext_test") {
   testonly = true
   if (!use_libfuzzer) {
     deps = [
-      ":ext_backup_js_test",
       ":ext_backup_js_sub_test",
-      ":ext_extension_test",
-      ":ext_extension_sub_test",
+      ":ext_backup_js_test",
       ":ext_extension_new_test",
+      ":ext_extension_sub_test",
+      ":ext_extension_test",
       ":installd_un_tar_file_test",
       ":tar_file_sub_test",
       ":tar_file_test",
