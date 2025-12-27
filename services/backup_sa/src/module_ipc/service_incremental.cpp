@@ -1159,8 +1159,6 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
     gcProgress->percent.store(percent, std::memory_order_relaxed);
     gcProgress->gap.store(gap, std::memory_order_relaxed);
     gcProgress->errcode.store(errcode, std::memory_order_release);
-    HILOGD("Get GC progress, status %{public}d, errcode: %{public}u, progress: %{public}u, gap: %{public}d",
-        status, errcode, percent, gap);
 }
 
 ErrCode Service::DealWithGcErrcode(bool isTaskDone, int GcErrCode)
@@ -1206,8 +1204,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         GcProgressInfoUpdate progressData{status, errcode, percent, gap};
         UpdateGcProgress(gcProgress_, progressData);
         auto gcStatus = static_cast<GcStatus>(status);
-        if (gcStatus == GcStatus::TASK_DONE || gcStatus == GcStatus::TASK_FAILED ||
-            gcStatus == GcStatus::DEVICE_GC_FAILED) {
+        if (gcStatus == GcStatus::TASK_DONE || gcStatus == GcStatus::TASK_FAILED) {
             isGcTaskDone_.store(true, std::memory_order_release);
             gcVariable_.notify_one();
         }

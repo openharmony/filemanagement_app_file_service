@@ -76,7 +76,6 @@ struct GcProgressInfoUpdate {
 enum class GcStatus {
     TASK_DONE = 0,
     TASK_FAILED = 1,
-    DEVICE_GC_FAILED = 8,
 };
 
 const int INVALID_FD = -1;
