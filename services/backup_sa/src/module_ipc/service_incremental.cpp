@@ -1161,9 +1161,13 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
     gcProgress->errcode.store(errcode, std::memory_order_release);
 }
 
-ErrCode Service::DealWithGcErrcode(bool isTaskDone, int GcErrCode)
+ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressInfo> gcProgress)
 {
-    if (GcErrCode == BConstants::GC_TASK_TIMEOUT || isTaskDone == false) {
+    if (isTaskDone == false) {
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
+    }
+    GcErrCode = gcProgress->errcode.load(std::memory_order_acquire);
+    if (GcErrCode == BConstants::GC_TASK_TIMEOUT) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
     } else if (GcErrCode == BConstants::GC_DEVICE_INCOMPATIBLE) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
@@ -1220,8 +1224,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     }
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
         [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
-    auto resCode = gcProgress_->errcode.load(std::memory_order_acquire);
     dlclose(handle);
-    return DealWithGcErrcode(isGcTaskDone_.load(), resCode);
+    return DealWithGcErrcode(isGcTaskDone_.load(), gcProgress_);
 }
 } // namespace OHOS::FileManagement::Backup
