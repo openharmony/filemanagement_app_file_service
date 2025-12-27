@@ -1166,12 +1166,12 @@ ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressIn
     if (isTaskDone == false) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
     }
-    GcErrCode = gcProgress->errcode.load(std::memory_order_acquire);
-    if (GcErrCode == BConstants::GC_TASK_TIMEOUT) {
+    int resCode = gcProgress->errcode.load(std::memory_order_acquire);
+    if (resCode == BConstants::GC_TASK_TIMEOUT) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
-    } else if (GcErrCode == BConstants::GC_DEVICE_INCOMPATIBLE) {
+    } else if (resCode == BConstants::GC_DEVICE_INCOMPATIBLE) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
-    } else if (GcErrCode == BConstants::GC_DEVICE_OK) {
+    } else if (resCode == BConstants::GC_DEVICE_OK) {
         return ERROR_OK;
     } else {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED);
