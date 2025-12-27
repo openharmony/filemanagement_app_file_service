@@ -2330,26 +2330,28 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_DealWithGcErrcode_0101, 
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_DealWithGcErrcode_0101";
     try {
-        int testCode = BConstants::GC_DEVICE_OK;
         bool testStatus = true;
-        auto res = service->DealWithGcErrcode(testStatus, testCode);
+        ASSERT_TRUE(service != nullptr);
+        service->gcProgress_ = std::make_shared<GcProgressInfo>();
+        service->gcProgress_->errcode.store(BConstants::GC_DEVICE_OK);
+        auto res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, ERROR_OK);
 
-        testCode = BConstants::GC_DEVICE_INCOMPATIBLE;
-        res = service->DealWithGcErrcode(testStatus, testCode);
+        service->gcProgress_->errcode.store(BConstants::GC_DEVICE_INCOMPATIBLE);
+        res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE));
         
-        testCode = BConstants::GC_TASK_TIMEOUT;
-        res = service->DealWithGcErrcode(testStatus, testCode);
+        service->gcProgress_->errcode.store(BConstants::GC_TASK_TIMEOUT);
+        res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT));
 
-        testCode = 1; // 其余错误码
-        res = service->DealWithGcErrcode(testStatus, testCode);
+        int testCode = 1; // 其余错误码
+        service->gcProgress_->errcode.store(testCode);
+        res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED));
 
-        testCode = BConstants::GC_DEVICE_OK;
         testStatus = false;
-        res = service->DealWithGcErrcode(testStatus, testCode);
+        res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT));
     } catch (...) {
         EXPECT_TRUE(false);

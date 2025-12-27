@@ -772,7 +772,7 @@ private:
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
-    ErrCode DealWithGcErrcode(bool isTaskDone, int GcErrCode);
+    ErrCode DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressInfo> gcProgress)
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         GcProgressInfoUpdate progressData);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
