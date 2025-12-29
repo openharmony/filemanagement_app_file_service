@@ -56,12 +56,12 @@ export default class BackupExtensionAbility {
   }
 
   private async etsCallGetBackupCompatibilityInfo(extInfo: string): string {
-    let p = this.GetBackupCompatibilityInfo();
+    let p = this.getBackupCompatibilityInfo(extInfo);
     return await p;
   }
 
   private async etsCallGetRestoreCompatibilityInfo(extInfo: string): string {
-    let p = this.getRestoreCompatibilityInfo();
+    let p = this.getRestoreCompatibilityInfo(extInfo);
     return await p;
   }
 
