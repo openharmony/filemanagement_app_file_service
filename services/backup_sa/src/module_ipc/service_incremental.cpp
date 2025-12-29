@@ -1190,7 +1190,8 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         HILOGE("Wrong Caller has no permission");
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
-    void *handle = dlopen(BConstants::FILE_SYSTEM_CLIENT_SO.data(), RTLD_LAZY);
+    const std::string fileSystemClientLibPath = "/system/lib64/libioqos_service_client.z.so";
+    void *handle = dlopen(fileSystemClientLibPath.data(), RTLD_LAZY);
     if (!handle) {
         HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);

@@ -678,10 +678,12 @@ int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned 
 int ServiceIncrementalTest::gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
 {
     thread mockFuncThread([argv4]() {
-        int testStatus = 0;
+        int testStatus = 1;
         int testErrcode = 1;
         unsigned int testPercent = 2;
         unsigned int testGap = 3;
+        argv4(testStatus, testErrcode, testPercent, testGap);
+        testStatus = 0;
         argv4(testStatus, testErrcode, testPercent, testGap);
     });
     mockFuncThread.detach();
