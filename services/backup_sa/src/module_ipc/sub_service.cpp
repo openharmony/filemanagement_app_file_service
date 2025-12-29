@@ -1005,7 +1005,7 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::str
         .activeTime = TimeUtils::GetCurrentTime(),
     });
     if (ret == ERR_OK) {
-        TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_, Mode::INCREMENTAL);
+        TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_);
         ClearFailedBundles();
         successBundlesNum_ = 0;
         CreateRunningLock();
