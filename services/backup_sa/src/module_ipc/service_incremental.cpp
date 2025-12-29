@@ -1209,7 +1209,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         GcProgressInfoUpdate progressData{status, errcode, percent, gap};
         UpdateGcProgress(gcProgress_, progressData);
         auto gcStatus = static_cast<GcStatus>(status);
-        if (gcStatus == BConstants::TASK_DONE) {
+        if (gcStatus == BConstants::GC_TASK_DONE) {
             isGcTaskDone_.store(true, std::memory_order_release);
             gcVariable_.notify_one();
         }
