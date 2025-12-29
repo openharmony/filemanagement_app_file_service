@@ -73,11 +73,6 @@ struct GcProgressInfoUpdate {
     unsigned int gap;
 };
 
-enum class GcStatus {
-    TASK_DONE = 0,
-    TASK_FAILED = 1,
-};
-
 const int INVALID_FD = -1;
 constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 

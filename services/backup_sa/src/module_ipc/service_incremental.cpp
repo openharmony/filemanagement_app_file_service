@@ -1209,7 +1209,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         GcProgressInfoUpdate progressData{status, errcode, percent, gap};
         UpdateGcProgress(gcProgress_, progressData);
         auto gcStatus = static_cast<GcStatus>(status);
-        if (gcStatus == GcStatus::TASK_DONE || gcStatus == GcStatus::TASK_FAILED) {
+        if (gcStatus == BConstants::TASK_DONE) {
             isGcTaskDone_.store(true, std::memory_order_release);
             gcVariable_.notify_one();
         }
@@ -1226,6 +1226,6 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
         [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
     dlclose(handle);
-    return DealWithGcErrcode(isGcTaskDone_.load(), gcProgress_);
+    return DealWithGcErrcode(isGcTaskDone_.load(std::memory_order_acquire), gcProgress_);
 }
 } // namespace OHOS::FileManagement::Backup

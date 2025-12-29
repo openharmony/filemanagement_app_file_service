@@ -277,6 +277,7 @@ static inline std::string FILE_BACKUP_RESTORE_STATISTIC = "FILE_BACKUP_RESTORE_S
 
 // Garbage collection
 constexpr int DEVICE_GARBAGE_COLLECTION = 0;
+constexpr int GC_TASK_DONE = 0;
 constexpr int GC_DEVICE_OK = 0;
 constexpr int GC_DEVICE_INCOMPATIBLE = -7;
 constexpr int GC_TASK_TIMEOUT = -16;
