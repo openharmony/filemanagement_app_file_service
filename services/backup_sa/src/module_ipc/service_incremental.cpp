@@ -1161,20 +1161,21 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
     gcProgress->errcode.store(errcode, std::memory_order_release);
 }
 
-ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressInfo> gcProgress)
+ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressInfo>& gcProgress)
 {
     if (isTaskDone == false) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
     }
     int resCode = gcProgress->errcode.load(std::memory_order_acquire);
-    if (resCode == BConstants::GC_TASK_TIMEOUT) {
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
-    } else if (resCode == BConstants::GC_DEVICE_INCOMPATIBLE) {
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
-    } else if (resCode == BConstants::GC_DEVICE_OK) {
-        return ERROR_OK;
-    } else {
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED);
+    switch (resCode) {
+        case BConstants::GC_DEVICE_OK:
+            return ERROR_OK;
+        case BConstants::GC_TASK_TIMEOUT:
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
+        case BConstants::GC_DEVICE_INCOMPATIBLE:
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
+        default:
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED); 
     }
 }
 
