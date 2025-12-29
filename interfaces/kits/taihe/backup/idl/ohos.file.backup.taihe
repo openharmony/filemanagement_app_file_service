@@ -116,7 +116,7 @@ interface SessionBackup{
   CleanBundleTempDirSync(bundleName: String): bool;
 
   @gen_promise("GetCompatibilityInfo")
-  GetCompatibilityInfoSync(bundleName: string, extInfo: string): String;
+  GetCompatibilityInfoSync(bundleName: String, extInfo: String): String;
 }
 
 @ctor("SessionBackup")
@@ -151,7 +151,7 @@ interface SessionRestore{
    CleanBundleTempDirSync(bundleName: String): bool;
 
    @gen_promise("GetCompatibilityInfo")
-   GetCompatibilityInfoSync(bundleName: string, extInfo: string): String;
+   GetCompatibilityInfoSync(bundleName: String, extInfo: String): String;
 }
 
 @ctor("SessionRestore")
@@ -180,7 +180,7 @@ interface IncrementalBackupSession {
    CleanBundleTempDirSync(bundleName: String): bool;
 
    @gen_promise("GetCompatibilityInfo")
-   GetCompatibilityInfoSync(bundleName: string, extInfo: string): String;
+   GetCompatibilityInfoSync(bundleName: String, extInfo: String): String;
 }
 
 @ctor("IncrementalBackupSession")
