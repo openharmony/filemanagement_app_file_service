@@ -346,7 +346,7 @@ ErrCode ExtBackupAni::OnRestore(std::function<void(ErrCode, std::string)> callba
 }
 
 ErrCode ExtBackupAni::GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
-        std::string extInfo)
+    std::string extInfo)
 {
     HILOGI("BackupExtensionAbility(ETS) GetBackupCompatibilityInfo begin.");
     BExcepUltils::BAssert(etsAbilityObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
@@ -370,7 +370,7 @@ ErrCode ExtBackupAni::GetBackupCompatibilityInfo(std::function<void(ErrCode, con
 }
 
 ErrCode ExtBackupAni::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
-        std::string extInfo)
+    std::string extInfo)
 {
     HILOGI("BackupExtensionAbility(ETS) GetRestoreCompatibilityInfo begin.");
     BExcepUltils::BAssert(etsAbilityObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
