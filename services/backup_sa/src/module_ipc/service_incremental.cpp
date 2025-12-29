@@ -1163,6 +1163,7 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
 
 ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressInfo>& gcProgress)
 {
+    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     if (isTaskDone == false) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
     }
@@ -1179,17 +1180,28 @@ ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressIn
     }
 }
 
-ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+ErrCode Service::VerifyDataClone()
 {
     ErrCode err = VerifyCaller();
     if (err != ERR_OK) {
         HILOGE("StartCleanData fail, Verify caller failed, errCode:%{public}d", err);
         return err;
     }
-    if (GetCallerName() != BConstants::BUNDLE_DATA_CLONE) {
+    std::string bundleName = GetCallerName();
+    if (bundleName != BConstants::BUNDLE_DATA_CLONE) {
         HILOGE("Wrong Caller has no permission");
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
+    return ERR_OK;
+}
+
+ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
+{
+    ErrCode err = VerifyDataClone();
+    if (err != ERR_OK) {
+        return err;
+    }
+    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
     const std::string fileSystemClientLibPath = "/system/lib64/libioqos_service_client.z.so";
     void *handle = dlopen(fileSystemClientLibPath.data(), RTLD_LAZY);
     if (!handle) {
@@ -1200,6 +1212,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     if (func == nullptr) {
         HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
         dlclose(handle);
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
     if (gcProgress_ == nullptr) {
@@ -1221,6 +1234,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     if (ret != ERROR_OK) {
         HILOGE("CallDeviceTaskRequest failed, errno = %{public}d", ret);
         dlclose(handle);
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),

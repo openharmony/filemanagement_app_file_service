@@ -2504,4 +2504,61 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0106, Tes
     EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0106";
 }
+
+/**
+ * @tc.number: SUB_ServiceIncremental_VerifyDataClone_0101
+ * @tc.name: SUB_ServiceIncremental_VerifyDataClone_0101
+ * @tc.desc: 测试 VerifyDataClone 函数 VerifyCaller failed
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0101, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_VerifyDataClone_0101";
+    EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+    auto res = service->VerifyDataClone();
+    EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0101";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_VerifyDataClone_0102
+ * @tc.name: SUB_ServiceIncremental_VerifyDataClone_0102
+ * @tc.desc: 测试 VerifyDataClone 函数 GetCallerName err
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0102, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_VerifyDataClone_0102";
+    std::string wrongName = "test";
+    EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(wrongName));
+    auto res = service->VerifyDataClone();
+    EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_PERM));
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0102";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_VerifyDataClone_0103
+ * @tc.name: SUB_ServiceIncremental_VerifyDataClone_0103
+ * @tc.desc: 测试 VerifyDataClone 函数 ok
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0103, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_VerifyDataClone_0103";
+    EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(BConstants::BUNDLE_DATA_CLONE));
+    auto res = service->VerifyDataClone();
+    EXPECT_EQ(res, ERR_OK);
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0103";
+}
 }
