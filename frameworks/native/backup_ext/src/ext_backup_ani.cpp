@@ -348,7 +348,7 @@ ErrCode ExtBackupAni::OnRestore(std::function<void(ErrCode, std::string)> callba
 ErrCode ExtBackupAni::GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
         std::string extInfo)
 {
-    HILOGI("BackupExtensionAbility(ETS) GetBackupCompatibilityInfo.");
+    HILOGI("BackupExtensionAbility(ETS) GetBackupCompatibilityInfo begin.");
     BExcepUltils::BAssert(etsAbilityObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
         "The app does not provide the GetBackupCompatibilityInfo interface.");
     std::string result;
@@ -361,7 +361,7 @@ ErrCode ExtBackupAni::GetBackupCompatibilityInfo(std::function<void(ErrCode, con
     }
     ErrCode ret = CallEtsGetBackupCompatibilityInfo(env, result, exception);
     if (ret == ERR_OK) {
-        callbackEx(BError(BError::Codes::OK), "");
+        callbackEx(BError(BError::Codes::OK), result);
     } else {
         callbackEx(BError(BError::Codes::EXT_THROW_EXCEPTION), exception);
     }
@@ -372,7 +372,7 @@ ErrCode ExtBackupAni::GetBackupCompatibilityInfo(std::function<void(ErrCode, con
 ErrCode ExtBackupAni::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
         std::string extInfo)
 {
-    HILOGI("BackupExtensionAbility(ETS) GetRestoreCompatibilityInfo.");
+    HILOGI("BackupExtensionAbility(ETS) GetRestoreCompatibilityInfo begin.");
     BExcepUltils::BAssert(etsAbilityObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
         "The app does not provide the GetRestoreCompatibilityInfo interface.");
     std::string result;
@@ -385,7 +385,7 @@ ErrCode ExtBackupAni::GetRestoreCompatibilityInfo(std::function<void(ErrCode, co
     }
     ErrCode ret = CallEtsGetRestoreCompatibilityInfo(env, result, exception);
     if (ret == ERR_OK) {
-        callbackEx(BError(BError::Codes::OK), "");
+        callbackEx(BError(BError::Codes::OK), result);
     } else {
         callbackEx(BError(BError::Codes::EXT_THROW_EXCEPTION), exception);
     }
