@@ -46,7 +46,7 @@ public:
     ErrCode GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
         std::string extInfo) override;
     ErrCode GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
-        std::string extInfo) override
+        std::string extInfo) override;
 
 public:
     explicit ExtBackupAni(AbilityRuntime::ETSRuntime &runtime);
