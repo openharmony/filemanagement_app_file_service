@@ -43,6 +43,10 @@ public:
     ErrCode InvokeAppExtMethod(ErrCode, const std::string) override;
     ErrCode OnProcess(std::function<void(ErrCode, const std::string)> callback) override;
     ErrCode OnRelease(std::function<void(ErrCode, const std::string)> callback, int32_t scenario) override;
+    ErrCode GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+        std::string extInfo) override;
+    ErrCode GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+        std::string extInfo) override
 
 public:
     explicit ExtBackupAni(AbilityRuntime::ETSRuntime &runtime);
@@ -60,6 +64,8 @@ private:
     ErrCode CallEtsOnRestoreEx(ani_env *env, const EtsRestoreInfo &info, std::string &result, std::string &exception);
     ErrCode CallEtsOnRestore(ani_env *env, const EtsRestoreInfo &info, std::string &exception);
     ErrCode CallEtsOnProcess(ani_env *env, std::string &result, std::string &exception);
+    ErrCode CallEtsGetBackupCompatibilityInfo(ani_env *env, std::string &result, std::string &exception);
+    ErrCode CallEtsGetRestoreCompatibilityInfo(ani_env *env, std::string &result, std::string &exception);
     
     ErrCode CallEtsGetBackupInfo(ani_env *env, std::string &result, std::string &exception);
     ErrCode CallEtsOnRelease(ani_env *env, int32_t scenario, std::string &exception);

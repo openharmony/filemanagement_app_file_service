@@ -55,6 +55,16 @@ export default class BackupExtensionAbility {
     return await(p as Promise<void>);
   }
 
+  private etsCallGetBackupCompatibilityInfo(extInfo: string): string {
+    let p = this.GetBackupCompatibilityInfo();
+    return await p;
+  }
+
+  private etsCallGetRestoreCompatibilityInfo(extInfo: string): string {
+    let p = this.getRestoreCompatibilityInfo();
+    return await p;
+  }
+
   onBackup(): void {}
 
   onBackupEx(backupInfo: string): string | Promise<string> {
@@ -77,5 +87,15 @@ export default class BackupExtensionAbility {
 
   onRelease(scenario: int): Promise<void> {
     return Promise.resolve();
+  }
+
+  getBackupCompatibilityInfo(extInfo: string): Promise<string> {
+    let ret: string = '{"scenario": "backup"}';
+    return Promise.resolve(ret);
+  }
+
+  getRestoreCompatibilityInfo(extInfo: string): Promise<string> {
+    let ret: string = '{"scenario": "restore"}';
+    return Promise.resolve(ret);
   }
 }

@@ -259,6 +259,25 @@ public:
         return result;
     }
 
+    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName,::taihe::string_view extInfo) {
+        if (!SAUtils::CheckBackupPermission()) {
+            HILOGE("Has not permission!");
+            ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
+            return ::taihe::string("");
+        }
+        if (!SAUtils::IsSystemApp()) {
+            HILOGE("System App check fail!");
+            ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return ::taihe::string("");
+        }
+        std::string bundleNameTemp(bundleName);
+        std::string exInfoTemp(extInfo);
+        auto compatInfo = std::make_shared<std::string>();
+        bSessionBackup->GetCompatibilityInfo(bundleNameTemp, exInfoTemp, *compatInfo);
+        std::string result = *compatInfo;
+        return ::taihe::string(result.c_str());
+    }
+
 private:
     ani_ref* getGeneCallBack()
     {
@@ -493,6 +512,25 @@ public:
         return result;
     }
 
+    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName,::taihe::string_view extInfo) {
+        if (!SAUtils::CheckBackupPermission()) {
+            HILOGE("Has not permission!");
+            ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
+            return ::taihe::string("");
+        }
+        if (!SAUtils::IsSystemApp()) {
+            HILOGE("System App check fail!");
+            ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return ::taihe::string("");
+        }
+        std::string bundleNameTemp(bundleName);
+        std::string exInfoTemp(extInfo);
+        auto compatInfo = std::make_shared<std::string>();
+        bIncrementalRestoreSession->GetCompatibilityInfo(bundleNameTemp, exInfoTemp, *compatInfo);
+        std::string result = *compatInfo;
+        return ::taihe::string(result.c_str());
+    }
+
 private:
     ani_ref* getGeneCallBack()
     {
@@ -721,6 +759,25 @@ public:
             ::taihe::set_business_error((int32_t)code, "CleanBundleTempDirSync error");
         }
         return result;
+    }
+
+    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName,::taihe::string_view extInfo) {
+        if (!SAUtils::CheckBackupPermission()) {
+            HILOGE("Has not permission!");
+            ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
+            return ::taihe::string("");
+        }
+        if (!SAUtils::IsSystemApp()) {
+            HILOGE("System App check fail!");
+            ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return ::taihe::string("");
+        }
+        std::string bundleNameTemp(bundleName);
+        std::string exInfoTemp(extInfo);
+        auto compatInfo = std::make_shared<std::string>();
+        bIncrementalBackupSession->GetCompatibilityInfo(bundleNameTemp, exInfoTemp, *compatInfo);
+        std::string result = *compatInfo;
+        return ::taihe::string(result.c_str());
     }
 
 private:
