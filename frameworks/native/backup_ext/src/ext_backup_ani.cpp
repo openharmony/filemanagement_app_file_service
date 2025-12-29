@@ -361,9 +361,9 @@ ErrCode ExtBackupAni::GetBackupCompatibilityInfo(std::function<void(ErrCode, con
     }
     ErrCode ret = CallEtsGetBackupCompatibilityInfo(env, result, exception);
     if (ret == ERR_OK) {
-        callback(BError(BError::Codes::OK), "");
+        callbackEx(BError(BError::Codes::OK), "");
     } else {
-        callback(BError(BError::Codes::EXT_THROW_EXCEPTION), exception);
+        callbackEx(BError(BError::Codes::EXT_THROW_EXCEPTION), exception);
     }
     AppExecFwk::DetachAniEnv(etsVm_, isAttachThread);
     return ret;
@@ -383,11 +383,11 @@ ErrCode ExtBackupAni::GetRestoreCompatibilityInfo(std::function<void(ErrCode, co
         HILOG_ERROR("env null");
         return EINVAL;
     }
-    ErrCode ret = CallEtsGetBackupCompatibilityInfo(env, result, exception);
+    ErrCode ret = CallEtsGetRestoreCompatibilityInfo(env, result, exception);
     if (ret == ERR_OK) {
-        callback(BError(BError::Codes::OK), "");
+        callbackEx(BError(BError::Codes::OK), "");
     } else {
-        callback(BError(BError::Codes::EXT_THROW_EXCEPTION), exception);
+        callbackEx(BError(BError::Codes::EXT_THROW_EXCEPTION), exception);
     }
     AppExecFwk::DetachAniEnv(etsVm_, isAttachThread);
     return ret;
