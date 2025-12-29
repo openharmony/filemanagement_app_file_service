@@ -1175,7 +1175,7 @@ ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressIn
         case BConstants::GC_DEVICE_INCOMPATIBLE:
             return static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE);
         default:
-            return static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED); 
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED);
     }
 }
 
