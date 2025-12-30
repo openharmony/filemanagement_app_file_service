@@ -581,20 +581,8 @@ class ServiceIncrementalTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase();
-    void SetUp()
-    {
-        srvMock = make_shared<ServiceMock>();
-        ServiceMock::serviceMock = srvMock;
-        dlFuncMock = std::make_shared<DlfcnMock>();
-        DlfcnMock::dlFunc_ = dlFuncMock;
-    };
-    void TearDown()
-    {
-        ServiceMock::serviceMock = nullptr;
-        srvMock = nullptr;
-        dlFuncMock = nullptr;
-        DlfcnMock::dlFunc_ = nullptr;
-    };
+    void SetUp() {};
+    void TearDown() {};
 
     static inline shared_ptr<DlfcnMock> dlFuncMock = nullptr;
     static inline sptr<Service> service = nullptr;
@@ -660,6 +648,10 @@ void ServiceIncrementalTest::TearDownTestCase()
     srProxy = nullptr;
     DirectoryFuncMock::directoryFunc_ = nullptr;
     directMock = nullptr;
+    ServiceMock::serviceMock = nullptr;
+    srvMock = nullptr;
+    dlFuncMock = nullptr;
+    DlfcnMock::dlFunc_ = nullptr;
 }
 
 int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
@@ -2520,9 +2512,11 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0107, Tes
     int testTriggerType = 0;
     unsigned int testWriteSize = 1000;
     unsigned int testWaitTime = 180;
+    auto tempSession = service->session_;
     service->session_ = nullptr;
     auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
     EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    service->session_ = tempSession;
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0107";
 }
 
