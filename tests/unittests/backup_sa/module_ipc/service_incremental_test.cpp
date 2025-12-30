@@ -624,6 +624,10 @@ void ServiceIncrementalTest::SetUpTestCase(void)
     srProxy = sptr(new ServiceReverseProxyMock());
     directMock = make_shared<DirectoryFuncMock>();
     DirectoryFuncMock::directoryFunc_ = directMock;
+    srvMock = make_shared<ServiceMock>();
+    ServiceMock::serviceMock = srvMock;
+    dlFuncMock = std::make_shared<DlfcnMock>();
+    DlfcnMock::dlFunc_ = dlFuncMock;
 }
 
 void ServiceIncrementalTest::TearDownTestCase()
