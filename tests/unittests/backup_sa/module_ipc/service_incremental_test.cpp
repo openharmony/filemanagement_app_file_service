@@ -583,11 +583,15 @@ public:
     static void TearDownTestCase();
     void SetUp()
     {
+        srvMock = make_shared<ServiceMock>();
+        ServiceMock::serviceMock = srvMock;
         dlFuncMock = std::make_shared<DlfcnMock>();
         DlfcnMock::dlFunc_ = dlFuncMock;
     };
     void TearDown()
     {
+        ServiceMock::serviceMock = nullptr;
+        srvMock = nullptr;
         dlFuncMock = nullptr;
         DlfcnMock::dlFunc_ = nullptr;
     };
@@ -613,8 +617,6 @@ public:
 void ServiceIncrementalTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase enter";
-    srvMock = make_shared<ServiceMock>();
-    ServiceMock::serviceMock = srvMock;
     service = sptr(new Service(SERVICE_ID));
     param = make_shared<BackupParaMock>();
     BackupParaMock::backupPara = param;
@@ -656,8 +658,6 @@ void ServiceIncrementalTest::TearDownTestCase()
     IPCSkeletonMock::skeleton = nullptr;
     skeleton = nullptr;
     srProxy = nullptr;
-    ServiceMock::serviceMock = nullptr;
-    srvMock = nullptr;
     DirectoryFuncMock::directoryFunc_ = nullptr;
     directMock = nullptr;
 }

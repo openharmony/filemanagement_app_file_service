@@ -1206,6 +1206,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     void *handle = dlopen(fileSystemClientLibPath.data(), RTLD_LAZY);
     if (!handle) {
         HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
     CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
