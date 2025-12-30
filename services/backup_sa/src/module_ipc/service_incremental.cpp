@@ -1234,7 +1234,6 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     std::unique_lock<std::mutex> lock(gcMtx_);
     isGcTaskDone_.store(false, std::memory_order_release);
     if (func(triggerType, writeSize, waitTime, cb) != ERROR_OK) {
-        HILOGE("CallDeviceTaskRequest failed, errno = %{public}d", ret);
         dlclose(handle);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);

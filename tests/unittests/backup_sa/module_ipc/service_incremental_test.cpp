@@ -581,20 +581,8 @@ class ServiceIncrementalTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase();
-    void SetUp()
-    {
-        srvMock = make_shared<ServiceMock>();
-        ServiceMock::serviceMock = srvMock;
-        dlFuncMock = std::make_shared<DlfcnMock>();
-        DlfcnMock::dlFunc_ = dlFuncMock;
-    };
-    void TearDown()
-    {
-        ServiceMock::serviceMock = nullptr;
-        srvMock = nullptr;
-        dlFuncMock = nullptr;
-        DlfcnMock::dlFunc_ = nullptr;
-    };
+    void SetUp() {};
+    void TearDown() {};
 
     static inline shared_ptr<DlfcnMock> dlFuncMock = nullptr;
     static inline sptr<Service> service = nullptr;
@@ -636,6 +624,10 @@ void ServiceIncrementalTest::SetUpTestCase(void)
     srProxy = sptr(new ServiceReverseProxyMock());
     directMock = make_shared<DirectoryFuncMock>();
     DirectoryFuncMock::directoryFunc_ = directMock;
+    srvMock = make_shared<ServiceMock>();
+    ServiceMock::serviceMock = srvMock;
+    dlFuncMock = std::make_shared<DlfcnMock>();
+    DlfcnMock::dlFunc_ = dlFuncMock;
 }
 
 void ServiceIncrementalTest::TearDownTestCase()
@@ -660,6 +652,10 @@ void ServiceIncrementalTest::TearDownTestCase()
     srProxy = nullptr;
     DirectoryFuncMock::directoryFunc_ = nullptr;
     directMock = nullptr;
+    ServiceMock::serviceMock = nullptr;
+    srvMock = nullptr;
+    dlFuncMock = nullptr;
+    DlfcnMock::dlFunc_ = nullptr;
 }
 
 int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
