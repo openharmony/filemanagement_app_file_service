@@ -73,12 +73,6 @@ struct GcProgressInfoUpdate {
     unsigned int gap;
 };
 
-enum class GcStatus {
-    TASK_DONE = 0,
-    TASK_FAILED = 1,
-    DEVICE_GC_FAILED = 8,
-};
-
 const int INVALID_FD = -1;
 constexpr const int32_t CONNECT_WAIT_TIME_S = 15;
 
@@ -773,9 +767,10 @@ private:
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
-    ErrCode DealWithGcErrcode(bool isTaskDone, int GcErrCode);
+    ErrCode DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressInfo>& gcProgress);
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         GcProgressInfoUpdate progressData);
+    bool VerifyDataClone();
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);

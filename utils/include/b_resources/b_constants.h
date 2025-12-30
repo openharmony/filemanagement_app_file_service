@@ -277,11 +277,11 @@ static inline std::string FILE_BACKUP_RESTORE_STATISTIC = "FILE_BACKUP_RESTORE_S
 
 // Garbage collection
 constexpr int DEVICE_GARBAGE_COLLECTION = 0;
+constexpr int GC_TASK_DONE = 0;
 constexpr int GC_DEVICE_OK = 0;
 constexpr int GC_DEVICE_INCOMPATIBLE = -7;
 constexpr int GC_TASK_TIMEOUT = -16;
-constexpr int GC_MAX_WAIT_TIME_S = 180;
-static inline std::string FILE_SYSTEM_CLIENT_SO = "/system/lib64/libioqos_service_client.z.so";
+constexpr int GC_MAX_WAIT_TIME_S = 200;
 // 克隆应用bundleName
 static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
 } // namespace OHOS::FileManagement::Backup::BConstants

@@ -581,16 +581,8 @@ class ServiceIncrementalTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase();
-    void SetUp()
-    {
-        dlFuncMock = std::make_shared<DlfcnMock>();
-        DlfcnMock::dlFunc_ = dlFuncMock;
-    };
-    void TearDown()
-    {
-        dlFuncMock = nullptr;
-        DlfcnMock::dlFunc_ = nullptr;
-    };
+    void SetUp() {};
+    void TearDown() {};
 
     static inline shared_ptr<DlfcnMock> dlFuncMock = nullptr;
     static inline sptr<Service> service = nullptr;
@@ -613,8 +605,6 @@ public:
 void ServiceIncrementalTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase enter";
-    srvMock = make_shared<ServiceMock>();
-    ServiceMock::serviceMock = srvMock;
     service = sptr(new Service(SERVICE_ID));
     param = make_shared<BackupParaMock>();
     BackupParaMock::backupPara = param;
@@ -634,6 +624,10 @@ void ServiceIncrementalTest::SetUpTestCase(void)
     srProxy = sptr(new ServiceReverseProxyMock());
     directMock = make_shared<DirectoryFuncMock>();
     DirectoryFuncMock::directoryFunc_ = directMock;
+    srvMock = make_shared<ServiceMock>();
+    ServiceMock::serviceMock = srvMock;
+    dlFuncMock = std::make_shared<DlfcnMock>();
+    DlfcnMock::dlFunc_ = dlFuncMock;
 }
 
 void ServiceIncrementalTest::TearDownTestCase()
@@ -656,10 +650,12 @@ void ServiceIncrementalTest::TearDownTestCase()
     IPCSkeletonMock::skeleton = nullptr;
     skeleton = nullptr;
     srProxy = nullptr;
-    ServiceMock::serviceMock = nullptr;
-    srvMock = nullptr;
     DirectoryFuncMock::directoryFunc_ = nullptr;
     directMock = nullptr;
+    ServiceMock::serviceMock = nullptr;
+    srvMock = nullptr;
+    dlFuncMock = nullptr;
+    DlfcnMock::dlFunc_ = nullptr;
 }
 
 int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
@@ -678,10 +674,12 @@ int ServiceIncrementalTest::gcFuncMock1(int argv1, unsigned int argv2, unsigned 
 int ServiceIncrementalTest::gcFuncMock2(int argv1, unsigned int argv2, unsigned int argv3, CallbackFunc argv4)
 {
     thread mockFuncThread([argv4]() {
-        int testStatus = 0;
+        int testStatus = 1;
         int testErrcode = 1;
         unsigned int testPercent = 2;
         unsigned int testGap = 3;
+        argv4(testStatus, testErrcode, testPercent, testGap);
+        testStatus = 0;
         argv4(testStatus, testErrcode, testPercent, testGap);
     });
     mockFuncThread.detach();
@@ -2330,26 +2328,28 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_DealWithGcErrcode_0101, 
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_DealWithGcErrcode_0101";
     try {
-        int testCode = BConstants::GC_DEVICE_OK;
         bool testStatus = true;
-        auto res = service->DealWithGcErrcode(testStatus, testCode);
+        ASSERT_TRUE(service != nullptr);
+        service->gcProgress_ = std::make_shared<GcProgressInfo>();
+        service->gcProgress_->errcode.store(BConstants::GC_DEVICE_OK);
+        auto res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, ERROR_OK);
 
-        testCode = BConstants::GC_DEVICE_INCOMPATIBLE;
-        res = service->DealWithGcErrcode(testStatus, testCode);
+        service->gcProgress_->errcode.store(BConstants::GC_DEVICE_INCOMPATIBLE);
+        res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_INCOMPATIBLE));
         
-        testCode = BConstants::GC_TASK_TIMEOUT;
-        res = service->DealWithGcErrcode(testStatus, testCode);
+        service->gcProgress_->errcode.store(BConstants::GC_TASK_TIMEOUT);
+        res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT));
 
-        testCode = 1; // 其余错误码
-        res = service->DealWithGcErrcode(testStatus, testCode);
+        int testCode = 1; // 其余错误码
+        service->gcProgress_->errcode.store(testCode);
+        res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_GC_FAILED));
 
-        testCode = BConstants::GC_DEVICE_OK;
         testStatus = false;
-        res = service->DealWithGcErrcode(testStatus, testCode);
+        res = service->DealWithGcErrcode(testStatus, service->gcProgress_);
         EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2497,7 +2497,108 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0106, Tes
     unsigned int testWaitTime = 180;
     EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
     auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
-    EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_PERM));
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0106";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_StartCleanData_0107
+ * @tc.name: SUB_ServiceIncremental_StartCleanData_0107
+ * @tc.desc: 测试 StartCleanData 函数 session empty
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0107, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0107";
+    int testTriggerType = 0;
+    unsigned int testWriteSize = 1000;
+    unsigned int testWaitTime = 180;
+    auto tempSession = service->session_;
+    service->session_ = nullptr;
+    auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
+    EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    service->session_ = tempSession;
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0107";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_StartCleanData_0108
+ * @tc.name: SUB_ServiceIncremental_StartCleanData_0108
+ * @tc.desc: 测试 StartCleanData 函数 Session is Occupying
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0108, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0108";
+    int testTriggerType = 0;
+    unsigned int testWriteSize = 1000;
+    unsigned int testWaitTime = 180;
+    service->isOccupyingSession_.store(true);
+    auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
+    EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0108";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_VerifyDataClone_0101
+ * @tc.name: SUB_ServiceIncremental_VerifyDataClone_0101
+ * @tc.desc: 测试 VerifyDataClone 函数 VerifyCaller failed
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0101, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_VerifyDataClone_0101";
+    EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+    auto res = service->VerifyDataClone();
+    EXPECT_EQ(res, false);
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0101";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_VerifyDataClone_0102
+ * @tc.name: SUB_ServiceIncremental_VerifyDataClone_0102
+ * @tc.desc: 测试 VerifyDataClone 函数 GetCallerName err
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0102, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_VerifyDataClone_0102";
+    std::string wrongName = "test";
+    EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(wrongName));
+    auto res = service->VerifyDataClone();
+    EXPECT_EQ(res, false);
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0102";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_VerifyDataClone_0103
+ * @tc.name: SUB_ServiceIncremental_VerifyDataClone_0103
+ * @tc.desc: 测试 VerifyDataClone 函数 ok
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0103, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_VerifyDataClone_0103";
+    EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+    EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(BConstants::BUNDLE_DATA_CLONE));
+    auto res = service->VerifyDataClone();
+    EXPECT_EQ(res, true);
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0103";
 }
 }
