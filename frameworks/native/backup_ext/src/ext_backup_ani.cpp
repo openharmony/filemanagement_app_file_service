@@ -345,6 +345,54 @@ ErrCode ExtBackupAni::OnRestore(std::function<void(ErrCode, std::string)> callba
     return ret;
 }
 
+ErrCode ExtBackupAni::GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    HILOGI("BackupExtensionAbility(ETS) GetBackupCompatibilityInfo begin.");
+    BExcepUltils::BAssert(etsAbilityObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
+        "The app does not provide the GetBackupCompatibilityInfo interface.");
+    std::string result;
+    std::string exception;
+    bool isAttachThread = false;
+    ani_env *env = AppExecFwk::AttachAniEnv(etsVm_, isAttachThread);
+    if (env == nullptr) {
+        HILOG_ERROR("env null");
+        return EINVAL;
+    }
+    ErrCode ret = CallEtsGetBackupCompatibilityInfo(env, result, exception);
+    if (ret == ERR_OK) {
+        callbackEx(BError(BError::Codes::OK), result);
+    } else {
+        callbackEx(BError(BError::Codes::EXT_THROW_EXCEPTION), exception);
+    }
+    AppExecFwk::DetachAniEnv(etsVm_, isAttachThread);
+    return ret;
+}
+
+ErrCode ExtBackupAni::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)> callbackEx,
+    std::string extInfo)
+{
+    HILOGI("BackupExtensionAbility(ETS) GetRestoreCompatibilityInfo begin.");
+    BExcepUltils::BAssert(etsAbilityObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
+        "The app does not provide the GetRestoreCompatibilityInfo interface.");
+    std::string result;
+    std::string exception;
+    bool isAttachThread = false;
+    ani_env *env = AppExecFwk::AttachAniEnv(etsVm_, isAttachThread);
+    if (env == nullptr) {
+        HILOG_ERROR("env null");
+        return EINVAL;
+    }
+    ErrCode ret = CallEtsGetRestoreCompatibilityInfo(env, result, exception);
+    if (ret == ERR_OK) {
+        callbackEx(BError(BError::Codes::OK), result);
+    } else {
+        callbackEx(BError(BError::Codes::EXT_THROW_EXCEPTION), exception);
+    }
+    AppExecFwk::DetachAniEnv(etsVm_, isAttachThread);
+    return ret;
+}
+
 ErrCode ExtBackupAni::OnRelease(std::function<void(ErrCode, const std::string)> callback, int32_t scenario)
 {
     HILOGI("BackupExtensionAbility(ETS) OnRestore.");
@@ -510,6 +558,48 @@ ErrCode ExtBackupAni::CallEtsOnRestore(ani_env *env, const EtsRestoreInfo &info,
 
     return CallObjectMethodVoid(
         env, exception, "onRestore", "C{@ohos.application.BackupExtensionAbility.BundleVersionInner}:", obj);
+}
+
+ErrCode ExtBackupAni::CallEtsGetBackupCompatibilityInfo(ani_env *env, std::string &result, std::string &exception)
+{
+    ani_string clsStr = AppExecFwk::GetAniString(env, backupExtInfo_);
+    if (clsStr == nullptr) {
+        HILOGE("GetAniString failed");
+        return EINVAL;
+    }
+    ani_ref aniRef = CallObjectMethodRef(env, exception,
+        "etsCallGetBackupCompatibilityInfo", "C{std.core.String}:C{std.core.String}", clsStr);
+    if (aniRef == nullptr) {
+        HILOGE("CallObjectMethodRef failed");
+        return EINVAL;
+    }
+    ani_string aniString = reinterpret_cast<ani_string>(aniRef);
+    if (!AppExecFwk::GetStdString(env, aniString, result)) {
+        HILOGE("GetStdString failed");
+        return EINVAL;
+    }
+    return ERR_OK;
+}
+
+ErrCode ExtBackupAni::CallEtsGetRestoreCompatibilityInfo(ani_env *env, std::string &result, std::string &exception)
+{
+    ani_string clsStr = AppExecFwk::GetAniString(env, backupExtInfo_);
+    if (clsStr == nullptr) {
+        HILOGE("GetAniString failed");
+        return EINVAL;
+    }
+    ani_ref aniRef = CallObjectMethodRef(env, exception,
+        "etsCallGetRestoreCompatibilityInfo", "C{std.core.String}:C{std.core.String}", clsStr);
+    if (aniRef == nullptr) {
+        HILOGE("CallObjectMethodRef failed");
+        return EINVAL;
+    }
+    ani_string aniString = reinterpret_cast<ani_string>(aniRef);
+    if (!AppExecFwk::GetStdString(env, aniString, result)) {
+        HILOGE("GetStdString failed");
+        return EINVAL;
+    }
+    return ERR_OK;
 }
 
 ErrCode ExtBackupAni::CallObjectMethodVoid(
