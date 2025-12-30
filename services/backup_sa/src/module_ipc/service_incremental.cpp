@@ -1197,13 +1197,13 @@ ErrCode Service::VerifyDataClone()
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
+    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
     ErrCode err = VerifyDataClone();
     if (err != ERR_OK) {
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return err;
     }
-    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-    const std::string fileSystemClientLibPath = "/system/lib64/libioqos_service_client.z.so";
-    void *handle = dlopen(fileSystemClientLibPath.data(), RTLD_LAZY);
+    void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
     if (!handle) {
         HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
