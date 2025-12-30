@@ -1179,31 +1179,31 @@ ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressIn
     }
 }
 
-ErrCode Service::VerifyDataClone()
+bool Service::VerifyDataClone()
 {
     ErrCode err = VerifyCaller();
     if (err != ERR_OK) {
         HILOGE("StartCleanData fail, Verify caller failed, errCode:%{public}d", err);
-        return err;
+        return false;
     }
     std::string bundleName = GetCallerName();
     if (bundleName != BConstants::BUNDLE_DATA_CLONE) {
         HILOGE("Wrong Caller has no permission");
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
+        return false;
     }
-    return ERR_OK;
+    return true;
 }
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
     if (session_ == nullptr || isOccupyingSession_.load()) {
         HILOGE("session is empty, StartCleanData failed.");
-        return BError(BError::Codes::SA_INVAL_ARG);
+        return BError(BError::Codes::SA_INVAL_ARG).GetCode();
     }
     session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-    if (VerifyDataClone() != ERR_OK) {
+    if (!VerifyDataClone()) {
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return err;
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
     void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
     if (!handle) {

@@ -2519,7 +2519,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0101, Te
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_VerifyDataClone_0101";
     EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
     auto res = service->VerifyDataClone();
-    EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    EXPECT_EQ(res, false);
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0101";
 }
 
@@ -2539,7 +2539,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0102, Te
     EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
     EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(wrongName));
     auto res = service->VerifyDataClone();
-    EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_PERM));
+    EXPECT_EQ(res, false);
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0102";
 }
 
@@ -2558,7 +2558,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0103, Te
     EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
     EXPECT_CALL(*srvMock, GetCallerName()).WillOnce(Return(BConstants::BUNDLE_DATA_CLONE));
     auto res = service->VerifyDataClone();
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, true);
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0103";
 }
 }

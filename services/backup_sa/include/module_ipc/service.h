@@ -770,7 +770,7 @@ private:
     ErrCode DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressInfo>& gcProgress);
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         GcProgressInfoUpdate progressData);
-    ErrCode VerifyDataClone();
+    bool VerifyDataClone();
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);
