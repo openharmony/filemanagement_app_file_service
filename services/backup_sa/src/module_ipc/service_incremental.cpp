@@ -1163,7 +1163,6 @@ void Service::UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
 
 ErrCode Service::DealWithGcErrcode(bool isTaskDone, std::shared_ptr<GcProgressInfo>& gcProgress)
 {
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     if (isTaskDone == false) {
         return static_cast<ErrCode> (BError::BackupErrorCode::E_MISSION_TIMEOUT);
     }
@@ -1197,9 +1196,12 @@ ErrCode Service::VerifyDataClone()
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
+    if (session_ == nullptr || isOccupyingSession_.load()) {
+        HILOGE("session is empty, StartCleanData error.");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-    ErrCode err = VerifyDataClone();
-    if (err != ERR_OK) {
+    if (VerifyDataClone() != ERR_OK) {
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return err;
     }
@@ -1231,8 +1233,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     };
     std::unique_lock<std::mutex> lock(gcMtx_);
     isGcTaskDone_.store(false, std::memory_order_release);
-    int ret = func(triggerType, writeSize, waitTime, cb);
-    if (ret != ERROR_OK) {
+    if (func(triggerType, writeSize, waitTime, cb) != ERROR_OK) {
         HILOGE("CallDeviceTaskRequest failed, errno = %{public}d", ret);
         dlclose(handle);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
@@ -1241,6 +1242,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
         [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
     dlclose(handle);
+    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return DealWithGcErrcode(isGcTaskDone_.load(std::memory_order_acquire), gcProgress_);
 }
 } // namespace OHOS::FileManagement::Backup
