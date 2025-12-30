@@ -1197,7 +1197,7 @@ bool Service::VerifyDataClone()
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
     if (session_ == nullptr || isOccupyingSession_.load()) {
-        HILOGE("session is empty, StartCleanData failed.");
+        HILOGE("session is nullptr or occupied, StartCleanData failed.");
         return BError(BError::Codes::SA_INVAL_ARG).GetCode();
     }
     session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);

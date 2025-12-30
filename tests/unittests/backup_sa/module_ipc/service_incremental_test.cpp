@@ -2497,8 +2497,50 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0106, Tes
     unsigned int testWaitTime = 180;
     EXPECT_CALL(*srvMock, VerifyCaller()).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
     auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
-    EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    EXPECT_EQ(res, static_cast<ErrCode> (BError::BackupErrorCode::E_PERM));
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0106";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_StartCleanData_0107
+ * @tc.name: SUB_ServiceIncremental_StartCleanData_0107
+ * @tc.desc: 测试 StartCleanData 函数 session empty
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0107, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0107";
+    int testTriggerType = 0;
+    unsigned int testWriteSize = 1000;
+    unsigned int testWaitTime = 180;
+    service->session_ = nullptr;
+    auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
+    EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0107";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_StartCleanData_0108
+ * @tc.name: SUB_ServiceIncremental_StartCleanData_0108
+ * @tc.desc: 测试 StartCleanData 函数 Session is Occupying
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0108, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_StartCleanData_0108";
+    int testTriggerType = 0;
+    unsigned int testWriteSize = 1000;
+    unsigned int testWaitTime = 180;
+    service->isOccupyingSession_.store(true);
+    auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
+    EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0108";
 }
 
 /**
