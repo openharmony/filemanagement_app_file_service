@@ -94,6 +94,7 @@ public:
                                      int userId) = 0;
     virtual void BroadCastRestore(const std::string &bundleName, const std::string &broadCastType) = 0;
     virtual void BroadCastSingle(const std::string &bundleName, const std::string &broadCastType) = 0;
+    virtual void SleepForDelayTime(const std::string &bundleName) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 #ifdef POWER_MANAGER_ENABLED
@@ -162,6 +163,7 @@ public:
     MOCK_METHOD(void, SetBroadCastInfoMap, (const std::string &, (const std::map<std::string, std::string> &), int));
     MOCK_METHOD(void, BroadCastRestore, (const std::string &, const std::string &));
     MOCK_METHOD(void, BroadCastSingle, (const std::string &, const std::string &));
+    MOCK_METHOD(void, SleepForDelayTime, (const std::string &));
 #ifdef POWER_MANAGER_ENABLED
     MOCK_METHOD(void, RunningLockRadarReport, (const std::string &, const std::string &, ErrCode));
 #endif
@@ -566,6 +568,8 @@ void Service::CreateRunningLock()
 {
     BService::serviceMock->CreateRunningLock();
 }
+
+void Service::SleepForDelayTime(const std::string &bundleName) {}
 } // namespace OHOS::FileManagement::Backup
 
 namespace OHOS::FileManagement::Backup {
@@ -2600,5 +2604,39 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0103, Te
     auto res = service->VerifyDataClone();
     EXPECT_EQ(res, true);
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_VerifyDataClone_0103";
+}
+
+/**
+* @tc.number: SUB_ServiceIncremental_HandleCurGroupIncBackupInfos_0100
+* @tc.name: SUB_ServiceIncremental_HandleCurGroupIncBackupInfos_0100
+* @tc.desc: 测试 HandleCurGroupIncBackupInfos 的文件删除异常分支
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: issueIAKC3I
+*/
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_HandleCurGroupIncBackupInfos_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_HandleCurGroupIncBackupInfos_0100";
+    try {
+        vector<BJsonEntityCaps::BundleInfo> backupInfos;
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
+        BJsonEntityCaps::BundleInfo bundleInfo;
+        std::string bundleName = "bundleName.test";
+        bundleInfo.name = bundleName;
+        bundleInfo.appIndex = 0;
+        backupInfos.push_back(bundleInfo);
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(bundleName));
+        service->HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
+
+        bundleSettingInfos[bundleName] = {true, 0};
+        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(bundleName));
+        service->HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by HandleCurGroupIncBackupInfos.";
+    }
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_HandleCurGroupIncBackupInfos_0100";
 }
 }

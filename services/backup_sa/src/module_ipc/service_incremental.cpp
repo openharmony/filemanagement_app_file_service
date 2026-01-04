@@ -210,6 +210,7 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
         HILOGE("this pointer is null");
         return;
     }
+    thisPtr->SleepForDelayTime(bundleName);
     auto session = thisPtr->session_;
     if (session == nullptr) {
         throw BError(BError::Codes::SA_INVAL_ARG, "session is nullptr");
@@ -219,9 +220,7 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
         throw BError(BError::Codes::SA_INVAL_ARG, "backUpConnection is empty");
     }
     auto proxy = backUpConnection->GetBackupExtProxy();
-    if (!proxy) {
-        throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty");
-    }
+    if (!proxy) { throw BError(BError::Codes::SA_INVAL_ARG, "Extension backup Proxy is empty"); }
     // distinguish whether it is 0 user
     if (BundleMgrAdapter::IsUser0BundleName(bundleName, session_->GetSessionUserId())) {
         if (proxy->User0OnBackup()) {
@@ -489,16 +488,16 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             return ret;
         }
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, infos, bundleNamesOnly,
-            session_->GetSessionUserId(), isClearDataFlags);
+            session_->GetSessionUserId(), bundleSettingInfos);
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundlesToBackup,
             session_->GetSessionUserId());
         std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, true, bundleNames);
         AppendBundles(supportBackupNames);
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
-        HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
+        HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
@@ -517,14 +516,18 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
 
 void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &backupInfos,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags)
+    std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos)
 {
     for (auto &info : backupInfos) {
         HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
             info.appIndex, info.extensionName.c_str());
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
-        SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
         session_->SetBundleDataSize(bundleNameIndexInfo, info.increSpaceOccupied);
+        auto iter = bundleSettingInfos.find(bundleNameIndexInfo);
+        if (iter != bundleSettingInfos.end()) {
+            session_->SetClearDataFlag(bundleNameIndexInfo, iter->second.isClearData);
+            session_->SetDelayTime(bundleNameIndexInfo, iter->second.delayTime);
+        }
         BJsonUtil::BundleDetailInfo uniCastInfo;
         if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
             HILOGI("current bundle:%{public}s, unicast info:%{public}s", bundleNameIndexInfo.c_str(),

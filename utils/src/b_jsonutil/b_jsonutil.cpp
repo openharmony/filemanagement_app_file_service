@@ -61,53 +61,11 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
     std::vector<std::string> &bundleNamesOnly, int32_t userId,
     std::map<std::string, bool> &isClearDataFlags)
 {
-    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
-    if (bundleNames.size() != bundleInfos.size()) {
-        HILOGE("bundleNames count is not equals bundleInfos count");
-        return bundleNameDetailMap;
+    std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
+    auto bundleNameDetailMap = BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, userId, bundleSettingInfos);
+    for (const auto& [bundleName, setting] : bundleSettingInfos) {
+        isClearDataFlags[bundleName] = setting.isClearData;
     }
-    HILOGD("Start BuildBundleInfos");
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        std::string bundleName = bundleNames[i];
-        if (bundleName.empty()) {
-            HILOGE("BundleName is invalid");
-            continue;
-        }
-        std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
-        size_t pos = bundleName.find(BUNDLE_INDEX_SPLICE);
-        if (pos == 0 || pos == (bundleName.size() - 1)) {
-            HILOGE("Current bundle name is wrong");
-            continue;
-        }
-        std::string bundleNameOnly;
-        int bundleIndex;
-        if (pos == std::string::npos) {
-            bundleNameOnly = bundleName;
-            bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
-            bundleNamesOnly.emplace_back(bundleName);
-        } else {
-            std::string bundleNameSplit = bundleName.substr(0, pos);
-            if (to_string(bundleName.back()) != BUNDLE_INDEX_SPLICE) {
-                std::string indexSplit = bundleName.substr(pos + 1);
-                int index = std::atoi(indexSplit.c_str());
-                bundleIndex = index;
-            } else {
-                bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
-            }
-            bundleNameOnly = bundleNameSplit;
-            bundleNamesOnly.emplace_back(bundleNameSplit);
-        }
-        std::string bundleInfo = bundleInfos[i];
-        bool isClearData = true;
-        BJsonUtil::BundleDetailInfo bundleDetailInfo;
-        bundleDetailInfo.bundleName = bundleNameOnly;
-        bundleDetailInfo.bundleIndex = bundleIndex;
-        bundleDetailInfo.userId = userId;
-        ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleDetailInfo, isClearData, userId);
-        isClearDataFlags[bundleName] = isClearData;
-        bundleNameDetailMap[bundleName] = bundleDetailInfos;
-    }
-    HILOGD("End BuildBundleInfos");
     return bundleNameDetailMap;
 }
 
@@ -249,7 +207,7 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
 }
 
 void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-    BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData, int32_t userId)
+    BJsonUtil::BundleDetailInfo bundleDetailInfo, BJsonUtil::BundleSettingInfo &bundleSettingInfo, int32_t userId)
 {
     string bundleInfoCopy = move(bundleInfo);
     if (!HasUnicastInfo(bundleInfoCopy)) {
@@ -268,8 +226,14 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
         HILOGE("Parse clearBackupData error.");
     } else {
         std::string value = clearBackupData->valuestring;
-        isClearData = value.compare("false") != 0;
-        HILOGI("bundleName:%{public}s clear data falg:%{public}d", bundleDetailInfo.bundleName.c_str(), isClearData);
+        bundleSettingInfo.isClearData = value.compare("false") != 0;
+        HILOGI("bundleName:%{public}s clear data flag:%{public}d", bundleDetailInfo.bundleName.c_str(),
+            bundleSettingInfo.isClearData);
+    }
+    cJSON *delayTime = cJSON_GetObjectItem(root, "delayTime");
+    if (delayTime != nullptr && cJSON_IsNumber(delayTime)) {
+        bundleSettingInfo.delayTime = delayTime->valueint;
+        HILOGI("Parse delayTime success, delayTime is %{public}d", bundleSettingInfo.delayTime);
     }
     cJSON *backupScene = cJSON_GetObjectItem(root, "backupScene");
     if (backupScene != nullptr && cJSON_IsString(backupScene) && (backupScene->valuestring != nullptr)) {
@@ -597,5 +561,60 @@ bool BJsonUtil::FindBroadCastInfoByName(std::map<std::string, std::vector<Bundle
         return false;
     }
     return true;
+}
+
+std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::BuildBundleInfos(
+    const std::vector<std::string> &bundleNames, const std::vector<std::string> &bundleInfos,
+    std::vector<std::string> &bundleNamesOnly, int32_t userId,
+    std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos)
+{
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+    if (bundleNames.size() != bundleInfos.size()) {
+        HILOGE("bundleNames count is not equals bundleInfos count");
+        return bundleNameDetailMap;
+    }
+    HILOGD("Start BuildBundleInfos");
+    for (size_t i = 0; i < bundleNames.size(); i++) {
+        std::string bundleName = bundleNames[i];
+        if (bundleName.empty()) {
+            HILOGE("BundleName is invalid");
+            continue;
+        }
+        std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
+        size_t pos = bundleName.find(BUNDLE_INDEX_SPLICE);
+        if (pos == 0 || pos == (bundleName.size() - 1)) {
+            HILOGE("Current bundle name is wrong");
+            continue;
+        }
+        std::string bundleNameOnly;
+        int bundleIndex;
+        if (pos == std::string::npos) {
+            bundleNameOnly = bundleName;
+            bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
+            bundleNamesOnly.emplace_back(bundleName);
+        } else {
+            std::string bundleNameSplit = bundleName.substr(0, pos);
+            if (to_string(bundleName.back()) != BUNDLE_INDEX_SPLICE) {
+                std::string indexSplit = bundleName.substr(pos + 1);
+                int index = std::atoi(indexSplit.c_str());
+                bundleIndex = index;
+            } else {
+                bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
+            }
+            bundleNameOnly = bundleNameSplit;
+            bundleNamesOnly.emplace_back(bundleNameSplit);
+        }
+        std::string bundleInfo = bundleInfos[i];
+        BJsonUtil::BundleSettingInfo bundleSettingInfo;
+        BJsonUtil::BundleDetailInfo bundleDetailInfo;
+        bundleDetailInfo.bundleName = bundleNameOnly;
+        bundleDetailInfo.bundleIndex = bundleIndex;
+        bundleDetailInfo.userId = userId;
+        ParseBundleInfoJson(bundleInfo, bundleDetailInfos, bundleDetailInfo, bundleSettingInfo, userId);
+        bundleSettingInfos[bundleName] = bundleSettingInfo;
+        bundleNameDetailMap[bundleName] = bundleDetailInfos;
+    }
+    HILOGD("End BuildBundleInfos");
+    return bundleNameDetailMap;
 }
 }

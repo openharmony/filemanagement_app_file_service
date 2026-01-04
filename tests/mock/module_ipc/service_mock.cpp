@@ -471,4 +471,6 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
 {
     return BError(BError::Codes::OK);
 }
+
+void Service::SleepForDelayTime(const std::string &bundleName) {}
 } // namespace OHOS::FileManagement::Backup

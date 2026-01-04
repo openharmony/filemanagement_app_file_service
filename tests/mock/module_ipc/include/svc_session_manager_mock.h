@@ -70,6 +70,8 @@ public:
     virtual void SetBackupScene(const std::string &bundleName, const std::string &backupScene) = 0;
     virtual bool GetIsExisted(const std::string &bundleName) = 0;
     virtual std::string GetScenarioStr() = 0;
+    virtual void SetDelayTime(const std::string &bundleName, int32_t delayTime) = 0;
+    virtual int32_t GetDelayTime(const std::string &bundleName) = 0;
 public:
     BSvcSessionManager() = default;
     virtual ~BSvcSessionManager() = default;
@@ -126,6 +128,8 @@ public:
     MOCK_METHOD(std::string, GetBackupScene, (const std::string &));
     MOCK_METHOD(bool, GetIsExisted, (const std::string &));
     MOCK_METHOD(std::string, GetScenarioStr, ());
+    MOCK_METHOD(void, SetDelayTime, (const std::string &, int32_t));
+    MOCK_METHOD(int32_t, GetDelayTime, (const std::string &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_SESSION_MANAGER_MOCK_H

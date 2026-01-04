@@ -1396,4 +1396,36 @@ HWTEST_F(ServiceTest, Service_HandleBroadcastOnlyBundles_Test, testing::ext::Tes
     EXPECT_TRUE(testNewBundleNames.empty());
     GTEST_LOG_(INFO) << "ServiceTest-end Service_HandleBroadcastOnlyBundles_Test";
 }
+
+/**
+* @tc.number: Service_SleepForDelayTime_Test
+* @tc.name: Service_SleepForDelayTime_Test
+* @tc.desc: 测试 SleepForDelayTime 接口
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+*/
+HWTEST_F(ServiceTest, Service_SleepForDelayTime_Test, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_SleepForDelayTime_Test";
+    std::string bundleName = "bundleName.test";
+    auto session = servicePtr_->session_;
+    servicePtr_->session_ = nullptr;
+    servicePtr_->SleepForDelayTime(bundleName);
+    EXPECT_EQ(servicePtr_->session_, nullptr);
+
+    servicePtr_->session_ = session;
+    BackupExtInfo extInfo;
+    extInfo.delayTime = 0;
+    servicePtr_->session_->impl_.backupExtNameMap[bundleName] = extInfo;
+    servicePtr_->SleepForDelayTime(bundleName);
+    EXPECT_NE(servicePtr_->session_, nullptr);
+
+    auto it = servicePtr_->session_->impl_.backupExtNameMap.find(bundleName);
+    EXPECT_NE(it, servicePtr_->session_->impl_.backupExtNameMap.end());
+    servicePtr_->session_->impl_.backupExtNameMap[bundleName].delayTime = 1;
+    servicePtr_->SleepForDelayTime(bundleName);
+    EXPECT_NE(servicePtr_->session_, nullptr);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_SleepForDelayTime_Test";
+}
 } // namespace OHOS::FileManagement::Backup

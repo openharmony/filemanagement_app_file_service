@@ -74,6 +74,8 @@ constexpr int SA_THREAD_POOL_COUNT = 1;       // SA THREAD_POOL 最大线程数
 constexpr int EXT_CONNECT_MAX_COUNT = 3;      // extension 最大启动数
 constexpr int EXT_CONNECT_MAX_TIME = 25000;   // SA 启动 extension 等待连接最大时间
 
+constexpr int DELAY_TIME_MAX = 1800;  // 增量扫描设置等待最大时间
+
 constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
 constexpr int MAX_PARCELABLE_VECTOR_NUM = 10000;
 constexpr char FILE_SEPARATOR_CHAR = '/';
