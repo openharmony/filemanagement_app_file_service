@@ -339,7 +339,7 @@ std::string SvcSessionManager::GetScenarioStr()
 
 void SvcSessionManager::SetDelayTime(const std::string &bundleName, int32_t delayTime) {}
  	 
-int32_t GetDelayTime(const std::string &bundleName)
+int32_t SvcSessionManager::GetDelayTime(const std::string &bundleName)
 {
     return BSvcSessionManager::sessionManager->GetDelayTime(bundleName);
 }
