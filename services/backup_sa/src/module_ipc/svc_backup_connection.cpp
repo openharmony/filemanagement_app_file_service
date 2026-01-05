@@ -28,6 +28,7 @@ namespace OHOS::FileManagement::Backup {
 constexpr int WAIT_TIME = 3;
 constexpr int32_t INDEX = 3;
 constexpr int32_t SEC_TO_MS = 1000;
+constexpr int32_t CONNECT_EXTENSION_TIMEOUT = 20;
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 using namespace std;
 
@@ -122,12 +123,13 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
 
 ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId, bool isCleanCalled)
 {
-    HILOGI("Called begin");
+    HILOGI("Called begin timeout = %{public}d", CONNECT_EXTENSION_TIMEOUT);
     isCleanCalled_.store(isCleanCalled);
     isConnectCalled_.store(true);
     std::unique_lock<std::mutex> lock(mutex_);
     connectSpend_.Start();
-    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId);
+    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId,
+        CONNECT_EXTENSION_TIMEOUT);
     HILOGI("Called end, ret=%{public}d, userId=%{public}d.", ret, userId);
     return ret;
 }

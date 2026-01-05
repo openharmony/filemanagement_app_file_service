@@ -72,7 +72,7 @@ constexpr int PATHES_TO_BACKUP_SIZE = 13;     // 应用默认备份的目录个�
 constexpr uint32_t BACKUP_PARA_VALUE_MAX = 5; // 读取backup.para字段值的最大长度
 constexpr int SA_THREAD_POOL_COUNT = 1;       // SA THREAD_POOL 最大线程数
 constexpr int EXT_CONNECT_MAX_COUNT = 3;      // extension 最大启动数
-constexpr int EXT_CONNECT_MAX_TIME = 15000;   // SA 启动 extension 等待连接最大时间
+constexpr int EXT_CONNECT_MAX_TIME = 25000;   // SA 启动 extension 等待连接最大时间
 
 constexpr int IPC_MAX_WAIT_TIME = 3000; // IPC通讯最大等待时间(s)
 constexpr int MAX_PARCELABLE_VECTOR_NUM = 10000;
