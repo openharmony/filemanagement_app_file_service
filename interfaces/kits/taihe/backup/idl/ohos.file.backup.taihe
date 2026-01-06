@@ -80,7 +80,7 @@ type OnBackupSizeReport = (reportInfo: string) => void;
 type BundlePara = undefined | string;
 type OnProcess = (bundleName: string, process: string) => void;
 type OnResultReport = (bundleName: string, result: string) => void;
-interface GeneralCallbacks {
+export interface GeneralCallbacks {
     onFileReady: AsyncCallback<File>;
     onBundleBegin: AsyncCallback<string, BundlePara>;
     onBundleEnd: AsyncCallback<string, BundlePara>;
