@@ -122,9 +122,13 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0100, testin
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0100";
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = ERR_NO_PERMISSION;
+    char c = '\0';
+    EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c)).WillOnce(nullptr);
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
+    EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, false), ERR_NO_PERMISSION);
+    
     EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, false), ERR_NO_PERMISSION);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportAppFileReady_Test_0100";
 }
@@ -142,6 +146,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0200, testin
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0200";
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = -1;
+    char c = '\0';
+    EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
@@ -164,6 +170,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0300, testin
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0300";
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = -1;
+    char c = '\0';
+    EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c)).WillOnce(Return(&c));
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1)).WillOnce(Return(1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
@@ -186,6 +194,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0400, testin
 {
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0400";
     ASSERT_TRUE(extExtension_ != nullptr);
+    char c = '\0';
+    EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
