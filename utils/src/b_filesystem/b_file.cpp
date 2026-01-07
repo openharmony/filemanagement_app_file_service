@@ -236,6 +236,11 @@ uint64_t BFile::GetFileSize(const string &path, int32_t &error)
 
 void BFile::WriteFile(const string &filename, const vector<struct ReportFileInfo> &srcFiles)
 {
+    auto resolvedPath = make_unique<char[]>(PATH_MAX + 1);
+    if (!realpath(filename.data(), resolvedPath.get())) {
+        HILOGE("failed to real path for the file %{public}s", filename.c_str());
+        return;
+    }
     fstream f;
     f.open(filename.data(), ios::out);
     if (!f) {

@@ -475,6 +475,12 @@ void BackupExtExtension::ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::str
 ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const string& filePath, bool needDelete)
 {
     int32_t errCode = ERR_OK;
+    auto resolvedPath = make_unique<char[]>(PATH_MAX + 1);
+    if (!realpath(filename.data(), resolvedPath.get())) {
+        errCode = errno;
+        HILOGE("realpath failed with errno = %{public}d, filePath = %{private}s", errno, GetAnonyString(filePath).c_str());
+        return errCode;
+    }
     int fdval = open(filePath.data(), O_RDONLY);
     if (fdval < 0) {
         errCode = errno;
