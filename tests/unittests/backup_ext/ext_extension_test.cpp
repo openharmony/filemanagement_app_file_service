@@ -412,8 +412,6 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0604, testing::ext::TestSize.Level
     try {
         string filename = "illegal_file_name";
         vector<struct ReportFileInfo> srcFiles;
-        char c = '\0';
-        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(nullptr);
         BFile::WriteFile(fileName, srcFiles);
         EXPECT_TRUE(srcFiles.empty());
     } catch (...) {

@@ -123,7 +123,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0100, testin
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = ERR_NO_PERMISSION;
     char c = '\0';
-    EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c)).WillOnce(nullptr);
+    EXPECT_CALL(*funcMock_, realpath(_, _)).WillOnce(Return(&c)).WillOnce(nullptr);
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
@@ -147,7 +147,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0200, testin
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = -1;
     char c = '\0';
-    EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+    EXPECT_CALL(*funcMock_, realpath(_, _)).WillOnce(Return(&c));
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
@@ -171,7 +171,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0300, testin
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = -1;
     char c = '\0';
-    EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c)).WillOnce(Return(&c));
+    EXPECT_CALL(*funcMock_, realpath(_, _)).WillOnce(Return(&c)).WillOnce(Return(&c));
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1)).WillOnce(Return(1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
@@ -195,7 +195,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0400, testin
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0400";
     ASSERT_TRUE(extExtension_ != nullptr);
     char c = '\0';
-    EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+    EXPECT_CALL(*funcMock_, realpath(_, _)).WillOnce(Return(&c));
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
@@ -228,6 +228,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_IndexFileReady_Test_0100, testing::e
     EXPECT_EQ(extExtension_->IndexFileReady(files), BError::BackupErrorCode::E_PERM);
 
     errno = EPERM;
+    char c = '\0';
+    EXPECT_CALL(*funcMock_, realpath(_, _)).WillRepeatedly(Return(&c));
     EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Return(1));
     EXPECT_CALL(*funcMock_, close(_)).WillRepeatedly(Return(0));
     EXPECT_CALL(*funcMock_, fstat(_, _)).WillRepeatedly(Return(0));
@@ -414,6 +416,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0100, testing::ext
         return -1;
     });
     int ret = 0;
+    char c = '\0';
+    EXPECT_CALL(*funcMock_, realpath(_, _)).WillRepeatedly(Return(&c));
     EXPECT_CALL(*serviceMock_, AppDone(_)).WillRepeatedly([&ret](int err) -> int {
         ret = err;
         return 0;
@@ -446,6 +450,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0200, testing::ext
     ScanFileSingleton::GetInstance().pendingFileQueue_.push(nullptr);
     ScanFileSingleton::GetInstance().SetCompletedFlag(true);
     int ret = 0;
+    char c = '\0';
+    EXPECT_CALL(*funcMock_, realpath(_, _)).WillRepeatedly(Return(&c));
     EXPECT_CALL(*serviceMock_, AppDone(_)).WillRepeatedly([&ret](int err) -> int {
         ret = err;
         return 0;
