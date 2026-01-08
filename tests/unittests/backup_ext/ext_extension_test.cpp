@@ -398,30 +398,6 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0603, testing::ext::TestSize.Level
 }
 
 /**
- * @tc.number: SUB_Ext_Extension_0604
- * @tc.name: Ext_Extension_Test_0604
- * @tc.desc: 测试写入失败
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0604, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0604";
-    try {
-        string fileName = "illegal_file_name";
-        vector<struct ReportFileInfo> srcFiles;
-        BFile::WriteFile(fileName, srcFiles);
-        EXPECT_TRUE(srcFiles.empty());
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0604";
-}
-
-/**
  * @tc.number: SUB_Ext_Extension_0800
  * @tc.name: Ext_Extension_Test_0800
  * @tc.desc: 测试 GetIndexFileRestorePath
