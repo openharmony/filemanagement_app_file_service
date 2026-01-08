@@ -31,6 +31,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
+using namespace installd;
 
 class InstalldUnTarFileTest : public testing::Test {
 public:
@@ -330,5 +331,38 @@ HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_FreeLongTypePointer_0100, t
         GTEST_LOG_(INFO) << "InstalldUnTarFileTest-an exception occurred by InstalldUnTarFile.";
     }
     GTEST_LOG_(INFO) << "InstalldUnTarFileTest-end Installd_Un_Tar_File_FreeLongTypePointer_0100";
+}
+
+/**
+ * @tc.number: Installd_Un_Tar_File_ProcessTarBlock_0100
+ * @tc.name: Installd_Un_Tar_File_ProcessTarBlock_0100
+ * @tc.desc: test ProcessTarBlock method
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC15LE
+ */
+HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_ProcessTarBlock_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InstalldUnTarFileTest-begin Installd_Un_Tar_File_ProcessTarBlock_0100";
+    try {
+        const TestManager tm("Installd_Un_Tar_File_ProcessTarBlock_0100");
+        const string rootPath = tm.GetRootDirCurTest();
+        UnTarFile unTarFile(rootPath.c_str());
+        TarHeader headBuff = {};
+        headBuff.size[0] = '2';
+        headBuff.typeflag = DIRTYPE;
+        ParseTarPath parseTarPath = {};
+        char empty_path[1] = {'\0'};
+        parseTarPath.fullPath = empty_path;
+        bool isSkip = false;
+        bool isSoftLink = false;
+        unTarFile.ProcessTarBlock((char *)(&headBuff), UnTarFile::EParseType::eCheckSplit, &parseTarPath, isSkip, isSoftLink);
+        EXPECT_FALSE(isSkip);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InstalldUnTarFileTest-an exception occurred by ProcessTarBlock.";
+    }
+    GTEST_LOG_(INFO) << "InstalldUnTarFileTest-end Installd_Un_Tar_File_ProcessTarBlock_0100";
 }
 } // namespace OHOS::FileManagement::Backup
