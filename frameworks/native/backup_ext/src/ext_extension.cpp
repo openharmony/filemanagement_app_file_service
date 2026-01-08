@@ -476,7 +476,7 @@ ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const str
 {
     int32_t errCode = ERR_OK;
     char resolvedPath[PATH_MAX] = {0};
-    if (!realpath(filename.data(), resolvedPath.get())) {
+    if (!realpath(filename.data(), resolvedPath)) {
         errCode = errno;
         HILOGE("realpath failed errno = %{public}d, filePath = %{private}s", errno, GetAnonyString(filePath).c_str());
         return errCode;
