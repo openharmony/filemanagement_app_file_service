@@ -357,7 +357,8 @@ HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_ProcessTarBlock_0100, testi
         parseTarPath.fullPath = empty_path;
         bool isSkip = false;
         bool isSoftLink = false;
-        unTarFile.ProcessTarBlock((char *)(&headBuff), UnTarFile::EParseType::eCheckSplit, &parseTarPath, isSkip, isSoftLink);
+        unTarFile.ProcessTarBlock((char *)(&headBuff),
+            UnTarFile::EParseType::eCheckSplit, &parseTarPath, isSkip, isSoftLink);
         EXPECT_FALSE(isSkip);
     } catch (...) {
         EXPECT_TRUE(false);
