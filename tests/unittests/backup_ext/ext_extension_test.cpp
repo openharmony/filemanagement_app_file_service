@@ -410,7 +410,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0604, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0604";
     try {
-        string filename = "illegal_file_name";
+        string fileName = "illegal_file_name";
         vector<struct ReportFileInfo> srcFiles;
         BFile::WriteFile(fileName, srcFiles);
         EXPECT_TRUE(srcFiles.empty());
