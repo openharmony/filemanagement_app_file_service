@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,12 +37,33 @@ namespace {
 const std::string FILE_SCHEME_PREFIX = "file://";
 const char BACKSLASH = '/';
 const std::string FILE_MANAGER_URI_HEAD = "/storage/";
+const std::string FILE_HAP_URI_HEAD = "/data/storage";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
+const std::string FILE_APP_DATA = "appdata";
+const std::string FILE_BASE = "base/";
+const std::string FILE_USERS = "Users";
+const std::string FILE_MNT_DATA = "/mnt/data/fuse";
+const std::string DLP_PACKAGE_NAME = "com.ohos.dlpmanager";
 const std::string MEDIA_FUSE_PATH_HEAD = "/data/storage/el2/media";
 const std::string MEDIA_AUTHORITY = "file://media";
 std::string g_bundleName = "";
 std::mutex g_globalMutex;
+} // namespace
+
+static string GetNextDirName(string &path)
+{
+    if (path.find(BACKSLASH) == 0) {
+        path = path.substr(1);
+    }
+    string dirname = "";
+    if (path.find(BACKSLASH) != string::npos) {
+        size_t pos = path.find(BACKSLASH);
+        dirname = path.substr(0, pos);
+        path = path.substr(pos);
+    }
+    return dirname;
 }
+
 static sptr<AppExecFwk::IBundleMgr> GetBundleMgrProxy()
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
@@ -108,6 +129,31 @@ static void NormalizePath(string &path)
     }
 }
 
+static bool GetResultIsUri(string &path)
+{
+    string realPath = path;
+    if (realPath.find(FILE_MANAGER_URI_HEAD) == 0) {
+        realPath = realPath.substr(FILE_MANAGER_URI_HEAD.size());
+        string pathType = GetNextDirName(realPath);
+        if (pathType != FILE_USERS) {
+            return false;
+        }
+        string userName = GetNextDirName(realPath);
+        if (GetNextDirName(realPath) == FILE_APP_DATA) {
+            string encryptionLevel = GetNextDirName(realPath);
+            string dataPart = GetNextDirName(realPath);
+            string bundleName = GetNextDirName(realPath);
+            if (bundleName.empty()) {
+                return false;
+            }
+            path = FILE_SCHEME_PREFIX + bundleName + FILE_HAP_URI_HEAD + BACKSLASH + encryptionLevel + BACKSLASH +
+                   dataPart + SandboxHelper::Encode(realPath);
+            return true;
+        }
+    }
+    return false;
+}
+
 string CommonFunc::GetUriFromPath(const string &path)
 {
     if (!SandboxHelper::IsValidPath(path)) {
@@ -124,6 +170,12 @@ string CommonFunc::GetUriFromPath(const string &path)
         return realPath.replace(realPath.find(MEDIA_FUSE_PATH_HEAD), MEDIA_FUSE_PATH_HEAD.length(), MEDIA_AUTHORITY);
     }
     string packageName;
+    if (GetResultIsUri(realPath)) {
+        return realPath;
+    }
+    if (realPath.find(FILE_MNT_DATA) == 0) {
+        return FILE_SCHEME_PREFIX + DLP_PACKAGE_NAME + SandboxHelper::Encode(realPath);
+    }
     {
         std::lock_guard<std::mutex> lock(g_globalMutex);
         if (g_bundleName == "") {

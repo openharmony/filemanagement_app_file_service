@@ -109,8 +109,9 @@ ohos_shared_library("fileuri_native") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "json:nlohmann_json_static",
+    "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
+    "json:nlohmann_json_static",
   ]
 
   part_name = "app_file_service"
