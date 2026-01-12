@@ -78,6 +78,10 @@ static int GenRealPath(const char *rootPath, const char *pathName, char* &realPa
         return ERR_PARAM;
     }
     size_t allLen = strlen(rootPath);
+    if (allLen == 0) {
+        LOGE("path len invalid");
+        return ERR_PARAM;
+    }
     if (rootPath[allLen - 1] != '/') {
         allLen += 1;
     }
@@ -113,6 +117,11 @@ static int CreateDir(char *path, mode_t mode)
     }
 
     size_t len = strlen(path);
+    if (len == 0) {
+        LOGE("path len invalid");
+        return ERR_PARAM;
+    }
+
     if (path[len - 1] == '/') {
         path[len - 1] = '\0';
     }
