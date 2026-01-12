@@ -353,8 +353,8 @@ HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_ProcessTarBlock_0100, testi
         headBuff.size[0] = '2';
         headBuff.typeflag = DIRTYPE;
         ParseTarPath parseTarPath = {};
-        char empty_path[1] = {'\0'};
-        parseTarPath.fullPath = empty_path;
+        char emptyPath[1] = {'\0'};
+        parseTarPath.fullPath = emptyPath;
         bool isSkip = false;
         bool isSoftLink = false;
         unTarFile.ProcessTarBlock((char *)(&headBuff),
