@@ -1323,4 +1323,54 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0101, testi
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0101";
 }
+
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3orEl4_Test_0102
+ * @tc.name: Ext_Extension_Sub_PathHasEl3orEl4_Test_0102
+ * @tc.desc: 测试PathHasEl3orEl4 状态已经为真，再次扫到el3/el4
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0102";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        extExtension->appStatistic_->hasel3orel4_ = true;
+        string actualPath = PATH_2 + FILE_NAME;
+        extExtension->PathHasEl3orEl4(actualPath);
+        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0102";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3orEl4_Test_0103
+ * @tc.name: Ext_Extension_Sub_PathHasEl3orEl4_Test_0103
+ * @tc.desc: 测试PathHasEl3orEl4 状态已经为真，再次扫到非el3/el4
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0103";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        extExtension->appStatistic_->hasel3orel4_ = true;
+        string actualPath = PATH + FILE_NAME;
+        extExtension->PathHasEl3orEl4(actualPath);
+        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0103";
+}
 }
