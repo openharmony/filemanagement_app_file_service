@@ -55,6 +55,7 @@ const std::string TAR_FILE_COUNT = "TAR_FILE_COUNT";
 const std::string TAR_FILE_SIZE = "TAR_FILE_SIZE";
 const std::string TAR_BOUND_SIZE = "TAR_BOUND_SIZE";
 const std::string DIR_DEPTH = "DIR_DEPTH";
+const std::string HAS_EL3_EL4 = "HAS_EL3_EL4";
 const std::string MANAGE_JSON_SIZE = "MANAGE_JSON_SIZE";
 const std::string EXTENSION_CONNECT_SPEND = "EXTENSION_CONNECT_SPEND";
 const std::string GET_EXT_INFO_SPEND = "GET_EXT_INFO_SPEND";

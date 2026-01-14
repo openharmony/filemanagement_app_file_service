@@ -1623,6 +1623,7 @@ void BackupExtExtension::DoBackupTask()
         WaitToSendFd(startTime, fdNum);
         int subRet = ERR_OK;
         allFiles.push_back(fileInfo);
+        PathHasEl3orEl4(fileInfo->filePath_);
         if (fileInfo->isBigFile_) {
             subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_);
             appStatistic_->bigFileCount_++;
@@ -1928,5 +1929,16 @@ set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& inclu
         includes.end()
     );
     return compatibleIncludes;
+}
+
+void BackupExtExtension::PathHasEl3orEl4(const std::string& backupPath)
+{
+    if (appStatistic_->hasel3orel4_) {
+        return;
+    }
+    if (backupPath.find("/el3/") == std::string::npos && backupPath.find("/el4/") == std::string::npos) {
+        return;
+    }
+    appStatistic_->hasel3orel4_ = true;
 }
 } // namespace OHOS::FileManagement::Backup

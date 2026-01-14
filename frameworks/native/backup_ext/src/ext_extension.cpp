@@ -666,6 +666,7 @@ void BackupExtExtension::DoPacket()
     appStatistic_->smallFileCount_ = allSmallFile.size();
     HILOGI("DoPacket begin, small file count: %{public}zu", allSmallFile.size());
     for (const auto &smallFile : allSmallFile) {
+        PathHasEl3orEl4(smallFile->filePath_);
         UpdateFileStat(smallFile->filePath_, smallFile->fileSize_);
         totalSize += smallFile->fileSize_;
         fileCount += 1;
