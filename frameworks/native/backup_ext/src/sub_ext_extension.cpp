@@ -1933,12 +1933,13 @@ set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& inclu
 
 void BackupExtExtension::PathHasEl3orEl4(const std::string& backupPath)
 {
-    if (appStatistic_->hasel3orel4_) {
+    if (appStatistic_->hasel3orel4_.load()) {
         return;
     }
     if (backupPath.find("/el3/") == std::string::npos && backupPath.find("/el4/") == std::string::npos) {
         return;
     }
-    appStatistic_->hasel3orel4_ = true;
+    appStatistic_->hasel3orel4_.store(true);
+    HILOGI("backupPath has el3 or el4");
 }
 } // namespace OHOS::FileManagement::Backup
