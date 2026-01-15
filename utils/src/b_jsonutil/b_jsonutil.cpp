@@ -226,7 +226,7 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
         HILOGE("Parse clearBackupData error.");
     } else {
         std::string value = clearBackupData->valuestring;
-        bundleSettingInfo.isClearData = value.compare("false") != 0;
+        bundleSettingInfo.isClearData = (value == "true");
         HILOGI("bundleName:%{public}s clear data flag:%{public}d", bundleDetailInfo.bundleName.c_str(),
             bundleSettingInfo.isClearData);
     }

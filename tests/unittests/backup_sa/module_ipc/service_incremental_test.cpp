@@ -2618,25 +2618,19 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_VerifyDataClone_0103, Te
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_HandleCurGroupIncBackupInfos_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_HandleCurGroupIncBackupInfos_0100";
-    try {
-        vector<BJsonEntityCaps::BundleInfo> backupInfos;
-        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
-        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
-        BJsonEntityCaps::BundleInfo bundleInfo;
-        std::string bundleName = "bundleName.test";
-        bundleInfo.name = bundleName;
-        bundleInfo.appIndex = 0;
-        backupInfos.push_back(bundleInfo);
-        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(bundleName));
-        service->HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
+    vector<BJsonEntityCaps::BundleInfo> backupInfos;
+    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
+    std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
+    BJsonEntityCaps::BundleInfo bundleInfo;
+    std::string bundleName = "bundleName.test";
+    bundleInfo.name = bundleName;
+    bundleInfo.appIndex = 0;
+    backupInfos.push_back(bundleInfo);
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(bundleName));
+    service->HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
 
-        bundleSettingInfos[bundleName] = {true, 0};
-        EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(bundleName));
-        service->HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by HandleCurGroupIncBackupInfos.";
-    }
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_HandleCurGroupIncBackupInfos_0100";
+    bundleSettingInfos[bundleName] = {true, 0};
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(bundleName));
+    service->HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
 }
 }
