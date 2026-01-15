@@ -19,6 +19,10 @@
 static { loadLibrary("file_fileuri_taihe.z"); }
 """)
 
+@!sts_inject_into_module("""
+import { BusinessError } from '@ohos.base';
+""")
+
 @class
 interface FileUriInner {
     @get getName(): String;
@@ -33,6 +37,16 @@ function getUriFromPath(path: String): String;
 
 @!sts_inject("""
 
+const UNKNOWN_ERR: int = 13900002;
+const UNKNOWN_MSG: string = "No such file or directory";
+
+function createBusinessError(code: int, msg: string): BusinessError {
+  let err = new BusinessError();
+  err.code = code;
+  err.message = msg;
+  return err;
+}
+
 export class FileUri extends uri.URI{
     inner: FileUriInner;
     constructor(uri: String) {
@@ -43,7 +57,11 @@ export class FileUri extends uri.URI{
         return this.inner.name;
     }
     getFullDirectoryUri(): string {
-        return this.inner.getFullDirectoryUri();
+        let uri: string = this.inner.getFullDirectoryUri();
+        if(uri == '') {
+            throw createBusinessError(UNKNOWN_ERR, UNKNOWN_MSG);
+        }
+        return uri;
     }
     isRemoteUri(): boolean {
         return this.inner.isRemoteUri();
