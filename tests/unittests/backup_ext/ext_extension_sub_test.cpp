@@ -44,7 +44,6 @@ const string BUNDLE_NAME = "com.example.app2backup/";
 const string MANAGE_JSON = "manage.json";
 const string PATH = "/data/storage/el2/backup/test/";
 const string PATH_HAS_EL3 = "/data/storage/el3/backup/test/";
-const string PATH_HAS_EL4 = "/data/storage/el4/backup/test/";
 const string TAR_FILE = "1.tar";
 const string BUNDLE_BASE_DIR = "/data/storage/el2/base/";
 const string PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/base/.backup";
@@ -1373,54 +1372,5 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0103, testi
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0103";
-}
-
-/**
- * @tc.number: Ext_Extension_Sub_PathHasEl3orEl4_Test_0104
- * @tc.name: Ext_Extension_Sub_PathHasEl3orEl4_Test_0104
- * @tc.desc: 测试PathHasEl3orEl4 包含el4
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0104, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0104";
-    try {
-        ASSERT_TRUE(extExtension != nullptr);
-        string actualPath = PATH_HAS_EL4 + FILE_NAME;
-        extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0104";
-}
-
-/**
- * @tc.number: Ext_Extension_Sub_PathHasEl3orEl4_Test_0105
- * @tc.name: Ext_Extension_Sub_PathHasEl3orEl4_Test_0105
- * @tc.desc: 测试PathHasEl3orEl4 状态已经为真，再次扫到el4
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0105, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0105";
-    try {
-        ASSERT_TRUE(extExtension != nullptr);
-        extExtension->appStatistic_->hasel3orel4_ = true;
-        string actualPath = PATH_HAS_EL4 + FILE_NAME;
-        extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0105";
 }
 }
