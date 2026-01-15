@@ -121,7 +121,7 @@ public:
     uint64_t manageJsonSize_ = 0;
     Duration getExtInfoSpend_ = {0, 0};
     uint32_t extConnectSpend_ = 0;
-    std::atomic<bool> hasel3orel4_{false};
+    std::atomic<bool> hasel3orel4_ {false};
 
     Duration onBackupSpend_ = {0, 0};
     Duration onBackupexSpend_ = {0, 0};
