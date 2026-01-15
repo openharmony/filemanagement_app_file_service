@@ -1292,7 +1292,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0100, testi
         ASSERT_TRUE(extExtension != nullptr);
         string actualPath = PATH + FILE_NAME;
         extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_FALSE(extExtension->appStatistic_->hasel3orel4_);
+        EXPECT_FALSE(extExtension->appStatistic_->hasel3orel4_.load());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
@@ -1316,7 +1316,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0101, testi
         ASSERT_TRUE(extExtension != nullptr);
         string actualPath = PATH_HAS_EL3 + FILE_NAME;
         extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_);
+        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_.load());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
@@ -1338,10 +1338,10 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0102, testi
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0102";
     try {
         ASSERT_TRUE(extExtension != nullptr);
-        extExtension->appStatistic_->hasel3orel4_ = true;
+        extExtension->appStatistic_->hasel3orel4_.store(true);
         string actualPath = PATH_HAS_EL3 + FILE_NAME;
         extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_);
+        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_.load());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
@@ -1363,10 +1363,10 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0103, testi
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0103";
     try {
         ASSERT_TRUE(extExtension != nullptr);
-        extExtension->appStatistic_->hasel3orel4_ = true;
+        extExtension->appStatistic_->hasel3orel4_.store(true);
         string actualPath = PATH + FILE_NAME;
         extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_);
+        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_.load());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
