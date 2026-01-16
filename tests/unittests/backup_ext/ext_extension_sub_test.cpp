@@ -1275,102 +1275,102 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0100, testin
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_GetScanDirList_Test_0100";
 }
-
+ 
 /**
- * @tc.number: Ext_Extension_Sub_PathHasEl3orEl4_Test_0100
- * @tc.name: Ext_Extension_Sub_PathHasEl3orEl4_Test_0100
- * @tc.desc: 测试PathHasEl3orEl4 不包含el3/el4
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100
+ * @tc.desc: 测试PathHasEl3OrEl4 不包含el3/el4
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I9P3Y3
  */
-HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0100";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100";
     try {
         ASSERT_TRUE(extExtension != nullptr);
         string actualPath = PATH + FILE_NAME;
-        extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_FALSE(extExtension->appStatistic_->hasel3orel4_.load());
+        extExtension->PathHasEl3OrEl4(actualPath);
+        EXPECT_FALSE(extExtension->appStatistic_->hasEl3OrEl4_.load());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0100";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100";
 }
-
+ 
 /**
- * @tc.number: Ext_Extension_Sub_PathHasEl3orEl4_Test_0101
- * @tc.name: Ext_Extension_Sub_PathHasEl3orEl4_Test_0101
- * @tc.desc: 测试PathHasEl3orEl4 包含el3
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101
+ * @tc.desc: 测试PathHasEl3OrEl4 包含el3
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I9P3Y3
  */
-HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0101, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0101";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101";
     try {
         ASSERT_TRUE(extExtension != nullptr);
         string actualPath = PATH_HAS_EL3 + FILE_NAME;
-        extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_.load());
+        extExtension->PathHasEl3OrEl4(actualPath);
+        EXPECT_TRUE(extExtension->appStatistic_->hasEl3OrEl4_.load());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0101";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101";
 }
-
+ 
 /**
- * @tc.number: Ext_Extension_Sub_PathHasEl3orEl4_Test_0102
- * @tc.name: Ext_Extension_Sub_PathHasEl3orEl4_Test_0102
- * @tc.desc: 测试PathHasEl3orEl4 状态已经为真，再次扫到el3
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102
+ * @tc.desc: 测试PathHasEl3OrEl4 状态已经为真，再次扫到el3
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I9P3Y3
  */
-HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0102, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0102";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102";
     try {
         ASSERT_TRUE(extExtension != nullptr);
-        extExtension->appStatistic_->hasel3orel4_.store(true);
+        extExtension->appStatistic_->hasEl3OrEl4_.store(true);
         string actualPath = PATH_HAS_EL3 + FILE_NAME;
-        extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_.load());
+        extExtension->PathHasEl3OrEl4(actualPath);
+        EXPECT_TRUE(extExtension->appStatistic_->hasEl3OrEl4_.load());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0102";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102";
 }
-
+ 
 /**
- * @tc.number: Ext_Extension_Sub_PathHasEl3orEl4_Test_0103
- * @tc.name: Ext_Extension_Sub_PathHasEl3orEl4_Test_0103
- * @tc.desc: 测试PathHasEl3orEl4 状态已经为真，再次扫到非el3/el4
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103
+ * @tc.desc: 测试PathHasEl3OrEl4 状态已经为真，再次扫到非el3/el4
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I9P3Y3
  */
-HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3orEl4_Test_0103, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3orEl4_Test_0103";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103";
     try {
         ASSERT_TRUE(extExtension != nullptr);
-        extExtension->appStatistic_->hasel3orel4_.store(true);
+        extExtension->appStatistic_->hasEl3OrEl4_.store(true);
         string actualPath = PATH + FILE_NAME;
-        extExtension->PathHasEl3orEl4(actualPath);
-        EXPECT_TRUE(extExtension->appStatistic_->hasel3orel4_.load());
+        extExtension->PathHasEl3OrEl4(actualPath);
+        EXPECT_TRUE(extExtension->appStatistic_->hasEl3OrEl4_.load());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3orEl4_Test_0103";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103";
 }
 }
