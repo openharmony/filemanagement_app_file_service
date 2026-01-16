@@ -1623,7 +1623,6 @@ void BackupExtExtension::DoBackupTask()
         WaitToSendFd(startTime, fdNum);
         int subRet = ERR_OK;
         allFiles.push_back(fileInfo);
-        PathHasEl3orEl4(fileInfo->filePath_);
         if (fileInfo->isBigFile_) {
             subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_);
             appStatistic_->bigFileCount_++;
@@ -1931,15 +1930,15 @@ set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& inclu
     return compatibleIncludes;
 }
 
-void BackupExtExtension::PathHasEl3orEl4(const std::string& backupPath)
+void BackupExtExtension::PathHasEl3OrEl4(const std::string& backupPath)
 {
-    if (appStatistic_->hasel3orel4_.load()) {
+    if (appStatistic_->hasEl3OrEl4_.load()) {
         return;
     }
     if (backupPath.find("/el3/") == std::string::npos && backupPath.find("/el4/") == std::string::npos) {
         return;
     }
-    appStatistic_->hasel3orel4_.store(true);
+    appStatistic_->hasEl3OrEl4_.store(true);
     HILOGI("backupPath has el3 or el4");
 }
 } // namespace OHOS::FileManagement::Backup
