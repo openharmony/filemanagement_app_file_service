@@ -39,6 +39,11 @@ public:
         int64_t incDataSize = -1;
     }BundleDataSize;
 
+    typedef struct BundleSettingInfo {
+        bool isClearData {true};
+        int32_t delayTime {0};
+    }BundleSettingInfo;
+
     /**
      * @brief 带有拼接字符的bundleName按照拼接字符进行分割
      *
@@ -65,6 +70,24 @@ public:
         const std::vector<std::string> &bundleNames, const std::vector<std::string> &details,
         std::vector<std::string> &realBundleNames, int32_t userId,
         std::map<std::string, bool> &isClearDataFlags);
+    
+    /**
+    * @brief 将传进来的bundleNames的集合进行按照拼接字符分割处理
+    *
+    * @param bundleNames bundleName拼接index的字符串集合
+    * @param details infos的集合
+    * @param patternInfo 拼接的字符
+    * @param realBundleNames 分割后真正的bundleNames
+    * @param userId userId
+    * @param bundleSettingInfos 框架是否清理和设置延时的标志集合
+    *
+    * @return 包名和解析结果的对应关系集合
+    *
+    */
+    static std::map<std::string, std::vector<BundleDetailInfo>> BuildBundleInfos(
+        const std::vector<std::string> &bundleNames, const std::vector<std::string> &details,
+        std::vector<std::string> &realBundleNames, int32_t userId,
+        std::map<std::string, BundleSettingInfo> &bundleSettingInfos);
 
     /**
      * @brief 解析单个bundle对应的json串
@@ -77,7 +100,7 @@ public:
      *
      */
     static void ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-        BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData, int32_t userId);
+        BJsonUtil::BundleDetailInfo bundleDetailInfo, BundleSettingInfo &bundleSettingInfo, int32_t userId);
 
     /**
      * @brief 根据业务类型和bundleName确定唯一的bundleInfo

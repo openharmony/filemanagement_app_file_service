@@ -1876,4 +1876,19 @@ std::vector<std::string> Service::GetCurUsrDispBundleName()
     }
     return bundleNameList;
 }
+
+void Service::SleepForDelayTime(const std::string &bundleName)
+{
+    if (session_ == nullptr) {
+        HILOGE("session is nullptr");
+        return;
+    }
+    int32_t delayTime = session_->GetDelayTime(bundleName);
+    delayTime = delayTime < BConstants::DELAY_TIME_MAX ? delayTime : BConstants::DELAY_TIME_MAX;
+    if (delayTime > 0) {
+        HILOGI("Sleep start, delay time is %{public}d", delayTime);
+        std::this_thread::sleep_for(std::chrono::seconds(delayTime));
+        HILOGI("Sleep end, delay time is %{public}d", delayTime);
+    }
+}
 }

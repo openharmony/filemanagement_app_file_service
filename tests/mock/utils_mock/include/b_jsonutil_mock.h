@@ -28,7 +28,7 @@ public:
         const std::vector<std::string>&, const std::vector<std::string>&, std::vector<std::string>&, int32_t,
         std::map<std::string, bool>&) = 0;
     virtual void ParseBundleInfoJson(const std::string&, std::vector<BJsonUtil::BundleDetailInfo>&,
-        BJsonUtil::BundleDetailInfo, bool&, int32_t) = 0;
+        BJsonUtil::BundleDetailInfo, BJsonUtil::BundleSettingInfo&, int32_t) = 0;
     virtual bool FindBundleInfoByName(std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>>&, std::string&,
         const std::string&, BJsonUtil::BundleDetailInfo&) = 0;
     virtual bool BuildExtensionErrInfo(std::string&, int, std::string) = 0;
@@ -54,7 +54,7 @@ public:
         ((const std::vector<std::string>&), (const std::vector<std::string>&), (std::vector<std::string>&), int32_t,
         (std::map<std::string, bool>&)));
     MOCK_METHOD(void, ParseBundleInfoJson, (const std::string&, (std::vector<BJsonUtil::BundleDetailInfo>&),
-        BJsonUtil::BundleDetailInfo, bool&, int32_t));
+        BJsonUtil::BundleDetailInfo, BJsonUtil::BundleSettingInfo&, int32_t));
     MOCK_METHOD(bool, FindBundleInfoByName, ((std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>>&),
         std::string&, const std::string&, BJsonUtil::BundleDetailInfo&));
     MOCK_METHOD(bool, BuildExtensionErrInfo, (std::string&, int, std::string));

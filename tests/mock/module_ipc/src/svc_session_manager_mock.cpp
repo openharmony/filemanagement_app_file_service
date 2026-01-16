@@ -336,4 +336,11 @@ std::string SvcSessionManager::GetScenarioStr()
 {
     return BSvcSessionManager::sessionManager->GetScenarioStr();
 }
+
+void SvcSessionManager::SetDelayTime(const std::string &bundleName, int32_t delayTime) {}
+ 	 
+int32_t SvcSessionManager::GetDelayTime(const std::string &bundleName)
+{
+    return BSvcSessionManager::sessionManager->GetDelayTime(bundleName);
+}
 } // namespace OHOS::FileManagement::Backup

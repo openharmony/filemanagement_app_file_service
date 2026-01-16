@@ -71,6 +71,7 @@ struct BackupExtInfo {
     std::string extInfo;
     int32_t userId {BConstants::DEFAULT_USER_ID};
     int32_t appendNum {1};
+    int32_t delayTime {0};
     bool isClearData {true};
     bool isInPublishFile {false};
     bool isReadyLaunch {false};
@@ -604,6 +605,9 @@ public:
      * @return void
      */
     void SetBackupScene(const std::string &bundleName, const std::string &backupScene);
+
+    void SetDelayTime(const std::string &bundleName, int32_t delayTime);
+    int32_t GetDelayTime(const std::string &bundleName);
     
 private:
     /**

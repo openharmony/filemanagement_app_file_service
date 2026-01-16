@@ -65,10 +65,21 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0100, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo2);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
+            userId, bundleSettingInfos);
         EXPECT_TRUE(result.empty());
+
+        bundleNames.emplace_back("");
+        result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, bundleSettingInfos);
+        EXPECT_EQ(result.size(), 1);
+
+        bundleNames[0] = "com.hos.app01:1";
+        bundleNames[1] = "com.hos.app02:";
+        result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, bundleSettingInfos);
+        EXPECT_EQ(result.size(), 1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
@@ -97,9 +108,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0200, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
+            userId, bundleSettingInfos);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -129,9 +140,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0300, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
+            userId, bundleSettingInfos);
         EXPECT_TRUE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -161,9 +172,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0301, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
+            userId, bundleSettingInfos);
         EXPECT_TRUE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -189,16 +200,22 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0400, testing::ext::TestSize
         std::string bundleName = "bundle1";
         bundleNames.push_back(bundleName);
         std::vector<std::string> bundleInfos;
-        std::string bundleInfo = {
-            "{\"infos\":[{\"type\":\"type1\",\"details\":\"details1\"}],\"clearBackupData\": \"false\"}"
-        };
+        std::string bundleInfo = R"({
+            "infos":[{
+                "type":"type1",
+                "details":"details1"
+            }],
+            "clearBackupData":"false",
+            "delayTime": 20
+        })";
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
-        EXPECT_EQ(isClearDataFlags[bundleName], false);
+            userId, bundleSettingInfos);
+        EXPECT_EQ(bundleSettingInfos[bundleName].isClearData, false);
+        EXPECT_EQ(bundleSettingInfos[bundleName].delayTime, 20);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -228,11 +245,12 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0500, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
 
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
-        EXPECT_EQ(isClearDataFlags[bundleName], true);
+            userId, bundleSettingInfos);
+        EXPECT_EQ(bundleSettingInfos[bundleName].isClearData, true);
+        EXPECT_EQ(bundleSettingInfos[bundleName].delayTime, 0);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -262,17 +280,52 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0600, testing::ext::TestSize
         bundleInfos.push_back(bundleInfo);
         int32_t userId = TEST_USER_ID;
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
 
         auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            userId, isClearDataFlags);
-        EXPECT_EQ(isClearDataFlags[bundleName], true);
+            userId, bundleSettingInfos);
+        EXPECT_EQ(bundleSettingInfos[bundleName].isClearData, true);
+        EXPECT_EQ(bundleSettingInfos[bundleName].delayTime, 0);
         EXPECT_FALSE(result.empty());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0600";
+}
+
+/**
+* @tc.number: b_jsonutil_BuildBundleInfos_0700
+* @tc.name: b_jsonutil_BuildBundleInfos_0700
+* @tc.desc: Test function of BuildBundleInfos interface for SUCCESS.
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 0
+* @tc.require: I6F3GV
+*/
+HWTEST_F(BJsonUtilTest, b_jsonutil_BuildBundleInfos_0700, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin BuildBundleInfos_0700";
+    try {
+        std::vector<std::string> bundleNames;
+        std::string bundleName = "com.hos.app01:1";
+        bundleNames.push_back(bundleName);
+        std::vector<std::string> bundleInfos;
+        std::string bundleInfo = "info1";
+        std::string bundleInfo2 = "info2";
+        bundleInfos.push_back(bundleInfo);
+        bundleInfos.push_back(bundleInfo2);
+        int32_t userId = TEST_USER_ID;
+        std::vector<std::string> bundleNamesOnly;
+        std::map<std::string, bool> isClearDataFlags;
+        auto result = BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            userId, isClearDataFlags);
+        EXPECT_TRUE(result.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end BuildBundleInfos_0700";
 }
 
 /**
@@ -538,8 +591,8 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0100, testing::ext::TestS
             "backupScene":""
         })";
         std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
-        bool isClearData = true;
-        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        BJsonUtil::BundleSettingInfo bundleSettingInfo;
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, bundleSettingInfo, 100);
         ASSERT_TRUE(!bundleDetailInfos.empty());
         EXPECT_TRUE(bundleDetailInfos[0].isBroadcastOnly);
 
@@ -553,7 +606,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0100, testing::ext::TestS
             "backupScene":""
         })";
         bundleDetailInfos.clear();
-        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, bundleSettingInfo, 100);
         ASSERT_TRUE(!bundleDetailInfos.empty());
         EXPECT_FALSE(bundleDetailInfos[0].isBroadcastOnly);
     } catch (...) {
@@ -589,8 +642,8 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0200, testing::ext::TestS
             "backupScene":""
         })";
         std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
-        bool isClearData = true;
-        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        BJsonUtil::BundleSettingInfo bundleSettingInfo;
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, bundleSettingInfo, 100);
         ASSERT_TRUE(!bundleDetailInfos.empty());
         EXPECT_FALSE(bundleDetailInfos[0].isBroadcastOnly);
 
@@ -603,7 +656,7 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0200, testing::ext::TestS
             "backupScene":""
         })";
         bundleDetailInfos.clear();
-        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, bundleSettingInfo, 100);
         ASSERT_TRUE(!bundleDetailInfos.empty());
         EXPECT_FALSE(bundleDetailInfos[0].isBroadcastOnly);
     } catch (...) {
@@ -637,8 +690,8 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0300, testing::ext::TestS
             "backupScene":""
         })";
         std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
-        bool isClearData = true;
-        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        BJsonUtil::BundleSettingInfo bundleSettingInfo;
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, bundleSettingInfo, 100);
         ASSERT_TRUE(!bundleDetailInfos.empty());
         EXPECT_TRUE(bundleDetailInfos[0].broadCastType.empty());
 
@@ -648,11 +701,10 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0300, testing::ext::TestS
                 "broadcastType":123,
                 "isBroadcastOnly":"true",
                 "details":[]
-            }],
-            "backupScene":""
+            }]
         })";
         bundleDetailInfos.clear();
-        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, bundleSettingInfo, 100);
         ASSERT_TRUE(!bundleDetailInfos.empty());
         EXPECT_TRUE(bundleDetailInfos[0].broadCastType.empty());
 
@@ -662,10 +714,11 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0300, testing::ext::TestS
                 "broadcastType":"",
                 "details":[]
             }],
-            "backupScene":""
+            "clearBackupData": "false",
+            "delayTime": 20
         })";
         bundleDetailInfos.clear();
-        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, isClearData, 100);
+        BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, bundleSettingInfo, 100);
         ASSERT_TRUE(!bundleDetailInfos.empty());
         EXPECT_TRUE(bundleDetailInfos[0].broadCastType.empty());
     } catch (...) {

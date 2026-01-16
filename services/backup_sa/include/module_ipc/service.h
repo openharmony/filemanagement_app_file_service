@@ -631,7 +631,7 @@ private:
 
     void HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-        std::map<std::string, bool> &isClearDataFlags);
+        std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos);
 
     void TimeoutRadarReport(IServiceReverseType::Scenario scenario, std::string &bundleName);
 
@@ -776,6 +776,7 @@ private:
         const std::vector<BundleName> &bundleNames);
     std::vector<std::string> GetCurUsrDispBundleName();
     int32_t GetCurrentActiveAccountUserId();
+    void SleepForDelayTime(const std::string &bundleName);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

@@ -32,9 +32,9 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
 }
 
 void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
-    BJsonUtil::BundleDetailInfo bundleDetailInfo, bool &isClearData, int32_t userId)
+    BJsonUtil::BundleDetailInfo bundleDetailInfo, BJsonUtil::BundleSettingInfo &bundleSettingInfo, int32_t userId)
 {
-    BBJsonUtil::jsonUtil->ParseBundleInfoJson(bundleInfo, bundleDetails, bundleDetailInfo, isClearData, userId);
+    BBJsonUtil::jsonUtil->ParseBundleInfoJson(bundleInfo, bundleDetails, bundleDetailInfo, bundleSettingInfo, userId);
 }
 
 bool BJsonUtil::FindBundleInfoByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,

@@ -481,3 +481,78 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetScenarioStr_0100, testi
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetScenarioStr_0100";
 }
+
+/**
+* @tc.number: SUB_backup_sa_session_SetDelayTime_0100
+* @tc.name: SUB_backup_sa_session_SetDelayTime_0100
+* @tc.desc: 测试 SetDelayTime 接口
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_SetDelayTime_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_SetDelayTime_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        std::string bundleName = "com.test.bundleName";
+        int32_t delayTime = 10;
+        sessionManagerPtr_->impl_.clientToken = 0;
+        sessionManagerPtr_->SetDelayTime(bundleName, delayTime);
+        auto it = sessionManagerPtr_->impl_.backupExtNameMap.find(bundleName);
+        EXPECT_EQ(it, sessionManagerPtr_->impl_.backupExtNameMap.end());
+        
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->SetDelayTime(bundleName, delayTime);
+        it = sessionManagerPtr_->impl_.backupExtNameMap.find(bundleName);
+        EXPECT_EQ(it, sessionManagerPtr_->impl_.backupExtNameMap.end());
+
+        BackupExtInfo extInfo;
+        sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = extInfo;
+        sessionManagerPtr_->SetDelayTime(bundleName, delayTime);
+        it = sessionManagerPtr_->impl_.backupExtNameMap.find(bundleName);
+        EXPECT_NE(it, sessionManagerPtr_->impl_.backupExtNameMap.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by SetDelayTime.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_SetDelayTime_0100";
+}
+
+/**
+* @tc.number: SUB_backup_sa_session_GetDelayTime_0100
+* @tc.name: SUB_backup_sa_session_GetDelayTime_0100
+* @tc.desc: 测试 GetDelayTime 接口
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetDelayTime_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_GetDelayTime_0100";
+    try {
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->impl_.backupExtNameMap.clear();
+        std::string bundleName = "com.test.bundleName";
+        sessionManagerPtr_->impl_.clientToken = 0;
+        auto ret = sessionManagerPtr_->GetDelayTime(bundleName);
+        EXPECT_EQ(ret, 0);
+        
+        sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
+        ret = sessionManagerPtr_->GetDelayTime(bundleName);
+        EXPECT_EQ(ret, 0);
+
+        BackupExtInfo extInfo;
+        extInfo.delayTime = 10;
+        sessionManagerPtr_->impl_.backupExtNameMap[bundleName] = extInfo;
+        ret = sessionManagerPtr_->GetDelayTime(bundleName);
+        EXPECT_EQ(ret, 10);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by GetDelayTime.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetDelayTime_0100";
+}
