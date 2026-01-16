@@ -666,7 +666,6 @@ void BackupExtExtension::DoPacket()
     appStatistic_->smallFileCount_ = allSmallFile.size();
     HILOGI("DoPacket begin, small file count: %{public}zu", allSmallFile.size());
     for (const auto &smallFile : allSmallFile) {
-        PathHasEl3orEl4(smallFile->filePath_);
         UpdateFileStat(smallFile->filePath_, smallFile->fileSize_);
         totalSize += smallFile->fileSize_;
         fileCount += 1;
@@ -697,6 +696,9 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     vector<string> excludes = {};
     GetScanDirList(includes, BConstants::INCLUDES, usrConfig);
     GetScanDirList(excludes, BConstants::EXCLUDES, usrConfig);
+    for (const auto &includePath : includes) {
+        PathHasEl3OrEl4(includePath);
+    }
     // 不用放在expand通配符之后，约束是compat的路径配置要与includes中某些路径配置完全一致
     auto compatibleIncludes = DivideIncludesByCompatInfo(includes, usrConfig);
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
