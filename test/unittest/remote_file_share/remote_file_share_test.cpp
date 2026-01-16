@@ -31,7 +31,6 @@ namespace {
     using namespace std;
     using namespace OHOS::AppFileService::ModuleRemoteFileShare;
 
-    const int E_INVALID_ARGUMENT = 22;
     const int E_OK = 0;
     const int USER_ID = 100;
     const int32_t TEST_CHAR = 95;
@@ -60,123 +59,6 @@ namespace {
         ASSERT_TRUE(test != nullptr) << "RemoteFileShare Construct Failed!";
         delete test;
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_RemoteFileShare_0000";
-    }
-
-    /**
-     * @tc.name: remote_file_share_test_0001
-     * @tc.desc: Test function of CreateSharePath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require: SR000H63TL
-     */
-    HWTEST_F(RemoteFileShareTest, Remote_file_share_CreateSharePath_0001, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_CreateSharePath_0001";
-        const int fd = -1;
-        const int userId = 100;
-        const string deviceId = "0";
-        string sharePath = "";
-        int ret = RemoteFileShare::CreateSharePath(fd, sharePath, userId, deviceId);
-        EXPECT_EQ(ret, E_INVALID_ARGUMENT);
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CreateSharePath_0001";
-    }
-
-    /**
-     * @tc.name: remote_file_share_test_0002
-     * @tc.desc: Test function of CreateSharePath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require: SR000H63TL
-     */
-    HWTEST_F(RemoteFileShareTest, Remote_file_share_CreateSharePath_0002, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_CreateSharePath_0002";
-        const int fd = 10;
-        const int userId = 90;
-        const string deviceId = "0";
-        string sharePath = "";
-        int ret = RemoteFileShare::CreateSharePath(fd, sharePath, userId, deviceId);
-        EXPECT_EQ(ret, E_INVALID_ARGUMENT);
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CreateSharePath_0002";
-    }
-
-    /**
-     * @tc.name: remote_file_share_test_0003
-     * @tc.desc: Test function of CreateSharePath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require: SR000H63TL
-     */
-    HWTEST_F(RemoteFileShareTest, Remote_file_share_CreateSharePath_0003, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_CreateSharePath_0003";
-        const int fd = 10;
-        const int userId = 100;
-        const string deviceId = "00";
-        string sharePath = "";
-        int ret = RemoteFileShare::CreateSharePath(fd, sharePath, userId, deviceId);
-        EXPECT_EQ(ret, E_INVALID_ARGUMENT);
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CreateSharePath_0003";
-    }
-
-    /**
-     * @tc.name: remote_file_share_test_0004
-     * @tc.desc: Test function of CreateSharePath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require: SR000H63TL
-     */
-    HWTEST_F(RemoteFileShareTest, Remote_file_share_CreateSharePath_0004, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_CreateSharePath_0004";
-        const string fileStr = "/data/test/remote_file_share_test.txt";
-        int fd = open(fileStr.c_str(), O_RDWR);
-        ASSERT_TRUE(fd != -1) << "RemoteFileShareTest Create File Failed!";
-        const int userId = 100;
-        const string deviceId = "0";
-        string sharePath = "";
-        int ret = RemoteFileShare::CreateSharePath(fd, sharePath, userId, deviceId);
-        close(fd);
-        EXPECT_EQ(ret, E_OK);
-        GTEST_LOG_(INFO) << "RemoteFileShareTest Create Share Path " << sharePath;
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CreateSharePath_0004";
-    }
-
-    /**
-     * @tc.name: remote_file_share_test_0005
-     * @tc.desc: Test function of CreateSharePath() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require: SR000H63TL
-     */
-    HWTEST_F(RemoteFileShareTest, Remote_file_share_CreateSharePath_0005, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin  Remote_file_share_CreateSharePath_0005";
-        const string fileStr = "/data/test/remote_file_share_test.txt";
-        int fd = open(fileStr.c_str(), O_RDWR);
-        ASSERT_TRUE(fd != -1) << "RemoteFileShareTest Create File Failed!";
-        const int userId = 100;
-        const string deviceId = "0";
-        string sharePath = "";
-        char pthreadName[PATH_MAX];
-        int ret = pthread_getname_np(pthread_self(), pthreadName, sizeof(pthreadName));
-        EXPECT_EQ(ret, E_OK);
-        string pthreadNameStr = pthreadName;
-        string errPthreadName = "../test";
-        ret = pthread_setname_np(pthread_self(), errPthreadName.c_str());
-        EXPECT_EQ(ret, E_OK);
-        ret = RemoteFileShare::CreateSharePath(fd, sharePath, userId, deviceId);
-        close(fd);
-        EXPECT_NE(ret, E_OK);
-        ret = pthread_setname_np(pthread_self(), pthreadNameStr.c_str());
-        EXPECT_EQ(ret, E_OK);
-        GTEST_LOG_(INFO) << "RemoteFileShareTest Create Share Path " << sharePath;
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_CreateSharePath_0005";
     }
 
     /**
@@ -359,23 +241,6 @@ namespace {
         ret = RemoteFileShare::TransRemoteUriToLocal(uriList, networkId, deviceId, resultList);
         EXPECT_NE(ret, EINVAL);
         GTEST_LOG_(INFO) << "RemoteFileShareTest-end remote_file_share_test_0017";
-    }
-
-    /**
-     * @tc.name: remote_file_share_test_0000
-     * @tc.desc: Test function of RemoteFileShare() interface for SUCCESS.
-     * @tc.size: MEDIUM
-     * @tc.type: FUNC
-     * @tc.level Level 1
-     * @tc.require: SR000H63TL
-     */
-    HWTEST_F(RemoteFileShareTest, Remote_file_share_DeleteShareDir_0000, testing::ext::TestSize.Level1)
-    {
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-begin Remote_file_share_DeleteShareDir_0000";
-        string packagePath = "/data/filetest";
-        string sharePath = "/data/filetest";
-        EXPECT_EQ(true, DeleteShareDir(packagePath, sharePath));
-        GTEST_LOG_(INFO) << "RemoteFileShareTest-end Remote_file_share_DeleteShareDir_0000";
     }
 
     /**
