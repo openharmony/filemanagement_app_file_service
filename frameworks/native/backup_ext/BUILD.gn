@@ -78,6 +78,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "napi:ace_napi",
     "runtime_core:ani",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   cflags_cc = [

@@ -317,7 +317,7 @@ void SvcSessionManager::SetIsRestoreEnd(const std::string &bundleName)
 
 bool SvcSessionManager::GetIsRestoreEnd(const std::string &bundleName)
 {
-    return false;
+    return BSvcSessionManager::sessionManager->GetIsRestoreEnd(bundleName);
 }
 
 std::string SvcSessionManager::GetBackupScene(const std::string &bundleName)

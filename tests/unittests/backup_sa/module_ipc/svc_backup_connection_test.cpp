@@ -121,6 +121,10 @@ HWTEST_F(SvcBackupConnectionTest, SUB_BackupConnection_GenErrorByStatus_0100, te
     EXPECT_EQ(backupCon_->error_.GetRawCode(), BError::Codes::EXT_ABILITY_DIED);
 
     backupCon_->GenErrorByStatus(resultCode, false);
+    EXPECT_EQ(backupCon_->error_.GetRawCode(), BError::Codes::EXT_ABILITY_DIED);
+
+    backupCon_->connectSpend_.startMilli_ = 1;
+    backupCon_->GenErrorByStatus(resultCode, false);
     EXPECT_EQ(backupCon_->error_.GetRawCode(), BError::Codes::SA_BOOT_EXT_TIMEOUT);
     GTEST_LOG_(INFO) << "SvcBackupConnectionTest-end SUB_BackupConnection_GenErrorByStatus_0100";
 }

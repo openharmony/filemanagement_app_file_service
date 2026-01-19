@@ -639,7 +639,7 @@ ohos_unittest("backup_service_other_test") {
   ]
 
   defines = [
-    "LOG_TAG=\"app_file_service\"",
+    "LOG_TAG=\"service_other_test\"",
     "LOG_DOMAIN=0xD004303",
     "private = public",
   ]

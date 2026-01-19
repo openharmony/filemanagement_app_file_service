@@ -78,25 +78,32 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
 void SvcBackupConnection::GenErrorByStatus(int errCode, bool hasConnected)
 {
     HILOGI("GenErrorByStatus");
+    std::unique_lock<std::shared_mutex> lock(errMutex_);
     if (hasConnected) {
         string errMsg = "{\"connectSpend\": " + to_string(connectSpend_.GetSpan()) + ", \"connectStartTime\":"
-            + to_string(connectSpend_.startMilli_) + "}";
+            + to_string(connectSpend_.startMilli_) + ",\"isCleanCalled\":" + to_string(isCleanCalled_) + "}";
         error_ = BError(errCode, BError::Codes::EXT_ABILITY_DIED, errMsg);
     } else {
         connectSpend_.End();
-        string errMsg = "{\"failSpend\": " + to_string(connectSpend_.GetSpan()) + "}";
-        error_ = BError(errCode, BError::Codes::SA_BOOT_EXT_TIMEOUT, errMsg);
+        uint32_t failSpend = connectSpend_.GetSpan();
+        string errMsg = "{\"failSpend\": " + to_string(failSpend) + ",\"isCleanCalled\":"
+            + to_string(isCleanCalled_) + "}";
+        if (failSpend >= CONNECT_EXTENSION_TIMEOUT * SECOND_TO_MS) {
+            error_ = BError(errCode, BError::Codes::SA_BOOT_EXT_TIMEOUT, errMsg);
+        } else {
+            error_ = BError(errCode, BError::Codes::EXT_ABILITY_DIED, errMsg);
+        }
     }
 }
 
 void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
 {
     HILOGI("called begin");
-    bool hasConnected = isConnected_.load();
+    hasConnected_.store(isConnected_.load());
     isConnected_.store(false);
     string bundleName = element.GetBundleName();
     HILOGI("bundleName:%{public}s, OnAbilityDisconnectDone, bundleNameIndexInfo:%{public}s, hasConnected:%{public}d",
-        bundleName.c_str(), bundleNameIndexInfo_.c_str(), hasConnected);
+        bundleName.c_str(), bundleNameIndexInfo_.c_str(), hasConnected_.load());
     if (bundleNameIndexInfo_.find(bundleName) == string::npos) {
         HILOGE("Current bundle name is wrong, bundleNameIndexInfo:%{public}s, bundleName:%{public}s",
             bundleNameIndexInfo_.c_str(), bundleName.c_str());
@@ -104,16 +111,10 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
     }
     bundleName = bundleNameIndexInfo_;
     if (isConnectCalled_ == true) {
-        GenErrorByStatus(resultCode, hasConnected);
-        if (isCleanCalled_ == true) {
-            HILOGE("It's error that the backup extension clean died before the backup sa. name : %{public}s",
-                bundleName.data());
-            callDied_(move(bundleName), true);
-        } else {
-            HILOGE("It's error that the backup extension died before the backup sa. name : %{public}s",
-                bundleName.data());
-            callDied_(move(bundleName), false);
-        }
+        GenErrorByStatus(resultCode, hasConnected_.load());
+        HILOGE("It's error that backup extension died before backup sa. name : %{public}s, isCleanCalled: %{public}d",
+            bundleName.data(), isCleanCalled_.load());
+        callDied_(move(bundleName), isCleanCalled_);
     }
     condition_.notify_all();
     waitCondition_.notify_all();

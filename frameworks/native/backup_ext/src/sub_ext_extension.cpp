@@ -1911,7 +1911,7 @@ set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& inclu
     }
     std::unordered_map<std::string, std::string> enabledCompatDirs;
     std::copy_if(dirMapping.begin(), dirMapping.end(), std::inserter(enabledCompatDirs, enabledCompatDirs.begin()),
-        [this](const pair<const string, string> item) {
+        [this](const pair<const string, string>& item) {
             return compatibleDirs_.find(item.first) != compatibleDirs_.end();
         });
     if (enabledCompatDirs.size() == 0) {
