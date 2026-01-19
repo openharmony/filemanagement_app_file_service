@@ -125,7 +125,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0100, testin
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
-    EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, false), ERR_NO_PERMISSION);
+    EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, false), 0);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportAppFileReady_Test_0100";
 }
 

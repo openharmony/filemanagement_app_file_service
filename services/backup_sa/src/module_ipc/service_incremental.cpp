@@ -1197,6 +1197,28 @@ bool Service::VerifyDataClone()
     return true;
 }
 
+ErrCode Service::LoadIoqosService(void* &handle, CallDeviceTaskRequest &func, CallStopTaskRequest &stopFunc)
+{
+    handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
+    if (!handle) {
+        HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+    }
+    func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
+    stopFunc = reinterpret_cast<CallStopTaskRequest>(dlsym(handle, "CallStopTaskRequest"));
+    if (func == nullptr || stopFunc == nullptr) {
+        HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
+        dlclose(handle);
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+    }
+    return ERROR_OK;
+}
+
+void Service::UnLoadIoqosService(void* handle)
+{
+    dlclose(handle);
+}
+
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
     if (session_ == nullptr || isOccupyingSession_.load()) {
@@ -1208,19 +1230,15 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
-    void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
-    if (!handle) {
-        HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
-    }
-    CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
-    if (func == nullptr) {
+    void *handle;
+    CallDeviceTaskRequest func;
+    CallStopTaskRequest stopFunc;
+    if (LoadIoqosService(handle, func, stopFunc) != ERROR_OK) {
         HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
-        dlclose(handle);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
+    std::unique_lock<std::mutex> lock(gcMtx_);
     if (gcProgress_ == nullptr) {
         gcProgress_ = std::make_shared<GcProgressInfo>();
     }
@@ -1234,16 +1252,17 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         }
         return ERROR_OK;
     };
-    std::unique_lock<std::mutex> lock(gcMtx_);
     isGcTaskDone_.store(false, std::memory_order_release);
-    if (func(triggerType, writeSize, waitTime, cb) != ERROR_OK) {
-        dlclose(handle);
+    int32_t taskId = func(triggerType, writeSize, waitTime, cb);
+    if (taskId < 0) {
+        UnLoadIoqosService(handle);
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
         [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
-    dlclose(handle);
+    stopFunc(taskId);
+    UnLoadIoqosService(handle);
     session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return DealWithGcErrcode(isGcTaskDone_.load(std::memory_order_acquire), gcProgress_);
 }

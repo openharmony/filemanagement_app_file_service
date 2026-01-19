@@ -123,13 +123,14 @@ string CommonFunc::GetUriFromPath(const string &path)
         realPath = SandboxHelper::Encode(realPath);
         return realPath.replace(realPath.find(MEDIA_FUSE_PATH_HEAD), MEDIA_FUSE_PATH_HEAD.length(), MEDIA_AUTHORITY);
     }
+    string packageName;
     {
         std::lock_guard<std::mutex> lock(g_globalMutex);
         if (g_bundleName == "") {
             g_bundleName = GetSelfBundleName();
         }
+        packageName = (realPath.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : g_bundleName;
     }
-    string packageName = (realPath.find(FILE_MANAGER_URI_HEAD) == 0) ? FILE_MANAGER_AUTHORITY : g_bundleName;
     realPath = FILE_SCHEME_PREFIX + packageName + SandboxHelper::Encode(realPath);
     return realPath;
 }
