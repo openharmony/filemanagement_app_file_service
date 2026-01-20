@@ -1936,12 +1936,9 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
     if (appStatistic_->hasEl3OrEl4_.load()) {
         return;
     }
-    static const vector<string> elPrefixes = {
-        "/data/storage/el3/",
-        "/data/storage/el4/"
-    };
-    bool allMatch  = std::all_of(elPrefixes.begin(), elPrefixes.end(), 
-                        [&](const string &path) { return BDir::IsDirsMatch(excludes, path); });
+    static const vector<string> elPrefixes = {"/data/storage/el3/", "/data/storage/el4/"};
+    bool allMatch = std::all_of(
+        elPrefixes.begin(), elPrefixes.end(), [&](const string &path) { return BDir::IsDirsMatch(excludes, path); });
     if (allMatch) {
         return;
     }
@@ -1950,8 +1947,9 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
             continue;
         }
         int pathDepth = std::count(includePath.begin(), includePath.end(), '/');
-        bool hasEl3OrEl4 = std::any_of(elPrefixes.begin(), elPrefixes.end(),
-                            [&](const std::string &prefix) { return includePath.find(prefix) == 0; });
+        bool hasEl3OrEl4 = std::any_of(elPrefixes.begin(), elPrefixes.end(), [&](const std::string &prefix) {
+            return includePath.find(prefix) == 0;
+        });
         if (!hasEl3OrEl4 && pathDepth > HIERARCHY_OF_FILE_ENCRYPTION_TYPE) {
             continue;
         }
