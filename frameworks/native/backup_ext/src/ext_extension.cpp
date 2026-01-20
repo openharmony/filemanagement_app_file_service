@@ -696,13 +696,11 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     vector<string> excludes = {};
     GetScanDirList(includes, BConstants::INCLUDES, usrConfig);
     GetScanDirList(excludes, BConstants::EXCLUDES, usrConfig);
-    for (const auto &includePath : includes) {
-        PathHasEl3OrEl4(includePath);
-    }
     // 不用放在expand通配符之后，约束是compat的路径配置要与includes中某些路径配置完全一致
     auto compatibleIncludes = DivideIncludesByCompatInfo(includes, usrConfig);
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
     BDir::PreDealExcludes(excludes);
+    PathHasEl3OrEl4(expandIncludes, excludes);
     // 扫描文件计算数据量
     appStatistic_->scanFileSpend_.Start();
     auto [errCode, bigFileSize, smallFileSize] = BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes);
