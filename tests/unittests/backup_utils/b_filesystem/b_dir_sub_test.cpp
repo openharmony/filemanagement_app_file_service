@@ -166,7 +166,7 @@ HWTEST_F(BDirSubTest, B_DIR_ProcessFile_004, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_ProcessFile_004";
     GTEST_LOG_(INFO) << "4. test match excludes";
     struct stat sta = {.st_size = 15};
-    EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Invoke([sta](const char *pathname, struct stat *statbuf) {
+    EXPECT_CALL(*funcMock_, stat(_, _)).WillRepeatedly(Invoke([sta](const char *pathname, struct stat *statbuf) {
         *statbuf = sta;
         GTEST_LOG_(INFO) << "sta.size =" << statbuf->st_size;
         return 0;
