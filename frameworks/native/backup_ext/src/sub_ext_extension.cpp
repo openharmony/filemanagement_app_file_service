@@ -64,6 +64,7 @@
 
 namespace OHOS::FileManagement::Backup {
 const uint32_t MAX_FD_GROUP_USE_TIME = 1000; // 每组打开最大时间1000ms
+const int HIERARCHY_OF_FILE_ENCRYPTION_TYPE = 3;
 
 ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
 {
@@ -1930,15 +1931,33 @@ set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& inclu
     return compatibleIncludes;
 }
 
-void BackupExtExtension::PathHasEl3OrEl4(const std::string& backupPath)
+void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vector<string> &excludes)
 {
     if (appStatistic_->hasEl3OrEl4_.load()) {
         return;
     }
-    if (backupPath.find("/el3/") == std::string::npos && backupPath.find("/el4/") == std::string::npos) {
+    static const vector<string> elPrefixes = {
+        "/data/storage/el3/",
+        "/data/storage/el4/"
+    };
+    bool allMatch  = std::all_of(elPrefixes.begin(), elPrefixes.end(), 
+                        [&](const string &path) { return BDir::IsDirsMatch(excludes, path); });
+    if (allMatch) {
         return;
     }
-    appStatistic_->hasEl3OrEl4_.store(true);
-    HILOGI("backupPath has el3 or el4");
+    for (const auto &includePath : includes) {
+        if (BDir::IsDirsMatch(excludes, includePath)) {
+            continue;
+        }
+        int pathDepth = std::count(includePath.begin(), includePath.end(), '/');
+        bool hasEl3OrEl4 = std::any_of(elPrefixes.begin(), elPrefixes.end(),
+                            [&](const std::string &prefix) { return includePath.find(prefix) == 0; });
+        if (!hasEl3OrEl4 && pathDepth > HIERARCHY_OF_FILE_ENCRYPTION_TYPE) {
+            continue;
+        }
+        appStatistic_->hasEl3OrEl4_.store(true);
+        HILOGI("backupPath has el3 or el4");
+        return;
+    }
 }
 } // namespace OHOS::FileManagement::Backup
