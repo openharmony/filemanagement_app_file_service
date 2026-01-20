@@ -64,7 +64,7 @@
 
 namespace OHOS::FileManagement::Backup {
 const uint32_t MAX_FD_GROUP_USE_TIME = 1000; // 每组打开最大时间1000ms
-const int HIERARCHY_OF_FILE_ENCRYPTION_TYPE = 3;
+const uint32_t HIERARCHY_OF_FILE_ENCRYPTION_TYPE = 3;
 
 ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
 {
@@ -1946,7 +1946,7 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
         if (BDir::IsDirsMatch(excludes, includePath)) {
             continue;
         }
-        int pathDepth = std::count(includePath.begin(), includePath.end(), '/');
+        uint32_t pathDepth = std::count(includePath.begin(), includePath.end(), '/');
         bool hasEl3OrEl4 = std::any_of(elPrefixes.begin(), elPrefixes.end(), [&](const std::string &prefix) {
             return includePath.find(prefix) == 0;
         });
