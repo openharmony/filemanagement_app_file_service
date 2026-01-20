@@ -80,7 +80,7 @@ static uint32_t CheckOverLongPath(const string &path)
     return len;
 }
 
-static void ProcessFile(ProcessInfo info, int64_t& bigFileSize, int64_t& smallFileSize,
+static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& smallFileSize,
     const std::vector<std::string> &excludes)
 {
     if (info.restorePath_.empty() && BDir::IsDirsMatch(excludes, info.backupPath_)) {
