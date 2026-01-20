@@ -392,7 +392,7 @@ private:
     // 1.返回兼容性路径列表 2.从原路径列表中剔除兼容性路径
     set<string> DivideIncludesByCompatInfo(vector<string> &pathInclude,
         const BJsonEntityExtensionConfig &usrConfig);
-    void PathHasEl3OrEl4(const std::string& backupPath);
+    void PathHasEl3OrEl4(const set<string> &includes, const vector<string> &excludes);
 private:
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
