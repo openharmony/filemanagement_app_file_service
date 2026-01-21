@@ -34,6 +34,15 @@
 #include "errors.h"
 
 namespace OHOS::FileManagement::Backup {
+struct ProcessInfo {
+    std::string backupPath_;
+    std::string restorePath_;
+    off_t sizeBoundary_;
+
+    ProcessInfo(const std::string& backupPath, const std::string& restorePath, off_t sizeBoundary)
+        : backupPath_(backupPath), restorePath_(restorePath), sizeBoundary_(sizeBoundary) {}
+};
+
 class IDirScanner {
 public:
     virtual ~IDirScanner() {};

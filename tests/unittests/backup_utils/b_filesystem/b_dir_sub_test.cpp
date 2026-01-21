@@ -85,7 +85,7 @@ HWTEST_F(BDirSubTest, B_DIR_ProcessFile_001, testing::ext::TestSize.Level1)
     std::string restorePath = "restore1";
     int64_t smallFileSize = 0;
     int64_t bigFileSize = 0;
-    ProcessFile(backupPath, restorePath, 0, smallFileSize, bigFileSize);
+    ProcessFile({backupPath, restorePath, 0}, smallFileSize, bigFileSize, {});
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 0);
     EXPECT_EQ(ScanFileSingleton::GetInstance().smallFiles_.size(), 0);
     GTEST_LOG_(INFO) << "BDirTest-end B_DIR_ProcessFile_001";
@@ -115,7 +115,7 @@ HWTEST_F(BDirSubTest, B_DIR_ProcessFile_002, testing::ext::TestSize.Level1)
     std::string restorePath = "restore2";
     int64_t smallFileSize = 0;
     int64_t bigFileSize = 0;
-    ProcessFile(backupPath, restorePath, 10, bigFileSize, smallFileSize);
+    ProcessFile({backupPath, restorePath, 10}, bigFileSize, smallFileSize, {});
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 0);
     EXPECT_EQ(ScanFileSingleton::GetInstance().smallFiles_.size(), 1);
     EXPECT_EQ(smallFileSize, 5);
@@ -145,11 +145,42 @@ HWTEST_F(BDirSubTest, B_DIR_ProcessFile_003, testing::ext::TestSize.Level1)
     std::string restorePath = "restore3";
     int64_t smallFileSize = 0;
     int64_t bigFileSize = 0;
-    ProcessFile(backupPath, restorePath, 10, bigFileSize, smallFileSize);
+    ProcessFile({backupPath, restorePath, 10}, bigFileSize, smallFileSize, {});
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
     EXPECT_EQ(ScanFileSingleton::GetInstance().smallFiles_.size(), 0);
     EXPECT_EQ(bigFileSize, 15);
     GTEST_LOG_(INFO) << "BDirSubTest-end B_DIR_ProcessFile_003";
+}
+
+/**
+ * @tc.number: B_DIR_ProcessFile_004
+ * @tc.name: B_DIR_ProcessFile_004
+ * @tc.desc: Test function of ProcessFile interface for ADD BIG FILE
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BDirSubTest, B_DIR_ProcessFile_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_ProcessFile_004";
+    GTEST_LOG_(INFO) << "4. test match excludes";
+    struct stat sta = {.st_size = 15};
+    EXPECT_CALL(*funcMock_, stat(_, _)).WillRepeatedly(Invoke([sta](const char *pathname, struct stat *statbuf) {
+        *statbuf = sta;
+        GTEST_LOG_(INFO) << "sta.size =" << statbuf->st_size;
+        return 0;
+    }));
+    int64_t smallFileSize = 0;
+    int64_t bigFileSize = 0;
+    ProcessFile({"/abc/test4.abc", "", 10}, bigFileSize, smallFileSize, {"/abc/test*"});
+    ProcessFile({"/abc/ttest4.abc", "", 10}, bigFileSize, smallFileSize, {"/abc/test*"});
+    ProcessFile({"/abc/test4", "", 10}, bigFileSize, smallFileSize, {"/abc/test4/*"});
+    ProcessFile({"/abc/test4.abc", "restore", 10}, bigFileSize, smallFileSize, {"/abc/test*"});
+    EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 3);
+    EXPECT_EQ(ScanFileSingleton::GetInstance().smallFiles_.size(), 0);
+    EXPECT_EQ(bigFileSize, 45);
+    GTEST_LOG_(INFO) << "BDirSubTest-end B_DIR_ProcessFile_004";
 }
 
 /**
@@ -168,7 +199,7 @@ HWTEST_F(BDirSubTest, B_DIR_ProcessSingleFile_001, testing::ext::TestSize.Level1
     std::string backupPath = "test1";
     std::string restorePath = "restore1";
     off_t sizeBoundary = 10;
-    auto [ret1, bigSize1, smallSize1] = ProcessSingleFile(backupPath, restorePath, sizeBoundary);
+    auto [ret1, bigSize1, smallSize1] = ProcessSingleFile({}, backupPath, restorePath, sizeBoundary);
     EXPECT_EQ(ret1, 0);
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 0);
     EXPECT_EQ(ScanFileSingleton::GetInstance().smallFiles_.size(), 0);
@@ -179,7 +210,7 @@ HWTEST_F(BDirSubTest, B_DIR_ProcessSingleFile_001, testing::ext::TestSize.Level1
         GTEST_LOG_(INFO) << "sta.size =" << statbuf->st_size;
         return 0;
     }));
-    auto [ret2, bigSize2, smallSize2] = ProcessSingleFile(backupPath, restorePath, sizeBoundary);
+    auto [ret2, bigSize2, smallSize2] = ProcessSingleFile({}, backupPath, restorePath, sizeBoundary);
     EXPECT_EQ(ret2, 0);
     EXPECT_EQ(bigSize2, 15);
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);

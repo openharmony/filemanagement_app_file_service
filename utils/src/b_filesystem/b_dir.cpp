@@ -80,35 +80,38 @@ static uint32_t CheckOverLongPath(const string &path)
     return len;
 }
 
-static void ProcessFile(const std::string& backupPath, const std::string& restorePath, off_t sizeBoundary,
-    int64_t& bigFileSize, int64_t& smallFileSize)
+static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& smallFileSize,
+    const std::vector<std::string> &excludes)
 {
-    struct stat sta = {};
-    if (CheckOverLongPath(backupPath) >= PATH_MAX_LEN) {
+    if (info.restorePath_.empty() && BDir::IsDirsMatch(excludes, info.backupPath_)) {
         return;
     }
-    if (stat(backupPath.data(), &sta) == -1) {
+    struct stat sta = {};
+    if (CheckOverLongPath(info.backupPath_) >= PATH_MAX_LEN) {
+        return;
+    }
+    if (stat(info.backupPath_.data(), &sta) == -1) {
         HILOGE("stat file fail, errno=%{public}d", errno);
         return;
     }
-    if (sta.st_size <= sizeBoundary) {
-        ScanFileSingleton::GetInstance().AddSmallFile(backupPath, sta.st_size, restorePath);
+    if (sta.st_size <= info.sizeBoundary_) {
+        ScanFileSingleton::GetInstance().AddSmallFile(info.backupPath_, sta.st_size, info.restorePath_);
         smallFileSize += sta.st_size;
     } else {
-        ScanFileSingleton::GetInstance().AddBigFile(backupPath, sta, restorePath);
+        ScanFileSingleton::GetInstance().AddBigFile(info.backupPath_, sta, info.restorePath_);
         bigFileSize += sta.st_size;
     }
 }
 
-static tuple<ErrCode, int64_t, int64_t> ProcessSingleFile(const string &backupPath, const string& restorePath,
-    off_t sizeBoundary = -1)
+static tuple<ErrCode, int64_t, int64_t> ProcessSingleFile(const vector<string> &excludes, const string &backupPath,
+    const string& restorePath, off_t sizeBoundary = -1)
 {
     if (backupPath == "/") {
         return {ERR_OK, 0, 0};
     }
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
-    ProcessFile(backupPath, restorePath, sizeBoundary, bigFileSize, smallFileSize);
+    ProcessFile({backupPath, restorePath, sizeBoundary}, bigFileSize, smallFileSize, excludes);
     return {ERR_OK, bigFileSize, smallFileSize};
 }
 
@@ -118,7 +121,7 @@ tuple<ErrCode, int64_t, int64_t> DirScanner::ScanDir(const string &backupPath, c
     HILOGD("scan dir, path: %{public}s", GetAnonyPath(backupPath).c_str());
     if (!filesystem::is_directory(backupPath)) {
         HILOGE("Invalid directory path: %{private}s", backupPath.c_str());
-        return ProcessSingleFile(backupPath, "", size);
+        return ProcessSingleFile(excludes, backupPath, "", size);
     }
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
@@ -146,7 +149,7 @@ tuple<ErrCode, int64_t, int64_t> DirScanner::ScanDir(const string &backupPath, c
             }
             std::string filePath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
             if (ptr->d_type == DT_REG) {
-                ProcessFile(filePath, "", size, bigFileSize, smallFileSize);
+                ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes);
             } else if (ptr->d_type == DT_DIR) {
                 dirStack.push(filePath);
             } else {
@@ -165,7 +168,7 @@ tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &pat
         GetAnonyPath(restorePath).c_str());
     if (!filesystem::is_directory(backupPath)) {
         HILOGE("Invalid directory path: %{private}s", path.c_str());
-        return ProcessSingleFile(backupPath, restorePath, size);
+        return ProcessSingleFile(excludes, backupPath, restorePath, size);
     }
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
@@ -191,7 +194,7 @@ tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &pat
             std::string subBackupPath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
             std::string subRestorePath = StringUtils::PathAddDelimiter(currentRestorePath) + string(ptr->d_name);
             if (ptr->d_type == DT_REG) {
-                ProcessFile(subBackupPath, subRestorePath, size, bigFileSize, smallFileSize);
+                ProcessFile({subBackupPath, subRestorePath, size}, bigFileSize, smallFileSize, excludes);
             } else if (ptr->d_type == DT_DIR) {
                 dirStack.push({subBackupPath, subRestorePath});
             } else {
