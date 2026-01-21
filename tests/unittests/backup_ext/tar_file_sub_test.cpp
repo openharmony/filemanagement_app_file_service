@@ -359,7 +359,7 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0300, testing::ext::TestSize.Level
             "1234567890abcdefghijk";
         struct stat sta = {.st_size = 1};
         int err = 0;
-        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(-1)).WillOnce(Return(-1));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_FALSE(TarFile::GetInstance().AddFile(fileName, sta, err));
 
@@ -389,7 +389,7 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0400, testing::ext::TestSize.Level
         string fileName = "1234567890abcdefghijk";
         struct stat sta = {.st_mode = 0x040000};
         int err = 0;
-        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(-1)).WillOnce(Return(-1));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0)).WillOnce(Return(0));
         struct passwd pw;
         EXPECT_CALL(*funcMock, getpwuid(_)).WillRepeatedly(Return(&pw));
@@ -427,7 +427,7 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0500, testing::ext::TestSize.Level
         string fileName = "1234567890abcdefghijk";
         struct stat sta = {.st_mode = 0x100000};
         int err = 0;
-        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(-1)).WillOnce(Return(-1));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0)).WillOnce(Return(0));
         struct passwd pw;
         EXPECT_CALL(*funcMock, getpwuid(_)).WillRepeatedly(Return(&pw));
@@ -469,7 +469,6 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0600, testing::ext::TestSize.Level
         EXPECT_CALL(*funcMock, getgrgid(_)).WillRepeatedly(Return(&gr));
         EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(-1));
         EXPECT_CALL(*funcMock, close(_)).WillRepeatedly(Return(0));
-        GTEST_LOG_(INFO) << "S_ISREG(st.st_mode) :" << S_ISREG(0100000);
         EXPECT_FALSE(TarFile::GetInstance().AddFile(fileName, sta, err));
     } catch (...) {
         EXPECT_TRUE(false);
