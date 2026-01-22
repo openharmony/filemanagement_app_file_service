@@ -88,10 +88,14 @@ ani_object CreateExtBackupETSContext(ani_env *env, std::shared_ptr<ExtBackupCont
     ani_object contextObj = nullptr;
     if ((status = env->Object_New(cls, method, &contextObj, (ani_long)workContext.release())) != ANI_OK ||
         contextObj == nullptr) {
+        delete distributeContextPtr;
+        distributeContextPtr = nullptr;
         HILOGE("Failed to create object, status : %{public}d", status);
         return nullptr;
     }
     if (!AbilityRuntime::ContextUtil::SetNativeContextLong(env, contextObj, (ani_long)(distributeContextPtr))) {
+        delete distributeContextPtr;
+        distributeContextPtr = nullptr;
         HILOGE("Failed to setNativeContextLong ");
         return nullptr;
     }
