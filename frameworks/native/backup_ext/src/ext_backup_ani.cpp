@@ -252,6 +252,7 @@ ErrCode ExtBackupAni::InvokeAppExtMethod(ErrCode errCode, const std::string resu
         callExtDefaultFunc_.store(false);
     }
     callJsExMethodDone_.store(true);
+    std::unique_lock<std::mutex> lock(callJsMutex_);
     callJsCon_.notify_one();
     HILOGI("End Get App onBackupEx/onRestoreEx method result");
     return ERR_OK;
