@@ -121,9 +121,9 @@ int Close(int fd)
     return LibraryFunc::libraryFunc_->close(fd);
 }
 
-int Lstat(const char *pathname, struct stat *statbuf)
+int Lstat(const char *pathname, struct stat *buf)
 {
-    return LibraryFunc::libraryFunc_->lstat(pathname, statbuf);
+    return LibraryFunc::libraryFunc_->lstat(pathname, buf);
 }
 
 int Fstat(int fd, struct stat* buf)
