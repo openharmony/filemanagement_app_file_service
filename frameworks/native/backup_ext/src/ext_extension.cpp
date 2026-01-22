@@ -475,7 +475,8 @@ void BackupExtExtension::ClearNoPermissionFiles(TarMap &pkgInfo, vector<std::str
 ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const string& filePath, bool needDelete)
 {
     int32_t errCode = ERR_OK;
-    int fdval = open(filePath.data(), O_RDONLY);
+    std::string newPath = BExcepUltils::Canonicalize(filePath);
+    int fdval = open(newPath.data(), O_RDONLY);
     if (fdval < 0) {
         errCode = errno;
         HILOGE("open file failed, filename: %{public}s, err: %{public}d", GetAnonyString(filePath).c_str(), errCode);
@@ -496,7 +497,7 @@ ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const str
     if (SUCCEEDED(reportRs)) {
         HILOGI("Report app file ready success, filename: %{public}s", filename.c_str());
         if (needDelete) {
-            RemoveFile(filePath);
+            RemoveFile(newPath);
         }
     } else {
         HILOGW("Report app file ready failed, ret: %{public}d, filename: %{public}s", reportRs, filename.c_str());

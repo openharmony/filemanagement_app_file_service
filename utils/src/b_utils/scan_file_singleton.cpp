@@ -129,6 +129,7 @@ bool ScanFileSingleton::IsProcessCompleted()
 
 void ScanFileSingleton::SetCompletedFlag(bool isCompleted)
 {
+    std::unique_lock<std::mutex> lock(mutexLock_);
     isProcessCompleted_.store(isCompleted);
     if (isCompleted) {
         waitFilesReady_.notify_all();

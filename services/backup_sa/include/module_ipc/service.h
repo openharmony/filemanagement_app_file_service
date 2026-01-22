@@ -42,6 +42,7 @@
 namespace OHOS::FileManagement::Backup {
 using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
 typedef int (*CallDeviceTaskRequest)(int, unsigned int, unsigned int, CallbackFunc);
+typedef int (*CallStopTaskRequest)(int32_t);
 
 struct ExtensionMutexInfo {
     std::string bundleName;
@@ -764,6 +765,8 @@ private:
     void UpdateHandleCnt(ErrCode errCode);
     void TotalStatReport();
     void CreateRunningLock();
+    ErrCode LoadIoqosService(void* &handle, CallDeviceTaskRequest &func, CallStopTaskRequest &stopFunc);
+    void UnLoadIoqosService(void* handle);
 #ifdef POWER_MANAGER_ENABLED
     void RunningLockRadarReport(const std::string &func, const std::string &errMsg, ErrCode errCode);
 #endif
