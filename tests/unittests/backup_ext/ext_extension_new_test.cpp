@@ -399,6 +399,12 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0100, testing::ext
 {
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_DoBackupTask_Test_0100";
     ASSERT_TRUE(extExtension_ != nullptr);
+    string filename = "app_file_ready_test";
+    string filePath = "/tmp";
+    struct stat sta;
+    shared_ptr<IFileInfo> file1 = make_shared<FileInfo>(filename, filePath, sta, false);
+    ScanFileSingleton::GetInstance().pendingFileQueue_.push(file1);
+    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
     EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly([](const char* path, int mode) -> int {
         errno = EPERM;
         return -1;

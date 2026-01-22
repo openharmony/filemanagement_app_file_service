@@ -436,7 +436,14 @@ ohos_unittest("ext_backup_js_test") {
 
 ohos_unittest("tar_file_sub_test") {
   module_out_path = path_module_out_tests
-
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
+  }
   sources = [
     "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
     "tar_file_sub_test.cpp",
