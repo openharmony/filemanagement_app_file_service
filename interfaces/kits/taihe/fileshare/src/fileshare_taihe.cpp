@@ -99,6 +99,24 @@ static std::string GetErrorMessage(int32_t errorCode)
     }
 }
 
+static void GetErrorCodeConversion(int32_t errCode)
+{
+    if (errCode == OHOS::FileManagement::LibN::ERRNO_NOERR) {
+        return;
+    }
+    int32_t code = 0;
+    std::string msg;
+    auto it = OHOS::FileManagement::LibN::errCodeTable.find(errCode);
+    if (it != OHOS::FileManagement::LibN::errCodeTable.end()) {
+        code = it->second.first;
+        msg = it->second.second;
+    } else {
+        code = OHOS::FileManagement::LibN::errCodeTable.at(OHOS::FileManagement::LibN::UNKROWN_ERR).first;
+        msg = OHOS::FileManagement::LibN::errCodeTable.at(OHOS::FileManagement::LibN::UNKROWN_ERR).second;
+    }
+    taihe::set_business_error(code, msg);
+}
+
 ohos::fileshare::fileShare::PolicyInfo MakePolicyInfo(taihe::string_view uri, int32_t operationMode)
 {
     return {uri, operationMode};
@@ -516,7 +534,31 @@ void RevokePermissionSync(::taihe::array_view<::ohos::fileshare::fileShare::Poli
     arg->errNo = OHOS::AppFileService::FilePermission::RevokePermission(uriPolicies, arg->errorResults);
     if (arg->errNo) {
         LOGE("RevokePermission failed.");
-        taihe::set_business_error(arg->errNo, GetErrorMessage(arg->errNo));
+        GetErrorCodeConversion(arg->errNo);
+        return;
+    }
+}
+
+void PersistPermissionSync(::taihe::array_view<::ohos::fileshare::fileShare::PolicyInfo> policies)
+{
+    std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
+    if (GetUriPoliciesArg(policies, uriPolicies)) {
+        LOGE("Failed to get uriPolicies.");
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PARAMS),
+            GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
+        return;
+    }
+    std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
+    if (arg == nullptr) {
+        LOGE("PolicyErrorArgs make make_shared failed.");
+        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR),
+            GetErrorMessage(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR));
+        return;
+    }
+    arg->errNo = OHOS::AppFileService::FilePermission::PersistPermission(uriPolicies, arg->errorResults);
+    if (arg->errNo) {
+        LOGE("PersistPermission failed.");
+        GetErrorCodeConversion(arg->errNo);
         return;
     }
 }
@@ -532,4 +574,5 @@ TH_EXPORT_CPP_API_CheckPathPermissionSync(ANI::FileShare::CheckPathPermissionSyn
 TH_EXPORT_CPP_API_GrantDecUriPermissionSync(ANI::FileShare::GrantDecUriPermissionSync);
 TH_EXPORT_CPP_API_CheckPersistentPermissionSync(ANI::FileShare::CheckPersistentPermissionSync);
 TH_EXPORT_CPP_API_RevokePermissionSync(ANI::FileShare::RevokePermissionSync);
+TH_EXPORT_CPP_API_PersistPermissionSync(ANI::FileShare::PersistPermissionSync);
  // NOLINTEND
