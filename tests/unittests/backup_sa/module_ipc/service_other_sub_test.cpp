@@ -346,5 +346,22 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0103, testing::ext::TestSiz
     EXPECT_EQ(service_->runningLockStatistic_->radarCode_, ERROR_OK);
     GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0103";
 }
+
+/**
+ * @tc.number: Service_CreateRunningLock_Test_0104
+ * @tc.name: Service_CreateRunningLock_Test_0104
+ * @tc.desc: 测试 CreateRunningLock 接口 白名单校验失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0104, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin Service_CreateRunningLock_Test_0104";
+    EXPECT_CALL(*srvMock_, VerifyDataClone()).WillOnce(Return(false));
+    service_->CreateRunningLock();
+    EXPECT_EQ(service_->runningLock_, nullptr);
+    GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0104";
+}
 #endif
 }
