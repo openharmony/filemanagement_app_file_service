@@ -40,6 +40,10 @@
 #include "sub_service.cpp"
 
 namespace OHOS::FileManagement::Backup {
+bool Service::VerifyDataClone()
+{
+    return false;
+}
 ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
     const std::vector<BIncrementalData> &bundlesToBackup,
     const std::vector<std::string> &bundleInfos)

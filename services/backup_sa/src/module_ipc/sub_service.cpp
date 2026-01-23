@@ -1737,6 +1737,9 @@ void Service::RunningLockRadarReport(const std::string &func, const std::string 
 void Service::CreateRunningLock()
 {
 #ifdef POWER_MANAGER_ENABLED
+    if (!VerifyDataClone()) {
+        return;
+    }
     std::unique_lock<std::shared_mutex> lock(runningLockMutex_);
     ErrCode ret = ERROR_OK;
     std::string errMsg = "";

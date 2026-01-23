@@ -1186,12 +1186,12 @@ bool Service::VerifyDataClone()
 {
     ErrCode err = VerifyCaller();
     if (err != ERR_OK) {
-        HILOGE("StartCleanData fail, Verify caller failed, errCode:%{public}d", err);
+        HILOGE("Verify caller failed, errCode:%{public}d", err);
         return false;
     }
     std::string bundleName = GetCallerName();
     if (bundleName != BConstants::BUNDLE_DATA_CLONE) {
-        HILOGE("Wrong Caller has no permission");
+        HILOGE("Caller: %{public}s has no permission", bundleName.data());
         return false;
     }
     return true;

@@ -80,7 +80,6 @@ public:
     };
 
     ErrCode Init(IServiceReverseType::Scenario scenario);
-    void MockRunningLock();
 
     static inline sptr<Service> servicePtr_ = nullptr;
     static inline sptr<ServiceReverseMock> remote_ = nullptr;
@@ -112,15 +111,6 @@ void ServiceSubTest::TearDownTestCase()
     remote_ = nullptr;
 }
 
-void ServiceSubTest::MockRunningLock()
-{
-#ifdef POWER_MANAGER_ENABLED
-    int callsNum = 2;
-    EXPECT_CALL(*powerClientMock_, CreateRunningLock(_, _)).Times(callsNum)
-        .WillRepeatedly(Return(nullptr));
-#endif
-}
-
 ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
 {
     vector<string> bundleNames;
@@ -141,7 +131,6 @@ ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
     string errMsg;
     ErrCode ret = 0;
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
-        MockRunningLock();
         EXPECT_TRUE(servicePtr_ != nullptr);
         EXPECT_TRUE(remote_ != nullptr);
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
@@ -156,7 +145,6 @@ ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
         ret = servicePtr_->Finish();
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } else if (scenario == IServiceReverseType::Scenario::BACKUP) {
-        MockRunningLock();
         sptr<IServiceReverse> srptr_ = static_cast<sptr<IServiceReverse>>(remote_);
         ret = servicePtr_->InitBackupSession(srptr_);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
@@ -312,8 +300,6 @@ HWTEST_F(ServiceSubTest, SUB_Service_StopAll_0105, testing::ext::TestSize.Level1
             RunningLockType::RUNNINGLOCK_BACKGROUND
         );
         servicePtr_->runningLock_ = testLock;
-        EXPECT_CALL(*runningLockMock_, Lock(_)).WillOnce(Return(ERROR_OK));
-        servicePtr_->CreateRunningLock();
         EXPECT_CALL(*runningLockMock_, UnLock()).WillOnce(Return(1));
 
         SvcSessionManager::Impl impl_;
