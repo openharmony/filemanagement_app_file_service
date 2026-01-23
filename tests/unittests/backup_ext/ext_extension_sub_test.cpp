@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -27,6 +28,7 @@
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_json/b_json_entity_extension_config.h"
+#include "b_resources/b_constants.h"
 #include "ext_backup_mock.h"
 #include "ext_extension_mock.h"
 #include "tar_file.h"
@@ -166,13 +168,14 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_HandleIncrementalBackup_Test_010
         string incrementalFile = PATH + BUNDLE_NAME + "2.txt";
         int incrementalFd = open(incrementalFile.data(), O_RDWR | O_TRUNC, S_IRWXU);
         EXPECT_GT(incrementalFd, 0);
+        fdsan_exchange_owner_tag(incrementalFd, 0, BConstants::FDSAN_EXT_TAG);
         string manifestFile = PATH + BUNDLE_NAME + FILE_NAME;
         int manifestFd = open(manifestFile.data(), O_RDWR | O_TRUNC, S_IRWXU);
         EXPECT_GT(manifestFd, 0);
+        fdsan_exchange_owner_tag(manifestFd, 0, BConstants::FDSAN_EXT_TAG);
 
         EXPECT_EQ(extExtension->HandleIncrementalBackup(incrementalFd, manifestFd), BError::E_FORBID);
-        close(incrementalFd);
-        close(manifestFd);
+        // HandleIncrementalBackup 内部会调用 fdsan_close_with_tag 关闭 fd
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
@@ -1116,7 +1119,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_OnBackupExCallback_Test_0100, te
         extExtension->isExecAppDone_.store(false);
         errMsg = "test";
         string usrConfig = "{\"allowToBackupRestore\":true}";
-        EXPECT_CALL(*extBackupMock, GetUsrConfig()).WillOnce(Return(usrConfig));
+        EXPECT_CALL(*extBackupMock, GetUsrConfig()).WillRepeatedly(Return(usrConfig));
         extExtension->OnBackupExCallback(obj)(errCode, errMsg);
         EXPECT_EQ(errMsg, "test");
 
@@ -1517,5 +1520,96 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0107, testi
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0107";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_Sub_FDSan_HandleIncrementalBackup_0200
+ * @tc.name: Ext_Extension_Sub_FDSan_HandleIncrementalBackup_Test_0200
+ * @tc.desc: 测试 HandleIncrementalBackup 函数的 FDSan 集成
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_FDSan_HandleIncrementalBackup_Test_0200, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_FDSan_HandleIncrementalBackup_Test_0200";
+    try {
+        string incrementalFile = PATH + BUNDLE_NAME + "incr_test.txt";
+        string manifestFile = PATH + BUNDLE_NAME + "manifest_test.txt";
+
+        int incrementalFd = open(incrementalFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        ASSERT_GE(incrementalFd, 0) << "Failed to create incremental file";
+        fdsan_exchange_owner_tag(incrementalFd, 0, BConstants::FDSAN_EXT_TAG);
+
+        int manifestFd = open(manifestFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        ASSERT_GE(manifestFd, 0) << "Failed to create manifest file";
+        fdsan_exchange_owner_tag(manifestFd, 0, BConstants::FDSAN_EXT_TAG);
+
+        ErrCode ret = extExtension->HandleIncrementalBackup(incrementalFd, manifestFd);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        remove(incrementalFile.c_str());
+        remove(manifestFile.c_str());
+
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-exception occurred in HandleIncrementalBackup FDSan test.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_FDSan_HandleIncrementalBackup_Test_0200";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_Sub_FDSan_DupFd_0201
+ * @tc.name: Ext_Extension_Sub_FDSan_DupFd_Test_0201
+ * @tc.desc: 测试 dup 后的文件描述符的 FDSan 管理
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_FDSan_DupFd_Test_0201, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_FDSan_DupFd_Test_0201";
+    try {
+        string incrementalFile = PATH + BUNDLE_NAME + "incr_dup.txt";
+        string manifestFile = PATH + BUNDLE_NAME + "manifest_dup.txt";
+
+        int incrementalFd = open(incrementalFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        ASSERT_GE(incrementalFd, 0) << "Failed to create incremental file";
+        fdsan_exchange_owner_tag(incrementalFd, 0, BConstants::FDSAN_EXT_TAG);
+
+        int manifestFd = open(manifestFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        ASSERT_GE(manifestFd, 0) << "Failed to create manifest file";
+        fdsan_exchange_owner_tag(manifestFd, 0, BConstants::FDSAN_EXT_TAG);
+
+        int incrementalFdDup = dup(incrementalFd);
+        ASSERT_GE(incrementalFdDup, 0) << "Failed to dup incremental fd";
+
+        int manifestFdDup = dup(manifestFd);
+        ASSERT_GE(manifestFdDup, 0) << "Failed to dup manifest fd";
+
+        const char* testData = "FDSan test data";
+        write(incrementalFdDup, testData, strlen(testData));
+        write(manifestFdDup, testData, strlen(testData));
+
+        int ret = fdsan_close_with_tag(incrementalFd, BConstants::FDSAN_EXT_TAG);
+        EXPECT_EQ(ret, 0);
+        ret = fdsan_close_with_tag(manifestFd, BConstants::FDSAN_EXT_TAG);
+        EXPECT_EQ(ret, 0);
+
+        close(incrementalFdDup);
+        close(manifestFdDup);
+
+        remove(incrementalFile.c_str());
+        remove(manifestFile.c_str());
+
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-exception occurred in DupFd FDSan test.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_FDSan_DupFd_Test_0201";
 }
 }

@@ -135,3 +135,13 @@ int Lseek(int fd, off_t offset, int whence)
 {
     return LibraryFunc::libraryFunc_->lseek(fd, offset, whence);
 }
+
+void FdsanExchangeOwnerTag(int fd, uint64_t expected_tag, uint64_t new_tag)
+{
+    return LibraryFunc::libraryFunc_->fdsan_exchange_owner_tag(fd, expected_tag, new_tag);
+}
+
+int FdsanCloseWithTag(int fd, uint64_t tag)
+{
+    return LibraryFunc::libraryFunc_->fdsan_close_with_tag(fd, tag);
+}

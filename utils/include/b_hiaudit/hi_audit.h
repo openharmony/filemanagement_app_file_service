@@ -22,6 +22,7 @@
 #include <string>
 #include <sys/stat.h>
 
+#include "b_resources/b_constants.h"
 #include "nocopyable.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -78,7 +79,7 @@ private:
 
 private:
     std::mutex mutex_;
-    int writeFd_;
+    int writeFd_ = BConstants::INVALID_FD_NUM;
     std::atomic<uint32_t> writeLogSize_ = 0;
     bool isSaJob_ = false;
     HiAuditConfig hiAuditConfig_;

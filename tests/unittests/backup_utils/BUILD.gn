@@ -676,6 +676,37 @@ ohos_unittest("b_radar_test") {
   use_exceptions = true
 }
 
+ohos_unittest("hi_audit_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [ "b_hiaudit/hi_audit_test.cpp" ]
+
+  include_dirs = [
+    "${path_backup}/utils/src/b_hiaudit",
+  ]
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  defines = [ "private = public" ]
+  use_exceptions = true
+}
+
 group("backup_utils_test") {
   testonly = true
 
@@ -700,5 +731,6 @@ group("backup_utils_test") {
     ":b_tarball_cmdline_test",
     ":b_tarball_factory_test",
     ":b_utils_test",
+    ":hi_audit_test",
   ]
 }

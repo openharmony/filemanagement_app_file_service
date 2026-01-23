@@ -185,7 +185,8 @@ bool TarFile::TraversalFile(string &backupPath, int &err, const std::string &res
             GetAnonyString(backupPath).c_str(), errno);
         return true;
     } else if (fd > 0) {
-        close(fd);
+        fdsan_exchange_owner_tag(fd, 0, BConstants::FDSAN_EXT_TAG);
+        fdsan_close_with_tag(fd, BConstants::FDSAN_EXT_TAG);
     } else {
         err = errno;
         HILOGE("File open failed, err = %{public}d", errno);
@@ -387,6 +388,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size, int &err)
         HILOGE("Failed to open file %{public}s, err = %{public}d", GetAnonyString(fileName).data(), errno);
         return false;
     }
+    fdsan_exchange_owner_tag(fd, 0, BConstants::FDSAN_EXT_TAG);
 
     off_t remain = size;
     while (remain > 0) {
@@ -408,7 +410,7 @@ bool TarFile::WriteFileContent(const string &fileName, off_t size, int &err)
         remain -= read;
     }
 
-    close(fd);
+    fdsan_close_with_tag(fd, BConstants::FDSAN_EXT_TAG);
     if (remain == 0) {
         return CompleteBlock(size);
     }

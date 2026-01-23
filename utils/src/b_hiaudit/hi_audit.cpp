@@ -27,6 +27,7 @@
 #include "filemgmt_libhilog.h"
 #include "b_hiaudit/zip_util.h"
 #include "b_hiaudit/hi_audit.h"
+#include "b_resources/b_constants.h"
 
 namespace OHOS::FileManagement::Backup {
 namespace {
@@ -50,7 +51,7 @@ HiAudit::HiAudit(bool isSaJob)
 HiAudit::~HiAudit()
 {
     if (writeFd_ >= 0) {
-        close(writeFd_);
+        fdsan_close_with_tag(writeFd_, BConstants::FDSAN_UTIL_TAG);
     }
 }
 
@@ -75,7 +76,9 @@ void HiAudit::Init()
     std::string logFilePath = hiAuditConfig_.logPath + hiAuditConfig_.logName + "_audit.csv";
     writeFd_ =
         open(logFilePath.c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if (writeFd_ < 0) {
+    if (writeFd_ >= 0) {
+        fdsan_exchange_owner_tag(writeFd_, 0, BConstants::FDSAN_UTIL_TAG);
+    } else {
         HILOGE("Init, open error, logFilePath is:%{public}s, errno:%{public}d", logFilePath.c_str(), errno);
     }
     struct stat st;
@@ -134,7 +137,7 @@ void HiAudit::GetWriteFilePath()
     if (writeLogSize_ < hiAuditConfig_.fileSize) {
         return;
     }
-    close(writeFd_);
+    fdsan_close_with_tag(writeFd_, BConstants::FDSAN_UTIL_TAG);
     ZipAuditLog();
     CleanOldAuditFile();
     if (!MkLogDirSuccess()) {
@@ -144,7 +147,9 @@ void HiAudit::GetWriteFilePath()
     std::string logFilePath = hiAuditConfig_.logPath + hiAuditConfig_.logName + "_audit.csv";
     writeFd_ =
         open(logFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if (writeFd_ < 0) {
+    if (writeFd_ >= 0) {
+        fdsan_exchange_owner_tag(writeFd_, 0, BConstants::FDSAN_UTIL_TAG);
+    } else {
         HILOGE("GetWriteFilePath, Open fd error, errno:%{public}d", errno);
     }
     writeLogSize_ = 0;

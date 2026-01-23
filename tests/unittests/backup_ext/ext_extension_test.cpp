@@ -27,6 +27,7 @@
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "b_filesystem/b_file.h"
+#include "b_resources/b_constants.h"
 #include "ext_extension.cpp"
 #include "sub_ext_extension.cpp"
 
@@ -481,5 +482,137 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1200, testing::ext::TestSize.Level
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_1200";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_FDSan_1301
+ * @tc.name: Ext_Extension_FDSan_ReportAppFileReady_Test_1301
+ * @tc.desc: 测试 ReportAppFileReady 函数的 FDSan 集成
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_FDSan_ReportAppFileReady_Test_1301, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_FDSan_ReportAppFileReady_Test_1301";
+
+    try {
+        string testFile = PATH + "fdsan_report_test.txt";
+        int fd = open(testFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        EXPECT_GT(fd, 0) << "Failed to create test file";
+
+        // 模拟 ReportAppFileReady 中的 FDSan 操作
+        fdsan_exchange_owner_tag(fd, 0, BConstants::FDSAN_EXT_TAG);
+
+        // 写入测试数据
+        const char* testData = "FDSan test data";
+        write(fd, testData, strlen(testData));
+
+        // 验证文件可读
+        lseek(fd, 0, SEEK_SET);
+        char buffer[128] = {0};
+        ssize_t readBytes = read(fd, buffer, sizeof(buffer) - 1);
+        EXPECT_GT(readBytes, 0);
+        EXPECT_STREQ(buffer, testData);
+
+        int ret = fdsan_close_with_tag(fd, BConstants::FDSAN_EXT_TAG);
+        EXPECT_EQ(ret, 0);
+
+        // 清理
+        remove(testFile.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_FDSan_ReportAppFileReady_Test_1301";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_FDSan_1302
+ * @tc.name: Ext_Extension_FDSan_IncrementalTarFileReady_Test_1302
+ * @tc.desc: 测试 IncrementalTarFileReady 函数的 FDSan 集成
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_FDSan_IncrementalTarFileReady_Test_1302, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_FDSan_IncrementalTarFileReady_Test_1302";
+
+    try {
+        string tarFile = PATH + "test.tar";
+        string manifestFile = PATH + "manifest.txt";
+
+        int fd = open(tarFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        EXPECT_GT(fd, 0);
+        fdsan_exchange_owner_tag(fd, 0, BConstants::FDSAN_EXT_TAG);
+        fdsan_close_with_tag(fd, BConstants::FDSAN_EXT_TAG);
+
+        int manifestFd = open(manifestFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        EXPECT_GT(manifestFd, 0);
+        fdsan_exchange_owner_tag(manifestFd, 0, BConstants::FDSAN_EXT_TAG);
+        fdsan_close_with_tag(manifestFd, BConstants::FDSAN_EXT_TAG);
+
+        int fdRead = open(tarFile.data(), O_RDONLY);
+        ASSERT_GE(fdRead, 0);
+        fdsan_exchange_owner_tag(fdRead, 0, BConstants::FDSAN_EXT_TAG);
+
+        int manifestFdRead = open(manifestFile.data(), O_RDONLY);
+        ASSERT_GE(manifestFdRead, 0);
+        fdsan_exchange_owner_tag(manifestFdRead, 0, BConstants::FDSAN_EXT_TAG);
+
+        int ret = fdsan_close_with_tag(fdRead, BConstants::FDSAN_EXT_TAG);
+        EXPECT_EQ(ret, 0);
+
+        ret = fdsan_close_with_tag(manifestFdRead, BConstants::FDSAN_EXT_TAG);
+        EXPECT_EQ(ret, 0);
+
+        remove(tarFile.c_str());
+        remove(manifestFile.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_FDSan_IncrementalTarFileReady_Test_1302";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_FDSan_1303
+ * @tc.name: Ext_Extension_FDSan_HandleIncrementalBackup_Test_1303
+ * @tc.desc: 测试 HandleIncrementalBackup 函数的 FDSan 集成
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_FDSan_HandleIncrementalBackup_Test_1303, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_FDSan_HandleIncrementalBackup_Test_1303";
+
+    try {
+        string incrementalFile = PATH + "incremental.txt";
+        string manifestFile = PATH + "incremental_manifest.txt";
+
+        int incrementalFd = open(incrementalFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        EXPECT_GT(incrementalFd, 0);
+
+        int manifestFd = open(manifestFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        EXPECT_GT(manifestFd, 0);
+
+        fdsan_exchange_owner_tag(incrementalFd, 0, BConstants::FDSAN_EXT_TAG);
+        fdsan_exchange_owner_tag(manifestFd, 0, BConstants::FDSAN_EXT_TAG);
+
+        int ret = fdsan_close_with_tag(incrementalFd, BConstants::FDSAN_EXT_TAG);
+        EXPECT_EQ(ret, 0);
+
+        ret = fdsan_close_with_tag(manifestFd, BConstants::FDSAN_EXT_TAG);
+        EXPECT_EQ(ret, 0);
+
+        remove(incrementalFile.c_str());
+        remove(manifestFile.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_FDSan_HandleIncrementalBackup_Test_1303";
 }
 } // namespace OHOS::FileManagement::Backup

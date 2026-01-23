@@ -400,6 +400,11 @@ private:
     ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>> &allFiles);
     ErrCode ReportAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
 
+    // Helper function to open a file with O_RDONLY and set fdsan ownership tag
+    int OpenFileWithFDSan(const std::string &path);
+    // Helper function to close a file with fdsan ownership tag
+    void CloseFileWithFDSan(int fd);
+
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;

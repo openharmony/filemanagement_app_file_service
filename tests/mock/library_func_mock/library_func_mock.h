@@ -18,6 +18,7 @@
 
 #include <gmock/gmock.h>
 
+#include <cstdint>
 #include <cstdio>
 #include <fcntl.h>
 #include <grp.h>
@@ -53,6 +54,8 @@ int Close(int);
 int Lstat(const char*, struct stat*);
 int Fstat(int fd, struct stat* buf);
 int Lseek(int fd, off_t offset, int whence);
+void FdsanExchangeOwnerTag(int fd, uint64_t expected_tag, uint64_t new_tag);
+int FdsanCloseWithTag(int fd, uint64_t tag);
 
 namespace OHOS {
 namespace AppFileService {
@@ -83,6 +86,8 @@ public:
     virtual int lstat(const char*, struct stat*) = 0;
     virtual int fstat(int fd, struct stat* buf) = 0;
     virtual int lseek(int fd, off_t offset, int whence) = 0;
+    virtual void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag) = 0;
+    virtual int fdsan_close_with_tag(int fd, uint64_t tag) = 0;
 public:
     static inline std::shared_ptr<LibraryFunc> libraryFunc_ = nullptr;
 };
@@ -113,6 +118,8 @@ public:
     MOCK_METHOD(int, lstat, (const char*, struct stat*));
     MOCK_METHOD(int, fstat, (int fd, struct stat* buf));
     MOCK_METHOD(int, lseek, (int fd, off_t offset, int whence));
+    MOCK_METHOD(void, fdsan_exchange_owner_tag, (int fd, uint64_t expected_tag, uint64_t new_tag));
+    MOCK_METHOD(int, fdsan_close_with_tag, (int fd, uint64_t tag));
 };
 } // namespace AppFileService
 } // namespace OHOS

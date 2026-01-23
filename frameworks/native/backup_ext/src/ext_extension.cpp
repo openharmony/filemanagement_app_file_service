@@ -450,7 +450,7 @@ ErrCode BackupExtExtension::IndexFileReady(const std::vector<std::shared_ptr<IFi
     auto cache = cachedEntity.Structuralize();
     cache.SetExtManage(allFiles);
     cachedEntity.Persist();
-    close(cachedEntity.GetFd().Release());
+    fdsan_close_with_tag(cachedEntity.GetFd().Release(), BConstants::FDSAN_EXT_TAG);
     int32_t err = 0;
     appStatistic_->manageJsonSize_ = BFile::GetFileSize(INDEX_FILE_BACKUP, err);
     if (err != 0) {
@@ -485,15 +485,16 @@ ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const str
             return errCode;
         }
     }
+    fdsan_exchange_owner_tag(fdval, 0, BConstants::FDSAN_EXT_TAG);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("ServiceClient is null");
-        close(fdval);
+        CloseFileWithFDSan(fdval);
         return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
     }
     int reportRs = fdval < 0 ? proxy->AppFileReadyWithoutFd(filename, errCode) :
         proxy->AppFileReady(filename, fdval, errCode);
-    close(fdval);
+    CloseFileWithFDSan(fdval);
     if (SUCCEEDED(reportRs)) {
         HILOGI("Report app file ready success, filename: %{public}s", filename.c_str());
         if (needDelete) {
@@ -1860,8 +1861,8 @@ ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
     BFile::WriteFile(file, srcFiles);
 
     string tarName = string(INDEX_FILE_INCREMENTAL_BACKUP).append(tarFile);
-    int fd = open(tarName.data(), O_RDONLY);
-    int manifestFd = open(file.data(), O_RDONLY);
+    int fd = OpenFileWithFDSan(tarName);
+    int manifestFd = OpenFileWithFDSan(file);
     ErrCode ret = (fd < 0 || manifestFd < 0) ?
                   proxy->AppIncrementalFileReadyWithoutFd(tarFile, ERR_OK) :
                   proxy->AppIncrementalFileReady(tarFile, fd, manifestFd, ERR_OK);
@@ -1873,8 +1874,8 @@ ErrCode BackupExtExtension::IncrementalTarFileReady(const TarMap &bigFileInfo,
     } else {
         HILOGE("IncrementalTarFileReady interface fails to be invoked: %{public}d", ret);
     }
-    close(fd);
-    close(manifestFd);
+    CloseFileWithFDSan(fd);
+    CloseFileWithFDSan(manifestFd);
     return ret;
 }
 
@@ -1896,7 +1897,7 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         auto [path, sta, isBeforeTar] = item.second;
         int32_t errCode = ERR_OK;
         WaitToSendFd(startTime, fdNum);
-        int fdval = open(path.data(), O_RDONLY);
+        int fdval = OpenFileWithFDSan(path);
         if (fdval < 0) {
             HILOGE("IncrementalBigFileReady open file failed, file name is %{public}s, err = %{public}d",
                 GetAnonyString(path).c_str(), errno);
@@ -1915,16 +1916,12 @@ ErrCode BackupExtExtension::IncrementalBigFileReady(TarMap &pkgInfo,
         }
         string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append(item.first));
         BFile::WriteFile(file, bigInfo);
-        int manifestFdval = open(file.data(), O_RDONLY);
+        int manifestFdval = OpenFileWithFDSan(file);
         ErrCode ret = (fdval < 0 || manifestFdval < 0) ? proxy->AppIncrementalFileReadyWithoutFd(item.first, errCode) :
                       proxy->AppIncrementalFileReady(item.first, fdval, manifestFdval, errCode);
         CheckAppIncrementalFileReadyResult(ret, item.first, file);
-        if (fdval >= 0) {
-            close(fdval);
-        }
-        if (manifestFdval >=0) {
-            close(manifestFdval);
-        }
+        CloseFileWithFDSan(fdval);
+        CloseFileWithFDSan(manifestFdval);
         fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         RefreshTimeInfo(startTime, fdNum);
     }
@@ -1955,12 +1952,12 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     auto cache = cachedEntity.Structuralize();
     cache.SetExtManage(pkgInfo);
     cachedEntity.Persist();
-    close(cachedEntity.GetFd().Release());
+    fdsan_close_with_tag(cachedEntity.GetFd().Release(), BConstants::FDSAN_EXT_TAG);
 
     string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append("all"));
     BFile::WriteFile(file, srcFiles);
-    int fdval = open(INDEX_FILE_BACKUP.data(), O_RDONLY);
-    int manifestFdval = open(file.data(), O_RDONLY);
+    int fdval = OpenFileWithFDSan(INDEX_FILE_BACKUP);
+    int manifestFdval = OpenFileWithFDSan(file);
     ErrCode ret = (fdval < 0 || manifestFdval < 0) ?
             proxy->AppIncrementalFileReadyWithoutFd(string(BConstants::EXT_BACKUP_MANAGE), ERR_OK) :
             proxy->AppIncrementalFileReady(string(BConstants::EXT_BACKUP_MANAGE), fdval, manifestFdval, ERR_OK);
@@ -1970,8 +1967,24 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     } else {
         HILOGI("successfully but the IncrementalAllFileReady interface fails to be invoked: %{public}d", ret);
     }
-    close(fdval);
-    close(manifestFdval);
+    CloseFileWithFDSan(fdval);
+    CloseFileWithFDSan(manifestFdval);
     return ret;
+}
+
+int BackupExtExtension::OpenFileWithFDSan(const std::string &path)
+{
+    int fd = open(path.data(), O_RDONLY);
+    if (fd >= 0) {
+        fdsan_exchange_owner_tag(fd, 0, BConstants::FDSAN_EXT_TAG);
+    }
+    return fd;
+}
+
+void BackupExtExtension::CloseFileWithFDSan(int fd)
+{
+    if (fd >= 0) {
+        fdsan_close_with_tag(fd, BConstants::FDSAN_EXT_TAG);
+    }
 }
 } // namespace OHOS::FileManagement::Backup
