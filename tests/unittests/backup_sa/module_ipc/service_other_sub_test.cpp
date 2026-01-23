@@ -164,7 +164,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
 
 class BService {
 public:
-    virtual int VerifyDataClone() = 0;
+    virtual bool VerifyDataClone() = 0;
 public:
     BService() = default;
     virtual ~BService() = default;
@@ -174,10 +174,10 @@ public:
 
 class ServiceMock : public BService {
 public:
-    MOCK_METHOD(int, VerifyDataClone, ());
+    MOCK_METHOD(bool, VerifyDataClone, ());
 };
 
-int OHOS::FileManagement::Backup::Service::VerifyDataClone()
+bool OHOS::FileManagement::Backup::Service::VerifyDataClone()
 {
     return ServiceMock::serviceMock->VerifyDataClone();
 }
@@ -200,12 +200,12 @@ public:
         srvMock_ = make_shared<ServiceMock>();
         ServiceMock::serviceMock = srvMock_;
         sessionMock_ = make_shared<SvcSessionManagerMock>();
-        SvcSessionManagerMock::sessionManager = session;
+        SvcSessionManagerMock::sessionManager = sessionMock_;
 #ifdef POWER_MANAGER_ENABLED
         powerClientMock_ = std::make_shared<PowerMgrClientMock>();
         PowerMgrClientMock::powerMgrClient_ = powerClientMock_;
         runningLockMock_ = std::make_shared<RunningLockMock>();
-        RunningLockMock::runninglock_ = RunningLockMock_;
+        RunningLockMock::runninglock_ = runningLockMock_;
         service_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
 #endif
     };
