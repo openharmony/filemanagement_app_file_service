@@ -701,6 +701,7 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     auto compatibleIncludes = DivideIncludesByCompatInfo(includes, usrConfig);
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
     BDir::PreDealExcludes(excludes);
+    PathHasEl3OrEl4(expandIncludes, excludes);
     // 扫描文件计算数据量
     appStatistic_->scanFileSpend_.Start();
     auto [errCode, bigFileSize, smallFileSize] = BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes);

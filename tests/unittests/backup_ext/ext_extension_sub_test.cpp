@@ -1274,4 +1274,248 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0100, testin
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_GetScanDirList_Test_0100";
 }
+
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100
+ * @tc.desc: 测试PathHasEl3OrEl4 不包含el3/el4
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        const std::set<std::string> includes = {
+            "/data/storage/el2/",
+            "/data/storage/el1/"
+        };
+        const std::vector<std::string> excludes = {
+            "/data/storage/el2/base/"
+        };
+        extExtension->PathHasEl3OrEl4(includes, excludes);
+        EXPECT_FALSE(extExtension->appStatistic_->hasEl3OrEl4_.load());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100";
+}
+ 
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101
+ * @tc.desc: 测试PathHasEl3OrEl4 排除el3
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        const std::set<std::string> includes = {
+            "/data/storage/el2/",
+            "/data/storage/el3/"
+        };
+        const std::vector<std::string> excludes = {
+            "/data/storage/el3/",
+            "/data/storage/el2/base/"
+        };
+        extExtension->PathHasEl3OrEl4(includes, excludes);
+        EXPECT_FALSE(extExtension->appStatistic_->hasEl3OrEl4_.load());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0101";
+}
+ 
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102
+ * @tc.desc: 测试PathHasEl3OrEl4 排除el3/el4目录
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        const std::set<std::string> includes = {
+            "/data/storage/"
+        };
+        const std::vector<std::string> excludes = {
+            "/data/storage/el3/",
+            "/data/storage/el4/"
+        };
+        extExtension->PathHasEl3OrEl4(includes, excludes);
+        EXPECT_FALSE(extExtension->appStatistic_->hasEl3OrEl4_.load());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0102";
+}
+ 
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103
+ * @tc.desc: 测试PathHasEl3OrEl4 包含el3
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        const std::set<std::string> includes = {
+            "/data/storage/el3/"
+        };
+        const std::vector<std::string> excludes = {
+            "/data/storage/el3/base/"
+        };
+        extExtension->PathHasEl3OrEl4(includes, excludes);
+        EXPECT_TRUE(extExtension->appStatistic_->hasEl3OrEl4_.load());
+        extExtension->appStatistic_->hasEl3OrEl4_.store(false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0103";
+}
+ 
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0104
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0104
+ * @tc.desc: 测试PathHasEl3OrEl4 状态已经为真，再次扫到el4
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0104, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0104";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        extExtension->appStatistic_->hasEl3OrEl4_.store(true);
+        const std::set<std::string> includes = {
+            "/data/storage/el4/"
+        };
+        const std::vector<std::string> excludes = {
+            "/data/storage/el4/base/"
+        };
+        extExtension->PathHasEl3OrEl4(includes, excludes);
+        EXPECT_TRUE(extExtension->appStatistic_->hasEl3OrEl4_.load());
+        extExtension->appStatistic_->hasEl3OrEl4_.store(false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0104";
+}
+ 
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0105
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0105
+ * @tc.desc: 测试PathHasEl3OrEl4 状态已经为真，再次扫到非el3/el4
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0105, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0105";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        extExtension->appStatistic_->hasEl3OrEl4_.store(true);
+        const std::set<std::string> includes = {
+            "/data/storage/el2/"
+        };
+        const std::vector<std::string> excludes = {
+            "/data/storage/el2/base/"
+        };
+        extExtension->PathHasEl3OrEl4(includes, excludes);
+        EXPECT_TRUE(extExtension->appStatistic_->hasEl3OrEl4_.load());
+        extExtension->appStatistic_->hasEl3OrEl4_.store(false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0105";
+}
+ 
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0106
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0106
+ * @tc.desc: 测试PathHasEl3OrEl4 包含整个应用文件的二级目录,只排除了el3
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0106, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0106";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        const std::set<std::string> includes = {
+            "/data/storage/"
+        };
+        const std::vector<std::string> excludes = {
+            "/data/storage/el2/",
+            "/data/storage/el3/"
+        };
+        extExtension->PathHasEl3OrEl4(includes, excludes);
+        EXPECT_TRUE(extExtension->appStatistic_->hasEl3OrEl4_.load());
+        extExtension->appStatistic_->hasEl3OrEl4_.store(false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0106";
+}
+ 
+/**
+ * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0107
+ * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0107
+ * @tc.desc: 测试PathHasEl3OrEl4 应用自定义的次级目录命名为el3
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_PathHasEl3OrEl4_Test_0107, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_PathHasEl3OrEl4_Test_0107";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        const std::set<std::string> includes = {
+            "/data/storage/el2/base/el3/",
+            "/data/storage/el1/"
+        };
+        const std::vector<std::string> excludes = {
+            "/data/storage/el1/base/"
+        };
+        extExtension->PathHasEl3OrEl4(includes, excludes);
+        EXPECT_FALSE(extExtension->appStatistic_->hasEl3OrEl4_.load());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_PathHasEl3OrEl4_Test_0107";
+}
 }
