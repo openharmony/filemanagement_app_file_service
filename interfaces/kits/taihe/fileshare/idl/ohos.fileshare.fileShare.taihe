@@ -90,3 +90,6 @@ function CheckPersistentPermissionSync( policies: Array<PolicyInfo> ): Array<boo
 
 @gen_promise("revokePermission")
 function RevokePermissionSync( policies: Array<PolicyInfo> ): void;
+
+@gen_promise("persistPermission")
+function PersistPermissionSync( policies: Array<PolicyInfo> ): void;
