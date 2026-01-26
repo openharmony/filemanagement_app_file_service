@@ -75,7 +75,6 @@ struct GcProgressInfoUpdate {
 };
 
 const int INVALID_FD = -1;
-constexpr const int32_t CONNECT_WAIT_TIME_S = 25;
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);

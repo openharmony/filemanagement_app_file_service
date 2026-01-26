@@ -13,14 +13,25 @@
  * limitations under the License.
  */
 
-#include "b_resources/b_constants.h"
 #include "b_utils/b_time.h"
 #include <chrono>
 #include <iomanip>
 #include <sstream>
 #include <unistd.h>
 
+#include "b_resources/b_constants.h"
+#include "filemgmt_libhilog.h"
+#include "parameters.h"
+
 namespace OHOS::FileManagement::Backup {
+namespace {
+    constexpr int32_t INVALID_RATIO = -1;
+    constexpr int32_t MAX_RATIO = 20;
+    constexpr const char* TIMEOUT_UNIT_TIME_RATIO = "persist.sys.abilityms.timeout_unit_time_ratio";
+    constexpr int32_t AFS_RESERVE_SECOND = 5;
+}
+std::atomic<int32_t> TimeUtils::amsTimeoutRatio_ = INVALID_RATIO;
+
 int64_t TimeUtils::GetTimeS()
 {
     std::chrono::seconds nowS = std::chrono::duration_cast<std::chrono::seconds>(
@@ -87,5 +98,22 @@ std::string TimeUtils::GetCurrentTime()
     strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
             << (std::setw(BConstants::INDEX)) << (ms.count() % BConstants::MS_1000);
     return strTime.str();
+}
+
+int32_t TimeUtils::GetAmsTimeout()
+{
+    if (amsTimeoutRatio_.load() == INVALID_RATIO) {
+        amsTimeoutRatio_.store(OHOS::system::GetIntParameter<int32_t>(TIMEOUT_UNIT_TIME_RATIO, 1));
+    }
+    if (amsTimeoutRatio_.load() < 0 || amsTimeoutRatio_.load() > MAX_RATIO) {
+        HILOGE("timeout ratio is invalid:%{public}d", amsTimeoutRatio_.load());
+        amsTimeoutRatio_.store(MAX_RATIO);
+    }
+    return amsTimeoutRatio_.load() * CONNECT_EXTENSION_TIMEOUT;
+}
+
+int32_t TimeUtils::GenAfsTimeout()
+{
+    return GetAmsTimeout() + AFS_RESERVE_SECOND;
 }
 } // namespace OHOS::FileManagement::Backup

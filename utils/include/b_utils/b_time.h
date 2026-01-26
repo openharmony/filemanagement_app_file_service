@@ -15,12 +15,15 @@
 
 #ifndef OHOS_FILEMGMT_BACKUP_B_TIME_H
 #define OHOS_FILEMGMT_BACKUP_B_TIME_H
+
+#include <atomic>
 #include <string>
 
 namespace OHOS::FileManagement::Backup {
 
 constexpr uint32_t MS_TO_US = 1000;
 constexpr uint32_t SECOND_TO_MS = 1000;
+constexpr int32_t CONNECT_EXTENSION_TIMEOUT = 20; // 连接extension接口超时时间(秒)
 
 class TimeUtils {
 public:
@@ -31,6 +34,10 @@ public:
     static uint32_t GetSpendMS(int64_t startMS);
     static uint64_t GetSpendUS(int64_t startUS);
     static std::string GetCurrentTime();
+    static int32_t GetAmsTimeout();
+    static int32_t GenAfsTimeout();
+private:
+    static std::atomic<int32_t> amsTimeoutRatio_;
 };
-} // namespace OHOS::FileManagement::TimeUtils
+} // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_B_TIME_H

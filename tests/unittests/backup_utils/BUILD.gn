@@ -611,6 +611,7 @@ ohos_unittest("b_utils_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
   }
 
   module_out_path = path_module_out_tests
@@ -618,6 +619,7 @@ ohos_unittest("b_utils_test") {
   sources = [
     "b_utils\scan_file_singleton_test.cpp",
     "b_utils\string_utils_test.cpp",
+    "b_utils\b_time_test.cpp",
   ]
 
   include_dirs = [ "${path_backup}/utils/src/b_utils" ]

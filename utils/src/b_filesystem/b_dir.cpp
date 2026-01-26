@@ -186,6 +186,10 @@ tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &pat
             continue;
         }
         unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(currentPath.c_str()), closedir};
+        if (dir == nullptr) {
+            HILOGE("openDir fail, path:%{public}s, errno:%{public}d", GetAnonyPath(currentPath).c_str(), errno);
+            continue;
+        }
         struct dirent *ptr = nullptr;
         while (!!(ptr = readdir(dir.get()))) {
             if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
