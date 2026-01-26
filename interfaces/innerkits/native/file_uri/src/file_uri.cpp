@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,8 +24,9 @@
 
 #include "common_func.h"
 #include "log.h"
-#include "sandbox_helper.h"
+#include "os_account_manager.h"
 #include "parameter.h"
+#include "sandbox_helper.h"
 
 using namespace std;
 namespace OHOS {
@@ -39,22 +40,40 @@ const std::string FILE_SCHEME_PREFIX = "file://";
 const std::string FILE_MANAGER_AUTHORITY = "docs";
 const std::string MEDIA_AUTHORITY = "media";
 const std::string NETWORK_PARA = "?networkid=";
+const std::string FILE_MANAGER_URI_HEAD = "/storage/Users/";
+const std::string DEFAULT_USERNAME = "currentUser";
+const std::string FILE_HAP_URI_HEAD = "/data/storage/";
+const std::string FILE_APP_DATA = "appdata";
+const std::string FILE_MNT_DATA = "/mnt/data/fuse";
+const std::string DLP_PACKAGE_NAME = "com.ohos.dlpmanager";
 const std::string BACKSLASH = "/";
-const std::string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
 const int DECODE_FORMAT_NUM = 16;
-const int DECODE_LEN = 2;
+const int32_t DECODE_LEN = 2;
 std::string BUNDLE_NAME = "";
 std::mutex g_globalMutex;
-static bool CheckFileManagerFullMountEnable()
+static string GetNextDirName(string &path)
 {
-    char value[] = "false";
-    int retSystem = GetParameter(FULL_MOUNT_ENABLE_PARAMETER.c_str(), "false", value, sizeof(value));
-    if (retSystem > 0 && !strcmp(value, "true")) {
-        LOGD("The full mount enable parameter is true");
-        return true;
+    if (path.find(BACKSLASH) == 0) {
+        path = path.substr(1);
     }
-    LOGD("The full mount enable parameter is false");
-    return false;
+    string dirname = "";
+    if (path.find(BACKSLASH) != string::npos) {
+        size_t pos = path.find(BACKSLASH);
+        dirname = path.substr(0, pos);
+        path = path.substr(pos);
+    }
+    return dirname;
+}
+
+static std::string GetUserName()
+{
+    std::string userName;
+    ErrCode errCode = OHOS::AccountSA::OsAccountManager::GetOsAccountShortName(userName);
+    if (errCode != ERR_OK || userName.empty()) {
+        LOGD("Reserved for multi-user adaptation");
+    }
+    userName = DEFAULT_USERNAME;
+    return userName;
 }
 
 string FileUri::GetName()
@@ -95,6 +114,27 @@ static string DecodeBySA(const string &uri)
     return outPutStr;
 }
 
+string GetOpenPath(string &path, string bundleName)
+{
+    if (path.find(FILE_HAP_URI_HEAD) == 0) {
+        path = path.substr(FILE_HAP_URI_HEAD.size());
+        string encryptionLevel = GetNextDirName(path);
+        string dataPart = GetNextDirName(path);
+        if (dataPart.empty()) {
+            if (path.empty()) {
+                LOGE("The directory at the same Base level is missing");
+                return "";
+            }
+            dataPart = path;
+            path = "";
+        }
+        return FILE_MANAGER_URI_HEAD + GetUserName() + BACKSLASH + FILE_APP_DATA + BACKSLASH + encryptionLevel +
+               BACKSLASH + dataPart + BACKSLASH + bundleName + path;
+    }
+    LOGE("The security encryption level directory is missing");
+    return "";
+}
+
 string FileUri::GetPath()
 {
     string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
@@ -112,26 +152,22 @@ string FileUri::GetPath()
 
 string FileUri::GetRealPath()
 {
+    LOGD("GetRealPath uri is ,%{private}s", uri_.ToString().c_str());
     string sandboxPath = SandboxHelper::Decode(uri_.GetPath());
     string realPath = sandboxPath;
     string bundleName = uri_.GetAuthority();
-    if (bundleName == FILE_MANAGER_AUTHORITY &&
-        uri_.ToString().find(NETWORK_PARA) == string::npos &&
-        (access(realPath.c_str(), F_OK) == 0 || CheckFileManagerFullMountEnable())) {
+    if (bundleName == FILE_MANAGER_AUTHORITY && uri_.ToString().find(NETWORK_PARA) == string::npos) {
+        LOGD("GetRealPath return path is ,%{private}s", realPath.c_str());
+        return realPath;
+    }
+    if (bundleName == DLP_PACKAGE_NAME && realPath.find(FILE_MNT_DATA) == 0) {
         return realPath;
     }
     if (bundleName == MEDIA_AUTHORITY) {
         realPath = MEDIA_FUSE_PATH_HEAD + bundleName + sandboxPath;
         return realPath;
     }
-    {
-        std::lock_guard<std::mutex> lock(g_globalMutex);
-        if (BUNDLE_NAME.empty()) {
-            BUNDLE_NAME = CommonFunc::GetSelfBundleName();
-        }
-    }
-    if (((!bundleName.empty()) && (bundleName != BUNDLE_NAME)) ||
-        uri_.ToString().find(NETWORK_PARA) != string::npos) {
+    if (bundleName == FILE_MANAGER_AUTHORITY && uri_.ToString().find(NETWORK_PARA) != string::npos) {
         string networkId = "";
         SandboxHelper::GetNetworkIdFromUri(uri_.ToString(), networkId);
         if (!networkId.empty()) {
@@ -146,12 +182,23 @@ string FileUri::GetRealPath()
                 realPath = PATH_SHARE + MODE_R + bundleName + sandboxPath;
             }
         }
+        LOGD("GetRealPath return path is ,%{private}s", realPath.c_str());
+        return realPath;
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_globalMutex);
+        if (BUNDLE_NAME.empty()) {
+            BUNDLE_NAME = CommonFunc::GetSelfBundleName();
+        }
+    }
+    if ((!bundleName.empty()) && (bundleName != BUNDLE_NAME)) {
+        realPath = GetOpenPath(realPath, bundleName);
     }
     LOGD("GetRealPath return path is ,%{private}s", realPath.c_str());
     return realPath;
 }
 
-string FileUri::GetRealPathBySA(const std::string &targetBundleName)
+string FileUri::GetRealPathBySA(const std::string &targeBundleName)
 {
     string sandboxPath = DecodeBySA(uri_.GetPath());
     if (sandboxPath.empty() || !SandboxHelper::IsValidPath(sandboxPath)) {
@@ -160,12 +207,14 @@ string FileUri::GetRealPathBySA(const std::string &targetBundleName)
     }
     string realPath = sandboxPath;
     string bundleName = uri_.GetAuthority();
-    if (bundleName == FILE_MANAGER_AUTHORITY &&
-        uri_.ToString().find(NETWORK_PARA) == string::npos &&
-        (access(realPath.c_str(), F_OK) == 0 || CheckFileManagerFullMountEnable())) {
+    if (bundleName == FILE_MANAGER_AUTHORITY || bundleName == targeBundleName) {
         return realPath;
     }
-    realPath = PATH_SHARE + MODE_R + bundleName + sandboxPath;
+    if (bundleName == DLP_PACKAGE_NAME && realPath.find(FILE_MNT_DATA) == 0) {
+        return realPath;
+    }
+    realPath = GetOpenPath(realPath, bundleName);
+    LOGI("GetRealPath return path is ,%{private}s", realPath.c_str());
     return realPath;
 }
 
@@ -223,10 +272,10 @@ bool FileUri::CheckUriFormat(const std::string &uri)
     return true;
 }
 
-FileUri::FileUri(const string &uriOrPath): uri_(
-    (uriOrPath.find(FILE_SCHEME_PREFIX) == 0) ? uriOrPath : CommonFunc::GetUriFromPath(uriOrPath)
-)
-{}
+FileUri::FileUri(const string &uriOrPath)
+    : uri_((uriOrPath.find(FILE_SCHEME_PREFIX) == 0) ? uriOrPath : CommonFunc::GetUriFromPath(uriOrPath))
+{
 }
-}  // namespace AppFileService
-}  // namespace OHOS
+} // namespace ModuleFileUri
+} // namespace AppFileService
+} // namespace OHOS

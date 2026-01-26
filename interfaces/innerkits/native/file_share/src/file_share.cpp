@@ -54,7 +54,7 @@ const string NETWORK_PARA = "networkid=";
 const int32_t DLP_COMMON = 0;
 const std::string BACKSLASH = "/";
 const string DOCS_TYPE = "docs";
-const string FILE_DEFAULT_PATH = "/storage/Users/currentUser/";
+const string FILE_DEFAULT_PATH = "/storage/Users/currentUser";
 const string FILE_PATH_TAIL = "/files/Docs";
 const string FILE_PATH_HEAD = "/mnt/hmdfs/";
 const string FILE_PATH_MID = "/account/device_view/";
@@ -103,7 +103,7 @@ static void GetProviderInfo(string uriStr, FileShareInfo &info)
     info.providerSandboxPath_ = SandboxHelper::Decode(uri.GetPath());
     if (info.providerBundleName_ == DOCS_TYPE
         && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) != string::npos) {
-        info.providerSandboxPath_ = FILE_DEFAULT_PATH;
+        info.providerSandboxPath_ = FILE_DEFAULT_PATH + BACKSLASH;
     }
 }
 
@@ -160,7 +160,9 @@ static void DelSharePath(const string &delPath)
     if (access(delPath.c_str(), F_OK) == 0) {
         if (umount2(delPath.c_str(), MNT_DETACH) != 0) {
             LOGE("DelSharePath, umount failed with %{public}d", errno);
+            return;
         }
+        LOGI("DelSharePath, umount2 success. begin to remove path.");
         if (remove(delPath.c_str()) != 0) {
             LOGE("DelSharePath, remove failed with %{public}d", errno);
         }
@@ -324,6 +326,9 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
         string path = SandboxHelper::Decode(uri.GetPath());
         string bundleName = uri.GetAuthority();
         string networkId = "";
+        if (bundleName == DOCS_TYPE && bundleNameSelf.find(FILE_MANAGER_BUNDLE_NAME) != string::npos) {
+            path = FILE_DEFAULT_PATH;
+        }
         SandboxHelper::GetNetworkIdFromUri(sharePathList[i], networkId);
         string delRPath = delPathPrefix + SHARE_R_PATH + bundleName + path;
         string delRWPath = delPathPrefix + SHARE_RW_PATH + bundleName + path;
