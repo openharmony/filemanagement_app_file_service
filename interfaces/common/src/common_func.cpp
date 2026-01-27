@@ -20,7 +20,7 @@
 
 #include <singleton.h>
 #include "bundle_mgr_client.h"
-#include "bundle_mgr_proxy.h"
+#include "bundle_mgr_interface.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
