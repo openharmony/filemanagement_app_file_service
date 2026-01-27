@@ -650,7 +650,7 @@ ohos_unittest("backup_service_other_test") {
   use_exceptions = true
 }
 
-ohos_unittest("backup_service_other_sub_test") {
+ohos_unittest("backup_service_other_test_extended") {
   module_out_path = path_module_out_tests
 
   sanitize = {
@@ -847,7 +847,7 @@ group("backup_sa_ipc_test") {
     ":backup_restore_deps_manager_test",
     ":backup_service_incremental_test",
     ":backup_service_other_test",
-    ":backup_service_other_sub_test",
+    ":backup_service_other_test_extended",
     ":backup_service_scheduler_test",
     ":backup_service_session_test",
     ":backup_service_sub_test",
