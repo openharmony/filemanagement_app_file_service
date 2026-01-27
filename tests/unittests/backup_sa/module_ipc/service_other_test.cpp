@@ -179,7 +179,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
 {
     return BError(BError::Codes::OK);
 }
-} // namespace OHOS::FileManagement::Backup
+}
 
 class BThreadPool {
 public:

@@ -25,6 +25,11 @@
 #include "svc_session_manager_mock.h"
 
 namespace OHOS::FileManagement::Backup {
+using namespace std;
+using namespace testing;
+using namespace testing::ext;
+using namespace PowerMgr;
+
 ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
     const std::vector<BIncrementalData> &bundlesToBackup,
     const std::vector<std::string> &bundleInfos)
@@ -160,7 +165,6 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
 {
     return BError(BError::Codes::OK);
 }
-} // namespace OHOS::FileManagement::Backup
 
 class BService {
 public:
@@ -177,16 +181,11 @@ public:
     MOCK_METHOD(bool, VerifyDataClone, ());
 };
 
-bool OHOS::FileManagement::Backup::Service::VerifyDataClone()
+bool Service::VerifyDataClone()
 {
     return ServiceMock::serviceMock->VerifyDataClone();
 }
 
-namespace OHOS::FileManagement::Backup {
-using namespace std;
-using namespace testing;
-using namespace testing::ext;
-using namespace PowerMgr;
 constexpr int32_t SERVICE_ID = 5203;
 class ServiceTest : public testing::Test {
 public:
@@ -291,6 +290,8 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0101, testing::ext::TestSiz
     EXPECT_CALL(*sessionMock_, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
     service_->CreateRunningLock();
     EXPECT_EQ(service_->runningLock_, nullptr);
+    int resCode = 484651017;
+    EXPECT_EQ(service_->runningLockStatistic_->radarCode_, resCode);
     GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0101";
 }
 
@@ -318,6 +319,8 @@ HWTEST_F(ServiceTest, Service_CreateRunningLock_Test_0102, testing::ext::TestSiz
     EXPECT_CALL(*sessionMock_, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
     service_->CreateRunningLock();
     EXPECT_EQ(service_->runningLock_, nullptr);
+    int resCode = 484651024;
+    EXPECT_EQ(service_->runningLockStatistic_->radarCode_, resCode);
     GTEST_LOG_(INFO) << "ServiceTest-end Service_CreateRunningLock_Test_0102";
 }
 
