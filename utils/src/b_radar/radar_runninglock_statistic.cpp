@@ -24,9 +24,6 @@ void RadarRunningLockStatistic::ReportBackupRunningLock(const std::string &func,
     const std::string &errMsg, ErrCode errCode)
 {
     radarCode_ = errCode;
-    if (radarCode_ == ERROR_OK) {
-        return;
-    }
     RadarError err(MODULE_BACKUP, radarCode_);
     radarCode_ = err.GenCode();
     HiSysEventWrite(
@@ -46,9 +43,6 @@ void RadarRunningLockStatistic::ReportRestoreRunningLock(const std::string &func
     const std::string &errMsg, ErrCode errCode)
 {
     radarCode_ = errCode;
-    if (radarCode_ == ERROR_OK) {
-        return;
-    }
     RadarError err(MODULE_RESTORE, radarCode_);
     radarCode_ = err.GenCode();
     HiSysEventWrite(

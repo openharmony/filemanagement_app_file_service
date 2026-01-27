@@ -141,9 +141,7 @@ void Service::SendUserIdToApp(string&, int32_t) {}
 void Service::SetCurrentBackupSessProperties(const vector<string> &,
                                              int32_t,
                                              std::vector<BJsonEntityCaps::BundleInfo> &,
-                                             bool)
-{
-}
+                                             bool) {}
 
 std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
 {
@@ -162,7 +160,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
 {
     return BError(BError::Codes::OK);
 }
-}
+} // namespace OHOS::FileManagement::Backup
 
 class BService {
 public:
