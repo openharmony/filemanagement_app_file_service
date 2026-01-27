@@ -1742,12 +1742,13 @@ void Service::CreateRunningLock()
     }
     std::unique_lock<std::shared_mutex> lock(runningLockMutex_);
     ErrCode ret = ERROR_OK;
-    std::string errMsg = "";
+    std::string errMsg = "Default message: DataClone create runninglock";
     if (runningLock_ == nullptr) {
         runningLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock("runninglock",
             PowerMgr::RunningLockType::RUNNINGLOCK_BACKGROUND);
         if (runningLock_ == nullptr) {
             ret = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_CREATE_FAIL);
+            errMsg = "Create runninglock failed";
             RunningLockRadarReport("CreateRunningLock-create", errMsg, ret);
             return;
         }
@@ -1755,10 +1756,10 @@ void Service::CreateRunningLock()
     ret = runningLock_->Lock();
     if (ret != ERROR_OK) {
         runningLock_ = nullptr;
-        errMsg = std::to_string(ret);
+        errMsg = "Lock failed, errcode = " + std::to_string(ret);
         ret = static_cast<int> (BError::Codes::SA_SESSION_RUNNINGLOCK_LOCK_FAIL);
-        RunningLockRadarReport("CreateRunningLock-lock", errMsg, ret);
     }
+    RunningLockRadarReport("CreateRunningLock-lock", errMsg, ret);
 #endif
 }
 
