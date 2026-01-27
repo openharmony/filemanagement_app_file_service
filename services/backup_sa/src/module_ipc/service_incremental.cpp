@@ -1191,7 +1191,7 @@ bool Service::VerifyDataClone()
     }
     std::string bundleName = GetCallerName();
     if (bundleName != BConstants::BUNDLE_DATA_CLONE) {
-        HILOGE("Caller: %{public}s has no permission", bundleName.data());
+        HILOGE("Caller has no permission");
         return false;
     }
     return true;

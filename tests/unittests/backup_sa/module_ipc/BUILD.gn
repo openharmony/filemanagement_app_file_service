@@ -685,7 +685,7 @@ ohos_unittest("backup_service_other_sub_test") {
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
     "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
-    "service_other_sub_test.cpp",
+    "service_other_test_extended.cpp",
   ]
 
   include_dirs = [

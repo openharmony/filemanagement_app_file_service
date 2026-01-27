@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,10 +31,12 @@ ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
 {
     return BError(BError::Codes::OK);
 }
+
 ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd)
 {
     return BError(BError::Codes::OK);
 }
+
 ErrCode Service::AppIncrementalFileReady(const std::string &fileName, int fd,
     int manifestFd, int32_t appIncrementalFileReadyErrCode)
 {
