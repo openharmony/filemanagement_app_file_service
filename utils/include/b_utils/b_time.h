@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_B_TIME_H
 
 #include <atomic>
+#include <mutex>
 #include <string>
 
 namespace OHOS::FileManagement::Backup {
@@ -37,7 +38,8 @@ public:
     static int32_t GetAmsTimeout();
     static int32_t GenAfsTimeout();
 private:
-    static std::atomic<int32_t> amsTimeoutRatio_;
+    static std::mutex mutex_;
+    static int32_t amsTimeoutRatio_;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_B_TIME_H

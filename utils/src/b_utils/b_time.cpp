@@ -26,11 +26,12 @@
 namespace OHOS::FileManagement::Backup {
 namespace {
     constexpr int32_t INVALID_RATIO = -1;
-    constexpr int32_t MAX_RATIO = 20;
+    constexpr int32_t MAX_RATIO = 50;
     constexpr const char* TIMEOUT_UNIT_TIME_RATIO = "persist.sys.abilityms.timeout_unit_time_ratio";
     constexpr int32_t AFS_RESERVE_SECOND = 5;
 }
-std::atomic<int32_t> TimeUtils::amsTimeoutRatio_ = INVALID_RATIO;
+std::mutex TimeUtils::mutex_;
+int32_t TimeUtils::amsTimeoutRatio_ = INVALID_RATIO;
 
 int64_t TimeUtils::GetTimeS()
 {
@@ -102,14 +103,15 @@ std::string TimeUtils::GetCurrentTime()
 
 int32_t TimeUtils::GetAmsTimeout()
 {
-    if (amsTimeoutRatio_.load() == INVALID_RATIO) {
-        amsTimeoutRatio_.store(OHOS::system::GetIntParameter<int32_t>(TIMEOUT_UNIT_TIME_RATIO, 1));
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (amsTimeoutRatio_ == INVALID_RATIO) {
+        amsTimeoutRatio_ = OHOS::system::GetIntParameter<int32_t>(TIMEOUT_UNIT_TIME_RATIO, 1);
     }
-    if (amsTimeoutRatio_.load() < 0 || amsTimeoutRatio_.load() > MAX_RATIO) {
-        HILOGE("timeout ratio is invalid:%{public}d", amsTimeoutRatio_.load());
-        amsTimeoutRatio_.store(MAX_RATIO);
+    if (amsTimeoutRatio_ < 0 || amsTimeoutRatio_ > MAX_RATIO) {
+        HILOGE("timeout ratio is invalid:%{public}d", amsTimeoutRatio_);
+        amsTimeoutRatio_ = MAX_RATIO;
     }
-    return amsTimeoutRatio_.load() * CONNECT_EXTENSION_TIMEOUT;
+    return amsTimeoutRatio_ * CONNECT_EXTENSION_TIMEOUT;
 }
 
 int32_t TimeUtils::GenAfsTimeout()
