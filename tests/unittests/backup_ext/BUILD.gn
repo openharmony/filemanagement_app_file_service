@@ -47,6 +47,7 @@ ohos_unittest("ext_extension_test") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:app_context",
     "ability_runtime:appkit_native",
+    "ability_runtime:extensionkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
