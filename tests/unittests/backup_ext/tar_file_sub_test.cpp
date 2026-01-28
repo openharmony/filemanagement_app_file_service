@@ -258,22 +258,25 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_WriteFileContent_0100, testing::ext::TestS
 
         TarFile::GetInstance().ioBuffer_.resize(BLOCK_SIZE);
         EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
         EXPECT_CALL(*funcMock, read(_, _, _)).WillOnce(Return(BLOCK_SIZE));
-        EXPECT_CALL(*funcMock, close(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
         EXPECT_FALSE(TarFile::GetInstance().WriteFileContent(fileName, 1, err));
 
         TarFile::GetInstance().ioBuffer_.resize(BLOCK_SIZE);
         EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
         EXPECT_CALL(*funcMock, read(_, _, _)).WillOnce(Return(BLOCK_SIZE));
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(BLOCK_SIZE + 1));
-        EXPECT_CALL(*funcMock, close(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
         EXPECT_FALSE(TarFile::GetInstance().WriteFileContent(fileName, BLOCK_SIZE, err));
 
         TarFile::GetInstance().ioBuffer_.resize(BLOCK_SIZE);
         EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
         EXPECT_CALL(*funcMock, read(_, _, _)).WillOnce(Return(BLOCK_SIZE));
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(BLOCK_SIZE));
-        EXPECT_CALL(*funcMock, close(_)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
         EXPECT_TRUE(TarFile::GetInstance().WriteFileContent(fileName, BLOCK_SIZE, err));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -302,7 +305,8 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0100, testing::ext::TestSize.Level
         EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(1));
         EXPECT_CALL(*funcMock, read(_, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
-        EXPECT_CALL(*funcMock, close(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_exchange_owner_tag(_, _, _)).WillRepeatedly(Return());
+        EXPECT_CALL(*funcMock, fdsan_close_with_tag(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*funcMock, ferror(_)).WillRepeatedly(Return(0));
         struct passwd pw;
         EXPECT_CALL(*funcMock, getpwuid(_)).WillRepeatedly(Return(&pw));
@@ -500,7 +504,8 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_ToAddFile_0100, testing::ext::TestSize.Lev
         EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(1));
         EXPECT_CALL(*funcMock, read(_, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
-        EXPECT_CALL(*funcMock, close(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_exchange_owner_tag(_, _, _)).WillRepeatedly(Return());
+        EXPECT_CALL(*funcMock, fdsan_close_with_tag(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*funcMock, ferror(_)).WillRepeatedly(Return(0));
         struct passwd pw;
         EXPECT_CALL(*funcMock, getpwuid(_)).WillRepeatedly(Return(&pw));
@@ -549,13 +554,16 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_TraversalFile_0100, testing::ext::TestSize
         EXPECT_FALSE(TarFile::GetInstance().TraversalFile(fileName, err));
 
         EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(1));
-        EXPECT_CALL(*funcMock, close(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*funcMock, fdsan_exchange_owner_tag(_, _, _)).WillRepeatedly(Return());
+        EXPECT_CALL(*funcMock, fdsan_close_with_tag(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*funcMock, lstat(_, _)).WillOnce(Return(-1));
         EXPECT_FALSE(TarFile::GetInstance().TraversalFile(fileName, err));
 
         EXPECT_CALL(*funcMock, lstat(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*funcMock, read(_, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
+        EXPECT_CALL(*funcMock, fdsan_exchange_owner_tag(_, _, _)).WillRepeatedly(Return());
+        EXPECT_CALL(*funcMock, fdsan_close_with_tag(_, _)).WillRepeatedly(Return(0));
         EXPECT_TRUE(TarFile::GetInstance().TraversalFile(fileName, err));
         EXPECT_TRUE(TarFile::GetInstance().TraversalFile(fileName, err, restorePath));
     } catch (...) {

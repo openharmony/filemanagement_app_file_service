@@ -286,6 +286,10 @@ constexpr int GC_TASK_TIMEOUT = -16;
 constexpr int GC_MAX_WAIT_TIME_S = 200;
 // 克隆应用bundleName
 static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
+
+//FdSan
+const uint64_t FDSAN_EXT_TAG = 0xD004303;
+const uint64_t FDSAN_UTIL_TAG = 0xD004305;
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H

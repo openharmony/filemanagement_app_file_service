@@ -165,6 +165,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0300, testin
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = -1;
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1)).WillOnce(Return(1));
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillRepeatedly(Return());
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
     EXPECT_CALL(*serviceMock_, AppFileReadyWithoutFd(_, _)).WillOnce(Return(-1));
@@ -187,6 +189,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0400, testin
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0400";
     ASSERT_TRUE(extExtension_ != nullptr);
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(1));
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
     EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
@@ -592,5 +596,81 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_AsyncDoBackup_Test_0100, testing::ex
     this_thread::sleep_for(chrono::seconds(5));
     EXPECT_FALSE(ScanFileSingleton::GetInstance().IsProcessCompleted());
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_AsyncDoBackup_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_OpenFileWithFDSan_Test_0100
+ * @tc.name: Ext_Extension_OpenFileWithFDSan_Test_0100
+ * @tc.desc: 测试OpenFileWithFDSan成功场景（fd >= 0）
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_OpenFileWithFDSan_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_OpenFileWithFDSan_Test_0100";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(5));
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    string testPath = "/data/test/file.txt";
+    int fd = extExtension_->OpenFileWithFDSan(testPath);
+    EXPECT_EQ(fd, 5);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_OpenFileWithFDSan_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_OpenFileWithFDSan_Test_0200
+ * @tc.name: Ext_Extension_OpenFileWithFDSan_Test_0200
+ * @tc.desc: 测试OpenFileWithFDSan失败场景（fd < 0）
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_OpenFileWithFDSan_Test_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_OpenFileWithFDSan_Test_0200";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1));
+    string testPath = "/data/test/nonexistent.txt";
+    int fd = extExtension_->OpenFileWithFDSan(testPath);
+    EXPECT_LT(fd, 0);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_OpenFileWithFDSan_Test_0200";
+}
+
+/**
+ * @tc.number: Ext_Extension_CloseFileWithFDSan_Test_0100
+ * @tc.name: Ext_Extension_CloseFileWithFDSan_Test_0100
+ * @tc.desc: 测试CloseFileWithFDSan有效fd场景（fd >= 0）
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_CloseFileWithFDSan_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_CloseFileWithFDSan_Test_0100";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
+    int validFd = 5;
+    extExtension_->CloseFileWithFDSan(validFd);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_CloseFileWithFDSan_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_CloseFileWithFDSan_Test_0200
+ * @tc.name: Ext_Extension_CloseFileWithFDSan_Test_0200
+ * @tc.desc: 测试CloseFileWithFDSan无效fd场景（fd < 0）
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_CloseFileWithFDSan_Test_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_CloseFileWithFDSan_Test_0200";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    // 当fd < 0时，不应该调用fdsan_close_with_tag
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).Times(0);
+    int invalidFd = -1;
+    extExtension_->CloseFileWithFDSan(invalidFd);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_CloseFileWithFDSan_Test_0200";
 }
 }

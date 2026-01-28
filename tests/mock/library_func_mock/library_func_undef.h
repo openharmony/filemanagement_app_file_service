@@ -40,5 +40,7 @@
 #define Lstat(pathname, statbuf) lstat(pathname, statbuf)
 #define Fstat fstat
 #define Lseek lseek
+#define FdsanExchangeOwnerTag fdsan_exchange_owner_tag
+#define FdsanCloseWithTag fdsan_close_with_tag
 
 #endif // FILEMANAGEMENT_APP_FILE_SERVICE_LIBRARY_FUNC_UNDEF_H
