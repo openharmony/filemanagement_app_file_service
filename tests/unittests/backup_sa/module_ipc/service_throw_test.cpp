@@ -30,7 +30,7 @@ using namespace testing;
 
 constexpr int32_t SERVICE_ID = 5203;
 constexpr int32_t DEBUG_ID = 100;
-
+constexpr int32_t CALL_NUM = 2;
 class ServiceThrowTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -147,7 +147,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0100, testing::e
     ret = service->InitRestoreSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
-    EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+    EXPECT_CALL(*skeleton, GetCallingUid()).Times(CALL_NUM).WillRepeatedly(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -193,7 +193,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitRestoreSession_0200, testing::e
     service->InitRestoreSessionWithErrMsg(reverseNUll, errCode, errMsg);
     EXPECT_EQ(errCode, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
-    EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+    EXPECT_CALL(*skeleton, GetCallingUid()).Times(CALL_NUM).WillRepeatedly(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -230,7 +230,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0100, testing::ex
     ret = service->InitBackupSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
-    EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+    EXPECT_CALL(*skeleton, GetCallingUid()).Times(CALL_NUM).WillRepeatedly(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -276,7 +276,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitBackupSession_0200, testing::ex
     service->InitBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
     EXPECT_EQ(errCode, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
-    EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+    EXPECT_CALL(*skeleton, GetCallingUid()).Times(CALL_NUM).WillRepeatedly(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -962,7 +962,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0100, 
     ret = service->InitIncrementalBackupSession(reverse);
     EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
-    EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+    EXPECT_CALL(*skeleton, GetCallingUid()).Times(CALL_NUM).WillRepeatedly(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));
@@ -1008,7 +1008,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_InitIncrementalBackupSession_0200, 
     service->InitIncrementalBackupSessionWithErrMsg(reverseNUll, errCode, errMsg);
     EXPECT_EQ(errCode, BError(BError::Codes::SA_SESSION_CONFLICT).GetCode());
 
-    EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+    EXPECT_CALL(*skeleton, GetCallingUid()).Times(CALL_NUM).WillRepeatedly(Return(BConstants::SYSTEM_UID));
     EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
     EXPECT_CALL(*sessionMock, Active(_)).WillOnce(Return(BError(BError::Codes::OK)));

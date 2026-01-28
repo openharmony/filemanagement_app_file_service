@@ -652,6 +652,104 @@ ohos_unittest("backup_service_other_test") {
   use_exceptions = true
 }
 
+ohos_unittest("backup_service_other_test_extended") {
+  module_out_path = path_module_out_tests
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
+  }
+  sources = [
+    "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/sub_service.cpp",
+    "${path_backup_mock}/accesstoken/src/accesstoken_kit_mock.cpp",
+    "${path_backup_mock}/b_radar/src/runninglock_mock.cpp",
+    "${path_backup_mock}/module_external/src/bms_adapter_mock.cpp",
+    "${path_backup_mock}/module_external/src/sms_adapter_mock.cpp",
+    "${path_backup_mock}/module_ipc/service_stub_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/app_gallery_dispose_proxy_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/ipc_skeleton_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/notify_work_service_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/sa_backup_connection_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/svc_backup_connection_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/svc_restore_deps_manager_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/svc_session_manager_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/system_ability_mock.cpp",
+    "${path_backup_mock}/module_sched/sched_scheduler_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/b_json_clear_data_config_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/b_json_service_disposal_config_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
+    "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
+    "service_other_test_extended.cpp",
+  ]
+
+  include_dirs = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/services/backup_sa/include",
+    "${path_backup}/services/backup_sa/include/module_app_gallery",
+    "${path_backup}/services/backup_sa/include/module_ipc",
+    "${path_backup}/services/backup_sa/include/module_notify",
+    "${path_backup}/services/backup_sa/src/module_ipc",
+    "${path_backup}/tests/unittests/backup_api/backup_impl/include",
+    "${path_backup}/tests/utils/include/",
+    "${path_backup_mock}/accesstoken/include",
+    "${path_backup_mock}/b_radar/include",
+    "${path_backup_mock}/module_external/include",
+    "${path_backup_mock}/module_ipc/include",
+    "${path_backup_mock}/utils_mock/include",
+  ]
+
+  public_configs = [ "${path_backup}/services/backup_sa:public_idl_config" ]
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
+    "ability_runtime:ability_manager",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+  ]
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private = public",
+  ]
+
+  if (power_mgr_enabled) {
+    external_deps += ["power_manager:powermgr_client"]
+    defines += ["POWER_MANAGER_ENABLED"]
+  }
+
+  use_exceptions = true
+}
+
 ohos_unittest("backup_service_sub_test") {
   branch_protector_ret = "pac_ret"
 
@@ -751,6 +849,7 @@ group("backup_sa_ipc_test") {
     ":backup_restore_deps_manager_test",
     ":backup_service_incremental_test",
     ":backup_service_other_test",
+    ":backup_service_other_test_extended",
     ":backup_service_scheduler_test",
     ":backup_service_session_test",
     ":backup_service_sub_test",
