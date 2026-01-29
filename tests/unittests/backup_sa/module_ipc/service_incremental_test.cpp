@@ -1114,7 +1114,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
-        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
+        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillRepeatedly(Return(bundleNameDetailMap));
         EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _)).WillOnce(Return(bundleInfos));
         EXPECT_CALL(*srvMock, GetSupportBackupBundleNames(_, _, _)).WillOnce(Return(supportBackupNames));
         ret = service->AppendBundlesIncrementalBackupSession({}, {});
