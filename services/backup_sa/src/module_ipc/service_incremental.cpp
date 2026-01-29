@@ -151,7 +151,7 @@ BJsonCachedEntity<BJsonEntityCaps> Service::CreateJsonEntity(UniqueFd &fd,
         isCreatingIncreaseFile_.store(0);
         const int userId = GetUserIdDefault();
         for (const auto &bundleInfo : bundleInfos) {
-            ClearIncrementalStatFile(userId, bundleInfo.name);
+            ClearIncrementalStatFile(userId, bundleInfo.name + ":" + std::to_string(bundleInfo.appIndex));
         }
         HILOGI("do ClearIncrementalStatFile finished");
     }
