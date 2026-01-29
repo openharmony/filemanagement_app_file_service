@@ -682,11 +682,15 @@ public:
     CounterHelper(sptr<SvcSessionManager> session, const std::string& funcName)
         : session_(session), funcName_(funcName)
     {
-        session_->IncreaseSessionCnt(funcName_);
+        if (session_ != nullptr) {
+            session_->IncreaseSessionCnt(funcName_);
+        }
     }
     ~CounterHelper()
     {
-        session_->DecreaseSessionCnt(funcName_);
+        if (session_ != nullptr) {
+            session_->DecreaseSessionCnt(funcName_);
+        }
     }
 private:
     sptr<SvcSessionManager> session_;

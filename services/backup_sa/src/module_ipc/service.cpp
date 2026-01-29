@@ -1614,7 +1614,7 @@ ErrCode Service::GetBackupInfoCmdHandle(const BundleName &bundleName, std::strin
         return BError(BError::Codes::SA_BOOT_EXT_FAIL);
     }
     std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
-    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(TimeUtils::GenAfsTimeout()));
     if (isConnectDied_.load()) {
         HILOGE("GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
         isConnectDied_.store(false);

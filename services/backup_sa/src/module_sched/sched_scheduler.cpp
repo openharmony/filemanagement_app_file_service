@@ -30,6 +30,7 @@
 #include "b_error/b_error.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_radar/b_radar.h"
+#include "b_utils/b_time.h"
 #include "filemgmt_libhilog.h"
 #include "iservice_registry.h"
 #include "module_external/bms_adapter.h"
@@ -206,7 +207,7 @@ void SchedScheduler::StartExecuteBundleTask(const std::string &bundleName, BCons
                 ptr->ExtConnectFailed(bundleName, BError(BError::Codes::SA_BOOT_EXT_TIMEOUT));
             }
         };
-        auto iTime = extTime_.Register(callStart, BConstants::EXT_CONNECT_MAX_TIME, true);
+        auto iTime = extTime_.Register(callStart, TimeUtils::GenAfsTimeout() * SECOND_TO_MS, true);
         unique_lock<shared_mutex> lock(lock_);
         bundleTimeVec_.emplace_back(make_tuple(bundleName, iTime));
         lock.unlock();

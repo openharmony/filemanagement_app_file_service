@@ -1429,7 +1429,7 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
     if (err != BError(BError::Codes::OK)) {return err;}
 
     std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
-    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(TimeUtils::GenAfsTimeout()));
     if (isConnectDied_.load()) {
         HILOGE("GetBackupInfoConnectDied, please check bundleName: %{public}s", bundleName.c_str());
         isConnectDied_.store(false);
@@ -1592,7 +1592,7 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
         return err;
     }
     std::unique_lock<std::mutex> lock(getBackupInfoSyncLock_);
-    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+    getBackupInfoCondition_.wait_for(lock, std::chrono::seconds(TimeUtils::GenAfsTimeout()));
     if (isConnectDied_.load()) {
         HILOGE("backupConnection connect timeout");
         isConnectDied_.store(false);
