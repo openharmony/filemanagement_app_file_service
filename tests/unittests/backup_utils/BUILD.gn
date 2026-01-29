@@ -634,6 +634,7 @@ ohos_unittest("b_utils_test") {
     "c_utils:utils",
     "hilog:libhilog",
     "jsoncpp:jsoncpp",
+    "init:libbegetutil",
   ]
   defines = [ "private = public" ]
   use_exceptions = true

@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "b_utils/b_time.h"
+#include "parameters.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -39,12 +40,52 @@ public:
 HWTEST_F(BTimeUtilsTest, GetAmsTimeout_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BTimeUtilsTest-begin GetAmsTimeout_001";
-    TimeUtils::amsTimeoutRatio_ = -1;
+    TimeUtils::amsTimeoutRatio_ = INVALID_RATIO;
     int32_t timeout1 = TimeUtils::GetAmsTimeout();
     EXPECT_GT(TimeUtils::amsTimeoutRatio_, 0);
     int32_t timeout2 = TimeUtils::GetAmsTimeout();
     EXPECT_EQ(timeout1, timeout2);
     GTEST_LOG_(INFO) << "BTimeUtilsTest-end GetAmsTimeout_001";
+}
+
+/**
+ * @tc.number: GetAmsTimeout_002
+ * @tc.name: GetAmsTimeout_002
+ * @tc.desc: Test function of GetAmsTimeout
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BTimeUtilsTest, GetAmsTimeout_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BTimeUtilsTest-begin GetAmsTimeout_002";
+    TimeUtils::amsTimeoutRatio_ = INVALID_RATIO;
+    std::string ratio = OHOS::system::GetParameter("persist.sys.abilityms.timeout_unit_time_ratio", "1");
+    OHOS::system::SetParameter("persist.sys.abilityms.timeout_unit_time_ratio", "-1");
+    EXPECT_EQ(TimeUtils::GetAmsTimeout(), 50 * CONNECT_EXTENSION_TIMEOUT);
+    OHOS::system::SetParameter("persist.sys.abilityms.timeout_unit_time_ratio", ratio);
+    GTEST_LOG_(INFO) << "BTimeUtilsTest-end GetAmsTimeout_002";
+}
+
+/**
+ * @tc.number: GetAmsTimeout_003
+ * @tc.name: GetAmsTimeout_003
+ * @tc.desc: Test function of GetAmsTimeout
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BTimeUtilsTest, GetAmsTimeout_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BTimeUtilsTest-begin GetAmsTimeout_003";
+    TimeUtils::amsTimeoutRatio_ = INVALID_RATIO;
+    std::string ratio = OHOS::system::GetParameter("persist.sys.abilityms.timeout_unit_time_ratio", "1");
+    OHOS::system::SetParameter("persist.sys.abilityms.timeout_unit_time_ratio", "100");
+    EXPECT_EQ(TimeUtils::GetAmsTimeout(), 50 * CONNECT_EXTENSION_TIMEOUT);
+    OHOS::system::SetParameter("persist.sys.abilityms.timeout_unit_time_ratio", ratio);
+    GTEST_LOG_(INFO) << "BTimeUtilsTest-end GetAmsTimeout_003";
 }
 
 /**

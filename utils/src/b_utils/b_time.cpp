@@ -25,13 +25,10 @@
 
 namespace OHOS::FileManagement::Backup {
 namespace {
-    constexpr int32_t INVALID_RATIO = -1;
     constexpr int32_t MAX_RATIO = 50;
     constexpr const char* TIMEOUT_UNIT_TIME_RATIO = "persist.sys.abilityms.timeout_unit_time_ratio";
     constexpr int32_t AFS_RESERVE_SECOND = 5;
 }
-std::mutex TimeUtils::mutex_;
-int32_t TimeUtils::amsTimeoutRatio_ = INVALID_RATIO;
 
 int64_t TimeUtils::GetTimeS()
 {

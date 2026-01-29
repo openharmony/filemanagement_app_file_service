@@ -25,6 +25,8 @@ namespace OHOS::FileManagement::Backup {
 constexpr uint32_t MS_TO_US = 1000;
 constexpr uint32_t SECOND_TO_MS = 1000;
 constexpr int32_t CONNECT_EXTENSION_TIMEOUT = 20; // 连接extension接口超时时间(秒)
+constexpr int32_t INVALID_RATIO = -1;
+
 
 class TimeUtils {
 public:
@@ -38,8 +40,8 @@ public:
     static int32_t GetAmsTimeout();
     static int32_t GenAfsTimeout();
 private:
-    static std::mutex mutex_;
-    static int32_t amsTimeoutRatio_;
+    static inline std::mutex mutex_;
+    static inline int32_t amsTimeoutRatio_ = INVALID_RATIO;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_B_TIME_H
