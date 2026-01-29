@@ -357,7 +357,7 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
     NVal ptr(env, funcArg.GetThisVar());
     auto backupEntity = std::make_unique<BackupEntity>();
     backupEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
-    ErrCode errCode;
+    ErrCode errCode = BError(BError::Codes::SDK_BROKEN_IPC);
     std::string errMsg;
     backupEntity->session = BSessionBackup::Init(BSessionBackup::Callbacks {
         .onFileReady = bind(OnFileReady, backupEntity->callbacks, placeholders::_1, placeholders::_2, placeholders::_3),

@@ -449,7 +449,7 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     auto restoreEntity = std::make_unique<RestoreEntity>();
     restoreEntity->callbacks = make_shared<GeneralCallbacks>(env, ptr, callbacks);
     restoreEntity->sessionWhole = nullptr;
-    ErrCode errCode;
+    ErrCode errCode = BError(BError::Codes::SDK_BROKEN_IPC);
     std::string errMsg;
     restoreEntity->sessionSheet = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
         .onFileReady = bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2,
