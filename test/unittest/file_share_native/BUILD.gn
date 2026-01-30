@@ -19,6 +19,10 @@ ohos_unittest("file_share_test") {
   sanitize = {
     integer_overflow = true
     debug = false
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${app_file_service_path}/cfi_blocklist.txt"
   }
 
   module_out_path = "app_file_service/app_file_service/file_share"

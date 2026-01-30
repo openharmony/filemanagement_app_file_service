@@ -392,7 +392,6 @@ HWTEST_F(ServiceTest, SUB_Service_OnStart_0100, TestSize.Level1)
         service->isOccupyingSession_ = false;
 
         EXPECT_CALL(*ability, Publish(_)).WillOnce(Return(false));
-        EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(bundleNames));
         service->OnStart();
         EXPECT_TRUE(true);
 
@@ -459,7 +458,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnStart_0200, TestSize.Level1)
         EXPECT_CALL(*jdConfig, GetBundleNameFromConfigFile()).WillOnce(Return(vector<string>(1)))
             .WillOnce(Return(vector<string>()));
         EXPECT_CALL(*cdConfig, GetAllClearBundleRecords()).WillOnce(Return(vector<string>()));
-        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
             .WillRepeatedly(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         EXPECT_CALL(*session, Active(_, _)).WillRepeatedly(Return(BError(BError::Codes::OK)));

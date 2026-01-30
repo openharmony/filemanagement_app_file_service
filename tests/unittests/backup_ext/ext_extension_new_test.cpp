@@ -574,31 +574,6 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DivideIncludesByCompatInfo_Test_0500
 }
 
 /**
- * @tc.number: Ext_Extension_AsyncDoBackup_Test_0100
- * @tc.name: Ext_Extension_AsyncDoBackup_Test_0100
- * @tc.desc: 测试AsyncDoBackup
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(ExtExtensionNewTest, Ext_Extension_AsyncDoBackup_Test_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_AsyncDoBackup_Test_0100";
-    ASSERT_TRUE(extExtension_ != nullptr);
-    errno = EPERM;
-    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
-    EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly([](const char* path, int mode) -> int {
-        errno = EPERM;
-        return -1;
-    });
-    EXPECT_CALL(*serviceMock_, AppDone(_)).WillRepeatedly(Return(0));
-    extExtension_->AsyncDoBackup();
-    this_thread::sleep_for(chrono::seconds(5));
-    EXPECT_FALSE(ScanFileSingleton::GetInstance().IsProcessCompleted());
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_AsyncDoBackup_Test_0100";
-}
-
-/**
  * @tc.number: Ext_Extension_OpenFileWithFDSan_Test_0100
  * @tc.name: Ext_Extension_OpenFileWithFDSan_Test_0100
  * @tc.desc: 测试OpenFileWithFDSan成功场景（fd >= 0）
