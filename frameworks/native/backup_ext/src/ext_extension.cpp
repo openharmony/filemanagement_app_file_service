@@ -450,7 +450,7 @@ ErrCode BackupExtExtension::IndexFileReady(const std::vector<std::shared_ptr<IFi
     auto cache = cachedEntity.Structuralize();
     cache.SetExtManage(allFiles);
     cachedEntity.Persist();
-    fdsan_close_with_tag(cachedEntity.GetFd().Release(), BConstants::FDSAN_EXT_TAG);
+    close(cachedEntity.GetFd().Release());
     int32_t err = 0;
     appStatistic_->manageJsonSize_ = BFile::GetFileSize(INDEX_FILE_BACKUP, err);
     if (err != 0) {
@@ -1952,7 +1952,7 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     auto cache = cachedEntity.Structuralize();
     cache.SetExtManage(pkgInfo);
     cachedEntity.Persist();
-    fdsan_close_with_tag(cachedEntity.GetFd().Release(), BConstants::FDSAN_EXT_TAG);
+    close(cachedEntity.GetFd().Release());
 
     string file = GetReportFileName(string(INDEX_FILE_INCREMENTAL_BACKUP).append("all"));
     BFile::WriteFile(file, srcFiles);

@@ -72,8 +72,8 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manif
     UniqueFd incrementalFdUnique(dup(incrementalFd));
     UniqueFd manifestFdUnique(dup(manifestFd));
     ErrCode ret = HandleIncrementalBackup(std::move(incrementalFdUnique), std::move(manifestFdUnique));
-    fdsan_close_with_tag(incrementalFd, BConstants::FDSAN_EXT_TAG);
-    fdsan_close_with_tag(manifestFd, BConstants::FDSAN_EXT_TAG);
+    close(incrementalFd);
+    close(manifestFd);
     return ret;
 }
 
@@ -1175,8 +1175,8 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
             if (incrementalDupFd < 0) {
                 throw BError(BError::Codes::EXT_INVAL_ARG, "dup failed");
             }
-            fdsan_close_with_tag(incrementalFdDup, BConstants::FDSAN_EXT_TAG);
-            fdsan_close_with_tag(manifestFdDup, BConstants::FDSAN_EXT_TAG);
+            close(incrementalFdDup);
+            close(manifestFdDup);
             auto ret = ptr->DoIncrementalBackupTask(move(incrementalDupFd), move(manifestDupFd));
             ptr->AppIncrementalDone(ret);
             HILOGI("Incremental backup app done %{public}d", ret);
