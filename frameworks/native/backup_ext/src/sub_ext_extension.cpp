@@ -1166,6 +1166,8 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
     if (incrementalFdDup < 0) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "dup failed");
     }
+    fdsan_exchange_owner_tag(incrementalFdDup, 0, BConstants::FDSAN_EXT_TAG);
+    fdsan_exchange_owner_tag(manifestFdDup, 0, BConstants::FDSAN_EXT_TAG);
     auto task = [obj {wptr<BackupExtExtension>(this)}, manifestFdDup, incrementalFdDup]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
@@ -1175,8 +1177,8 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
             if (incrementalDupFd < 0) {
                 throw BError(BError::Codes::EXT_INVAL_ARG, "dup failed");
             }
-            close(incrementalFdDup);
-            close(manifestFdDup);
+            fdsan_close_with_tag(incrementalFdDup, BConstants::FDSAN_EXT_TAG);
+            fdsan_close_with_tag(manifestFdDup, BConstants::FDSAN_EXT_TAG);
             auto ret = ptr->DoIncrementalBackupTask(move(incrementalDupFd), move(manifestDupFd));
             ptr->AppIncrementalDone(ret);
             HILOGI("Incremental backup app done %{public}d", ret);
