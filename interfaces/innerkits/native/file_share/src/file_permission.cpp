@@ -305,6 +305,9 @@ int32_t FilePermission::CheckPathPermission(uint32_t tokenId, const vector<PathP
         LOGE("invalid policy type %{public}d", policyType);
     }
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode);
+#else
+    LOGW("Sandbox manager bundle not exist, device not support.");
+    return FileManagement::LibN::E_DEVICENOTSUPPORT;
 #endif
     return errorCode;
 }
