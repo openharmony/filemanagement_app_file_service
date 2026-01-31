@@ -72,8 +72,8 @@ ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manif
     UniqueFd incrementalFdUnique(dup(incrementalFd));
     UniqueFd manifestFdUnique(dup(manifestFd));
     ErrCode ret = HandleIncrementalBackup(std::move(incrementalFdUnique), std::move(manifestFdUnique));
-    fdsan_close_with_tag(incrementalFd, BConstants::FDSAN_EXT_TAG);
-    fdsan_close_with_tag(manifestFd, BConstants::FDSAN_EXT_TAG);
+    close(incrementalFd);
+    close(manifestFd);
     return ret;
 }
 
@@ -1166,6 +1166,8 @@ void BackupExtExtension::AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, Un
     if (incrementalFdDup < 0) {
         throw BError(BError::Codes::EXT_INVAL_ARG, "dup failed");
     }
+    fdsan_exchange_owner_tag(incrementalFdDup, 0, BConstants::FDSAN_EXT_TAG);
+    fdsan_exchange_owner_tag(manifestFdDup, 0, BConstants::FDSAN_EXT_TAG);
     auto task = [obj {wptr<BackupExtExtension>(this)}, manifestFdDup, incrementalFdDup]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
