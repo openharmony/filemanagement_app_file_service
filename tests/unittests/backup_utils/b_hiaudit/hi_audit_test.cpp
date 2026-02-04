@@ -37,7 +37,18 @@ public:
         GTEST_LOG_(INFO) << "HiAuditTest TearDownTestCase enter";
     }
     void SetUp() override {}
-    void TearDown() override {}
+    void TearDown() override
+    {
+        HiAudit& hiAudit = HiAudit::GetInstance(false);
+        if (hiAudit.writeFd_ >= 0) {
+            fdsan_close_with_tag(hiAudit.writeFd_, BConstants::FDSAN_UTIL_TAG);
+            hiAudit.writeFd_ = -1;
+        }
+        const string testLogDir = "/data/storage/el2/log/hiaudit/";
+        const string blockPath = "/data/storage/el2/log/hiaudit";
+        remove(blockPath.c_str());
+        ForceCreateDirectory(testLogDir.data());
+    }
 };
 
 /**
@@ -245,25 +256,18 @@ HWTEST_F(HiAuditTest, Hi_Audit_FDSan_Init_Fail_Test_0105, testing::ext::TestSize
     GTEST_LOG_(INFO) << "HiAuditTest-begin Hi_Audit_FDSan_Init_Fail_Test_0105";
     try {
         HiAudit& hiAudit = HiAudit::GetInstance(false);
-
-        // 先关闭之前可能打开的文件描述符，确保测试隔离
-        if (hiAudit.writeFd_ >= 0) {
-            fdsan_close_with_tag(hiAudit.writeFd_, BConstants::FDSAN_UTIL_TAG);
-            hiAudit.writeFd_ = -1;
-        }
         string testLogDir = "/data/storage/el2/log/hiaudit/";
+        string blockPath = "/data/storage/el2/log/hiaudit";  // 无尾斜杠，才能创建普通文件阻塞 mkdir
         ForceRemoveDirectoryBMS(testLogDir);
         string testLogParentDir = "/data/storage/el2/log/";
         ForceCreateDirectory(testLogParentDir.data());
-        int blockFd = open(testLogDir.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+        int blockFd = open(blockPath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
         if (blockFd >= 0) {
             close(blockFd);
             GTEST_LOG_(INFO) << "Test_0105: Created file at log dir path to block mkdir";
         }
         hiAudit.Init();
         EXPECT_LT(hiAudit.writeFd_, 0);
-        remove(testLogDir.c_str());
-        ForceCreateDirectory(testLogDir.data());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HiAuditTest-exception occurred in Init Fail FDSan test.";
@@ -322,17 +326,12 @@ HWTEST_F(HiAuditTest, Hi_Audit_FDSan_GetWriteFilePath_Fail_Test_0107, testing::e
     GTEST_LOG_(INFO) << "HiAuditTest-begin Hi_Audit_FDSan_GetWriteFilePath_Fail_Test_0107";
     try {
         HiAudit& hiAudit = HiAudit::GetInstance(false);
-
-        // 先关闭之前可能打开的文件描述符，确保测试隔离
-        if (hiAudit.writeFd_ >= 0) {
-            fdsan_close_with_tag(hiAudit.writeFd_, BConstants::FDSAN_UTIL_TAG);
-            hiAudit.writeFd_ = -1;
-        }
         string testLogDir = "/data/storage/el2/log/hiaudit/";
+        string blockPath = "/data/storage/el2/log/hiaudit";  // 无尾斜杠，才能创建普通文件阻塞 mkdir
         ForceRemoveDirectoryBMS(testLogDir);
         string testLogParentDir = "/data/storage/el2/log/";
         ForceCreateDirectory(testLogParentDir.data());
-        int blockFd = open(testLogDir.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+        int blockFd = open(blockPath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
         if (blockFd >= 0) {
             close(blockFd);
             GTEST_LOG_(INFO) << "Test_0107: Created file at log dir path to block mkdir";
@@ -340,8 +339,6 @@ HWTEST_F(HiAuditTest, Hi_Audit_FDSan_GetWriteFilePath_Fail_Test_0107, testing::e
         hiAudit.writeLogSize_ = 4 * 1024 * 1024;
         hiAudit.GetWriteFilePath();
         EXPECT_LT(hiAudit.writeFd_, 0);
-        remove(testLogDir.c_str());
-        ForceCreateDirectory(testLogDir.data());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HiAuditTest-exception occurred in GetWriteFilePath Fail FDSan test.";
