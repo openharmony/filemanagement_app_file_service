@@ -296,6 +296,7 @@ UniqueFd Service::GetLocalCapabilities()
             session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return UniqueFd(-EPERM);
         }
+        std::unique_lock<std::mutex> lock(getLocalLock_);
         string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         CreateDirIfNotExist(path);
