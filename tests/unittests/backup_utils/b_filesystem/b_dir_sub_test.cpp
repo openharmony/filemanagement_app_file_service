@@ -279,7 +279,7 @@ HWTEST_F(BDirSubTest, B_DIR_DirScanner_ScanDir_003, testing::ext::TestSize.Level
 {
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_DirScanner_ScanDir_003";
     GTEST_LOG_(INFO) << "3. opendir fail";
-    EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*funcMock_, stat(_, _)).WillRepeatedly(Return(-1));
     std::string backupPath = "/abc";
     off_t sizeBoundary = 10;
     vector<string> excludes;
@@ -400,7 +400,7 @@ HWTEST_F(BDirSubTest, B_DIR_CompatibleDirScanner_ScanDir_003, testing::ext::Test
 {
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_CompatibleDirScanner_ScanDir_003";
     GTEST_LOG_(INFO) << "3. opendir fail";
-    EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*funcMock_, stat(_, _)).WillRepeatedly(Return(-1));
     std::string backupPath = "/abc||||/retstore||||";
     off_t sizeBoundary = 10;
     vector<string> excludes;
