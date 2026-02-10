@@ -35,7 +35,9 @@ export default class BackupExtensionAbility {
   private etsCallOnBackupEx(backupInfo: string): string {
     let p = this.onBackupEx(backupInfo);
     if (p instanceof Promise) {
-        return await(p as Promise<string>);
+        return waitForCompletion(async () => {
+          return await(p as Promise<string>);
+        });
     } else {
         return p;
     }
@@ -44,7 +46,9 @@ export default class BackupExtensionAbility {
   private etsCallOnRestoreEx(bundleVersion: BundleVersion, restoreInfo: string): string {
     let p = this.onRestoreEx(bundleVersion, restoreInfo);
     if (p instanceof Promise) {
-        return await(p as Promise<string>);
+        return waitForCompletion(async () => {
+          return await(p as Promise<string>);
+        });
     } else {
         return p;
     }
@@ -52,17 +56,23 @@ export default class BackupExtensionAbility {
 
   private etsCallOnRelease(scenario: int): void {
     let p = this.onRelease(scenario);
-    return await(p as Promise<void>);
+    return waitForCompletion(async () => {
+      return await(p as Promise<void>);
+    });
   }
 
   private etsCallGetBackupCompatibilityInfo(extInfo: string): string {
     let p = this.getBackupCompatibilityInfo(extInfo);
-    return await p;
+    return waitForCompletion(async () => {
+      return await p;
+    })
   }
 
   private etsCallGetRestoreCompatibilityInfo(extInfo: string): string {
     let p = this.getRestoreCompatibilityInfo(extInfo);
-    return await p;
+    return waitForCompletion(async () => {
+      return await p;
+    });
   }
 
   onBackup(): void {}
