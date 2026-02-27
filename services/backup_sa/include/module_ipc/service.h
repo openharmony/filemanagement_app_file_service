@@ -833,6 +833,7 @@ public:
     std::mutex gcMtx_;
     std::shared_ptr<GcProgressInfo> gcProgress_ = nullptr;
     std::atomic<bool> isGcTaskDone_ = {false};
+    std::mutex getLocalLock_;
 };
 } // namespace OHOS::FileManagement::Backup
 
