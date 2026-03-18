@@ -114,7 +114,7 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
         GenErrorByStatus(resultCode, hasConnected_.load());
         HILOGE("It's error that backup extension died before backup sa. name : %{public}s, isCleanCalled: %{public}d",
             bundleName.data(), isCleanCalled_.load());
-        callDied_(move(bundleName), isCleanCalled_);
+        callDied_(move(bundleName), isCleanCalled_.load());
     }
     condition_.notify_all();
     waitCondition_.notify_all();
