@@ -50,7 +50,7 @@ public:
             return false;
         }
         if (!obj_.isObject()) {
-            HILOGE("JSon value is not object");
+            HILOGE("Json value is not object");
             return false;
         }
         if (!obj_.isMember(key)) {

@@ -332,24 +332,15 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0000";
     try {
-        service->isOccupyingSession_ = false;
+        GTEST_LOG_(INFO) << "1.isClean and connection nullptr";
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
             .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false)).WillOnce(Return(false));
-        service->OnBackupExtensionDied("", true);
-        EXPECT_TRUE(true);
-
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
-        service->OnBackupExtensionDied("", false);
-        EXPECT_TRUE(true);
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        service->OnBackupExtensionDied("OnBackupExtensionDied1", true);
+        EXPECT_FALSE(service->isOccupyingSession_);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnBackupExtensionDied.";
@@ -358,9 +349,76 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0000, TestSize.Level1)
 }
 
 /**
+ * @tc.number: SUB_Service_OnBackupExtensionDied_0001
+ * @tc.name: SUB_Service_OnBackupExtensionDied_0001
+ * @tc.desc: 测试 OnBackupExtensionDied 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0001";
+    auto totalStatistic_ = service->totalStatistic_;
+    try {
+        GTEST_LOG_(INFO) << "2.isClean and connection not nullptr";
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &&bundleName) {};
+        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, "OnBackupExtensionDied2"));
+        connectPtr->error_ = BError(BError::Codes::OK);
+        EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
+        service->totalStatistic_ = nullptr;
+        service->OnBackupExtensionDied("OnBackupExtensionDied2", true);
+        EXPECT_FALSE(service->isOccupyingSession_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnBackupExtensionDied.";
+    }
+    service->totalStatistic_ = totalStatistic_;
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnBackupExtensionDied_0001";
+}
+
+/**
+ * @tc.number: SUB_Service_OnBackupExtensionDied_0002
+ * @tc.name: SUB_Service_OnBackupExtensionDied_0002
+ * @tc.desc: 测试 OnBackupExtensionDied 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0002";
+    try {
+        GTEST_LOG_(INFO) << "3.not clean";
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StopFwkTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
+        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        service->OnBackupExtensionDied("OnBackupExtensionDied3", false);
+        EXPECT_FALSE(service->isOccupyingSession_);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by OnBackupExtensionDied.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_OnBackupExtensionDied_0002";
+}
+
+/**
  * @tc.number: SUB_Service_ExtConnectDied_0000
  * @tc.name: SUB_Service_ExtConnectDied_0000
- * @tc.desc: 测试 ExtConnectDied 的正常/异常分支
+ * @tc.desc: 测试 ExtConnectDied backupConnection为null且hasConnected为false场景
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -369,55 +427,154 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0000, TestSize.Level1)
 HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDied_0000";
-    try {
-        string callName;
-        service->isOccupyingSession_ = false;
-        EXPECT_CALL(*session, StopFwkTimer(_)).WillRepeatedly(Return(true));
-        EXPECT_CALL(*session, StopExtTimer(_)).WillRepeatedly(Return(true));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        service->ExtConnectDied(callName);
-        EXPECT_TRUE(true);
-
-        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
-        auto callConnected = [](const string &&bundleName) {};
-        auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, "bundleName"));
-        EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
-        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
-        service->ExtConnectDied(callName);
-        EXPECT_TRUE(true);
-
-        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
-        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillRepeatedly(Return(true));
-        EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillRepeatedly(Return(false));
-        service->ExtConnectDied(callName);
-        EXPECT_TRUE(true);
-
-        EXPECT_CALL(*connect, IsExtAbilityConnected()).WillRepeatedly(Return(false));
-        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillRepeatedly(Return(false));
-        EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(true));
-        EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
-        EXPECT_CALL(*session, UpdateDfxInfo(_, _)).WillRepeatedly(Return());
-        service->ExtConnectDied(callName);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by ExtConnectDied.";
-    }
+    GTEST_LOG_(INFO) << "1. backupConnection is null and hasConnected is false";
+    string callName = "extConnectDie_0000";
+    service->isOccupyingSession_ = false;
+    EXPECT_CALL(*session, StopFwkTimer(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*session, StopExtTimer(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
+    EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(false));
+    EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false));
+    EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+        .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+    EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+    EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
+    service->ExtConnectDied(callName);
+    EXPECT_EQ(service->sched_->bundleTimeVec_.size(), 0);
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtConnectDied_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_ExtConnectDied_0001
+ * @tc.name: SUB_Service_ExtConnectDied_0001
+ * @tc.desc: 测试 ExtConnectDied backupConnection不为null且needCleanData为false场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDied_0001";
+    GTEST_LOG_(INFO) << "2. backupConnection is not null and hasConnected is true, needCleanData is false";
+    string callName = "ExtConnectDied_0001";
+    service->isOccupyingSession_ = false;
+    EXPECT_CALL(*session, StopFwkTimer(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*session, StopExtTimer(_)).WillRepeatedly(Return(true));
+    auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+    auto callConnected = [](const string &&bundleName) {};
+    auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, callName));
+    connectPtr->hasConnected_.store(true);
+    EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
+    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
+    EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(false));
+    EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false));
+    EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+        .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+    EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+    EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
+    service->ExtConnectDied(callName);
+    EXPECT_EQ(service->sched_->bundleTimeVec_.size(), 0);
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtConnectDied_0001";
+}
+
+/**
+ * @tc.number: SUB_Service_ExtConnectDied_0002
+ * @tc.name: SUB_Service_ExtConnectDied_0002
+ * @tc.desc: 测试 ExtConnectDied backupConnection不为null且bundle is sa场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDied_0002";
+    GTEST_LOG_(INFO) << "3. backupConnection is not null and hasConnected is true, needCleanData is true, bundle is sa";
+    string callName = "1234";
+    service->isOccupyingSession_ = false;
+    EXPECT_CALL(*session, StopFwkTimer(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*session, StopExtTimer(_)).WillRepeatedly(Return(true));
+    auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+    auto callConnected = [](const string &&bundleName) {};
+    auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, callName));
+    connectPtr->hasConnected_.store(true);
+    EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
+    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false)).WillOnce(Return(false));
+    EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false)).WillOnce(Return(false));
+    EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
+        .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+    EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+    EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
+    service->ExtConnectDied(callName);
+    EXPECT_EQ(service->sched_->bundleTimeVec_.size(), 0);
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtConnectDied_0002";
+}
+
+/**
+ * @tc.number: SUB_Service_ExtConnectDied_0003
+ * @tc.name: SUB_Service_ExtConnectDied_0003
+ * @tc.desc: 测试 ExtConnectDied backupConnection不为空场景执行clean并且lauchExtension失败的场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDied_0003";
+    GTEST_LOG_(INFO) << "4. backupConnection is not null and needclean and launch fail";
+    string callName = "ExtConnectDied_0003";
+    EXPECT_CALL(*session, StopFwkTimer(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*session, StopExtTimer(_)).WillRepeatedly(Return(true));
+    auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
+    auto callConnected = [](const string &&bundleName) {};
+    auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, callName));
+    connectPtr->hasConnected_.store(true);
+    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
+    EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
+    EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
+    EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false)).WillOnce(Return(false))
+        .WillOnce(Return(false));
+    service->ExtConnectDied(callName);
+    EXPECT_EQ(service->sched_->bundleTimeVec_.size(), 0);
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtConnectDied_0003";
+}
+
+/**
+ * @tc.number: SUB_Service_ClearAndNoticeClient_0000
+ * @tc.name: SUB_Service_ClearAndNoticeClient_0000
+ * @tc.desc: 测试 ClearAndNoticeClient 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_ClearAndNoticeClient_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ClearAndNoticeClient_0000";
+    string callName = "ClearAndNoticeClient";
+    GTEST_LOG_(INFO) << "1. test normal";
+    EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false)).WillOnce(Return(true)).WillOnce(Return(true));
+    uint32_t origin= service->successBundlesNum_;
+    service->ClearAndNoticeClient(callName, 0, true);
+    service->ClearAndNoticeClient(callName, 0, true);
+    service->ClearAndNoticeClient(callName, 0, false);
+    uint32_t middle = service->successBundlesNum_;
+    EXPECT_EQ(2, middle - origin);
+
+    GTEST_LOG_(INFO) << "2. test session nullptr";
+    auto session_ = service->session_;
+    service->session_ = nullptr;
+    service->ClearAndNoticeClient(callName, 0, false);
+    service->session_ = session_;
+    EXPECT_EQ(0, service->successBundlesNum_ - middle);
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ClearAndNoticeClient_0000";
 }
 
 /**

@@ -92,8 +92,13 @@ public:
 
     uint32_t GetConnectSpan() { return connectSpend_.GetSpan(); }
 
-    BError& GetError() { return error_; }
+    const BError& GetError()
+    {
+        std::shared_lock<std::shared_mutex> lock(errMutex_);
+        return error_;
+    }
 
+public:
     SvcBackupConnection(std::function<void(const std::string &&, bool)> callDied,
                         std::function<void(const std::string &&)> callConnected,
                         std::string bundleNameIndexInfo)
@@ -101,7 +106,7 @@ public:
     {
     }
     ~SvcBackupConnection() override {};
-
+    std::atomic<bool> hasConnected_ = {false};
 private:
     void GenErrorByStatus(int errCode, bool hasConnected);
 
@@ -118,6 +123,7 @@ private:
     std::function<void(const std::string &&)> callConnected_;
     std::string bundleNameIndexInfo_;
     Duration connectSpend_;
+    std::shared_mutex errMutex_;
     BError error_;
 };
 } // namespace OHOS::FileManagement::Backup

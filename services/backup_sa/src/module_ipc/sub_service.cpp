@@ -648,6 +648,19 @@ void Service::SaStatReport(const string &bundleName, const string &func, RadarEr
     saStatistic->ReportSA(func, err);
 }
 
+void Service::ClearAndNoticeClient(const std::string &bundleName, ErrCode errCode, bool checkRestoreEnd)
+{
+    if (session_ == nullptr) {
+        HILOGE("session is null");
+        return;
+    }
+    bool isRestoreEnd = session_->GetIsRestoreEnd(bundleName);
+    ClearSessionAndSchedInfo(bundleName);
+    if (!checkRestoreEnd || !isRestoreEnd) {
+        NoticeClientFinish(bundleName, errCode);
+    }
+}
+
 void Service::ExtConnectDied(const string &callName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -663,20 +676,22 @@ void Service::ExtConnectDied(const string &callName)
         sched_->RemoveExtConn(callName);
         session_->StopFwkTimer(callName);
         session_->StopExtTimer(callName);
-        auto backUpConnection = session_->GetExtConnection(callName);
-        if (backUpConnection != nullptr) {
-            AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_ABILITY_MGR_SVC,
-                backUpConnection->GetError()));
-            if (backUpConnection->IsExtAbilityConnected()) {
-                backUpConnection->DisconnectBackupExtAbility();
+        auto backupConnection = session_->GetExtConnection(callName).promote();
+        bool hasConnected = false;
+        ErrCode errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
+        if (backupConnection != nullptr) {
+            BError connectErr = backupConnection->GetError();
+            errCode = connectErr.GetCode();
+            AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_ABILITY_MGR_SVC, connectErr));
+            hasConnected = backupConnection->hasConnected_.load();
+            if (backupConnection->IsExtAbilityConnected()) {
+                backupConnection->DisconnectBackupExtAbility();
             }
         }
         bool needCleanData = session_->GetClearDataFlag(callName);
-        if (!needCleanData || SAUtils::IsSABundleName(callName)) {
+        if (!hasConnected || !needCleanData || SAUtils::IsSABundleName(callName)) {
             HILOGE("Current extension is died, but not need clean data, bundleName:%{public}s", callName.c_str());
-            SendEndAppGalleryNotify(callName);
-            ClearSessionAndSchedInfo(callName);
-            NoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED));
+            ClearAndNoticeClient(callName, errCode, false);
             return;
         }
         session_->SetServiceSchedAction(callName, BConstants::ServiceSchedAction::CLEAN);
@@ -685,17 +700,12 @@ void Service::ExtConnectDied(const string &callName)
             /* Clear Session before notice client finish event */
             HILOGE("Current bundle launch extension failed, bundleName:%{public}s", callName.c_str());
             SendEndAppGalleryNotify(callName);
-            bool isRestoreEnd = session_->GetIsRestoreEnd(callName);
-            ClearSessionAndSchedInfo(callName);
-            /* Notice Client Ext Ability Process Died */
-            DoNoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED), isRestoreEnd);
+            ClearAndNoticeClient(callName, BError(BError::Codes::EXT_ABILITY_DIED));
         }
     } catch (...) {
         HILOGE("Unexpected exception, bundleName: %{public}s", callName.c_str());
         SendEndAppGalleryNotify(callName);
-        bool isRestoreEnd = session_->GetIsRestoreEnd(callName);
-        ClearSessionAndSchedInfo(callName);
-        DoNoticeClientFinish(callName, BError(BError::Codes::EXT_ABILITY_DIED), isRestoreEnd);
+        ClearAndNoticeClient(callName, BError(BError::Codes::EXT_ABILITY_DIED));
     }
     RemoveExtensionMutex(callName);
 }
@@ -705,9 +715,13 @@ void Service::OnBackupExtensionDied(const string &&bundleName, bool isCleanCalle
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (isCleanCalled) {
         HILOGE("Backup <%{public}s> Extension Process second Died", bundleName.c_str());
-        bool isRestoreEnd = session_->GetIsRestoreEnd(bundleName);
-        ClearSessionAndSchedInfo(bundleName);
-        DoNoticeClientFinish(bundleName, BError(BError::Codes::EXT_ABILITY_DIED), isRestoreEnd);
+        auto backupConnection = session_->GetExtConnection(bundleName).promote();
+        if (backupConnection != nullptr) {
+            HILOGE("report dfx err <%{public}s>", bundleName.c_str());
+            AppStatReportErr(bundleName, "OnBackupExtensionDied", RadarError(MODULE_ABILITY_MGR_SVC,
+                backupConnection->GetError()));
+        }
+        ClearAndNoticeClient(bundleName, BError(BError::Codes::EXT_ABILITY_DIED));
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return;
     }

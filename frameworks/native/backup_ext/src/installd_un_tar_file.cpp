@@ -350,7 +350,7 @@ bool UnTarFile::ProcessTarBlock(char *buff, EParseType type, ParseTarPath *parse
                 isSplit = true;
                 return false;
             }
-        case REGTYPE:
+        case REGTYPE: // fall-through
         case AREGTYPE:
             HandleRegularFile(buff, type, parseTarPath, isSkip, tarFileInfo);
             break;

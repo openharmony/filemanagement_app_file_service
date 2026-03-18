@@ -42,6 +42,11 @@ public:
     MOCK_METHOD(bool, IsExtAbilityConnected, ());
     MOCK_METHOD((sptr<IExtension>), GetBackupExtProxy, ());
     MOCK_METHOD(bool, WaitDisconnectDone, ());
+    const BError& GetError()
+    {
+        return error_;
+    }
+    BError error_;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_EXTENSION_PROXY_MOCK_H
