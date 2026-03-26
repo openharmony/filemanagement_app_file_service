@@ -1635,6 +1635,10 @@ void BackupExtExtension::DoBackupTask()
             subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_, true);
             fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         }
+        if (subRet == ERR_NO_PERMISSION) {
+            allFiles.pop_back();
+            subRet = ERR_OK;
+        }
         if (subRet != ERR_OK) { // 后续错误码上报DFX
             HILOGE("report file ready fail,filename=%{public}s, err=%{public}d", fileInfo->filename_.c_str(), subRet);
             ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);

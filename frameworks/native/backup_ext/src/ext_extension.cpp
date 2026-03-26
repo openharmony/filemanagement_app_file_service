@@ -482,7 +482,7 @@ ErrCode BackupExtExtension::ReportAppFileReady(const string& filename, const str
         HILOGE("open file failed, filename: %{public}s, err: %{public}d", GetAnonyString(filePath).c_str(), errCode);
         if (errCode == ERR_NO_PERMISSION) {
             HILOGW("noPermissionFile, don't need to backup, path: %{public}s", GetAnonyString(filePath).c_str());
-            return ERR_OK;
+            return errCode;
         }
     }
     fdsan_exchange_owner_tag(fdval, 0, BConstants::FDSAN_EXT_TAG);
