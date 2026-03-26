@@ -468,6 +468,33 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0200, testing::ext
 }
 
 /**
+ * @tc.number: Ext_Extension_DoBackupTask_Test_0300
+ * @tc.name: Ext_Extension_DoBackupTask_Test_0300
+ * @tc.desc: 测试DoBackupTask open权限场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_DoBackupTask_Test_0300";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly([](const char* path, int mode) -> int {
+        errno = ERR_NO_PERMISSION;
+        return -1;
+    });
+    int ret = 0;
+    EXPECT_CALL(*serviceMock_, AppDone(_)).WillRepeatedly([&ret](int err) -> int {
+        ret = err;
+        return 0;
+    });
+    GTEST_LOG_(INFO) << "3. test open no permission";
+    extExtension_->DoBackupTask();
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_DoBackupTask_Test_0300";
+}
+
+/**
  * @tc.number: Ext_Extension_DivideIncludesByCompatInfo_Test_0100
  * @tc.name: Ext_Extension_DivideIncludesByCompatInfo_Test_0100
  * @tc.desc: 测试 DivideIncludesByCompatInfo dirMapping为空场景
