@@ -479,18 +479,27 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0300, testing::ext
 {
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_DoBackupTask_Test_0300";
     ASSERT_TRUE(extExtension_ != nullptr);
+    string filename = "app_file_ready_test";
+    string filePath = "/tmp";
+    struct stat sta;
+    shared_ptr<IFileInfo> file1 = make_shared<FileInfo>(filename, filePath, sta, false);
+    shared_ptr<IFileInfo> file2 = make_shared<FileInfo>(filename, filePath, sta, true);
+    ScanFileSingleton::GetInstance().pendingFileQueue_.push(file1);
+    ScanFileSingleton::GetInstance().pendingFileQueue_.push(file2);
+    ScanFileSingleton::GetInstance().pendingFileQueue_.push(nullptr);
+    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
+    int ret = 0;
     EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly([](const char* path, int mode) -> int {
         errno = ERR_NO_PERMISSION;
         return -1;
     });
-    int ret = 0;
     EXPECT_CALL(*serviceMock_, AppDone(_)).WillRepeatedly([&ret](int err) -> int {
         ret = err;
         return 0;
     });
     GTEST_LOG_(INFO) << "3. test open no permission";
     extExtension_->DoBackupTask();
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL));
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_DoBackupTask_Test_0300";
 }
 
