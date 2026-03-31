@@ -141,6 +141,8 @@ static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/base/.backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/base/.backup";
 static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME = "/storage/Users/currentUser/.backup";
+static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME_DH = "/storage/Users/currentUser/HO_DATA_EXT_MISC/.backup";
+static inline std::string_view PATH_FILEMANAGE_BACKUP_DH = "/mnt/data/100/HO_MEDIA/.backup";
 static inline std::string_view PATH_MEDIALDATA_BACKUP_HOME = "/storage/media/local/files/.backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR = "/data/backup/incrementalreceived/";
@@ -152,6 +154,12 @@ static inline std::string BACKUP_DIR_END = "/base/.backup/";
 static inline std::string BUNDLE_BASE_DIR = "/data/storage/el2/base";
 static inline std::string PATH_PUBLIC_HOME = "/storage/Users/currentUser/";
 static inline std::string PATH_APP_DATA = "appdata";
+static inline std::string BACKSLASH = "/";
+static inline std::string FUSE_ANCO_DIR = "HO_DATA_EXT_MISC";
+static inline std::string ANCO_TAG = "_anco";
+constexpr int FIRST = 0;
+constexpr int SECOND = 1;
+constexpr int THIRD = 2;
 
 // 文管bundleName
 static inline std::string BUNDLE_FILE_MANAGER = ".filemanager";
@@ -191,6 +199,15 @@ static inline std::string GetSaBundleBackupToolDir(int32_t userId)
     str.append("/data/service/el2/");
     str.append(std::to_string(userId));
     str.append("/backup/backup_tool/");
+    return str;
+}
+
+static inline std::string GetFullHmfsAncoDir(int32_t userId)
+{
+    std::string str;
+    str.append("/mnt/data/");
+    str.append(std::to_string(userId));
+    str.append("/HO_MEDIA/");
     return str;
 }
 
@@ -290,6 +307,7 @@ static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
 //FdSan
 const uint64_t FDSAN_EXT_TAG = 0xD004303;
 const uint64_t FDSAN_UTIL_TAG = 0xD004305;
+const int32_t MAX_PATH_LEN = 4096;
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H

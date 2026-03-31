@@ -173,6 +173,13 @@
                         "header_files": [],
                         "header_base": "//foundation/filemanagement/app_file_service/interfaces/kits/cj/src"
                     }
+                },
+                {
+                    "name": "//foundation/filemanagement/app_file_service/utils:backup_utils",
+                    "header": {
+                        "header_files": [],
+                        "header_base": "//foundation/filemanagement/app_file_service/utils/include"
+                    }
                 }
             ],
             "test": [

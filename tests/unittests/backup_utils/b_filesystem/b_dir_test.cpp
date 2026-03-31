@@ -380,4 +380,185 @@ HWTEST_F(BDirTest, b_dir__PreDealExcludes_0100, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_PreDealExcludes_0100";
 }
+
+/**
+* @tc.number: b_dir_IsNotPath_0100
+* @tc.name: b_dir_IsNotPath_0100
+* @tc.desc: Test function of IsNotPath interface for SUCCESS
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(BDirTest, b_dir_IsNotPath_0100, testing::ext::TestSize.Level1) {
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_IsNotPath_0100";
+    try {
+        std::string longPath(BConstants::MAX_PATH_LEN + 1, 'a');
+        std::vector<std::string> bigFiles, smallFiles;
+        auto result = IsNotPath(longPath, bigFiles, smallFiles, 1024);
+        
+        EXPECT_TRUE(std::get<0>(result).empty());
+        EXPECT_TRUE(std::get<1>(result).empty());
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an IsNotPath exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_IsNotPath_0100";
+}
+
+/**
+* @tc.number: b_dir_IsNotPath_0200
+* @tc.name: b_dir_IsNotPath_0200
+* @tc.desc: Test function of IsNotPath interface for SUCCESS
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(BDirTest, b_dir_IsNotPath_0200, testing::ext::TestSize.Level1) {
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_IsNotPath_0200";
+    try {
+        std::string invalidPath = "";
+        std::vector<std::string> bigFiles, smallFiles;
+        auto result = IsNotPath(invalidPath, bigFiles, smallFiles, 1024);
+        
+        EXPECT_TRUE(std::get<0>(result).empty());
+        EXPECT_TRUE(std::get<1>(result).empty());
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an IsNotPath exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_IsNotPath_0200";
+}
+
+/**
+* @tc.number: b_dir_IsNotPath_0300
+* @tc.name: b_dir_IsNotPath_0300
+* @tc.desc: Test function of IsNotPath interface for SUCCESS
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(BDirTest, b_dir_IsNotPath_0300, testing::ext::TestSize.Level1) {
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_IsNotPath_0300";
+    try {
+        std::string longPath(BConstants::MAX_PATH_LEN - 1, 'a');
+        std::vector<std::string> bigFiles, smallFiles;
+        auto result = IsNotPath(longPath, bigFiles, smallFiles, 1024);
+        
+        EXPECT_TRUE(std::get<0>(result).empty());
+        EXPECT_TRUE(std::get<1>(result).empty());
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an IsNotPath exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_IsNotPath_0300";
+}
+
+/**
+* @tc.number: b_dir_GetUser0DirFilesDetail_0100
+* @tc.name: b_dir_GetUser0DirFilesDetail_0100
+* @tc.desc: Test function of GetUser0DirFilesDetail interface for SUCCESS
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(BDirTest, b_dir_GetUser0DirFilesDetail_0100, testing::ext::TestSize.Level1) {
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetUser0DirFilesDetail_0100";
+    try {
+        std::string longPath(BConstants::MAX_PATH_LEN + 1, 'a');
+        auto result = GetUser0DirFilesDetail(longPath);
+        
+        EXPECT_TRUE(std::get<0>(result).empty());
+        EXPECT_TRUE(std::get<1>(result).empty());
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an GetUser0DirFilesDetail exception occurred.";
+        EXPECT_TRUE(true);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetUser0DirFilesDetail_0100";
+}
+
+/**
+* @tc.number: b_dir_GetUser0DirFilesDetail_0200
+* @tc.name: b_dir_GetUser0DirFilesDetail_0200
+* @tc.desc: Test function of GetUser0DirFilesDetail interface for SUCCESS
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(BDirTest, b_dir_GetUser0DirFilesDetail_0200, testing::ext::TestSize.Level1) {
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetUser0DirFilesDetail_0200";
+    try {
+        std::string invalidPath = "";
+        auto result = GetUser0DirFilesDetail(invalidPath);
+        
+        EXPECT_TRUE(std::get<0>(result).empty());
+        EXPECT_TRUE(std::get<1>(result).empty());
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an GetUser0DirFilesDetail exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetUser0DirFilesDetail_0200";
+}
+
+/**
+* @tc.number: b_dir_GetUser0DirFilesDetail_0300
+* @tc.name: b_dir_GetUser0DirFilesDetail_0300
+* @tc.desc: Test function of GetUser0DirFilesDetail interface for SUCCESS
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(BDirTest, b_dir_GetUser0DirFilesDetail_0300, testing::ext::TestSize.Level1) {
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_GetUser0DirFilesDetail_0300";
+    try {
+        std::string longPath(BConstants::MAX_PATH_LEN - 1, 'a');
+        auto result = GetUser0DirFilesDetail(longPath);
+        
+        EXPECT_TRUE(std::get<0>(result).empty());
+        EXPECT_TRUE(std::get<1>(result).empty());
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an GetUser0DirFilesDetail exception occurred.";
+        EXPECT_TRUE(true);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_GetUser0DirFilesDetail_0100";
+}
+
+/**
+* @tc.number: PROCESS_FILE_TEST_001
+* @tc.name: PROCESS_FILE_TEST_001
+* @tc.desc: Test function of ProcessInfo interface for SUCCESS
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(BDirTest, PROCESS_FILE_TEST_001, testing::ext::TestSize.Level1) {
+    GTEST_LOG_(INFO) << "BDirTest-begin: PROCESS_FILE_TEST_001";
+
+    try {
+        ProcessInfo info("", "path/to/backup", 1024);
+        info.restorePath_ = "";
+        info.backupPath_ = std::string(BConstants::MAX_PATH_LEN + 1, 'a');
+        info.sizeBoundary_ = 1024;
+
+        int64_t bigFileSize = 0;
+        int64_t smallFileSize = 0;
+        std::vector<std::string> excludes;
+
+        ProcessFile(info, bigFileSize, smallFileSize, excludes);
+
+        EXPECT_EQ(bigFileSize, 0);
+        EXPECT_EQ(smallFileSize, 0);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an ProcessFile exception occurred.";
+        EXPECT_TRUE(false);
+    }
+
+    GTEST_LOG_(INFO) << "BDirTest-end: PROCESS_FILE_TEST_001";
+}
 } // namespace OHOS::FileManagement::Backup

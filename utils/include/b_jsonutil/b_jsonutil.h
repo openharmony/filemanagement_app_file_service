@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_JSON_UTIL_H
 #define OHOS_FILEMGMT_BACKUP_JSON_UTIL_H
 
+#include "anco_restore_result.h"
 #include <string>
 #include <map>
 
@@ -148,6 +149,17 @@ public:
      *
      */
     static bool BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
+    
+    /**
+    * @brief 添加东湖文件恢复结果
+    *
+    * @param jsonStr 组建结果
+    * @param errCode 错误码
+    *
+    * @return 是否组建成功
+    *
+    */
+    static bool AddAncoFileResult(const AncoRestoreResult &ancoRestoreRes, std::string &jsonStr);
 
     /**
      * @brief 组建App进度返回的信息

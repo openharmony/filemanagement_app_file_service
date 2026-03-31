@@ -69,6 +69,83 @@ HWTEST_F(ScanFileSingletonTest, FILE_INFO_TEST_001, testing::ext::TestSize.Level
 }
 
 /**
+* @tc.number: FILE_INFO_TEST_002
+* @tc.name: FILE_INFO_TEST_002
+* @tc.desc: Test function of FileInfo and CompatFileInfo
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(ScanFileSingletonTest, FILE_INFO_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin FILE_INFO_TEST_002";
+    GTEST_LOG_(INFO) << "1. test FileInfo";
+    std::string filename = "test1";
+    std::string filePath = "/tmp/test1";
+    struct stat sta = {};
+    std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<FileInfo>(filename, filePath, sta, false);
+    EXPECT_EQ(fInfo1->GetFd(), -1);
+
+    GTEST_LOG_(INFO) << "2. test CompatFileInfo";
+    std::string restorePath = "/tmp/restore/test2";
+    std::shared_ptr<IFileInfo> fInfo2 = std::make_shared<CompatibleFileInfo>(filename, filePath, sta, false,
+        restorePath);
+    EXPECT_EQ(fInfo2->GetFd(), -1);
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end FILE_INFO_TEST_001";
+}
+
+/**
+* @tc.number: FILE_INFO_TEST_002
+* @tc.name: FILE_INFO_TEST_002
+* @tc.desc: Test function of FileInfo and CompatFileInfo
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(ScanFileSingletonTest, ANCO_FILE_INFO_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin ANCO_FILE_INFO_TEST_001";
+    GTEST_LOG_(INFO) << "1. test AncoFileInfo";
+    std::string filename = "test_anco";
+    std::string filePath = "/tmp/test_anco";
+    struct stat sta = {};
+    UniqueFd fd(123);
+    std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd));
+    EXPECT_EQ(fInfo1->GetRestorePath(), "");
+
+    GTEST_LOG_(INFO) << "2. test AncoFileInfo";
+    std::shared_ptr<IFileInfo> fInfo2 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd));
+    EXPECT_EQ(fInfo2->GetFd(), fd);
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end ANCO_FILE_INFO_TEST_001";
+}
+
+/**
+* @tc.number: FILE_INFO_TEST_002
+* @tc.name: FILE_INFO_TEST_002
+* @tc.desc: Test function of FileInfo and CompatFileInfo
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(ScanFileSingletonTest, ANCO_COMPATIBLEFILE_FILE_INFO_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin ANCO_COMPATIBLEFILE_FILE_INFO_TEST_001";
+    GTEST_LOG_(INFO) << "1. test AncoCompatibleFileInfo";
+    std::string filename = "test_anco_compatible";
+    std::string filePath = "/tmp/test_anco_compatible";
+    struct stat sta = {};
+    UniqueFd fd(456);
+    std::string restorePath = "/tmp/restore/test_anco_compatible";
+    std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<AncoCompatibleFileInfo>(filename, filePath, sta, false, restorePath,
+        std::move(fd));
+    EXPECT_EQ(fInfo1->GetFd(), 456);
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end ANCO_COMPATIBLEFILE_FILE_INFO_TEST_001";
+}
+
+/**
  * @tc.number: SMALL_FILE_INFO_TEST_001
  * @tc.name: SMALL_FILE_INFO_TEST_001
  * @tc.desc: Test function of SmallFileInfo and CompatSmallFileInfo
@@ -396,5 +473,108 @@ HWTEST_F(ScanFileSingletonTest, UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001, testing::ex
     ScanFileSingleton::GetInstance().UpdateLimitByTotalSize(100);
     EXPECT_EQ(ScanFileSingleton::GetInstance().percentSizeLimit_, 50);
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001";
+}
+
+/**
+* @tc.number: ADD_ANCO_BIGFILE_TEST_001
+* @tc.name: ADD_ANCO_BIGFILE_TEST_001
+* @tc.desc: Test function of AddAncoBigFile
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(ScanFileSingletonTest, ADD_ANCO_BIG_FILE_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_ANCO_BIGFILE_TEST_001";
+    std::string filePath = "/test/path/to/anco_file";
+    std::string restorePath = "/restore/path/to/anco_file";
+    struct stat sta = {};
+    UniqueFd fd(123); // 假设 UniqueFd 是一个智能文件描述符
+
+    // 调用被测函数
+    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, sta, std::move(fd));
+
+    auto fileInfo = ScanFileSingleton::GetInstance().GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), "/restore/path/to/anco_file");
+
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: ADD_ANCO_BIG_FILE_TEST_001";
+}
+
+/**
+* @tc.number: ADD_ANCO_TARFILE_TEST_001
+* @tc.name: ADD_ANCO_TARFILE_TEST_001
+* @tc.desc: Test function of AddAncoTarFile
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_ANCO_TARFILE_TEST_001";
+    // 准备测试数据
+    std::string filename = "test.tar";
+    std::string filePath = "/data/test/test.tar";
+    struct stat sta = {};
+    sta.st_size = 1024 * 1024;
+    UniqueFd fd = UniqueFd(42);
+
+    // 执行测试操作
+    ScanFileSingleton::GetInstance().AddAncoTarFile(filename, filePath, sta, std::move(fd));
+
+    // 验证结果
+    EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
+    auto frontItem = ScanFileSingleton::GetInstance().pendingFileQueue_.front();
+    EXPECT_NE(frontItem, nullptr);
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001";
+}
+
+/**
+* @tc.number: ADD_ANCO_BIGFILE_TEST_002
+* @tc.name: ADD_ANCO_BIGFILE_TEST_002
+* @tc.desc: Test function of AddAncoBigFile
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(ScanFileSingletonTest, ADD_ANCO_BIG_FILE_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_ANCO_BIGFILE_TEST_002";
+    std::string filePath = "/test/path/to/anco_file";
+    std::string restorePath = "";
+    struct stat sta = {};
+    UniqueFd fd(123); 
+
+    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, sta, std::move(fd));
+
+    auto fileInfo = ScanFileSingleton::GetInstance().GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), "");
+
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: ADD_ANCO_BIGFILE_TEST_002";
+}
+
+HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_ANCO_TARFILE_TEST_002";
+    std::string filename = "test.tar";
+    std::string filePath = "/data/test/test.tar";
+    struct stat sta = {};
+    sta.st_size = 1024 * 1024;
+    UniqueFd fd = UniqueFd(42);
+
+    ScanFileSingleton& instance = ScanFileSingleton::GetInstance();
+    instance.currentTarSize_.store(0);
+    instance.percentSizeLimit_.store(1.5 * 1024 * 1024);
+
+    ScanFileSingleton::GetInstance().AddAncoTarFile(filename, filePath, sta, std::move(fd));
+
+    EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
+    auto frontItem = ScanFileSingleton::GetInstance().pendingFileQueue_.front();
+    EXPECT_NE(frontItem, nullptr);
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_002";
 }
 } // namespace OHOS::FileManagement::Backup

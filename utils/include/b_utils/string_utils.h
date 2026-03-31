@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <set>
 
 namespace OHOS::FileManagement::Backup {
 
@@ -33,6 +34,15 @@ public:
     static std::pair<std::string, std::string> ParseMappingDir(const std::string& str);
 
     static std::string GenHashName(const std::string &str);
+
+    static bool IsSandboxAncoPath(const std::string &path);
+    static bool IsRealAncoPath(const std::string &path);
+    static std::string ResolveSandboxAncoPath(const std::string &path);
+    static std::string ResolveRealAncoPath(const std::string &path);
+    static std::set<std::string> FilterAncoPaths(std::set<std::string> &paths);
+    static std::set<std::string> ResolveSandboxAncoPaths(const std::set<std::string> &paths);
+    static std::vector<std::string> ResolveSandboxAncoPaths(const std::vector<std::string> &paths);
+    static uint32_t CheckOverLongPath(const std::string &path);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_STRING_UTILS_H

@@ -213,4 +213,483 @@ HWTEST_F(StringUtilsTest, GEN_HASH_NAME_TEST_001, testing::ext::TestSize.Level1)
     EXPECT_EQ(hash.length(), 16);
     GTEST_LOG_(INFO) << "StringUtilsTest-end GEN_HASH_NAME_TEST_001";
 }
+
+/**
+* @tc.number: IS_SANBOX_ANCO_PATH_TEST_001
+* @tc.name: IS_SANBOX_ANCO_PATH_TEST_001
+* @tc.desc: Test function of IsSandboxAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, IS_SANBOX_ANCO_PATH_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin IS_SANBOX_ANCO_PATH_TEST_001";
+    // 完全匹配
+    EXPECT_TRUE(StringUtils::IsSandboxAncoPath("/storage/Users/currentUser/HO_DATA_EXT_MISC/"));
+    // 长度不足
+    EXPECT_TRUE(StringUtils::IsSandboxAncoPath("/storage/Users/currentUser/HO_DATA_EXT_MISC"));
+    // 长度超过但后缀不是斜杠
+    EXPECT_TRUE(StringUtils::IsSandboxAncoPath("/storage/Users/currentUser/HO_DATA_EXT_MISC/test"));
+    // 长度超过且后缀是斜杠，但内容不匹配
+    EXPECT_FALSE(StringUtils::IsSandboxAncoPath("/storage/Users/currentUser/other_dir/"));
+    // 长度超过且后缀是斜杠，但内容不匹配
+    EXPECT_FALSE(StringUtils::IsSandboxAncoPath("/storage/Users/currentUser/HO_DATA_EXT_MIS/"));
+    // 长度超过且后缀是斜杠，但内容不匹配
+    EXPECT_TRUE(StringUtils::IsSandboxAncoPath("/storage/Users/currentUser/HO_DATA_EXT_MISC/test/"));
+    GTEST_LOG_(INFO) << "StringUtilsTest-end IS_SANBOX_ANCO_PATH_TEST_001";
+}
+
+/**
+* @tc.number: IS_REAL_ANCO_PATH_TEST_001
+* @tc.name: IS_REAL_ANCO_PATH_TEST_001
+* @tc.desc: Test function of IsRealAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, IS_REAL_ANCO_PATH_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin IS_REAL_ANCO_PATH_TEST_001";
+    EXPECT_TRUE(StringUtils::IsRealAncoPath("/mnt/data/100/HO_MEDIA/test"));
+    EXPECT_TRUE(StringUtils::IsRealAncoPath("/mnt/data/100/HO_MEDIA/"));
+
+    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/101/backup/backup_sa/some_file.txt"));
+    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/100/backup/other/some_file.txt"));
+    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/100/backup/backup_sa/"));
+
+    EXPECT_FALSE(StringUtils::IsRealAncoPath(""));
+    GTEST_LOG_(INFO) << "StringUtilsTest-end IS_REAL_ANCO_PATH_TEST_001";
+}
+
+/**
+* @tc.number: RESOLVE_SAND_ANCO_PATH_TEST_001
+* @tc.name: RESOLVE_SAND_ANCO_PATH_TEST_001
+* @tc.desc: Test function of ResolveSandboxAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_SAND_ANCO_PATH_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SAND_ANCO_PATH_TEST_001";
+    std::string inputPath = "com.example.app/files/data.txt";
+    std::string expectedResult = "com.example.app/files/data.txt";
+    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath);
+    EXPECT_EQ(result, expectedResult);
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SAND_ANCO_PATH_TEST_001";
+}
+
+/**
+* @tc.number: RESOLVE_SAND_ANCO_PATH_TEST_002
+* @tc.name: RESOLVE_SAND_ANCO_PATH_TEST_002
+* @tc.desc: Test function of ResolveSandboxAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_SAND_ANCO_PATH_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SAND_ANCO_PATH_TEST_002";
+    std::string inputPath = "";
+    std::string expectedResult = "";
+    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath);
+    EXPECT_EQ(result, expectedResult);
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SAND_ANCO_PATH_TEST_002";
+}
+
+/**
+* @tc.number: RESOLVE_SAND_ANCO_PATH_TEST_003
+* @tc.name: RESOLVE_SAND_ANCO_PATH_TEST_003
+* @tc.desc: Test function of ResolveSandboxAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_SAND_ANCO_PATH_TEST_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SAND_ANCO_PATH_TEST_003";
+
+    std::string inputPath = "/storage/Users/currentUser/HO_DATA_EXT_MISC/test.txt";
+    std::string expectedResult = "/mnt/data/100/HO_MEDIA/test.txt";
+    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath);
+    EXPECT_EQ(result, expectedResult);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SAND_ANCO_PATH_TEST_003";
+}
+
+/**
+* @tc.number: RESOLVE_SAND_ANCO_PATH_TEST_004
+* @tc.name: RESOLVE_SAND_ANCO_PATH_TEST_004
+* @tc.desc: Test function of ResolveSandboxAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_SAND_ANCO_PATH_TEST_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SAND_ANCO_PATH_TEST_004";
+
+    std::string inputPath = "storage/Users/currentUser/HO_DATA_EXT_MISC/test.txt";
+    std::string expectedResult = "/mnt/data/100/HO_MEDIA/test.txt";
+    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath);
+    EXPECT_EQ(result, expectedResult);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SAND_ANCO_PATH_TEST_004";
+}
+
+/**
+* @tc.number: RESOLVE_REAL_ANCO_PATH_TEST_001
+* @tc.name: RESOLVE_REAL_ANCO_PATH_TEST_001
+* @tc.desc: Test function of ResolveRealAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_REAL_ANCO_PATH_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_REAL_ANCO_PATH_TEST_001";
+
+    std::string inputPath = "mnt/data/100/HO_MEDIA/";
+    std::string expectedResult = "/storage/Users/currentUser/HO_DATA_EXT_MISC/";
+    std::string result = StringUtils::ResolveRealAncoPath(inputPath);
+    EXPECT_EQ(result, expectedResult);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_REAL_ANCO_PATH_TEST_001";
+}
+
+/**
+* @tc.number: RESOLVE_REAL_ANCO_PATH_TEST_002
+* @tc.name: RESOLVE_REAL_ANCO_PATH_TEST_002
+* @tc.desc: Test function of ResolveRealAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_REAL_ANCO_PATH_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_REAL_ANCO_PATH_TEST_002";
+
+    std::string inputPath = "";
+    std::string expectedResult = "";
+    std::string result = StringUtils::ResolveRealAncoPath(inputPath);
+    EXPECT_EQ(result, expectedResult);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_REAL_ANCO_PATH_TEST_002";
+}
+
+/**
+* @tc.number: RESOLVE_REAL_ANCO_PATH_TEST_003
+* @tc.name: RESOLVE_REAL_ANCO_PATH_TEST_003
+* @tc.desc: Test function of ResolveRealAncoPath
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_REAL_ANCO_PATH_TEST_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_REAL_ANCO_PATH_TEST_003";
+
+    std::string inputPath = "/mnt/data/100/HO_MEDIA/test.txt";
+    std::string expectedResult = "/storage/Users/currentUser/HO_DATA_EXT_MISC/test.txt";
+    std::string result = StringUtils::ResolveRealAncoPath(inputPath);
+    EXPECT_EQ(result, expectedResult);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_REAL_ANCO_PATH_TEST_003";
+}
+
+/**
+* @tc.number: FILTER_ANCO_PATHS_TEST_001
+* @tc.name: FILTER_ANCO_PATHS_TEST_001
+* @tc.desc: Test function of FilterAncoPaths with mixed paths
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, FILTER_ANCO_PATHS_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin FILTER_ANCO_PATHS_TEST_001";
+
+    std::set<std::string> inputPaths = {
+        "/storage/Users/currentUser/HO_DATA_EXT_MISC/",
+        "/data/app/com.example.app/",
+        "/mnt/data/100/HO_MEDIA/",
+        "/data/user/0/com.example.app/",
+        "/storage/Users/currentUser/HO_DATA/"
+    };
+
+    std::set<std::string> expectedAncoPaths = {
+        "/storage/Users/currentUser/HO_DATA_EXT_MISC/"
+    };
+
+    std::set<std::string> resultAncoPaths = StringUtils::FilterAncoPaths(inputPaths);
+    EXPECT_EQ(resultAncoPaths, expectedAncoPaths);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end FILTER_ANCO_PATHS_TEST_001";
+}
+
+/**
+* @tc.number: FILTER_ANCO_PATHS_TEST_002
+* @tc.name: FILTER_ANCO_PATHS_TEST_002
+* @tc.desc: Test function of FilterAncoPaths with no anco paths
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, FILTER_ANCO_PATHS_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin FILTER_ANCO_PATHS_TEST_002";
+
+    std::set<std::string> inputPaths = {
+        "/data/app/com.example.app/",
+        "/data/user/0/com.example.app/",
+        "/storage/Users/currentUser/HO_DATA/"
+    };
+
+    std::set<std::string> expectedAncoPaths;
+
+    std::set<std::string> resultAncoPaths = StringUtils::FilterAncoPaths(inputPaths);
+
+    EXPECT_EQ(resultAncoPaths, expectedAncoPaths);
+    GTEST_LOG_(INFO) << "StringUtilsTest-end FILTER_ANCO_PATHS_TEST_002";
+}
+
+/**
+* @tc.number: FILTER_ANCO_PATHS_TEST_003
+* @tc.name: FILTER_ANCO_PATHS_TEST_003
+* @tc.desc: Test function of FilterAncoPaths with all anco paths
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, FILTER_ANCO_PATHS_TEST_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin FILTER_ANCO_PATHS_TEST_003";
+
+    std::set<std::string> inputPaths = {
+        "/storage/Users/currentUser/HO_DATA_EXT_MISC/",
+        "/storage/Users/currentUser/HO_DATA/"
+    };
+
+    std::set<std::string> expectedAncoPaths = {
+        "/storage/Users/currentUser/HO_DATA_EXT_MISC/"
+    };
+
+    std::set<std::string> resultAncoPaths = StringUtils::FilterAncoPaths(inputPaths);
+
+    EXPECT_EQ(resultAncoPaths, expectedAncoPaths);
+    GTEST_LOG_(INFO) << "StringUtilsTest-end FILTER_ANCO_PATHS_TEST_003";
+}
+
+/**
+* @tc.number: FILTER_ANCO_PATHS_TEST_004
+* @tc.name: FILTER_ANCO_PATHS_TEST_004
+* @tc.desc: Test function of FilterAncoPaths with empty input
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, FILTER_ANCO_PATHS_TEST_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin FILTER_ANCO_PATHS_TEST_004";
+
+    std::set<std::string> inputPaths;
+    std::set<std::string> expectedAncoPaths;
+
+    std::set<std::string> resultAncoPaths = StringUtils::FilterAncoPaths(inputPaths);
+    EXPECT_EQ(resultAncoPaths, expectedAncoPaths);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end FILTER_ANCO_PATHS_TEST_004";
+}
+
+/**
+* @tc.number: RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_001
+* @tc.name: RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_001
+* @tc.desc: Test function of ResolveSandboxAncoPaths
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_001";
+
+    std::set<std::string> inputPaths;
+    std::set<std::string> expectedRealPaths;
+
+    std::set<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths);
+
+    EXPECT_EQ(resultRealPaths, expectedRealPaths);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_001";
+}
+
+/**
+* @tc.number: RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_002
+* @tc.name: RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_002
+* @tc.desc: Test function of ResolveSandboxAncoPaths
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_SANDBOX_ANCO_PATHS_VECTOR_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SANDBOX_ANCO_PATHS_VECTOR_TEST_002";
+
+    std::vector<std::string> inputPaths;
+    std::vector<std::string> expectedRealPaths;
+
+    std::vector<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths);
+
+    EXPECT_EQ(resultRealPaths, expectedRealPaths);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SANDBOX_ANCO_PATHS_VECTOR_TEST_002";
+}
+
+/**
+* @tc.number: RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_003
+* @tc.name: RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_003
+* @tc.desc: Test function of ResolveSandboxAncoPaths
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_003";
+
+    std::set<std::string> inputPaths = {
+        "/storage/Users/currentUser/HO_DATA_EXT_MISC/test.txt"
+    };
+    std::set<std::string> expectedRealPaths = {"/mnt/data/100/HO_MEDIA/test.txt"};
+
+    std::set<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths);
+
+    EXPECT_EQ(resultRealPaths, expectedRealPaths);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_003";
+}
+
+/**
+* @tc.number: RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_004
+* @tc.name: RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_004
+* @tc.desc: Test function of ResolveSandboxAncoPaths
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, RESOLVE_SANDBOX_ANCO_PATHS_VECTOR_TEST_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SANDBOX_ANCO_PATHS_VECTOR_TEST_004";
+
+    std::vector<std::string> inputPaths = {
+        "/storage/Users/currentUser/HO_DATA_EXT_MISC/test.txt"
+    };
+    std::vector<std::string> expectedRealPaths = {"/mnt/data/100/HO_MEDIA/test.txt"};
+
+    std::vector<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths);
+
+    EXPECT_EQ(resultRealPaths, expectedRealPaths);
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SANDBOX_ANCO_PATHS_VECTOR_TEST_004";
+}
+
+/**
+* @tc.number: STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_001
+* @tc.name: CheckOverLongPath_NormalPath
+* @tc.desc: Test normal path length check
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_001";
+
+    std::string normalPath = "/storage/Users/currentUser/test.txt";
+    uint32_t result = StringUtils::CheckOverLongPath(normalPath);
+    EXPECT_EQ(result, normalPath.length());
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_001";
+}
+
+/**
+* @tc.number: STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_002
+* @tc.name: CheckOverLongPath_LongPath
+* @tc.desc: Test over long path with file name
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_002";
+
+    std::string longPath = "/storage/Users/currentUser/very_long_directory_name_that_exceeds_max_path_length/test.txt";
+    uint32_t result = StringUtils::CheckOverLongPath(longPath);
+    EXPECT_EQ(result, longPath.length());
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_002";
+}
+
+/**
+* @tc.number: STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_003
+* @tc.name: CheckOverLongPath_LongPathWithoutFileName
+* @tc.desc: Test over long path without file name
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_CHECK_OVER_LONG_PATH__TEST003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_003";
+
+    std::string longPathWithoutFile = "/storage/Users/current/very_long_directory_name_that_exceeds_max_path_length/";
+    uint32_t result = StringUtils::CheckOverLongPath(longPathWithoutFile);
+    EXPECT_EQ(result, longPathWithoutFile.length());
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_003";
+}
+
+/**
+* @tc.number: STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_004
+* @tc.name: CheckOverLongPath_ExactMaxPath
+* @tc.desc: Test path length exactly at max limit
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_004";
+
+    // 创建一个刚好等于MAX_PATH_LEN的路径
+    std::string exactMaxPath(4068, 'a');
+    exactMaxPath += "/test.txt";
+    uint32_t result = StringUtils::CheckOverLongPath(exactMaxPath);
+    EXPECT_EQ(result, exactMaxPath.length());
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_004";
+}
 } // namespace OHOS::FileManagement::Backup

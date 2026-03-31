@@ -97,4 +97,101 @@ std::string StringUtils::GenHashName(const std::string &str)
     strHex << std::setfill('0') << std::setw(BConstants::BIG_FILE_NAME_SIZE) << szHash;
     return strHex.str();
 }
+
+bool StringUtils::IsSandboxAncoPath(const std::string &path)
+{
+    const auto length = BConstants::PATH_PUBLIC_HOME.length() + BConstants::FUSE_ANCO_DIR.length();
+    if (path.length() < length ||
+        (path.length() > length && path.substr(length, BConstants::BACKSLASH.length()) != BConstants::BACKSLASH)) {
+        return false;
+    }
+    return path.compare(BConstants::PATH_PUBLIC_HOME.length(), BConstants::FUSE_ANCO_DIR.length(),
+        BConstants::FUSE_ANCO_DIR, 0, BConstants::FUSE_ANCO_DIR.length()) == 0;
+}
+
+bool StringUtils::IsRealAncoPath(const std::string &path)
+{
+    const auto realAncoPath = BConstants::GetFullHmfsAncoDir(BConstants::DEFAULT_USER_ID);
+    if (path.length() < realAncoPath.length()) {
+        return false;
+    }
+    return path.compare(0, realAncoPath.length(), realAncoPath, 0, realAncoPath.length()) == 0;
+}
+
+std::string StringUtils::ResolveSandboxAncoPath(const std::string &path)
+{
+    std::string fullPath = path;
+    if (!IsSandboxAncoPath(fullPath)) {
+        fullPath = "/" + fullPath;
+        if (!IsSandboxAncoPath(fullPath)) {
+            return path;
+        }
+    }
+    const auto newPath = BConstants::GetFullHmfsAncoDir(BConstants::DEFAULT_USER_ID) +
+        fullPath.substr(BConstants::PATH_PUBLIC_HOME.length() + BConstants::FUSE_ANCO_DIR.length() + 1);
+    return newPath;
+}
+
+std::string StringUtils::ResolveRealAncoPath(const std::string &path)
+{
+    std::string fullPath = path;
+    if (!IsRealAncoPath(fullPath)) {
+        fullPath = "/" + fullPath;
+        if (!IsRealAncoPath(fullPath)) {
+            return path;
+        }
+    }
+    const auto realAncoPath = BConstants::GetFullHmfsAncoDir(BConstants::DEFAULT_USER_ID);
+    const auto newPath =
+        BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR + fullPath.substr(realAncoPath.length() - 1);
+    return newPath;
+}
+
+std::set<std::string> StringUtils::FilterAncoPaths(std::set<std::string> &paths)
+{
+    std::set<std::string> ancoPaths;
+    auto it = paths.begin();
+    while (it != paths.end()) {
+        if (IsSandboxAncoPath(*it)) {
+            ancoPaths.emplace(*it);
+            it = paths.erase(it);
+        } else {
+            it++;
+        }
+    }
+    return ancoPaths;
+}
+
+std::set<std::string> StringUtils::ResolveSandboxAncoPaths(const std::set<std::string> &paths)
+{
+    std::set<std::string> realPaths;
+    for (const auto &path : paths) {
+        realPaths.emplace(ResolveSandboxAncoPath(path));
+    }
+    return realPaths;
+}
+
+std::vector<std::string> StringUtils::ResolveSandboxAncoPaths(const std::vector<std::string> &paths)
+{
+    std::vector<std::string> realPaths;
+    for (const auto &path : paths) {
+        realPaths.emplace_back(ResolveSandboxAncoPath(path));
+    }
+    return realPaths;
+}
+
+uint32_t StringUtils::CheckOverLongPath(const std::string &path)
+{
+    uint32_t len = path.length();
+    if (len >= BConstants::MAX_PATH_LEN) {
+        size_t found = path.find_last_of(BConstants::FILE_SEPARATOR_CHAR);
+        std::string sub = "";
+        if (found != std::string::npos && found != path.length() - 1) {
+            sub = path.substr(found + 1);
+        }
+        HILOGE("Path over long, length:%{public}d, fileName:%{private}s.", len, sub.c_str());
+    }
+    return len;
+}
+
 } // namespace OHOS::FileManagement::Backup
