@@ -21,6 +21,5 @@
 #define cJSON_Delete CJSONDelete
 #define cJSON_IsArray CJSONIsArray
 #define cJSON_free CJSONFree
-#define cJSON_IsString CJSONIsString
 
 #endif // FILEMANAGEMENT_APP_FILE_SERVICE_CJSON_FUNC_DEFINE_H
