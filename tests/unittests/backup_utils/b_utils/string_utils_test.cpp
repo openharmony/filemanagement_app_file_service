@@ -692,4 +692,47 @@ HWTEST_F(StringUtilsTest, STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_004, testing::ex
 
     GTEST_LOG_(INFO) << "StringUtilsTest-end STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_004";
 }
+
+/**
+* @tc.number: STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_005
+* @tc.name: CheckOverLongPath_ExactMaxPath
+* @tc.desc: Test path length exactly at max limit
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_005";
+
+    // 创建一个刚好等于MAX_PATH_LEN的路径
+    std::string exactMaxPath(4096, 'a');
+    exactMaxPath += "/";
+    uint32_t result = StringUtils::CheckOverLongPath(exactMaxPath);
+    EXPECT_EQ(result, exactMaxPath.length());
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_005";
+}
+
+/**
+* @tc.number: STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_006
+* @tc.name: CheckOverLongPath_ExactMaxPath
+* @tc.desc: Test path length exactly at max limit
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_006";
+
+    // 创建一个刚好等于MAX_PATH_LEN的路径
+    std::string exactMaxPath(4097, 'a');
+    uint32_t result = StringUtils::CheckOverLongPath(exactMaxPath);
+    EXPECT_EQ(result, exactMaxPath.length());
+
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_006";
+}
 } // namespace OHOS::FileManagement::Backup
