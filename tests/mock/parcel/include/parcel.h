@@ -17,9 +17,18 @@
 #define MOCK_OHOS_BACKUP_PARCEL_H
 
 #include <string>
+#include <queue>
+#include <any>
 
 namespace OHOS::FileManagement::Backup {
+
 void MockWriteUint32(bool state);
+
+void MockWriteInt32(bool state);
+ 	 
+void MockWriteUint64(bool state);
+
+void MockWriteInt64(bool state);
 
 void MockWriteString(bool state, uint8_t count);
 
@@ -31,21 +40,39 @@ void ResetParcelState();
 
 bool GetMockReadParcelableState();
 
+void SetSpecialParcelSequence(const std::vector<bool> &sequence);
+
 class Parcelable;
 class Parcel {
 public:
     Parcel() {}
     virtual ~Parcel() = default;
 
-    bool WriteUint32(uint32_t);
+    void SetEasyMode(bool value);
+ 	 
+    void Reset();
 
-    bool WriteString(const std::string &);
+    bool WriteUint32(uint32_t value);
+
+    bool WriteInt32(int32_t value);
+
+    bool WriteUint64(uint64_t value);
+
+    bool WriteInt64(int64_t value);
+
+    bool WriteString(const std::string &value);
 
     bool WriteParcelable(const Parcelable *);
 
     bool ReadString(std::string &value);
 
     bool ReadUint32(uint32_t &value);
+
+    bool ReadInt32(int32_t &value);
+ 	 
+    bool ReadUint64(uint64_t &value);
+
+    bool ReadInt64(int64_t &value);
 
     template <typename T>
     T *ReadParcelable()
@@ -55,6 +82,10 @@ public:
         }
         return nullptr;
     }
+
+protected:
+    bool easyMode_ = true;
+    std::queue<std::any> values_;
 };
 
 class Parcelable {
