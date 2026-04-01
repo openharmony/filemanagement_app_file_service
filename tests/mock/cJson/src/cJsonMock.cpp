@@ -75,3 +75,28 @@ CJSON_PUBLIC(void) CJSONFree(void *object)
 {
     return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_free(object);
 }
+
+CJSON_PUBLIC(cJSON*) cJSON_GetArrayItem(const cJSON* array, int index)
+{
+    return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_GetArrayItem(array, index);
+}
+
+CJSON_PUBLIC(cJSON_bool) cJSON_HasObjectItem(const cJSON *object, const char *string)
+{
+    return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_HasObjectItem(object, string);
+}
+
+CJSON_PUBLIC(cJSON_bool) CJSONIsString(const cJSON * const item)
+{
+    return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_IsString(item);
+} 
+
+CJSON_PUBLIC(cJSON*) cJSON_AddNumberToObject(cJSON *const object, const char *const name, const double number)
+{
+    return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_AddNumberToObject(object, name, number);
+}
+
+CJSON_PUBLIC(cJSON*) cJSON_AddArrayToObject(cJSON * const object, const char * const name)
+{
+    return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_AddArrayToObject(object, name);
+}
