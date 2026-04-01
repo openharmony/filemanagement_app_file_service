@@ -19,7 +19,6 @@ config("public_config") {
   include_dirs = [
     ".",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
-    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/ext",
   ]
 }
 
@@ -56,9 +55,6 @@ ohos_shared_library("backup_kit_inner") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_client.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_incremental_reverse.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_reverse.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/stat_info.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/anco_scan_result.cpp",
-    "${path_backup}/frameworks/native/backup_kit_inner/src/anco_restore_result.cpp",
   ]
 
   defines = [

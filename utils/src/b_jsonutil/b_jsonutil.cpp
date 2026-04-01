@@ -334,56 +334,6 @@ bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string
     return true;
 }
 
- bool BJsonUtil::AddAncoFileResult(const AncoRestoreResult &ancoRestoreRes, std::string &jsonStr)
-{
-    cJSON *root = cJSON_Parse(jsonStr.c_str());
-    if (root == nullptr) {
-        return false;
-    }
-    cJSON *resultInfoArray = cJSON_GetObjectItem(root, "resultInfo");
-    if (resultInfoArray == nullptr || !cJSON_IsArray(resultInfoArray)) {
-        cJSON_Delete(root);
-        return false;
-    }
-    int arraySize = cJSON_GetArraySize(resultInfoArray);
-    for (int i = 0; i < arraySize; ++i) {
-        cJSON *item = cJSON_GetArrayItem(resultInfoArray, i);
-        if (!cJSON_HasObjectItem(item, "type")) {
-            continue;
-        }
-        cJSON *typeObj = cJSON_GetObjectItem(item, "type");
-        if (cJSON_IsString(typeObj) && std::string(typeObj->valuestring) == "CountInfo") {
-            cJSON *infosArray = cJSON_GetObjectItem(item, "infos");
-            if (infosArray == nullptr || !cJSON_IsArray(infosArray)) {
-                cJSON_Delete(root);
-                return false;
-            }
-            cJSON *newBackupInfo = cJSON_CreateObject();
-            if (newBackupInfo == nullptr) {
-                cJSON_Delete(root);
-                return false;
-            }
-            cJSON_AddStringToObject(newBackupInfo, "backupInfo", "anco_doc");
-            cJSON_AddNumberToObject(newBackupInfo, "successCount", ancoRestoreRes.successCount);
-            cJSON_AddNumberToObject(newBackupInfo, "duplicateCount", ancoRestoreRes.duplicateCount);
-            cJSON_AddNumberToObject(newBackupInfo, "failedCount", ancoRestoreRes.failedCount);
-            cJSON_AddArrayToObject(newBackupInfo, "details");
-            cJSON_AddItemToArray(infosArray, newBackupInfo);
-            char *newJsonStr = cJSON_Print(root);
-            if (newJsonStr == nullptr) {
-                cJSON_Delete(root);
-                return false;
-            }
-            jsonStr = std::string(newJsonStr);
-            cJSON_Delete(root);
-            cJSON_free(newJsonStr);
-            return true;
-        }
-    }
-    cJSON_Delete(root);
-    return false;
-}
-
 bool BJsonUtil::BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet)
 {
     cJSON *info = cJSON_CreateObject();
