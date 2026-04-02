@@ -26,7 +26,7 @@ using namespace std;
 static bool WriteErrorCodeList(Parcel &parcel, const std::vector<ErrCode> &vec)
 {
     if (!parcel.WriteUint64(vec.size())) {
-        HILOGE("Failed to write vector size");
+        HILOGE("Failed to write error code list size");
         return false;
     }
     for (const auto &v : vec) {
@@ -42,7 +42,7 @@ static bool ReadErrorCodeList(Parcel &parcel, std::vector<ErrCode> &vec)
 {
     uint64_t size = 0;
     if (!parcel.ReadUint64(size)) {
-        HILOGE("Failed to ReadErrorCodeList");
+        HILOGE("Failed to read error code list size");
         return false;
     }
     while (size > 0) {
@@ -76,7 +76,7 @@ static bool ReadEndFileMap(Parcel &parcel, std::map<std::string, int64_t> &mp)
 {
     uint64_t size = 0;
     if (!parcel.ReadUint64(size)) {
-        HILOGE("Failed to ReadEndFileMap");
+        HILOGE("Failed to read end map size");
         return false;
     }
     while (size > 0) {
@@ -111,7 +111,7 @@ static bool ReadErrFileMap(Parcel &parcel, std::map<std::string, std::vector<Err
 {
     uint64_t size = 0;
     if (!parcel.ReadUint64(size)) {
-        HILOGE("Failed to ReadErrFileMap");
+        HILOGE("Failed to read err map size");
         return false;
     }
     while (size > 0) {
