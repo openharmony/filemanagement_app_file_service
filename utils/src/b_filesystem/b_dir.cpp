@@ -221,7 +221,7 @@ tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::st
 std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::string> &includes,
     const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes)
 {
-    HILOGI("scan all dirs inlcude:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
+    HILOGI("scan all dirs include:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
         includes.size(), compatIncludes.size(), excludes.size());
     ErrCode errCode = ERR_OK;
     int64_t bigFileSize = 0;
