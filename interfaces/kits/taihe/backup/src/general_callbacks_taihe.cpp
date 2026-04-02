@@ -57,10 +57,10 @@ ani_object WrapBusinessError(ani_env* env, const std::string& msg)
         return nullptr;
     }
 
-    if ((status = env->FindClass("Lescompat/Error;", &cls)) != ANI_OK) {
+    if ((status = env->FindClass("Lstd/core/Error;", &cls)) != ANI_OK) {
         return nullptr;
     }
-    if ((status = env->Class_FindMethod(cls, "<ctor>", "Lstd/core/String;Lescompat/ErrorOptions;:V", &method)) !=
+    if ((status = env->Class_FindMethod(cls, "<ctor>", "Lstd/core/String;Lstd/core/ErrorOptions;:V", &method)) !=
         ANI_OK) {
         return nullptr;
     }
@@ -79,7 +79,7 @@ ani_ref CreateBusinessError(ani_env* env, ani_int code, const std::string& msg)
         return nullptr;
     }
     ani_method ctor;
-    if ((status = env->Class_FindMethod(cls, "<ctor>", "DLescompat/Error;:V", &ctor)) != ANI_OK) {
+    if ((status = env->Class_FindMethod(cls, "<ctor>", "DLstd/core/Error;:V", &ctor)) != ANI_OK) {
         return nullptr;
     }
     ani_object error = WrapBusinessError(env, msg);
