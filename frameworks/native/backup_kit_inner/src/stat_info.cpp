@@ -18,6 +18,8 @@
 #include "filemgmt_libhilog.h"
 #include "message_parcel.h"
 
+#include <tuple>
+
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 bool StatInfo::Marshalling(Parcel &parcel) const
@@ -33,12 +35,24 @@ bool StatInfo::Marshalling(Parcel &parcel) const
 
 bool StatInfo::ReadFromParcel(Parcel &parcel)
 {
-    if (!parcel.ReadInt64(sta.st_size) || !parcel.ReadUint32(sta.st_mode) || !parcel.ReadInt64(sta.st_atim.tv_sec) ||
-        !parcel.ReadInt64(sta.st_atim.tv_nsec) || !parcel.ReadInt64(sta.st_mtim.tv_sec) ||
-        !parcel.ReadInt64(sta.st_mtim.tv_nsec)) {
+    int64_t stSize = 0;
+    uint32_t stMode = 0;
+    int64_t stAtimTvSec = 0;
+    int64_t stAtimTvNsec = 0;
+    int64_t stMtimTvSec = 0;
+    int64_t stMtimTvNsec = 0;
+    if (!parcel.ReadInt64(stSize) || !parcel.ReadUint32(stMode) || !parcel.ReadInt64(stAtimTvSec) ||
+        !parcel.ReadInt64(stAtimTvNsec) || !parcel.ReadInt64(stMtimTvSec) ||
+        !parcel.ReadInt64(stMtimTvNsec)) {
         HILOGE("Failed to ReadFromParcel");
         return false;
     }
+    sta.st_size = stSize;
+    sta.st_mode = stMode;
+    sta.st_atim.tv_sec = stAtimTvSec;
+    sta.st_atim.tv_nsec = stAtimTvNsec;
+    sta.st_mtim.tv_sec = stMtimTvSec;
+    sta.st_mtim.tv_nsec = stMtimTvNsec;
     return true;
 }
 
