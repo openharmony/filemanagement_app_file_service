@@ -139,8 +139,8 @@ HWTEST_F(ScanFileSingletonTest, ANCO_COMPATIBLEFILE_FILE_INFO_TEST_001, testing:
     struct stat sta = {};
     UniqueFd fd(456);
     std::string restorePath = "/tmp/restore/test_anco_compatible";
-    std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<AncoCompatibleFileInfo>(filename, filePath, sta, false, restorePath,
-        std::move(fd));
+    std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<AncoCompatibleFileInfo>(filename, filePath, sta, false,
+        restorePath, std::move(fd));
     EXPECT_EQ(fInfo1->GetFd(), 456);
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end ANCO_COMPATIBLEFILE_FILE_INFO_TEST_001";
 }
@@ -546,7 +546,7 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_BIG_FILE_TEST_002, testing::ext::TestSi
     std::string filePath = "/test/path/to/anco_file";
     std::string restorePath = "";
     struct stat sta = {};
-    UniqueFd fd(123); 
+    UniqueFd fd(123);
 
     ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, sta, std::move(fd));
 
