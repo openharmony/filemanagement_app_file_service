@@ -23,7 +23,7 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-static bool WriteVector(Parcel &parcel, const std::vector<ErrCode> &vec)
+static bool WriteErrorCodeList(Parcel &parcel, const std::vector<ErrCode> &vec)
 {
     if (!parcel.WriteUint64(vec.size())) {
         HILOGE("Failed to write vector size");
@@ -31,25 +31,25 @@ static bool WriteVector(Parcel &parcel, const std::vector<ErrCode> &vec)
     }
     for (const auto &v : vec) {
         if (!parcel.WriteInt32(v)) {
-            HILOGE("Failed to WriteVector");
+            HILOGE("Failed to WriteErrorCodeList");
             return false;
         }
     }
     return true;
 }
 
-static bool ReadVector(Parcel &parcel, std::vector<ErrCode> &vec)
+static bool ReadErrorCodeList(Parcel &parcel, std::vector<ErrCode> &vec)
 {
     uint64_t size = 0;
     if (!parcel.ReadUint64(size)) {
-        HILOGE("Failed to ReadVector");
+        HILOGE("Failed to ReadErrorCodeList");
         return false;
     }
     while (size > 0) {
         size--;
         int32_t v;
         if (!parcel.ReadInt32(v)) {
-            HILOGE("Failed to ReadVector");
+            HILOGE("Failed to ReadErrorCodeList");
             return false;
         }
         vec.push_back(static_cast<ErrCode>(v));
@@ -57,26 +57,26 @@ static bool ReadVector(Parcel &parcel, std::vector<ErrCode> &vec)
     return true;
 }
 
-static bool WriteMap(Parcel &parcel, const std::map<std::string, int64_t> &mp)
+static bool WriteEndFileMap(Parcel &parcel, const std::map<std::string, int64_t> &mp)
 {
     if (!parcel.WriteUint64(mp.size())) {
-        HILOGE("Failed to write map size");
+        HILOGE("Failed to write end map size");
         return false;
     }
     for (const auto &[k, v] : mp) {
         if (!parcel.WriteString(k) || !parcel.WriteInt64(v)) {
-            HILOGE("Failed to WriteMap");
+            HILOGE("Failed to WriteEndFileMap");
             return false;
         }
     }
     return true;
 }
 
-static bool ReadMap(Parcel &parcel, std::map<std::string, int64_t> &mp)
+static bool ReadEndFileMap(Parcel &parcel, std::map<std::string, int64_t> &mp)
 {
     uint64_t size = 0;
     if (!parcel.ReadUint64(size)) {
-        HILOGE("Failed to ReadMap");
+        HILOGE("Failed to ReadEndFileMap");
         return false;
     }
     while (size > 0) {
@@ -84,7 +84,7 @@ static bool ReadMap(Parcel &parcel, std::map<std::string, int64_t> &mp)
         std::string key;
         int64_t value;
         if (!parcel.ReadString(key) || !parcel.ReadInt64(value)) {
-            HILOGE("Failed to ReadMap");
+            HILOGE("Failed to ReadEndFileMap");
             return false;
         }
         mp.emplace(key, value);
@@ -92,34 +92,34 @@ static bool ReadMap(Parcel &parcel, std::map<std::string, int64_t> &mp)
     return true;
 }
 
-static bool WriteMap2(Parcel &parcel, const std::map<std::string, std::vector<ErrCode>> &mp)
+static bool WriteErrFileMap(Parcel &parcel, const std::map<std::string, std::vector<ErrCode>> &mp)
 {
     if (!parcel.WriteUint64(mp.size())) {
-        HILOGE("Failed to WriteMap2");
+        HILOGE("Failed to write err map size");
         return false;
     }
     for (const auto &[k, v] : mp) {
-        if (!parcel.WriteString(k) || !WriteVector(parcel, v)) {
-            HILOGE("Failed to WriteMap2");
+        if (!parcel.WriteString(k) || !WriteErrorCodeList(parcel, v)) {
+            HILOGE("Failed to WriteErrFileMap");
             return false;
         }
     }
     return true;
 }
 
-static bool ReadMap2(Parcel &parcel, std::map<std::string, std::vector<ErrCode>> &mp)
+static bool ReadErrFileMap(Parcel &parcel, std::map<std::string, std::vector<ErrCode>> &mp)
 {
     uint64_t size = 0;
     if (!parcel.ReadUint64(size)) {
-        HILOGE("Failed to ReadMap2");
+        HILOGE("Failed to ReadErrFileMap");
         return false;
     }
     while (size > 0) {
         size--;
         std::string key;
         std::vector<ErrCode> value;
-        if (!parcel.ReadString(key) || !ReadVector(parcel, value)) {
-            HILOGE("Failed to ReadMap2");
+        if (!parcel.ReadString(key) || !ReadErrorCodeList(parcel, value)) {
+            HILOGE("Failed to ReadErrFileMap");
             return false;
         }
         mp.emplace(key, value);
@@ -130,7 +130,7 @@ static bool ReadMap2(Parcel &parcel, std::map<std::string, std::vector<ErrCode>>
 bool AncoRestoreResult::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteInt64(successCount) || !parcel.WriteInt64(duplicateCount) || !parcel.WriteInt64(failedCount) ||
-        !WriteMap(parcel, endFileInfos) || !WriteMap2(parcel, errFileInfos)) {
+        !WriteEndFileMap(parcel, endFileInfos) || !WriteErrFileMap(parcel, errFileInfos)) {
         HILOGE("Failed to Marshalling");
         return false;
     }
@@ -140,7 +140,7 @@ bool AncoRestoreResult::Marshalling(Parcel &parcel) const
 bool AncoRestoreResult::ReadFromParcel(Parcel &parcel)
 {
     if (!parcel.ReadInt64(successCount) || !parcel.ReadInt64(duplicateCount) || !parcel.ReadInt64(failedCount) ||
-        !ReadMap(parcel, endFileInfos) || !ReadMap2(parcel, errFileInfos)) {
+        !ReadEndFileMap(parcel, endFileInfos) || !ReadErrFileMap(parcel, errFileInfos)) {
         HILOGE("Failed to ReadFromParcel");
         return false;
     }

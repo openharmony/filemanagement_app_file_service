@@ -413,23 +413,23 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0901, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
         mockRoot->valuestring = const_cast<char *>("CountInfo");
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillRepeatedly(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_AddNumberToObject(_, _, _)).WillRepeatedly(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_AddArrayToObject(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_AddNumberToObject(_, _, _)).WillRepeatedly(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_AddArrayToObject(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillOnce(Return(true));
  
         EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(const_cast<char*>("CountInfo")));
@@ -493,9 +493,9 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0903, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
  
@@ -526,10 +526,10 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0904, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(false));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
  
@@ -560,13 +560,13 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0905, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
  
@@ -597,16 +597,16 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0906, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
  
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(false));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
  
@@ -637,16 +637,16 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0907, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
  
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
         mockRoot->valuestring = const_cast<char*>("Count");
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
@@ -678,16 +678,16 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0908, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
  
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
         mockRoot->valuestring = const_cast<char*>("CountInfo");
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
@@ -720,19 +720,19 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0909, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
         mockRoot->valuestring = const_cast<char *>("CountInfo");
  
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(false));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
  
@@ -763,18 +763,18 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0910, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
         mockRoot->valuestring = const_cast<char *>("CountInfo");
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillRepeatedly(Return(true));
  
         EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
@@ -807,24 +807,24 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0911, testing::ext::TestSiz
         ancoRestoreRes.successCount = 10;
         ancoRestoreRes.duplicateCount = 5;
         ancoRestoreRes.failedCount = 2;
-        cJSON *mockRoot = new cJSON();
+        auto mockRoot = make_shared<cJSON>();
  
-        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
-        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
         mockRoot->valuestring = const_cast<char *>("CountInfo");
-        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillRepeatedly(Return(true));
  
-        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _)).WillOnce(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_AddNumberToObject(_, _, _)).WillRepeatedly(Return(mockRoot));
-        EXPECT_CALL(*cJsonMock, cJSON_AddArrayToObject(_, _)).WillOnce(Return(mockRoot));
+        EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_AddStringToObject(_, _, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_AddNumberToObject(_, _, _)).WillRepeatedly(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_AddArrayToObject(_, _)).WillOnce(Return(mockRoot.get()));
         EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());

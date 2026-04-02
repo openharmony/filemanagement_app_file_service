@@ -79,9 +79,9 @@ HWTEST_F(StatInfoTest, SUB_StatInfo_Marshalling_0100, testing::ext::TestSize.Lev
     for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
         SetParcelState(i);
         if (CanCaseSuccess(mask, i)) {
-            EXPECT_EQ(statInfo.Marshalling(parcel), true);
+            EXPECT_TRUE(statInfo.Marshalling(parcel));
         } else {
-            EXPECT_EQ(statInfo.Marshalling(parcel), false);
+            EXPECT_FALSE(statInfo.Marshalling(parcel));
         }
     }
     // unmarshalling
@@ -112,7 +112,7 @@ HWTEST_F(StatInfoTest, SUB_StatInfo_ReadFromParcel_0100, testing::ext::TestSize.
     StatInfo statInfo(sta);
     Parcel parcel;
     // marshalling
-    EXPECT_EQ(statInfo.Marshalling(parcel), true);
+    EXPECT_TRUE(statInfo.Marshalling(parcel));
 
     // ReadFromParcel
     statInfo.ReadFromParcel(parcel);
@@ -155,9 +155,9 @@ HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Marshalling_0100, testing:
     for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
         SetParcelState(i);
         if (CanCaseSuccess(mask1, i)) {
-            EXPECT_EQ(result.Marshalling(parcel), true);
+            EXPECT_TRUE(result.Marshalling(parcel));
         } else {
-            EXPECT_EQ(result.Marshalling(parcel), false);
+            EXPECT_FALSE(result.Marshalling(parcel));
         }
     }
     // unmarshalling
@@ -269,7 +269,7 @@ HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0100, testi
     Parcel parcel;
     parcel.SetEasyMode(false);
     // marshalling
-    EXPECT_EQ(result.Marshalling(parcel), true);
+    EXPECT_TRUE(result.Marshalling(parcel));
     // unmarshalling
     AncoRestoreResult tempRes;
     tempRes.ReadFromParcel(parcel);
@@ -301,7 +301,7 @@ HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0101, testi
     Parcel parcel;
     parcel.SetEasyMode(false);
     // marshalling
-    EXPECT_EQ(result.Marshalling(parcel), true);
+    EXPECT_TRUE(result.Marshalling(parcel));
     // unmarshalling
     std::vector<bool> sequence = {
         true, // ReadInt64
@@ -340,7 +340,7 @@ HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0102, testi
     Parcel parcel;
     parcel.SetEasyMode(false);
     // marshalling
-    EXPECT_EQ(result.Marshalling(parcel), true);
+    EXPECT_TRUE(result.Marshalling(parcel));
     // unmarshalling
     std::vector<bool> sequence = {
         true, // ReadInt64
@@ -381,7 +381,7 @@ HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0103, testi
     Parcel parcel;
     parcel.SetEasyMode(false);
     // marshalling
-    EXPECT_EQ(result.Marshalling(parcel), true);
+    EXPECT_TRUE(result.Marshalling(parcel));
     // unmarshalling
     std::vector<bool> sequence = {
         true, // ReadInt64
@@ -431,9 +431,9 @@ HWTEST_F(AncoScanResultTest, SUB_AncoScanResult_Marshalling_0100, testing::ext::
     for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
         SetParcelState(i);
         if (CanCaseSuccess(mask, i)) {
-            EXPECT_EQ(result.Marshalling(parcel), true);
+            EXPECT_TRUE(result.Marshalling(parcel));
         } else {
-            EXPECT_EQ(result.Marshalling(parcel), false);
+            EXPECT_FALSE(result.Marshalling(parcel));
         }
     }
     // unmarshalling
@@ -463,7 +463,7 @@ HWTEST_F(AncoScanResultTest, SUB_AncoScanResult_ReadFromParcel_0100, testing::ex
     AncoScanResult result(1, 2);
     Parcel parcel;
     // marshalling
-    EXPECT_EQ(result.Marshalling(parcel), true);
+    EXPECT_TRUE(result.Marshalling(parcel));
 
     // unmarshalling
     result.ReadFromParcel(parcel);
