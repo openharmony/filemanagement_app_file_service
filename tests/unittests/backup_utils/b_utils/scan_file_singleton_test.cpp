@@ -115,8 +115,9 @@ HWTEST_F(ScanFileSingletonTest, ANCO_FILE_INFO_TEST_001, testing::ext::TestSize.
     std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd));
     EXPECT_EQ(fInfo1->GetRestorePath(), "");
 
+    UniqueFd fd1(234);
     GTEST_LOG_(INFO) << "2. test AncoFileInfo";
-    std::shared_ptr<IFileInfo> fInfo2 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd));
+    std::shared_ptr<IFileInfo> fInfo2 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd1));
     EXPECT_EQ(fInfo2->GetFd(), fd);
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end ANCO_FILE_INFO_TEST_001";
 }
@@ -486,7 +487,7 @@ HWTEST_F(ScanFileSingletonTest, UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001, testing::ex
 */
 HWTEST_F(ScanFileSingletonTest, ADD_ANCO_BIG_FILE_TEST_001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_ANCO_BIGFILE_TEST_001";
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_ANCO_BIG_FILE_TEST_001";
     std::string filePath = "/test/path/to/anco_file";
     std::string restorePath = "/restore/path/to/anco_file";
     struct stat sta = {};
@@ -528,7 +529,7 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_001, testing::ext::TestSiz
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
     auto frontItem = ScanFileSingleton::GetInstance().pendingFileQueue_.front();
     EXPECT_NE(frontItem, nullptr);
-    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001";
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: ADD_ANCO_TARFILE_TEST_001";
 }
 
 /**
@@ -540,7 +541,7 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_001, testing::ext::TestSiz
 * @tc.level Level 1
 * @tc.require: NA
 */
-HWTEST_F(ScanFileSingletonTest, ADD_ANCO_BIG_FILE_TEST_002, testing::ext::TestSize.Level1)
+HWTEST_F(ScanFileSingletonTest, ADD_ANCO_BIGFILE_TEST_002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_ANCO_BIGFILE_TEST_002";
     std::string filePath = "/test/path/to/anco_file";
@@ -575,6 +576,6 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_002, testing::ext::TestSiz
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
     auto frontItem = ScanFileSingleton::GetInstance().pendingFileQueue_.front();
     EXPECT_NE(frontItem, nullptr);
-    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_002";
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: ADD_ANCO_TARFILE_TEST_002";
 }
 } // namespace OHOS::FileManagement::Backup
