@@ -89,7 +89,7 @@ CJSON_PUBLIC(cJSON_bool) cJSON_HasObjectItem(const cJSON *object, const char *st
 CJSON_PUBLIC(cJSON_bool) CJSONIsString(const cJSON * const item)
 {
     return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_IsString(item);
-} 
+}
 
 CJSON_PUBLIC(cJSON*) cJSON_AddNumberToObject(cJSON *const object, const char *const name, const double number)
 {
