@@ -122,7 +122,8 @@ class AncoRestoreResultTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase() {};
-    void SetUp() override {
+    void SetUp() override
+    {
         ResetParcelState();
     };
     void TearDown() override {};

@@ -179,8 +179,7 @@ bool Parcel::WriteString(const string & value)
     if (!easyMode_ && seqCurId < g_mockSpecialSeq.size()) {
         isSuccess = g_mockSpecialSeq[seqCurId];
         seqCurId++;
-    } else if (easyMode_ && g_mockWriteStringCount < g_mockWriteStringMax)
-    {
+    } else if (easyMode_ && g_mockWriteStringCount < g_mockWriteStringMax) {
         g_mockWriteStringCount++;
         isSuccess = !g_mockWriteString;
     }
@@ -202,8 +201,7 @@ bool Parcel::ReadString(string &value)
     if (!easyMode_ && seqCurId < g_mockSpecialSeq.size()) {
         isSuccess = g_mockSpecialSeq[seqCurId];
         seqCurId++;
-    } else if (easyMode_ && g_mockWriteStringCount < g_mockWriteStringMax)
-    {
+    } else if (easyMode_ && g_mockWriteStringCount < g_mockWriteStringMax) {
         g_mockWriteStringCount++;
         isSuccess = !g_mockWriteString;
     }
