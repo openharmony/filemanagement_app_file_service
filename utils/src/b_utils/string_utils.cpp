@@ -98,27 +98,32 @@ std::string StringUtils::GenHashName(const std::string &str)
     return strHex.str();
 }
 
+bool StringUtils::IsSubdirectory(const std::string &parent, const std::string &child)
+{
+    if (child.length() < parent.length()) {
+        return false;
+    }
+    if (child.length() > parent.length() && child.substr(parent.length(), 1) != BConstants::BACKSLASH) {
+        return false;
+    }
+    return child.substr(0, parent.length()) == parent;
+}
+
 bool StringUtils::IsSandboxAncoPath(const std::string &path)
 {
-    const auto length = BConstants::PATH_PUBLIC_HOME.length() + BConstants::FUSE_ANCO_DIR.length();
-    if (path.length() < length ||
-        (path.length() > length && path.substr(length, BConstants::BACKSLASH.length()) != BConstants::BACKSLASH)) {
-        return false;
-    }
-    return path.compare(BConstants::PATH_PUBLIC_HOME.length(), BConstants::FUSE_ANCO_DIR.length(),
-        BConstants::FUSE_ANCO_DIR, 0, BConstants::FUSE_ANCO_DIR.length()) == 0;
+    // /storage/Users/currentUser/HO_DATA_EXT_MISC
+    const auto sbAncoPath = BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR;
+    return IsSubdirectory(sbAncoPath, path);
 }
 
-bool StringUtils::IsRealAncoPath(const std::string &path)
+bool StringUtils::IsRealAncoPath(const std::string &path, int userId)
 {
-    const auto realAncoPath = BConstants::GetFullHmfsAncoDir(BConstants::DEFAULT_USER_ID);
-    if (path.length() < realAncoPath.length()) {
-        return false;
-    }
-    return path.compare(0, realAncoPath.length(), realAncoPath, 0, realAncoPath.length()) == 0;
+    // /mnt/data/<userId>/HO_MEDIA
+    const auto realAncoPath = BConstants::GetRealAncoDir(userId);
+    return IsSubdirectory(realAncoPath, path);
 }
 
-std::string StringUtils::ResolveSandboxAncoPath(const std::string &path)
+std::string StringUtils::ResolveSandboxAncoPath(const std::string &path, int userId)
 {
     std::string fullPath = path;
     if (!IsSandboxAncoPath(fullPath)) {
@@ -127,24 +132,23 @@ std::string StringUtils::ResolveSandboxAncoPath(const std::string &path)
             return path;
         }
     }
-    const auto newPath = BConstants::GetFullHmfsAncoDir(BConstants::DEFAULT_USER_ID) +
-        fullPath.substr(BConstants::PATH_PUBLIC_HOME.length() + BConstants::FUSE_ANCO_DIR.length() + 1);
-    return newPath;
+    // /storage/Users/currentUser/HO_DATA_EXT_MISC/xxxxxx -> /mnt/data/<userId>/HO_MEDIA/xxxxxx
+    const auto sbAncoPathLength = BConstants::PATH_PUBLIC_HOME.length() + BConstants::FUSE_ANCO_DIR.length();
+    return BConstants::GetRealAncoDir(userId) + fullPath.substr(sbAncoPathLength);
 }
 
-std::string StringUtils::ResolveRealAncoPath(const std::string &path)
+std::string StringUtils::ResolveRealAncoPath(const std::string &path, int userId)
 {
     std::string fullPath = path;
-    if (!IsRealAncoPath(fullPath)) {
+    if (!IsRealAncoPath(fullPath, userId)) {
         fullPath = "/" + fullPath;
-        if (!IsRealAncoPath(fullPath)) {
+        if (!IsRealAncoPath(fullPath, userId)) {
             return path;
         }
     }
-    const auto realAncoPath = BConstants::GetFullHmfsAncoDir(BConstants::DEFAULT_USER_ID);
-    const auto newPath =
-        BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR + fullPath.substr(realAncoPath.length() - 1);
-    return newPath;
+    // /mnt/data/<userId>/HO_MEDIA/xxxxxx -> /storage/Users/currentUser/HO_DATA_EXT_MISC/xxxxxx
+    const auto realAncoPathLength = BConstants::GetRealAncoDir(userId).length();
+    return BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR + fullPath.substr(realAncoPathLength);
 }
 
 std::set<std::string> StringUtils::FilterAncoPaths(std::set<std::string> &paths)
@@ -162,20 +166,20 @@ std::set<std::string> StringUtils::FilterAncoPaths(std::set<std::string> &paths)
     return ancoPaths;
 }
 
-std::set<std::string> StringUtils::ResolveSandboxAncoPaths(const std::set<std::string> &paths)
+std::set<std::string> StringUtils::ResolveSandboxAncoPaths(const std::set<std::string> &paths, int userId)
 {
     std::set<std::string> realPaths;
     for (const auto &path : paths) {
-        realPaths.emplace(ResolveSandboxAncoPath(path));
+        realPaths.emplace(ResolveSandboxAncoPath(path, userId));
     }
     return realPaths;
 }
 
-std::vector<std::string> StringUtils::ResolveSandboxAncoPaths(const std::vector<std::string> &paths)
+std::vector<std::string> StringUtils::ResolveSandboxAncoPaths(const std::vector<std::string> &paths, int userId)
 {
     std::vector<std::string> realPaths;
     for (const auto &path : paths) {
-        realPaths.emplace_back(ResolveSandboxAncoPath(path));
+        realPaths.emplace_back(ResolveSandboxAncoPath(path, userId));
     }
     return realPaths;
 }
@@ -193,5 +197,4 @@ uint32_t StringUtils::CheckOverLongPath(const std::string &path)
     }
     return len;
 }
-
 } // namespace OHOS::FileManagement::Backup

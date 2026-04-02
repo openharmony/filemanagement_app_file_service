@@ -18,6 +18,9 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+namespace {
+    const int USER_ID = 100;
+}
 
 class StringUtilsTest : public testing::Test {
 public:
@@ -253,14 +256,14 @@ HWTEST_F(StringUtilsTest, IS_SANBOX_ANCO_PATH_TEST_001, testing::ext::TestSize.L
 HWTEST_F(StringUtilsTest, IS_REAL_ANCO_PATH_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StringUtilsTest-begin IS_REAL_ANCO_PATH_TEST_001";
-    EXPECT_TRUE(StringUtils::IsRealAncoPath("/mnt/data/100/HO_MEDIA/test"));
-    EXPECT_TRUE(StringUtils::IsRealAncoPath("/mnt/data/100/HO_MEDIA/"));
+    EXPECT_TRUE(StringUtils::IsRealAncoPath("/mnt/data/100/HO_MEDIA/test", USER_ID));
+    EXPECT_TRUE(StringUtils::IsRealAncoPath("/mnt/data/100/HO_MEDIA/", USER_ID));
 
-    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/101/backup/backup_sa/some_file.txt"));
-    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/100/backup/other/some_file.txt"));
-    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/100/backup/backup_sa/"));
+    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/101/backup/backup_sa/some_file.txt", USER_ID));
+    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/100/backup/other/some_file.txt", USER_ID));
+    EXPECT_FALSE(StringUtils::IsRealAncoPath("/data/service/el2/100/backup/backup_sa/", USER_ID));
 
-    EXPECT_FALSE(StringUtils::IsRealAncoPath(""));
+    EXPECT_FALSE(StringUtils::IsRealAncoPath("", USER_ID));
     GTEST_LOG_(INFO) << "StringUtilsTest-end IS_REAL_ANCO_PATH_TEST_001";
 }
 
@@ -278,7 +281,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_SAND_ANCO_PATH_TEST_001, testing::ext::TestSiz
     GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SAND_ANCO_PATH_TEST_001";
     std::string inputPath = "com.example.app/files/data.txt";
     std::string expectedResult = "com.example.app/files/data.txt";
-    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath);
+    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath, USER_ID);
     EXPECT_EQ(result, expectedResult);
     GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SAND_ANCO_PATH_TEST_001";
 }
@@ -297,7 +300,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_SAND_ANCO_PATH_TEST_002, testing::ext::TestSiz
     GTEST_LOG_(INFO) << "StringUtilsTest-begin RESOLVE_SAND_ANCO_PATH_TEST_002";
     std::string inputPath = "";
     std::string expectedResult = "";
-    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath);
+    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath, USER_ID);
     EXPECT_EQ(result, expectedResult);
     GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SAND_ANCO_PATH_TEST_002";
 }
@@ -317,7 +320,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_SAND_ANCO_PATH_TEST_003, testing::ext::TestSiz
 
     std::string inputPath = "/storage/Users/currentUser/HO_DATA_EXT_MISC/test.txt";
     std::string expectedResult = "/mnt/data/100/HO_MEDIA/test.txt";
-    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath);
+    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath, USER_ID);
     EXPECT_EQ(result, expectedResult);
 
     GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SAND_ANCO_PATH_TEST_003";
@@ -338,7 +341,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_SAND_ANCO_PATH_TEST_004, testing::ext::TestSiz
 
     std::string inputPath = "storage/Users/currentUser/HO_DATA_EXT_MISC/test.txt";
     std::string expectedResult = "/mnt/data/100/HO_MEDIA/test.txt";
-    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath);
+    std::string result = StringUtils::ResolveSandboxAncoPath(inputPath, USER_ID);
     EXPECT_EQ(result, expectedResult);
 
     GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_SAND_ANCO_PATH_TEST_004";
@@ -359,7 +362,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_REAL_ANCO_PATH_TEST_001, testing::ext::TestSiz
 
     std::string inputPath = "mnt/data/100/HO_MEDIA/";
     std::string expectedResult = "/storage/Users/currentUser/HO_DATA_EXT_MISC/";
-    std::string result = StringUtils::ResolveRealAncoPath(inputPath);
+    std::string result = StringUtils::ResolveRealAncoPath(inputPath, USER_ID);
     EXPECT_EQ(result, expectedResult);
 
     GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_REAL_ANCO_PATH_TEST_001";
@@ -380,7 +383,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_REAL_ANCO_PATH_TEST_002, testing::ext::TestSiz
 
     std::string inputPath = "";
     std::string expectedResult = "";
-    std::string result = StringUtils::ResolveRealAncoPath(inputPath);
+    std::string result = StringUtils::ResolveRealAncoPath(inputPath, USER_ID);
     EXPECT_EQ(result, expectedResult);
 
     GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_REAL_ANCO_PATH_TEST_002";
@@ -401,7 +404,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_REAL_ANCO_PATH_TEST_003, testing::ext::TestSiz
 
     std::string inputPath = "/mnt/data/100/HO_MEDIA/test.txt";
     std::string expectedResult = "/storage/Users/currentUser/HO_DATA_EXT_MISC/test.txt";
-    std::string result = StringUtils::ResolveRealAncoPath(inputPath);
+    std::string result = StringUtils::ResolveRealAncoPath(inputPath, USER_ID);
     EXPECT_EQ(result, expectedResult);
 
     GTEST_LOG_(INFO) << "StringUtilsTest-end RESOLVE_REAL_ANCO_PATH_TEST_003";
@@ -531,7 +534,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_001, testing::ext:
     std::set<std::string> inputPaths;
     std::set<std::string> expectedRealPaths;
 
-    std::set<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths);
+    std::set<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths, USER_ID);
 
     EXPECT_EQ(resultRealPaths, expectedRealPaths);
 
@@ -554,7 +557,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_SANDBOX_ANCO_PATHS_VECTOR_TEST_002, testing::e
     std::vector<std::string> inputPaths;
     std::vector<std::string> expectedRealPaths;
 
-    std::vector<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths);
+    std::vector<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths, USER_ID);
 
     EXPECT_EQ(resultRealPaths, expectedRealPaths);
 
@@ -579,7 +582,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_SANDBOX_ANCO_PATHS_SET_TEST_003, testing::ext:
     };
     std::set<std::string> expectedRealPaths = {"/mnt/data/100/HO_MEDIA/test.txt"};
 
-    std::set<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths);
+    std::set<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths, USER_ID);
 
     EXPECT_EQ(resultRealPaths, expectedRealPaths);
 
@@ -604,7 +607,7 @@ HWTEST_F(StringUtilsTest, RESOLVE_SANDBOX_ANCO_PATHS_VECTOR_TEST_004, testing::e
     };
     std::vector<std::string> expectedRealPaths = {"/mnt/data/100/HO_MEDIA/test.txt"};
 
-    std::vector<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths);
+    std::vector<std::string> resultRealPaths = StringUtils::ResolveSandboxAncoPaths(inputPaths, USER_ID);
 
     EXPECT_EQ(resultRealPaths, expectedRealPaths);
 

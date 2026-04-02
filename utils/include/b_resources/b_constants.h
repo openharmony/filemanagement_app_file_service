@@ -141,8 +141,7 @@ static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/base/.backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/base/.backup";
 static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME = "/storage/Users/currentUser/.backup";
-static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME_DH = "/storage/Users/currentUser/HO_DATA_EXT_MISC/.backup";
-static inline std::string_view PATH_FILEMANAGE_BACKUP_DH = "/mnt/data/100/HO_MEDIA/.backup";
+static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME_ANCO = "/storage/Users/currentUser/HO_DATA_EXT_MISC/.backup";
 static inline std::string_view PATH_MEDIALDATA_BACKUP_HOME = "/storage/media/local/files/.backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR = "/data/backup/incrementalreceived/";
@@ -202,12 +201,21 @@ static inline std::string GetSaBundleBackupToolDir(int32_t userId)
     return str;
 }
 
-static inline std::string GetFullHmfsAncoDir(int32_t userId)
+static inline std::string GetRealAncoDir(int32_t userId)
 {
     std::string str;
     str.append("/mnt/data/");
     str.append(std::to_string(userId));
-    str.append("/HO_MEDIA/");
+    str.append("/HO_MEDIA");
+    return str;
+}
+
+static inline std::string GetRealAncoBackupDir(int32_t userId)
+{
+    std::string str;
+    str.append("/mnt/data/");
+    str.append(std::to_string(userId));
+    str.append("/HO_MEDIA/.backup");
     return str;
 }
 
