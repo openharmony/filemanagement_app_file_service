@@ -111,14 +111,12 @@ bool StringUtils::IsSubdirectory(const std::string &parent, const std::string &c
 
 bool StringUtils::IsSandboxAncoPath(const std::string &path)
 {
-    // /storage/Users/currentUser/HO_DATA_EXT_MISC
     const auto sbAncoPath = BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR;
     return IsSubdirectory(sbAncoPath, path);
 }
 
 bool StringUtils::IsRealAncoPath(const std::string &path, int userId)
 {
-    // /mnt/data/<userId>/HO_MEDIA
     const auto realAncoPath = BConstants::GetRealAncoDir(userId);
     return IsSubdirectory(realAncoPath, path);
 }
@@ -132,7 +130,6 @@ std::string StringUtils::ResolveSandboxAncoPath(const std::string &path, int use
             return path;
         }
     }
-    // /storage/Users/currentUser/HO_DATA_EXT_MISC/xxxxxx -> /mnt/data/<userId>/HO_MEDIA/xxxxxx
     const auto sbAncoPathLength = BConstants::PATH_PUBLIC_HOME.length() + BConstants::FUSE_ANCO_DIR.length();
     return BConstants::GetRealAncoDir(userId) + fullPath.substr(sbAncoPathLength);
 }
@@ -146,7 +143,6 @@ std::string StringUtils::ResolveRealAncoPath(const std::string &path, int userId
             return path;
         }
     }
-    // /mnt/data/<userId>/HO_MEDIA/xxxxxx -> /storage/Users/currentUser/HO_DATA_EXT_MISC/xxxxxx
     const auto realAncoPathLength = BConstants::GetRealAncoDir(userId).length();
     return BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR + fullPath.substr(realAncoPathLength);
 }
