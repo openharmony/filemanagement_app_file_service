@@ -102,7 +102,7 @@ void Parcel::SetEasyMode(bool value)
 void Parcel::Reset()
 {
     easyMode_ = true;
-    std::queue<std::any>().swap(values_); // clear
+    std::queue<std::any>().swap(values_);
 }
 
 bool Parcel::WriteUint32(uint32_t value)

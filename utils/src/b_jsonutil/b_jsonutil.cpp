@@ -352,7 +352,7 @@ bool BJsonUtil::AddAncoFileResult(const AncoRestoreResult &ancoRestoreRes, std::
             continue;
         }
         cJSON *typeObj = cJSON_GetObjectItem(item, "type");
-        if (cJSON_IsString(typeObj) && std::string(typeObj->valuestring) == "CountInfo") {
+        if (!typeObj && cJSON_IsString(typeObj) && std::string(typeObj->valuestring) == "CountInfo") {
             cJSON *infosArray = cJSON_GetObjectItem(item, "infos");
             if (infosArray == nullptr || !cJSON_IsArray(infosArray)) {
                 cJSON_Delete(root);
