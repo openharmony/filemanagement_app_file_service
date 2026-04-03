@@ -42,7 +42,6 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-const int32_t PATH_MAX_LEN = 4096;
 const size_t TOP_ELE = 0;
 const std::string APP_DATA_DIR = BConstants::PATH_PUBLIC_HOME +
     BConstants::PATH_APP_DATA + BConstants::FILE_SEPARATOR_CHAR;
@@ -66,20 +65,6 @@ static bool IsEmptyDirectory(const string &path)
     return isEmpty;
 }
 
-static uint32_t CheckOverLongPath(const string &path)
-{
-    uint32_t len = path.length();
-    if (len >= PATH_MAX_LEN) {
-        size_t found = path.find_last_of(BConstants::FILE_SEPARATOR_CHAR);
-        string sub = "";
-        if (found != std::string::npos && found != path.length() - 1) {
-            sub = path.substr(found + 1);
-        }
-        HILOGE("Path over long, length:%{public}d, fileName:%{private}s.", len, sub.c_str());
-    }
-    return len;
-}
-
 static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& smallFileSize,
     const std::vector<std::string> &excludes)
 {
@@ -87,7 +72,7 @@ static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& 
         return;
     }
     struct stat sta = {};
-    if (CheckOverLongPath(info.backupPath_) >= PATH_MAX_LEN) {
+    if (StringUtils::CheckOverLongPath(info.backupPath_) >= BConstants::MAX_PATH_LEN) {
         return;
     }
     if (stat(info.backupPath_.data(), &sta) == -1) {
@@ -236,7 +221,7 @@ tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::st
 std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::string> &includes,
     const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes)
 {
-    HILOGI("scan all dirs inlcude:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
+    HILOGI("scan all dirs include:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
         includes.size(), compatIncludes.size(), excludes.size());
     ErrCode errCode = ERR_OK;
     int64_t bigFileSize = 0;
@@ -476,7 +461,7 @@ static tuple<vector<string>, vector<string>> IsNotPath(const string &path, vecto
     vector<string> &smallFiles, off_t size)
 {
     struct stat sta = {};
-    if (CheckOverLongPath(path) >= PATH_MAX_LEN || stat(path.data(), &sta) == -1) {
+    if (StringUtils::CheckOverLongPath(path) >= BConstants::MAX_PATH_LEN || stat(path.data(), &sta) == -1) {
         return {};
     }
     if (sta.st_size <= size) {
@@ -517,7 +502,8 @@ static tuple<vector<string>, vector<string>> GetUser0DirFilesDetail(const string
         } else if (ptr->d_type == DT_REG) {
             struct stat sta = {};
             string fileName = IncludeTrailingPathDelimiter(path) + string(ptr->d_name);
-            if (CheckOverLongPath(fileName) >= PATH_MAX_LEN || stat(fileName.data(), &sta) == -1) {
+            if (StringUtils::CheckOverLongPath(fileName) >= BConstants::MAX_PATH_LEN ||
+                stat(fileName.data(), &sta) == -1) {
                 continue;
             }
             if (sta.st_size <= size) {

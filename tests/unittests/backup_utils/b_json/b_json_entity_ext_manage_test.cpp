@@ -775,4 +775,46 @@ HWTEST_F(BJsonEntityExtManageTest, b_json_entity_ext_manage_0904, testing::ext::
     }
     GTEST_LOG_(INFO) << "BJsonEntityExtManageTest-end b_json_entity_ext_manage_0904";
 }
+
+/**
+* @tc.number: CheckUserTar_Test_1001
+* @tc.name: CheckUserTar_Test_1001
+* @tc.desc: 测试CheckUserTar各种异常分支
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: issuesI9JXNH
+*/
+HWTEST_F(BJsonEntityExtManageTest, CheckUserTar_Test_1001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckUserTar_Test-begin CheckUserTar_Test_1001";
+
+    try {
+        std::string fileName = "test.tar";
+        struct stat mockStat;
+        mockStat.st_size = 1024;
+        EXPECT_FALSE(CheckUserTar("", mockStat, false));
+
+        fileName = "test.txt";
+        EXPECT_FALSE(CheckUserTar(fileName, mockStat, false));
+
+        fileName = "large_file.tar";
+        mockStat.st_size = 1024 * 1024 * 1024;
+        EXPECT_FALSE(CheckUserTar(fileName, mockStat, false));
+
+        fileName = "test.tar";
+        mockStat.st_size = 3 * 1024 * 1024;
+        EXPECT_FALSE(CheckUserTar(fileName, mockStat, false));
+
+        EXPECT_FALSE(CheckUserTar("anco_file.txt", mockStat, true));
+
+        EXPECT_TRUE(CheckUserTar("anco_file.tar", mockStat, true));
+        
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckUserTar_Test-an exception occurred.";
+    }
+
+    GTEST_LOG_(INFO) << "CheckUserTar_Test-end CheckUserTar_Test_1001";
+}
 } // namespace OHOS::FileManagement::Backup

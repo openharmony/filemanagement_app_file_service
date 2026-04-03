@@ -83,9 +83,9 @@ static bool CheckOwnPackTar(const string &fileName)
     return true;
 }
 
-static bool CheckUserTar(const string &fileName, struct stat sta)
+static bool CheckUserTar(const string &fileName, struct stat sta, bool isAncoFile = false)
 {
-    if (access(fileName.c_str(), F_OK) != 0) {
+    if (!isAncoFile && access(fileName.c_str(), F_OK) != 0) {
         HILOGI("file does not exists");
         return false;
     }
@@ -179,7 +179,7 @@ void BJsonEntityExtManage::SetExtManage(const std::vector<std::shared_ptr<IFileI
         std::string restorePath = item->GetRestorePath();
         value["information"]["path"] = restorePath.empty() ? item->filePath_ : restorePath;
         value["information"]["stat"] = Stat2JsonValue(item->sta_);
-        value["isUserTar"] = item->isBigFile_ && CheckUserTar(item->filePath_, item->sta_);
+        value["isUserTar"] = item->isBigFile_ && CheckUserTar(item->filePath_, item->sta_, item->isAncoFile_);
         value["isBigFile"] = item->isBigFile_;
         obj_.append(value);
     }

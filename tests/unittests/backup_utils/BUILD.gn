@@ -542,6 +542,7 @@ ohos_unittest("b_jsonutil_other_test") {
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
   ]
 
   external_deps = [
