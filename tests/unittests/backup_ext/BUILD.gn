@@ -530,6 +530,9 @@ ohos_unittest("ext_extension_new_test") {
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
     "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
     "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/stat_info.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/anco_scan_result.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/anco_restore_result.cpp",
     "ext_extension_new_test.cpp",
   ]
 
