@@ -162,7 +162,7 @@ bool AncoRestoreResult::ReadFromParcel(Parcel &parcel)
         return false;
     }
     if (!ReadErrFileMap(parcel, errFileInfos)) {
-        HILOGE("Failed to read EndFileMap");
+        HILOGE("Failed to read ErrFileMap");
         return false;
     }
     return true;
