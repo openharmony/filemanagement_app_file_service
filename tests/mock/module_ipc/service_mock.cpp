@@ -473,4 +473,63 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
 }
 
 void Service::SleepForDelayTime(const std::string &bundleName) {}
+
+ErrCode Service::CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::DestroyAncoBackupTask()
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
+    const std::vector<std::string> &excludes)
+{
+    includes.clear();
+    compatIncludes.clear();
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::StartAncoScanAllDirs(AncoScanResult &scanResult)
+{
+    scanResult.bigFileSize = 0;
+    scanResult.smallFileSize = 0;
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
+{
+    smallFileCount = 0;
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::CreateAncoRestoreTask()
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::DestroyAncoRestoreTask()
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::StartAncoUnPacket(const std::vector<std::string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
+    const std::vector<std::string> &tarFileNames, const std::string &rootPath)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::StartAncoMove(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats,
+    AncoRestoreResult &ancoRestoreRes)
+{
+    ancoRestoreRes.duplicateCount = 0;
+    ancoRestoreRes.failedCount = 0;
+    ancoRestoreRes.successCount = 0;
+    ancoRestoreRes.endFileInfos.clear();
+    ancoRestoreRes.errFileInfos.clear();
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

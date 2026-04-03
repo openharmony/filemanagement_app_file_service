@@ -15,9 +15,13 @@
 
 package OHOS.FileManagement.Backup;
 import ServiceType;
+import IAncoBackupCallback;
 interface OHOS.FileManagement.Backup.IServiceReverse;
 sequenceable BackupFileInfo..OHOS.FileManagement.Backup.BFileInfo;
 sequenceable BackupIncrementalData..OHOS.FileManagement.Backup.BIncrementalData;
+sequenceable OHOS.FileManagement.Backup.StatInfo;
+sequenceable OHOS.FileManagement.Backup.AncoScanResult;
+sequenceable OHOS.FileManagement.Backup.AncoRestoreResult;
 interface OHOS.FileManagement.Backup.IService{
     [ipccode 39] void InitRestoreSession([in] IServiceReverse reverseIpcRemoteObject);
     [ipccode 1] void InitRestoreSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject,
@@ -79,4 +83,16 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 44] void AppIncrementalFileReadyWithoutFd([in] String fileName, [in] int appIncrementalFileReadyErrCode);
     [ipccode 45] void GetCompatibilityInfo([in] String bundleName, [in] String extInfo, [out] String compatInfo);
     [ipccode 46] void StartCleanData([in] int triggerType, [in] unsigned int WriteSize, [in] unsigned int waitTime);
+    [ipccode 47] void CreateAncoBackupTask([in] IAncoBackupCallback cb);
+    [ipccode 48] void DestroyAncoBackupTask();
+    [ipccode 49] void FilterAndSaveBackupPaths([inout] Set<String> expandIncludes,
+        [inout] Set<String> compatibleIncludes, [in] String[] excludes);
+    [ipccode 50] void StartAncoScanAllDirs([out] AncoScanResult scanResult);
+    [ipccode 51] void StartAncoPacket([out] unsigned long smallFileCount);
+    [ipccode 52] void CreateAncoRestoreTask();
+    [ipccode 53] void DestroyAncoRestoreTask();
+    [ipccode 54] void StartAncoUnPacket([in] String[] tarFiles, [in] long[] tarFileSizes, [in] String[] tarFileNames,
+        [in] String rootPath);
+    [ipccode 55] void StartAncoMove([in] String[] ancoSourcePath, [in] String[] ancoTargetPath,
+        [in] StatInfo[] ancoStats, [out] AncoRestoreResult ancoRestoreRes);
  }

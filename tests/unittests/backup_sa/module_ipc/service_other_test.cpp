@@ -38,6 +38,7 @@
 
 #include "service.cpp"
 #include "sub_service.cpp"
+#include "ienhance_service_mock.h"
 
 namespace OHOS::FileManagement::Backup {
 bool Service::VerifyDataClone()
@@ -236,6 +237,7 @@ public:
     static inline shared_ptr<AppGalleryDisposeProxyMock> gallery = nullptr;
     static inline shared_ptr<StorageMgrAdapterMock> sms = nullptr;
     static inline shared_ptr<ThreadPoolMock> task = nullptr;
+    static inline MockIEnhanceService* mockEnhanceService = nullptr;
 };
 
 void ServiceTest::SetUpTestCase(void)
@@ -278,6 +280,8 @@ void ServiceTest::SetUpTestCase(void)
     StorageMgrAdapterMock::sms = sms;
     task = make_shared<ThreadPoolMock>();
     ThreadPoolMock::task = task;
+    mockEnhanceService = new MockIEnhanceService();
+    EnhanceServiceManager::GetInstance().service_ = mockEnhanceService;
 }
 
 void ServiceTest::TearDownTestCase()
@@ -320,6 +324,9 @@ void ServiceTest::TearDownTestCase()
     sms = nullptr;
     ThreadPoolMock::task = nullptr;
     task = nullptr;
+    EnhanceServiceManager::GetInstance().service_ = nullptr;
+    delete mockEnhanceService;
+    mockEnhanceService = nullptr;
 }
 
 #include "sub_service_test.cpp"

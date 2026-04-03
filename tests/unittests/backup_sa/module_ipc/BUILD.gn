@@ -99,6 +99,7 @@ ohos_unittest("backup_service_test") {
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "service_test.cpp",
   ]
   sources += backup_mock_src
@@ -195,6 +196,7 @@ ohos_unittest("backup_service_throw_test") {
     "${path_backup}/services/backup_sa/src/module_ipc/sub_service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "service_throw_test.cpp",
   ]
   sources += backup_mock_src
@@ -276,6 +278,7 @@ ohos_unittest("backup_service_session_test") {
     "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_session_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "svc_session_manager_test.cpp",
   ]
   sources += backup_mock_src
@@ -342,6 +345,7 @@ ohos_unittest("backup_service_scheduler_test") {
   sources = [
     "${path_backup_mock}/timer/timer_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_sched/sched_scheduler.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "sched_scheduler_test.cpp",
   ]
   sources += backup_mock_src
@@ -416,6 +420,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "${path_backup}/services/backup_sa/src/module_ipc/sub_service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "svc_restore_deps_manager_test.cpp",
   ]
   sources += backup_mock_src
@@ -590,6 +595,7 @@ ohos_unittest("backup_service_other_test") {
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
     "${path_backup_mock}/utils_mock/src/backup_para_mock.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "service_other_test.cpp",
   ]
 
@@ -668,6 +674,7 @@ ohos_unittest("backup_service_other_test_extended") {
   sources = [
     "${path_backup}/services/backup_sa/src/module_ipc/service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/sub_service.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "${path_backup_mock}/accesstoken/src/accesstoken_kit_mock.cpp",
     "${path_backup_mock}/b_radar/src/runninglock_mock.cpp",
     "${path_backup_mock}/module_external/src/bms_adapter_mock.cpp",
@@ -766,6 +773,7 @@ ohos_unittest("backup_service_sub_test") {
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "service_sub_test.cpp",
   ]
   sources += backup_mock_src

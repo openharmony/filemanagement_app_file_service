@@ -271,4 +271,63 @@ ErrCode ServiceProxy::StartCleanData(int triggerType, unsigned int writeSize, un
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceProxy::CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::DestroyAncoBackupTask()
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
+    const std::vector<std::string> &excludes)
+{
+    includes.clear();
+    compatIncludes.clear();
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::StartAncoScanAllDirs(AncoScanResult &scanResult)
+{
+    scanResult.bigFileSize = 0;
+    scanResult.smallFileSize = 0;
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::StartAncoPacket(uint64_t &smallFileCount)
+{
+    smallFileCount = 0;
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::CreateAncoRestoreTask()
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::DestroyAncoRestoreTask()
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::StartAncoUnPacket(const std::vector<std::string> &tarFiles,
+    const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames, const std::string &rootPath)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::StartAncoMove(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats,
+    AncoRestoreResult &ancoRestoreRes)
+{
+    ancoRestoreRes.duplicateCount = 0;
+    ancoRestoreRes.failedCount = 0;
+    ancoRestoreRes.successCount = 0;
+    ancoRestoreRes.endFileInfos.clear();
+    ancoRestoreRes.errFileInfos.clear();
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

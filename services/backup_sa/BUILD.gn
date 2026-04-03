@@ -26,6 +26,9 @@ idl_gen_interface("backup_idl") {
     "ServiceReverseType.idl",
     "ServiceType.idl",
   ]
+  sources_callback = [
+    "IAncoBackupCallback.idl",
+  ]
   hitrace = "HITRACE_TAG_FILEMANAGEMENT"
   log_domainid = "0xD004313"
   log_tag = "AppFileService"
@@ -52,7 +55,10 @@ ohos_source_set("backup_sa_ipc") {
 
   public_configs = [ ":public_idl_config" ]
 
-  deps = [ ":backup_idl" ]
+  deps = [
+    ":backup_idl",
+    "${path_backup}/utils:backup_utils",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -90,10 +96,14 @@ ohos_source_set("backup_extension_stub_idl") {
     debug = false
   }
   sources = [
-    "${target_gen_dir}/extension_stub.cpp"
+    "${target_gen_dir}/extension_stub.cpp",
+    "${target_gen_dir}/anco_backup_callback_stub.cpp",
   ]
   public_configs = [ ":public_idl_config" ]
-  deps = [ ":backup_idl" ]
+  deps = [
+    ":backup_idl",
+    "${path_backup}/utils:backup_utils",
+  ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
@@ -104,6 +114,7 @@ ohos_source_set("backup_extension_stub_idl") {
   ]
   include_dirs = [
     ".",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${target_gen_dir}/",
   ]
   cflags_cc = [
@@ -127,7 +138,10 @@ ohos_source_set("backup_reverse_stub_idl") {
     "${target_gen_dir}/service_reverse_stub.cpp"
   ]
   public_configs = [ ":public_idl_config" ]
-  deps = [ ":backup_idl" ]
+  deps = [
+    ":backup_idl",
+    "${path_backup}/utils:backup_utils",
+  ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
@@ -162,7 +176,10 @@ ohos_source_set("backup_service_proxy_idl") {
     "${target_gen_dir}/service_proxy.cpp"
   ]
   public_configs = [ ":public_idl_config" ]
-  deps = [ ":backup_idl" ]
+  deps = [
+    ":backup_idl",
+    "${path_backup}/utils:backup_utils",
+  ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
@@ -201,7 +218,10 @@ ohos_source_set("backup_sa_ipc_stub") {
   sources += filter_include(output_values, [ "*_stub.cpp" ])
   public_configs = [ ":public_idl_config" ]
 
-  deps = [ ":backup_idl" ]
+  deps = [
+    ":backup_idl",
+    "${path_backup}/utils:backup_utils",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -254,6 +274,7 @@ ohos_shared_library("backup_sa") {
     "src/module_ipc/svc_backup_connection.cpp",
     "src/module_ipc/svc_restore_deps_manager.cpp",
     "src/module_ipc/svc_session_manager.cpp",
+    "src/module_ipc/enhance_service_manager.cpp",
     "src/module_notify/notify_work_service.cpp",
     "src/module_sched/sched_scheduler.cpp",
     "src/module_external/storage_manager_service.cpp",

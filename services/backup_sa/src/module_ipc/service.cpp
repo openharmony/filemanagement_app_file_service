@@ -68,6 +68,7 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "system_ability_definition.h"
+#include "module_ipc/enhance_service_manager.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -213,6 +214,7 @@ void Service::OnStart()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("SA OnStart Begin.");
+    EnhanceServiceManager::GetInstance().LoadService();
     std::vector<std::string> bundleNameList = GetCurUsrDispBundleName();
     std::vector<std::string> residualBundleNameList;
     if (clearRecorder_ != nullptr) {
@@ -266,6 +268,7 @@ void Service::OnStop()
         oldMemoryParaSize = session_->GetMemParaCurSize();
     }
     StorageMgrAdapter::UpdateMemPara(oldMemoryParaSize);
+    EnhanceServiceManager::GetInstance().UnloadService();
     HILOGI("SA OnStop End.");
 }
 

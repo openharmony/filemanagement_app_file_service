@@ -46,6 +46,20 @@ public:
     MOCK_METHOD(ErrCode, ServiceResultReport, (const std::string&, BackupRestoreScenario, ErrCode));
     MOCK_METHOD(ErrCode, GetLocalCapabilities, (int& fd));
     MOCK_METHOD(ErrCode, GetLocalCapabilitiesForBundleInfos, (int& fd));
+    MOCK_METHOD(ErrCode, CreateAncoBackupTask, (const sptr<IAncoBackupCallback> &));
+    MOCK_METHOD(ErrCode, DestroyAncoBackupTask, ());
+    MOCK_METHOD(ErrCode, FilterAndSaveBackupPaths, (std::set<std::string> &, std::set<std::string> &,
+        const std::vector<std::string> &));
+    MOCK_METHOD(ErrCode, StartAncoScanAllDirs, (AncoScanResult &));
+    MOCK_METHOD(ErrCode, StartAncoPacket, (uint64_t &));
+    MOCK_METHOD(ErrCode, CreateAncoRestoreTask, ());
+    MOCK_METHOD(ErrCode, DestroyAncoRestoreTask, ());
+    MOCK_METHOD(ErrCode, StartAncoUnPacket,
+        (const std::vector<std::string> &, const std::vector<int64_t> &, const std::vector<std::string> &,
+            const std::string &));
+    MOCK_METHOD(ErrCode, StartAncoMove,
+        (const std::vector<std::string> &, const std::vector<std::string> &, const std::vector<StatInfo> &,
+            AncoRestoreResult &));
 
     int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {
