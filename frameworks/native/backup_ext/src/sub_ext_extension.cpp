@@ -2038,7 +2038,7 @@ void AncoBackupHelper::DestroyAncoBackupTask()
 }
 
 void AncoBackupHelper::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
-        const std::vector<std::string> &excludes)
+    const std::vector<std::string> &excludes)
 {
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
