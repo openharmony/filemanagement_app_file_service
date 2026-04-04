@@ -1946,7 +1946,7 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
         }
         uint32_t pathDepth = std::count(includePath.begin(), includePath.end(), '/');
         bool hasEl3OrEl4 = std::any_of(elPrefixes.begin(), elPrefixes.end(), [&](const std::string &prefix) {
-            return includePath.find(prefix) == 0;BError(BError::Codes::ENHANCE_SERVICE_NOT_L
+            return includePath.find(prefix) == 0;
         });
         if (!hasEl3OrEl4 && pathDepth > HIERARCHY_OF_FILE_ENCRYPTION_TYPE) {
             continue;
