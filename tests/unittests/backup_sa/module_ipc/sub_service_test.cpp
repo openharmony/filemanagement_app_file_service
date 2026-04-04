@@ -2673,3 +2673,5 @@ HWTEST_F(ServiceTest, SUB_Service_GetCurUsrDispBundleName_0000, testing::ext::Te
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetCurUsrDispBundleName_0000";
 }
+
+#include "sub_service_ex_test.cpp"

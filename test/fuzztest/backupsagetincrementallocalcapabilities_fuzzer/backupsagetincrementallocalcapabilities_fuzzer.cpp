@@ -51,7 +51,7 @@ constexpr int32_t NEED_CREATE_THREE_STRING_NUM = 3;
 
 void GetBundleNamesData(const uint8_t *data, size_t size, vector<BIncrementalData> &bundleNames)
 {
-    int minLen = sizeof(int64_t) + sizeof(int) + sizeof(int32_t);
+    size_t minLen = sizeof(int64_t) + sizeof(int) + sizeof(int32_t);
     if (size < minLen + 1) {
         return;
     }
@@ -256,10 +256,10 @@ bool CheckIfDirForIncludesFuzzTest(const uint8_t *data, size_t size)
     string bundleName = "com.example.test";
     BundleStatsParas paras = {
         .userId = 100,
+        .bundleName = bundleName,
         .lastBackupTime = TypeCast<int64_t>(data, &pos),
         .fileSizeSum = TypeCast<int64_t>(data + pos, &pos),
-        .incFileSizeSum = TypeCast<int64_t>(data + pos, &pos),
-        .bundleName = bundleName
+        .incFileSizeSum = TypeCast<int64_t>(data + pos, &pos)
     };
 
     string path(reinterpret_cast<const char *>(data + pos), size - pos);

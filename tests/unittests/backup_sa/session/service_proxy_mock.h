@@ -80,6 +80,18 @@ public:
     MOCK_METHOD1(GetExtOnRelease, ErrCode(bool &isExtOnRelease));
     MOCK_METHOD3(GetCompatibilityInfo, ErrCode(const std::string&, const std::string&, std::string&));
     MOCK_METHOD3(StartCleanData, ErrCode(int, unsigned int, unsigned int));
+    MOCK_METHOD1(CreateAncoBackupTask, ErrCode(const sptr<IAncoBackupCallback> &));
+    MOCK_METHOD0(DestroyAncoBackupTask, ErrCode());
+    MOCK_METHOD3(FilterAndSaveBackupPaths, ErrCode(std::set<std::string> &, std::set<std::string> &,
+        const std::vector<std::string> &));
+    MOCK_METHOD1(StartAncoScanAllDirs, ErrCode(AncoScanResult &));
+    MOCK_METHOD1(StartAncoPacket, ErrCode(uint64_t &));
+    MOCK_METHOD0(CreateAncoRestoreTask, ErrCode());
+    MOCK_METHOD0(DestroyAncoRestoreTask, ErrCode());
+    MOCK_METHOD4(StartAncoUnPacket, ErrCode(const std::vector<std::string> &, const std::vector<int64_t> &,
+        const std::vector<std::string> &, const std::string &));
+    MOCK_METHOD4(StartAncoMove, ErrCode(const std::vector<std::string> &, const std::vector<std::string> &,
+        const std::vector<StatInfo> &, AncoRestoreResult &));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H
