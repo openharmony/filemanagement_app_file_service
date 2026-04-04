@@ -35,6 +35,8 @@
 #include "untar_file.h"
 
 #include "sub_ext_extension.cpp"
+#include "service_proxy_mock.h"
+#include "service_client.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -66,6 +68,8 @@ public:
     static inline shared_ptr<ExtBackup> extension = nullptr;
     static inline shared_ptr<ExtBackupMock> extBackupMock = nullptr;
     static inline shared_ptr<ExtExtensionMock> extExtensionMock = nullptr;
+    static inline sptr<ServiceProxyMock> proxy = nullptr;
+    static inline sptr<AncoBackupCallback> backupCallback = nullptr;
 };
 
 void ExtExtensionSubTest::SetUpTestCase(void)
@@ -100,6 +104,11 @@ void ExtExtensionSubTest::SetUpTestCase(void)
         nullptr, BUNDLE_NAME));
     extension = make_shared<ExtBackup>();
     extExtension->extension_ = extension;
+    proxy = sptr<ServiceProxyMock>(new ServiceProxyMock(nullptr));
+    ServiceClient::serviceProxy_ = proxy;
+ 
+    backupCallback = sptr<AncoBackupCallback>(new AncoBackupCallback(
+        wptr<BackupExtExtension>(extExtension)));
 };
 
 void ExtExtensionSubTest::TearDownTestCase(void)
@@ -120,6 +129,8 @@ void ExtExtensionSubTest::TearDownTestCase(void)
     extBackupMock = nullptr;
     ExtExtensionMock::extExtension = nullptr;
     extExtensionMock = nullptr;
+    ServiceClient::serviceProxy_ = nullptr;
+    proxy = nullptr;
 };
 
 /**
@@ -1572,4 +1583,61 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_FDSan_DupFd_Test_0201, testing::
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_FDSan_DupFd_Test_0201";
 }
+
+
+/**
+ * @tc.number: SUB_Ext_Extension_0300
+ * @tc.name: Ext_Extension_Test_0300
+ * @tc.desc: 测试 OnTarFileReadyCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Test_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0300";
+    try {
+        const string filePath(BConstants::MAX_PATH_LEN + 1, 'b');
+        const string fileName = "test.txt";
+        StatInfo statInfo;
+        statInfo.sta.st_size = 1024;
+        int fd = 3;
+        auto ret = backupCallback->OnTarFileReadyCallback(fileName, filePath, statInfo, fd);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::EXT_INVAL_ARG));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0300";
+}
+ 
+/**
+ * @tc.number: SUB_Ext_Extension_0301
+ * @tc.name: Ext_Extension_Test_0301
+ * @tc.desc: 测试 OnBigFileReadyCallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Test_0301, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0301";
+    try {
+        const string longPath(BConstants::MAX_PATH_LEN + 1, 'a');
+        const string restorePath = "/test/restore/path/file.txt";
+        StatInfo statInfo;
+        statInfo.sta.st_size = 1024;
+        int fd = 0;
+        auto ret = backupCallback->OnBigFileReadyCallback(longPath, restorePath, statInfo, fd);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::EXT_INVAL_ARG));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0301";
+}
+
+#include "ext_extension_sub_ext_test.cpp"
 }

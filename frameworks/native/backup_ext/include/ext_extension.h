@@ -23,9 +23,12 @@
 #include <vector>
 #include <tuple>
 #include <unordered_set>
+#include <cstdint>
+#include <functional>
 
 #include <sys/stat.h>
 
+#include "anco_backup_callback_stub.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
@@ -42,10 +45,48 @@
 #include "untar_file.h"
 
 namespace OHOS::FileManagement::Backup {
+class BackupExtExtension;
+class AncoBackupCallback : public AncoBackupCallbackStub {
+public:
+    AncoBackupCallback(wptr<BackupExtExtension> extension) : extension_(extension)
+    {}
+    ~AncoBackupCallback() = default;
+
+    ErrCode OnBigFileReadyCallback(
+        const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo, int fd) override;
+    ErrCode OnTarFileReadyCallback(
+        const std::string &fileName, const std::string &filePath, const StatInfo &statInfo, int fd) override;
+ErrCode WaitForPacketFlag() override;
+    ErrCode ReportErrFileByProc(const std::string &msg, int32_t err) override;
+    ErrCode UpdateFileStat(const std::string &filePath, const StatInfo &statInfo) override;
+
+private:
+    wptr<BackupExtExtension> extension_;
+};
+class AncoBackupHelper {
+public:
+    static void CreateAncoBackupTask(wptr<BackupExtExtension> extension);
+    static void DestroyAncoBackupTask();
+    static void FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
+        const std::vector<std::string> &excludes);
+    static std::tuple<ErrCode, int64_t, int64_t> StartAncoScanAllDirs();
+    static void StartAncoPacket(uint64_t &ancoSmallFileCount);
+};
+class AncoIncrementalRestoreHelper {
+public:
+    static void CreateAncoRestoreTask();
+    static void DestroyAncoRestoreTask();
+    static ErrCode StartAncoUnPacket(const std::vector<std::string> &ancoTarFiles,
+        const std::vector<int64_t> &ancoTarFileSizes, const std::vector<std::string> &ancoTarFileNames,
+        const std::string &tempPath);
+    static AncoRestoreResult StartAncoMove(const std::vector<std::string> &ancoSourcePath,
+        const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats);
+};
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
-                                 map<string, struct ReportFileInfo>,
-                                 map<string, struct ReportFileInfo>>;
+    map<string, struct ReportFileInfo>, map<string, struct ReportFileInfo>>;
+
 class BackupExtExtension : public ExtensionStub {
+    friend class AncoBackupCallback;
 public:
     ErrCode GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int& fd) override;
     ErrCode HandleClear() override;
@@ -130,6 +171,14 @@ private:
      */
     int DoIncrementalRestore();
 
+    /**
+    * @brief process tarfile
+    *
+    */
+    ErrCode ProcessTarFile(const std::string& item, const std::vector<ExtManageInfo>& extManageInfo,
+                            std::tuple<std::vector<std::string>, std::vector<int64_t>,
+                            std::vector<std::string>> &ancoTarInfo, std::string &tempPath);
+
     /** @brief clear backup restore data */
     void DoClear();
 
@@ -148,8 +197,7 @@ private:
      *
      * @param restoreRetInfo app restore reportInfo
      */
-    void AppResultReport(const std::string restoreRetInfo, BackupRestoreScenario scenario,
-        ErrCode errCode = 0);
+    void AppResultReport(std::string restoreRetInfo, BackupRestoreScenario scenario, ErrCode errCode = 0);
 
     /**
      * @brief extension process Info
@@ -329,7 +377,7 @@ private:
     ErrCode RestoreTarForSpecialCloneCloud(const ExtManageInfo &item);
     void RestoreBigFiles(bool appendTargetPath);
     void FillEndFileInfos(const std::string &path, const unordered_map<string, struct ReportFileInfo> &result);
-    void RestoreBigFileAfter(const string &filePath, const struct stat &sta);
+    void RestoreBigFileAfter(const string &filePath, const struct stat &sta, std::vector<StatInfo> &ancoStats);
     void DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
         const std::tuple<int, EndFileInfo, ErrFileInfo> &result);
 
@@ -347,7 +395,8 @@ private:
     std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
         BackupRestoreScenario scenario);
     std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForNormalVersion(const std::string &fileName);
-    void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath);
+    void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath,
+ 	    std::vector<StatInfo> &ancoStats);
     int DealIncreRestoreBigAndTarFile();
     ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo, const vector<struct ReportFileInfo> &srcFiles,
         sptr<IService> proxy);
@@ -398,7 +447,9 @@ private:
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
     void ReportAppStatistic(const std::string &func, ErrCode errCode);
     ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>> &allFiles);
-    ErrCode ReportAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
+    ErrCode ReportAppFileReady(const std::shared_ptr<IFileInfo> &fileInfo, int &fdNum);
+    ErrCode ReportNormalAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
+    ErrCode ReportAncoAppFileReady(const string &filename, const string &filePath, int fd, bool needDelete = false);
 
     // Helper function to open a file with O_RDONLY and set fdsan ownership tag
     int OpenFileWithFDSan(const std::string &path);
@@ -461,6 +512,7 @@ private:
     std::string compatibilityInfo_ {};
     std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并发
     std::mutex updateFileStatLock_;
+    AncoRestoreResult ancoRestoreRes_;
 };
 } // namespace OHOS::FileManagement::Backup
 

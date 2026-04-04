@@ -28,6 +28,7 @@
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
+#include "b_utils/string_utils.h"
 #include "filemgmt_libhilog.h"
 #include "sandbox_helper.h"
 #include "file_uri.h"
@@ -564,7 +565,7 @@ bool StorageManagerService::GetIncludesFileStats(const std::string &dir, BundleS
             struct FileStat fileStat = {};
             fileStat.filePath = PhysicalToSandboxPath(dir, sandboxDir, path);
             fileStat.fileSize = fileInfo.st_size;
-            CheckOverLongPath(fileStat.filePath);
+            StringUtils::CheckOverLongPath(fileStat.filePath);
             // mode
             fileStat.mode = static_cast<int32_t>(fileInfo.st_mode);
             int64_t lastUpdateTime = static_cast<int64_t>(fileInfo.st_mtime);
@@ -772,19 +773,4 @@ bool StorageManagerService::AddPathMapForPathWildCard(uint32_t userId, const std
     }
     return true;
 }
-
-uint32_t StorageManagerService::CheckOverLongPath(const std::string &path)
-{
-    uint32_t len = path.length();
-    if (len >= PATH_MAX_LEN) {
-        size_t found = path.find_last_of('/');
-        std::string sub = "";
-        if (found != std::string::npos && found != path.length() - 1) {
-            sub = path.substr(found + 1);
-        }
-        HILOGE("Path over long, length:%{public}d, fileName:%{public}s.", len, sub.c_str());
-    }
-    return len;
-}
-
 } // namespace OHOS::FileManagement::Backup

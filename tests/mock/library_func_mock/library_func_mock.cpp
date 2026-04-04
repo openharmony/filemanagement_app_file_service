@@ -145,3 +145,15 @@ int FdsanCloseWithTag(int fd, uint64_t tag)
 {
     return LibraryFunc::libraryFunc_->fdsan_close_with_tag(fd, tag);
 }
+
+int Futimens(int fd, const struct timespec times[2])
+{
+    return LibraryFunc::libraryFunc_->futimens(fd, times);
+}
+
+namespace OHOS {
+bool MyRemoveFile(const std::string &fileName)
+{
+    return LibraryFunc::libraryFunc_->RemoveFile(fileName);
+}
+}

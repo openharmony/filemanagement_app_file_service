@@ -34,6 +34,7 @@ ohos_unittest("ext_extension_test") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${path_backup}/interfaces/common/include",
     "${path_backup}/utils/include",
+    "${path_backup}/tests/unittests/backup_sa/session",
   ]
 
   deps = [

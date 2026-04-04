@@ -21,6 +21,7 @@
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_filesystem/b_dir.h"
+#include "b_resources/b_constants.h"
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "filemgmt_libhilog.h"
@@ -199,23 +200,23 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ReadLongName_0100, testing::ext::TestS
     GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_ReadLongName_0100";
     FileStatInfo info;
     info.fullPath = "test";
-    UntarFile::GetInstance().tarFileSize_ = PATH_MAX_LEN + 1;
+    UntarFile::GetInstance().tarFileSize_ = BConstants::MAX_PATH_LEN + 1;
     auto [ret, fileInfo] = UntarFile::GetInstance().ReadLongName(info);
     EXPECT_EQ(ret, -1);
 
-    UntarFile::GetInstance().tarFileSize_ = PATH_MAX_LEN;
+    UntarFile::GetInstance().tarFileSize_ = BConstants::MAX_PATH_LEN;
     EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(1));
     tie(ret, fileInfo) = UntarFile::GetInstance().ReadLongName(info);
     EXPECT_EQ(ret, -1);
 
-    UntarFile::GetInstance().tarFileSize_ = PATH_MAX_LEN;
-    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(PATH_MAX_LEN));
+    UntarFile::GetInstance().tarFileSize_ = BConstants::MAX_PATH_LEN;
+    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(BConstants::MAX_PATH_LEN));
     EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(1));
     tie(ret, fileInfo) = UntarFile::GetInstance().ReadLongName(info);
     EXPECT_EQ(ret, -1);
 
-    UntarFile::GetInstance().tarFileSize_ = PATH_MAX_LEN;
-    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(PATH_MAX_LEN));
+    UntarFile::GetInstance().tarFileSize_ = BConstants::MAX_PATH_LEN;
+    EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(BConstants::MAX_PATH_LEN));
     EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
     tie(ret, fileInfo) = UntarFile::GetInstance().ReadLongName(info);
     EXPECT_EQ(ret, 0);
@@ -340,7 +341,7 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseFileByTypeFlag_0200, testing::ext
     UntarFile::GetInstance().rootPath_ = "rootPath";
     try {
         FileStatInfo info;
-        UntarFile::GetInstance().tarFileSize_ = PATH_MAX_LEN + 1;
+        UntarFile::GetInstance().tarFileSize_ = BConstants::MAX_PATH_LEN + 1;
         info.fullPath = "/test/../test/";
         auto [ret, flag, m] = UntarFile::GetInstance().ParseFileByTypeFlag(GNUTYPE_LONGNAME, info);
         EXPECT_EQ(ret, DEFAULT_ERR);
@@ -503,7 +504,7 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_ParseIncrementalFileByTypeFlag_0200, t
     UntarFile::GetInstance().rootPath_ = "rootPath";
     try {
         FileStatInfo info;
-        UntarFile::GetInstance().tarFileSize_ = PATH_MAX_LEN + 1;
+        UntarFile::GetInstance().tarFileSize_ = BConstants::MAX_PATH_LEN + 1;
         info.fullPath = "/test/../test/";
         auto [ret, flag, m] = UntarFile::GetInstance().ParseIncrementalFileByTypeFlag(GNUTYPE_LONGNAME, info);
         EXPECT_EQ(ret, DEFAULT_ERR);

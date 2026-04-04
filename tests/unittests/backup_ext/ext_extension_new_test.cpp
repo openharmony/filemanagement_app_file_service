@@ -44,6 +44,10 @@ using namespace std;
 using namespace testing;
 using namespace OHOS::AppFileService;
 
+namespace{
+const string BUNDLE_NAME = "com.example.app2backup/";
+}
+
 sptr<IService> ServiceClient::GetInstance()
 {
     return serviceProxy_;
@@ -110,58 +114,58 @@ void ExtExtensionNewTest::TearDownTestCase(void)
 };
 
 /**
- * @tc.number: Ext_Extension_ReportAppFileReady_Test_0100
- * @tc.name: Ext_Extension_ReportAppFileReady_Test_0100
- * @tc.desc: 测试ReportAppFileReady open失败且为错误码为没权限场景
+ * @tc.number: Ext_Extension_ReportNormalAppFileReady_Test_0100
+ * @tc.name: Ext_Extension_ReportNormalAppFileReady_Test_0100
+ * @tc.desc: 测试ReportNormalAppFileReady open失败且为错误码为没权限场景
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportNormalAppFileReady_Test_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0100";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportNormalAppFileReady_Test_0100";
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = ERR_NO_PERMISSION;
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
-    EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, false), 0);
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportAppFileReady_Test_0100";
+    EXPECT_EQ(extExtension_->ReportNormalAppFileReady(filename, filePath, false), 0);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportNormalAppFileReady_Test_0100";
 }
 
 /**
- * @tc.number: Ext_Extension_ReportAppFileReady_Test_0200
- * @tc.name: Ext_Extension_ReportAppFileReady_Test_0200
- * @tc.desc: 测试ReportAppFileReady proxy为空场景
+ * @tc.number: Ext_Extension_ReportNormalAppFileReady_Test_0200
+ * @tc.name: Ext_Extension_ReportNormalAppFileReady_Test_0200
+ * @tc.desc: 测试ReportNormalAppFileReady proxy为空场景
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0200, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportNormalAppFileReady_Test_0200, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0200";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportNormalAppFileReady_Test_0200";
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = -1;
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1));
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
     ServiceClient::serviceProxy_ = nullptr;
-    EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, false),
+    EXPECT_EQ(extExtension_->ReportNormalAppFileReady(filename, filePath, false),
         static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL));
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportAppFileReady_Test_0200";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportNormalAppFileReady_Test_0200";
 }
 
 /**
- * @tc.number: Ext_Extension_ReportAppFileReady_Test_0300
- * @tc.name: Ext_Extension_ReportAppFileReady_Test_0300
- * @tc.desc: 测试ReportAppFileReady AppFileReadyWithoutFd/AppFileReady返回-1场景
+ * @tc.number: Ext_Extension_ReportNormalAppFileReady_Test_0300
+ * @tc.name: Ext_Extension_ReportNormalAppFileReady_Test_0300
+ * @tc.desc: 测试ReportNormalAppFileReady AppFileReadyWithoutFd/AppFileReady返回-1场景
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0300, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportNormalAppFileReady_Test_0300, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0300";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportNormalAppFileReady_Test_0300";
     ASSERT_TRUE(extExtension_ != nullptr);
     errno = -1;
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(-1)).WillOnce(Return(1));
@@ -170,23 +174,23 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0300, testin
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
     EXPECT_CALL(*serviceMock_, AppFileReadyWithoutFd(_, _)).WillOnce(Return(-1));
-    EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, false), -1);
+    EXPECT_EQ(extExtension_->ReportNormalAppFileReady(filename, filePath, false), -1);
     EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(-2));
-    EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, false), -2);
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportAppFileReady_Test_0300";
+    EXPECT_EQ(extExtension_->ReportNormalAppFileReady(filename, filePath, false), -2);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportNormalAppFileReady_Test_0300";
 }
 
 /**
- * @tc.number: Ext_Extension_ReportAppFileReady_Test_0400
- * @tc.name: Ext_Extension_ReportAppFileReady_Test_0400
- * @tc.desc: 测试ReportAppFileReady 成功场景
+ * @tc.number: Ext_Extension_ReportNormalAppFileReady_Test_0400
+ * @tc.name: Ext_Extension_ReportNormalAppFileReady_Test_0400
+ * @tc.desc: 测试ReportNormalAppFileReady 成功场景
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  */
-HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0400, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportNormalAppFileReady_Test_0400, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportAppFileReady_Test_0400";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_ReportNormalAppFileReady_Test_0400";
     ASSERT_TRUE(extExtension_ != nullptr);
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(1));
     EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
@@ -194,8 +198,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0400, testin
     string filename = "app_file_ready_test";
     string filePath = "/tmp";
     EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
-    EXPECT_EQ(extExtension_->ReportAppFileReady(filename, filePath, true), 0);
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportAppFileReady_Test_0400";
+    EXPECT_EQ(extExtension_->ReportNormalAppFileReady(filename, filePath, true), 0);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_ReportNormalAppFileReady_Test_0400";
 }
 
 /**
@@ -324,6 +328,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoPacket_Test_0200, testing::ext::Te
     EXPECT_CALL(*funcMock_, lstat(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*funcMock_, read(_, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
     EXPECT_CALL(*funcMock_, fwrite(_, _, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
+    EXPECT_CALL(*serviceMock_, StartAncoPacket(_)).WillRepeatedly(Return(ERR_OK));
     string filename1 = "app_file_ready_test1";
     size_t fileSize1 = BConstants::DEFAULT_SLICE_SIZE;
     shared_ptr<ISmallFileInfo> file1 = make_shared<SmallFileInfo>(filename1, fileSize1);
@@ -360,6 +365,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ScanAllDirs_Test_0100, testing::ext:
 
     errno = EPERM;
     EXPECT_CALL(*funcMock_, mkdir(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*serviceMock_, StartAncoScanAllDirs(_)).WillRepeatedly(Return(ERR_OK));
     EXPECT_EQ(extExtension_->ScanAllDirs(cache, totalSize), BError::BackupErrorCode::E_PERM);
     errno = EEXIST;
     EXPECT_CALL(*funcMock_, mkdir(_, _)).WillOnce(Return(-1)).WillRepeatedly(Return(0));
@@ -683,5 +689,444 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_CloseFileWithFDSan_Test_0200, testin
     int invalidFd = -1;
     extExtension_->CloseFileWithFDSan(invalidFd);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_CloseFileWithFDSan_Test_0200";
+}
+
+/**
+ * @tc.number: Ext_Extension_GetRestoreTempPath_Test_0000
+ * @tc.name: Ext_Extension_GetRestoreTempPath_Test_0000
+ * @tc.desc: 测试 GetRestoreTempPath
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetRestoreTempPath_Test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetRestoreTempPath_Test_0000";
+    std::string bundleName = BConstants::BUNDLE_MEDIAL_DATA;
+    auto ret = GetRestoreTempPath(bundleName);
+    EXPECT_EQ(ret, string(BConstants::PATH_MEDIALDATA_BACKUP_HOME)
+        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+
+    bundleName = "test";
+    ret = GetRestoreTempPath(bundleName);
+    EXPECT_EQ(ret, string(BConstants::PATH_BUNDLE_BACKUP_HOME)
+        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetRestoreTempPath_Test_0000";
+}
+
+/**
+ * @tc.number: Ext_Extension_GetRestoreTempPath_Test_0001
+ * @tc.name: Ext_Extension_GetRestoreTempPath_Test_0001
+ * @tc.desc: 测试 GetRestoreTempPath
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetRestoreTempPath_Test_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetRestoreTempPath_Test_0001";
+    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Return(ERR_OK));
+
+    std::string hashName = "file_anco";
+    std::string hashName2 = "file.txt";
+    EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName),
+        string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+    EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName2),
+        string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+    EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName2),
+        string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetRestoreTempPath_Test_0001";
+}
+
+/**
+ * @tc.number: Ext_Extension_GetRestoreTempPath_Test_0002
+ * @tc.name: Ext_Extension_GetRestoreTempPath_Test_0002
+ * @tc.desc: 测试 GetRestoreTempPath
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetRestoreTempPath_Test_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetRestoreTempPath_Test_0002";
+    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Invoke([&](const char *pathname, mode_t mode) {
+        errno = EEXIST;
+        return -1;
+    }));
+
+    std::string hashName = "file_anco";
+    std::string hashName2 = "file.txt";
+    EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName),
+        string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+    EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName2),
+        string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetRestoreTempPath_Test_0002";
+}
+
+/**
+ * @tc.number: Ext_Extension_GetIncrementalFileHandlePath_Test_0000
+ * @tc.name: Ext_Extension_GetIncrementalFileHandlePath_Test_0000
+ * @tc.desc: 测试 GetIncrementalFileHandlePath
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetIncrementalFileHandlePath_Test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetIncrementalFileHandlePath_Test_0000";
+    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Return(ERR_OK));
+
+    const string fileName = "1.txt";
+    const string fileName2 = "test_anco";
+    string tarName = "2.tar";
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, tarName), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName2, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, tarName), ERR_OK);
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetIncrementalFileHandlePath_Test_0000";
+}
+
+/**
+ * @tc.number: Ext_Extension_GetIncrementalFileHandlePath_Test_0001
+ * @tc.name: Ext_Extension_GetIncrementalFileHandlePath_Test_0001
+ * @tc.desc: 测试 GetIncrementalFileHandlePath - FAILURE
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetIncrementalFileHandlePath_Test_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetIncrementalFileHandlePath_Test_0001";
+    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Invoke([&](const char *pathname, mode_t mode) {
+        errno = ENOENT;
+        return -1;
+    }));
+
+    const string fileName = "1.txt";
+    const string fileName2 = "test_anco";
+    string tarName = "2.tar";
+    EXPECT_NE(GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, tarName), ERR_OK);
+    EXPECT_NE(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
+    EXPECT_NE(GetIncrementalFileHandlePath(fileName2, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
+    EXPECT_NE(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, tarName), ERR_OK);
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetIncrementalFileHandlePath_Test_0001";
+}
+
+/**
+ * @tc.number: Ext_Extension_GetIncrementalFileHandlePath_Test_0002
+ * @tc.name: Ext_Extension_GetIncrementalFileHandlePath_Test_0002
+ * @tc.desc: 测试 GetIncrementalFileHandlePath - SUCCESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetIncrementalFileHandlePath_Test_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetIncrementalFileHandlePath_Test_0002";
+    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Invoke([&](const char *pathname, mode_t mode) {
+        errno = EEXIST;
+        return -1;
+    }));
+
+    const string fileName = "1.txt";
+    const string fileName2 = "test_anco";
+    string tarName = "2.tar";
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, tarName), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName2, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, tarName), ERR_OK);
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetIncrementalFileHandlePath_Test_0002";
+}
+
+/**
+ * @tc.number: Ext_Extension_ReportAppFileReady_Test_0000
+ * @tc.name: Ext_Extension_ReportAppFileReady_Test_0000
+ * @tc.desc: 测试 ReportAppFileReady - 普通小文件
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ReportAppFileReady_Test_0000";
+    struct stat sta;
+    auto fileInfo = make_shared<FileInfo>("", "", sta, false);
+    int fdNum = 0;
+
+    // success
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(100));
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock_, RemoveFile(_)).WillOnce(Return(true));
+
+    EXPECT_TRUE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
+
+    // fail
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Invoke([&](const char *filename, int flags, ...) {
+        errno = ERR_NO_PERMISSION;
+        return -1;
+    }));
+    EXPECT_EQ(extExtension_->ReportAppFileReady(fileInfo, fdNum), ERR_NO_PERMISSION);
+
+    // fail
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Invoke([&](const char *filename, int flags, ...) {
+        errno = ERR_NO_PERMISSION + 1;
+        return -1;
+    }));
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    EXPECT_CALL(*serviceMock_, AppFileReadyWithoutFd(_, _)).WillOnce(Return(-1));
+    EXPECT_FALSE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
+
+    // fail
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(100));
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    ServiceClient::serviceProxy_ = nullptr;
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
+    EXPECT_EQ(extExtension_->ReportAppFileReady(fileInfo, fdNum),
+        static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL));
+    ServiceClient::serviceProxy_ = serviceMock_;
+
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ReportAppFileReady_Test_0000";
+}
+
+/**
+ * @tc.number: Ext_Extension_ReportAppFileReady_Test_0001
+ * @tc.name: Ext_Extension_ReportAppFileReady_Test_0001
+ * @tc.desc: 测试 ReportAppFileReady - TRUE - 普通大文件
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ReportAppFileReady_Test_0001";
+    struct stat sta;
+    auto fileInfo = make_shared<CompatibleFileInfo>("", "", sta, true, "");
+    int fdNum = 0;
+
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Return(100));
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
+
+    EXPECT_TRUE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ReportAppFileReady_Test_0001";
+}
+
+/**
+ * @tc.number: Ext_Extension_ReportAppFileReady_Test_0002
+ * @tc.name: Ext_Extension_ReportAppFileReady_Test_0002
+ * @tc.desc: 测试 ReportAppFileReady - 特殊小文件
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ReportAppFileReady_Test_0002";
+    struct stat sta;
+    auto fileInfo = make_shared<AncoFileInfo>("", "", sta, false, UniqueFd(100));
+    auto fileInfo2 = make_shared<AncoFileInfo>("", "", sta, false, UniqueFd(-1));
+    int fdNum = 0;
+
+    // success
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock_, RemoveFile(_)).WillOnce(Return(true));
+
+    EXPECT_TRUE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
+
+    // fail
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    EXPECT_CALL(*serviceMock_, AppFileReadyWithoutFd(_, _)).WillOnce(Return(-1));
+    EXPECT_FALSE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo2, fdNum)));
+
+    // fail
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    ServiceClient::serviceProxy_ = nullptr;
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
+    EXPECT_EQ(extExtension_->ReportAppFileReady(fileInfo, fdNum),
+        static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL));
+    ServiceClient::serviceProxy_ = serviceMock_;
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ReportAppFileReady_Test_0002";
+}
+
+/**
+ * @tc.number: Ext_Extension_ReportAppFileReady_Test_0003
+ * @tc.name: Ext_Extension_ReportAppFileReady_Test_0003
+ * @tc.desc: 测试 ReportAppFileReady - TRUE - 特殊大文件
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ReportAppFileReady_Test_0003";
+    struct stat sta;
+    auto fileInfo = make_shared<AncoCompatibleFileInfo>("", "", sta, true, "", UniqueFd(100));
+    int fdNum = 0;
+
+    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
+    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
+
+    EXPECT_TRUE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ReportAppFileReady_Test_0003";
+}
+
+/**
+ * @tc.number: Ext_Extension_DoIncrementalRestore_Test_0000
+ * @tc.name: Ext_Extension_DoIncrementalRestore_Test_0000
+ * @tc.desc: 测试 DoIncrementalRestore
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoIncrementalRestore_Test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_DoIncrementalRestore_Test_0000";
+    auto oldBundleName = extExtension_->bundleName_;
+    extExtension_->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
+    EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Return(-1));
+    EXPECT_EQ(extExtension_->DoIncrementalRestore(), ERR_OK);
+    extExtension_->bundleName_ = oldBundleName;
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_DoIncrementalRestore_Test_0000";
+}
+
+/**
+ * @tc.number: Ext_Extension_ProcessTarFile_Test_0000
+ * @tc.name: Ext_Extension_ProcessTarFile_Test_0000
+ * @tc.desc: 测试 ProcessTarFile - SUCEESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ProcessTarFile_Test_0000";
+    auto oldParam = std::make_tuple(extExtension_->bundleName_, extExtension_->isDebug_);
+    extExtension_->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
+    extExtension_->isDebug_ = true;
+
+    std::string item;
+    std::vector<ExtManageInfo> extManageInfo(1);
+    std::tuple<std::vector<string>, std::vector<int64_t>, std::vector<string>> ancoTarInfo;
+    std::string tempPath;
+    item = "1.tar";
+    extManageInfo.back().hashName = "1.tar";
+    extManageInfo.back().isUserTar = false;
+    auto backInput = std::make_tuple(item, extManageInfo, ancoTarInfo, tempPath);
+
+    // -------------------------- if - false
+    // 1
+    std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
+    item = "1.txt";
+    EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
+    // 2
+    std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
+    extManageInfo.back().isUserTar = true;
+    EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
+
+    // -------------------------- if - true
+    // 3
+    std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
+    EXPECT_CALL(*extBackupMock_, GetExtensionAction()).WillOnce(Return(BConstants::ExtensionAction::BACKUP));
+    EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), EPERM);
+
+    EXPECT_CALL(*extBackupMock_, GetExtensionAction()).WillRepeatedly(Return(BConstants::ExtensionAction::RESTORE));
+    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Return(0));
+
+    // 4
+    std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
+    item = "test../../test.tar";
+    EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_INVALID_VALUE);
+    // 5
+    std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
+    item = "1_anco.tar";
+    EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
+
+    EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Invoke([&](const char *filename, int flags, ...) {
+        errno = ERR_NO_PERMISSION;
+        return -1;
+    }));
+    EXPECT_CALL(*funcMock_, fopen(_, _)).WillRepeatedly(Invoke([&](const char *pathname, const char *mode) {
+        errno = ERR_OK;
+        return nullptr;
+    }));
+    EXPECT_CALL(*funcMock_, RemoveFile(_)).WillRepeatedly(Return(true));
+
+    // 6
+    std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
+    EXPECT_CALL(*extBackupMock_, SpecialVersionForCloneAndCloud()).WillOnce(Return(false));
+    EXPECT_CALL(*extBackupMock_, UseFullBackupOnly()).WillOnce(Return(false));
+    EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
+
+    // 7
+    std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
+    EXPECT_CALL(*extBackupMock_, SpecialVersionForCloneAndCloud()).WillOnce(Return(true));
+    EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
+
+    // 8
+    std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
+    EXPECT_CALL(*extBackupMock_, SpecialVersionForCloneAndCloud()).WillOnce(Return(false));
+    EXPECT_CALL(*extBackupMock_, UseFullBackupOnly()).WillOnce(Return(true));
+    EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
+
+    std::tie(extExtension_->bundleName_, extExtension_->isDebug_) = oldParam;
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ProcessTarFile_Test_0000";
+}
+
+/**
+ * @tc.number: Ext_Extension_RestoreBigFileAfter_Test_0000
+ * @tc.name: Ext_Extension_RestoreBigFileAfter_Test_0000
+ * @tc.desc: 测试 RestoreBigFileAfter
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_RestoreBigFileAfter_Test_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_RestoreBigFileAfter_Test_0000";
+    string filePath = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE)
+        .append("1.txt");
+    struct stat sta;
+    std::vector<StatInfo> ancoStats;
+
+    // 1
+    EXPECT_CALL(*funcMock_, chmod(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Invoke([&](const char *filename, int flags, ...) {
+        errno = ERR_NO_PERMISSION;
+        return -1;
+    }));
+    extExtension_->RestoreBigFileAfter(filePath, sta, ancoStats);
+    EXPECT_EQ(ancoStats.size(), 1);
+
+    // 2
+    ancoStats.clear();
+    EXPECT_CALL(*funcMock_, chmod(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Invoke([&](const char *filename, int flags, ...) {
+        errno = ERR_OK;
+        return 100;
+    }));
+    EXPECT_CALL(*funcMock_, futimens(_, _)).WillOnce(Return(0));
+    extExtension_->RestoreBigFileAfter(filePath, sta, ancoStats);
+    EXPECT_EQ(ancoStats.size(), 1);
+
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_RestoreBigFileAfter_Test_0000";
 }
 }

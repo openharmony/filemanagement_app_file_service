@@ -26,6 +26,7 @@
 #include <pwd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <string>
 #include <unistd.h>
 
 #include "securec.h"
@@ -56,6 +57,7 @@ int Fstat(int fd, struct stat* buf);
 int Lseek(int fd, off_t offset, int whence);
 void FdsanExchangeOwnerTag(int fd, uint64_t expected_tag, uint64_t new_tag);
 int FdsanCloseWithTag(int fd, uint64_t tag);
+int Futimens(int fd, const struct timespec times[2]);
 
 namespace OHOS {
 namespace AppFileService {
@@ -88,6 +90,8 @@ public:
     virtual int lseek(int fd, off_t offset, int whence) = 0;
     virtual void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag) = 0;
     virtual int fdsan_close_with_tag(int fd, uint64_t tag) = 0;
+    virtual int futimens(int fd, const struct timespec times[2]) = 0;
+    virtual bool RemoveFile(const std::string &fileName) = 0;
 public:
     static inline std::shared_ptr<LibraryFunc> libraryFunc_ = nullptr;
 };
@@ -120,6 +124,8 @@ public:
     MOCK_METHOD(int, lseek, (int fd, off_t offset, int whence));
     MOCK_METHOD(void, fdsan_exchange_owner_tag, (int fd, uint64_t expected_tag, uint64_t new_tag));
     MOCK_METHOD(int, fdsan_close_with_tag, (int fd, uint64_t tag));
+    MOCK_METHOD(int, futimens, (int, const struct timespec[2]));
+    MOCK_METHOD(bool, RemoveFile, (const std::string &));
 };
 } // namespace AppFileService
 } // namespace OHOS
