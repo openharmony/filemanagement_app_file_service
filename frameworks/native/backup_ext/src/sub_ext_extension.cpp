@@ -1960,8 +1960,6 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
 ErrCode AncoBackupCallback::OnBigFileReadyCallback(
     const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo, int fd)
 {
-    HILOGD("OnBigFileReadyCallback, filePath:%{public}s, restorePath:%{public}s, size:%{public}" PRId64
-        ", fd:%{public}d", filePath.c_str(), GetAnonyPath(restorePath).c_str(), statInfo.sta.st_size, fd);
     if (StringUtils::CheckOverLongPath(filePath) >= BConstants::MAX_PATH_LEN) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
@@ -1973,10 +1971,9 @@ ErrCode AncoBackupCallback::OnTarFileReadyCallback(
     const std::string &fileName, const std::string &filePath, const StatInfo &statInfo, int fd)
 {
     auto extensionPtr = extension_.promote();
-    if(!extensionPtr) {
+    if (!extensionPtr) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
-    HILOGD("OnTarFileReadyCallback, filePath:%{public}s, restorePath:%{public}s, fd:%{public}d",
         fileName.c_str(), GetAnonyPath(filePath).c_str(), fd);
     if (StringUtils::CheckOverLongPath(filePath) >= BConstants::MAX_PATH_LEN) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
@@ -1996,7 +1993,7 @@ ErrCode AncoBackupCallback::WaitForPacketFlag()
 ErrCode AncoBackupCallback::ReportErrFileByProc(const std::string &msg, int32_t err)
 {
     auto extensionPtr = extension_.promote();
-    if(!extensionPtr) {
+    if (!extensionPtr) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
     extensionPtr->ReportErrFileByProc(extensionPtr, extensionPtr->curScenario_)(msg, err);
@@ -2006,7 +2003,7 @@ ErrCode AncoBackupCallback::ReportErrFileByProc(const std::string &msg, int32_t 
 ErrCode AncoBackupCallback::UpdateFileStat(const std::string &filePath, const StatInfo &statInfo)
 {
     auto extensionPtr = extension_.promote();
-    if(!extensionPtr) {
+    if (!extensionPtr) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
     extensionPtr->UpdateFileStat(filePath, statInfo.sta.st_size);
@@ -2015,7 +2012,6 @@ ErrCode AncoBackupCallback::UpdateFileStat(const std::string &filePath, const St
 
 void AncoBackupHelper::CreateAncoBackupTask(wptr<BackupExtExtension> extension)
 {
-    HILOGI("BackupExtExtension::CreateAncoBackupTask");
     auto callback = sptr<AncoBackupCallback>::MakeSptr(extension);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
@@ -2057,7 +2053,6 @@ void AncoBackupHelper::FilterAndSaveBackupPaths(std::set<std::string> &includes,
 
 std::tuple<ErrCode, int64_t, int64_t> AncoBackupHelper::StartAncoScanAllDirs()
 {
-    HILOGI("BackupExtExtension::StartAncoScanAllDirs");
     AncoScanResult scanResult;
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
@@ -2074,7 +2069,6 @@ std::tuple<ErrCode, int64_t, int64_t> AncoBackupHelper::StartAncoScanAllDirs()
 
 void AncoBackupHelper::StartAncoPacket(uint64_t &ancoSmallFileCount)
 {
-    HILOGI("BackupExtExtension::StartAncoPacket");
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
@@ -2088,7 +2082,6 @@ void AncoBackupHelper::StartAncoPacket(uint64_t &ancoSmallFileCount)
 
 void AncoIncrementalRestoreHelper::CreateAncoRestoreTask()
 {
-    HILOGI("BackupExtExtension::CreateAncoRestoreTask");
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
@@ -2116,7 +2109,6 @@ void AncoIncrementalRestoreHelper::DestroyAncoRestoreTask()
 ErrCode AncoIncrementalRestoreHelper::StartAncoUnPacket(const std::vector<string> &ancoTarFiles,
     const std::vector<int64_t> &ancoTarFileSizes, const std::vector<string> &ancoTarFileNames, const string &tempPath)
 {
-    HILOGI("anco temp path is %{public}s", tempPath.c_str());
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");

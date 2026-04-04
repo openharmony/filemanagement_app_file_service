@@ -44,7 +44,7 @@ using namespace std;
 using namespace testing;
 using namespace OHOS::AppFileService;
 
-namespace{
+namespace {
 const string BUNDLE_NAME = "com.example.app2backup/";
 }
 
@@ -1041,8 +1041,6 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0000, testing::e
     extManageInfo.back().isUserTar = true;
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
 
-    // -------------------------- if - true
-    // 3
     std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
     EXPECT_CALL(*extBackupMock_, GetExtensionAction()).WillOnce(Return(BConstants::ExtensionAction::BACKUP));
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), EPERM);
@@ -1054,6 +1052,35 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0000, testing::e
     std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
     item = "test../../test.tar";
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_INVALID_VALUE);
+
+    std::tie(extExtension_->bundleName_, extExtension_->isDebug_) = oldParam;
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ProcessTarFile_Test_0000";
+}
+
+/**
+ * @tc.number: Ext_Extension_ProcessTarFile_Test_0001
+ * @tc.name: Ext_Extension_ProcessTarFile_Test_0001
+ * @tc.desc: 测试 ProcessTarFile - SUCEESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ProcessTarFile_Test_0001";
+    auto oldParam = std::make_tuple(extExtension_->bundleName_, extExtension_->isDebug_);
+    extExtension_->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
+    extExtension_->isDebug_ = true;
+
+    std::string item;
+    std::vector<ExtManageInfo> extManageInfo(1);
+    std::tuple<std::vector<string>, std::vector<int64_t>, std::vector<string>> ancoTarInfo;
+    std::string tempPath;
+    item = "1.tar";
+    extManageInfo.back().hashName = "1.tar";
+    extManageInfo.back().isUserTar = false;
+    auto backInput = std::make_tuple(item, extManageInfo, ancoTarInfo, tempPath);
     // 5
     std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
     item = "1_anco.tar";
@@ -1075,6 +1102,35 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0000, testing::e
     EXPECT_CALL(*extBackupMock_, UseFullBackupOnly()).WillOnce(Return(false));
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
 
+    std::tie(extExtension_->bundleName_, extExtension_->isDebug_) = oldParam;
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ProcessTarFile_Test_0001";
+}
+
+/**
+ * @tc.number: Ext_Extension_ProcessTarFile_Test_0002
+ * @tc.name: Ext_Extension_ProcessTarFile_Test_0002
+ * @tc.desc: 测试 ProcessTarFile - SUCEESS
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ProcessTarFile_Test_0002";
+    auto oldParam = std::make_tuple(extExtension_->bundleName_, extExtension_->isDebug_);
+    extExtension_->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
+    extExtension_->isDebug_ = true;
+
+    std::string item;
+    std::vector<ExtManageInfo> extManageInfo(1);
+    std::tuple<std::vector<string>, std::vector<int64_t>, std::vector<string>> ancoTarInfo;
+    std::string tempPath;
+    item = "1.tar";
+    extManageInfo.back().hashName = "1.tar";
+    extManageInfo.back().isUserTar = false;
+    auto backInput = std::make_tuple(item, extManageInfo, ancoTarInfo, tempPath);
+
     // 7
     std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
     EXPECT_CALL(*extBackupMock_, SpecialVersionForCloneAndCloud()).WillOnce(Return(true));
@@ -1087,7 +1143,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0000, testing::e
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
 
     std::tie(extExtension_->bundleName_, extExtension_->isDebug_) = oldParam;
-    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ProcessTarFile_Test_0000";
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ProcessTarFile_Test_0002";
 }
 
 /**

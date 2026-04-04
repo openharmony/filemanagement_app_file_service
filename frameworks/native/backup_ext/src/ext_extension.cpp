@@ -338,7 +338,6 @@ static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string
             }
             path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         }
-
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
         path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     }
