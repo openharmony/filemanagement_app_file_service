@@ -1974,7 +1974,6 @@ ErrCode AncoBackupCallback::OnTarFileReadyCallback(
     if (!extensionPtr) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
-        fileName.c_str(), GetAnonyPath(filePath).c_str(), fd);
     if (StringUtils::CheckOverLongPath(filePath) >= BConstants::MAX_PATH_LEN) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
