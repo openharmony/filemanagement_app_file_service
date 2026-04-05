@@ -201,24 +201,6 @@ static inline std::string GetSaBundleBackupToolDir(int32_t userId)
     return str;
 }
 
-static inline std::string GetRealAncoDir(int32_t userId)
-{
-    std::string str;
-    str.append("/mnt/data/");
-    str.append(std::to_string(userId));
-    str.append("/HO_MEDIA");
-    return str;
-}
-
-static inline std::string GetRealAncoBackupDir(int32_t userId)
-{
-    std::string str;
-    str.append("/mnt/data/");
-    str.append(std::to_string(userId));
-    str.append("/HO_MEDIA/.backup");
-    return str;
-}
-
 constexpr uint32_t APP_BASE_PATH_DEPTH = 4;
 
 // 备份恢复配置文件暂存路径

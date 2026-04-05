@@ -115,38 +115,6 @@ bool StringUtils::IsSandboxAncoPath(const std::string &path)
     return IsSubdirectory(sbAncoPath, path);
 }
 
-bool StringUtils::IsRealAncoPath(const std::string &path, int userId)
-{
-    const auto realAncoPath = BConstants::GetRealAncoDir(userId);
-    return IsSubdirectory(realAncoPath, path);
-}
-
-std::string StringUtils::ResolveSandboxAncoPath(const std::string &path, int userId)
-{
-    std::string fullPath = path;
-    if (!IsSandboxAncoPath(fullPath)) {
-        fullPath = "/" + fullPath;
-        if (!IsSandboxAncoPath(fullPath)) {
-            return path;
-        }
-    }
-    const auto sbAncoPathLength = BConstants::PATH_PUBLIC_HOME.length() + BConstants::FUSE_ANCO_DIR.length();
-    return BConstants::GetRealAncoDir(userId) + fullPath.substr(sbAncoPathLength);
-}
-
-std::string StringUtils::ResolveRealAncoPath(const std::string &path, int userId)
-{
-    std::string fullPath = path;
-    if (!IsRealAncoPath(fullPath, userId)) {
-        fullPath = "/" + fullPath;
-        if (!IsRealAncoPath(fullPath, userId)) {
-            return path;
-        }
-    }
-    const auto realAncoPathLength = BConstants::GetRealAncoDir(userId).length();
-    return BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR + fullPath.substr(realAncoPathLength);
-}
-
 std::set<std::string> StringUtils::FilterAncoPaths(std::set<std::string> &paths)
 {
     std::set<std::string> ancoPaths;
@@ -160,24 +128,6 @@ std::set<std::string> StringUtils::FilterAncoPaths(std::set<std::string> &paths)
         }
     }
     return ancoPaths;
-}
-
-std::set<std::string> StringUtils::ResolveSandboxAncoPaths(const std::set<std::string> &paths, int userId)
-{
-    std::set<std::string> realPaths;
-    for (const auto &path : paths) {
-        realPaths.emplace(ResolveSandboxAncoPath(path, userId));
-    }
-    return realPaths;
-}
-
-std::vector<std::string> StringUtils::ResolveSandboxAncoPaths(const std::vector<std::string> &paths, int userId)
-{
-    std::vector<std::string> realPaths;
-    for (const auto &path : paths) {
-        realPaths.emplace_back(ResolveSandboxAncoPath(path, userId));
-    }
-    return realPaths;
 }
 
 uint32_t StringUtils::CheckOverLongPath(const std::string &path)

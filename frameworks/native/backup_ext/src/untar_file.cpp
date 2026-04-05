@@ -23,7 +23,6 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-const int32_t PATH_MAX_LEN = 4096;
 const int32_t OCTAL = 8;
 
 static bool IsEmptyBlock(const char *p)
@@ -80,7 +79,7 @@ std::tuple<int, ErrFileInfo> UntarFile::ReadLongName(FileStatInfo &info)
 {
     size_t nameLen = static_cast<size_t>(tarFileSize_);
     int ret = 0;
-    if (nameLen <= PATH_MAX_LEN) {
+    if (nameLen <= BConstants::MAX_PATH_LEN) {
         string tempName("");
         tempName.resize(nameLen);
         size_t read = fread(&(tempName[0]), sizeof(char), nameLen, tarFilePtr_);

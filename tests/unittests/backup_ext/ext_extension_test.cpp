@@ -41,6 +41,7 @@ const string BUNDLE_NAME = "com.example.app2backup/";
 const string MANAGE_JSON = "manage.json";
 const string PATH = "/data/storage/el2/backup/test/";
 const string TAR_FILE = "1.tar";
+const string DH_PATH = "/storage/Users/currentUser/HO_DATA_EXT_MISC/test/";
 } // namespace
 
 class ExtExtensionTest : public testing::Test {
@@ -456,10 +457,36 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0900, testing::ext::TestSize.Level
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0900";
 }
 
+
+/**
+ * @tc.number: SUB_Ext_Extension_1000
+ * @tc.name: Ext_Extension_Test_1000
+ * @tc.desc: 测试 GetRestoreTempPath
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_1000";
+    try {
+        std::string bundleName = BConstants::BUNDLE_FILE_MANAGER;
+        std::string hashName = "file_anco";
+        auto ret = GetRestoreTempPath(bundleName, hashName);
+        EXPECT_EQ(ret, string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO)
+            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_1000";
+}
+
 /**
  * @tc.number: SUB_Ext_Extension_1200
  * @tc.name: Ext_Extension_Test_1200
- * @tc.desc: 测试 GetFileHandleForSpecialCloneCloud
+ * @tc.desc: 测试 GetIncrementalFileHandlePath
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -482,6 +509,30 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1200, testing::ext::TestSize.Level
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_1200";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_1201
+ * @tc.name: Ext_Extension_Test_1201
+ * @tc.desc: 测试 GetIncrementalFileHandlePath
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1201, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_1201";
+    try {
+        const string fileName = "test_anco";
+        string tarName = "2.tar";
+        auto ret = GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName);
+        EXPECT_NE(ret, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_1201";
 }
 
 /**
@@ -614,5 +665,48 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_FDSan_HandleIncrementalBackup_Test_1303
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_FDSan_HandleIncrementalBackup_Test_1303";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_FDSan_1400
+ * @tc.name: Ext_Extension_FDSan_ReportAncoAppFileReady_Test_1400
+ * @tc.desc: 测试 ReportAncoAppFileReady 函数的 FDSan 集成
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_FDSan_ReportAncoAppFileReady_Test_1301, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_FDSan_ReportAncoAppFileReady_Test_1400";
+ 
+    try {
+        string testFile = PATH + "fdsan_report_test.txt";
+        int fd = open(testFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
+        EXPECT_GT(fd, -1) << "Failed to create test file";
+ 
+        // 模拟 ReportAncoAppFileReady 中的 FDSan 操作
+        fdsan_exchange_owner_tag(fd, 0, BConstants::FDSAN_EXT_TAG);
+ 
+        // 写入测试数据
+        const char* testData = "FDSan test data";
+        write(fd, testData, strlen(testData));
+ 
+        // 验证文件可读
+        lseek(fd, 0, SEEK_SET);
+        char buffer[128] = {0};
+        ssize_t readBytes = read(fd, buffer, sizeof(buffer) - 1);
+        EXPECT_GT(readBytes, 0);
+        EXPECT_STREQ(buffer, testData);
+ 
+        int ret = fdsan_close_with_tag(fd, BConstants::FDSAN_EXT_TAG);
+        EXPECT_EQ(ret, 0);
+ 
+        // 清理
+        remove(testFile.c_str());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_FDSan_ReportAncoAppFileReady_Test_1301";
 }
 } // namespace OHOS::FileManagement::Backup

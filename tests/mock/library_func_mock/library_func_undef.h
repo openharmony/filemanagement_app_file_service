@@ -42,5 +42,7 @@
 #define Lseek lseek
 #define FdsanExchangeOwnerTag fdsan_exchange_owner_tag
 #define FdsanCloseWithTag fdsan_close_with_tag
+#define Futimens futimens
+#define MyRemoveFile RemoveFile
 
 #endif // FILEMANAGEMENT_APP_FILE_SERVICE_LIBRARY_FUNC_UNDEF_H

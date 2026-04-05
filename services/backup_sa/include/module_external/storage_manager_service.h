@@ -26,7 +26,6 @@
 #include "datashare_predicates.h"
 
 namespace OHOS::FileManagement::Backup {
-const uint64_t PATH_MAX_LEN = 4096;
 const std::string PHY_APP = "/data/app/";
 const std::string WILDCARD_DEFAULT_INCLUDE = "*";
 constexpr char FILE_SEPARATOR_CHAR = '/';

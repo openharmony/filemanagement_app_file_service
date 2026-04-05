@@ -22,6 +22,7 @@
 #include <fuzzer/FuzzedDataProvider.h>
 #include <vector>
 
+#include "b_utils/string_utils.h"
 #include "directory_ex.h"
 #include "message_parcel.h"
 #include "module_external/storage_manager_service.h"
@@ -301,7 +302,7 @@ bool GetPathWildCardFuzzTest(const uint8_t *data, size_t size)
 bool CmdCheckOverLongPath(const uint8_t *data, size_t size)
 {
     string filePath(reinterpret_cast<const char*>(data), size);
-    StorageManagerService::GetInstance().CheckOverLongPath(filePath);
+    StringUtils::CheckOverLongPath(filePath);
     return true;
 }
 } // namespace OHOS

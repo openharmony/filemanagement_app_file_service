@@ -37,6 +37,7 @@
 #include <unique_fd.h>
 
 #include "accesstoken_kit.h"
+#include "anco_scan_result.h"
 #include "bundle_mgr_client.h"
 #include "errors.h"
 #include "ipc_skeleton.h"
@@ -1624,17 +1625,8 @@ void BackupExtExtension::DoBackupTask()
             continue;
         }
         WaitToSendFd(startTime, fdNum);
-        int subRet = ERR_OK;
         allFiles.push_back(fileInfo);
-        if (fileInfo->isBigFile_) {
-            subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_);
-            appStatistic_->bigFileCount_++;
-            UpdateFileStat(fileInfo->filePath_, fileInfo->sta_.st_size);
-            fdNum++;
-        } else {
-            subRet = ReportAppFileReady(fileInfo->filename_, fileInfo->filePath_, true);
-            fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
-        }
+        ErrCode subRet = ReportAppFileReady(fileInfo, fdNum);
         if (subRet == ERR_NO_PERMISSION) {
             allFiles.pop_back();
             subRet = ERR_OK;
@@ -1963,5 +1955,180 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
         HILOGI("backupPath has el3 or el4");
         return;
     }
+}
+
+ErrCode AncoBackupCallback::OnBigFileReadyCallback(
+    const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo, int fd)
+{
+    if (StringUtils::CheckOverLongPath(filePath) >= BConstants::MAX_PATH_LEN) {
+        return ErrCode(BError::Codes::EXT_INVAL_ARG);
+    }
+    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, statInfo.sta, UniqueFd(fd));
+    return ErrCode(BError::Codes::OK);
+}
+
+ErrCode AncoBackupCallback::OnTarFileReadyCallback(
+    const std::string &fileName, const std::string &filePath, const StatInfo &statInfo, int fd)
+{
+    auto extensionPtr = extension_.promote();
+    if (!extensionPtr) {
+        return ErrCode(BError::Codes::EXT_INVAL_ARG);
+    }
+    if (StringUtils::CheckOverLongPath(filePath) >= BConstants::MAX_PATH_LEN) {
+        return ErrCode(BError::Codes::EXT_INVAL_ARG);
+    }
+    extensionPtr->appStatistic_->tarFileSize_ += TarFile::GetInstance().GetTarFileSize();
+    extensionPtr->appStatistic_->tarFileCount_++;
+    ScanFileSingleton::GetInstance().AddAncoTarFile(fileName, filePath, statInfo.sta, UniqueFd(fd));
+    return ErrCode(BError::Codes::OK);
+}
+
+ErrCode AncoBackupCallback::WaitForPacketFlag()
+{
+    ScanFileSingleton::GetInstance().WaitForPacketFlag();
+    return ErrCode(BError::Codes::OK);
+}
+
+ErrCode AncoBackupCallback::ReportErrFileByProc(const std::string &msg, int32_t err)
+{
+    auto extensionPtr = extension_.promote();
+    if (!extensionPtr) {
+        return ErrCode(BError::Codes::EXT_INVAL_ARG);
+    }
+    extensionPtr->ReportErrFileByProc(extensionPtr, extensionPtr->curScenario_)(msg, err);
+    return ErrCode(BError::Codes::OK);
+}
+
+ErrCode AncoBackupCallback::UpdateFileStat(const std::string &filePath, const StatInfo &statInfo)
+{
+    auto extensionPtr = extension_.promote();
+    if (!extensionPtr) {
+        return ErrCode(BError::Codes::EXT_INVAL_ARG);
+    }
+    extensionPtr->UpdateFileStat(filePath, statInfo.sta.st_size);
+    return ErrCode(BError::Codes::OK);
+}
+
+void AncoBackupHelper::CreateAncoBackupTask(wptr<BackupExtExtension> extension)
+{
+    auto callback = sptr<AncoBackupCallback>::MakeSptr(extension);
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return;
+    }
+    auto ret = proxy->CreateAncoBackupTask(callback);
+    if (ret != ERR_OK && ret != BError(BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD))) {
+        HILOGE("Failed to CreateAncoBackupTask. err = %{public}d", ret);
+    }
+}
+
+void AncoBackupHelper::DestroyAncoBackupTask()
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return;
+    }
+    auto ret = proxy->DestroyAncoBackupTask();
+    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+        HILOGE("Failed to DestroyAncoBackupTask. err = %{public}d", ret);
+    }
+}
+
+void AncoBackupHelper::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
+    const std::vector<std::string> &excludes)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return;
+    }
+    auto ret = proxy->FilterAndSaveBackupPaths(includes, compatIncludes, excludes);
+    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+        HILOGE("Failed to FilterAndSaveBackupPaths. err = %{public}d", ret);
+    }
+}
+
+std::tuple<ErrCode, int64_t, int64_t> AncoBackupHelper::StartAncoScanAllDirs()
+{
+    AncoScanResult scanResult;
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return std::make_tuple(ERR_INVALID_OPERATION, scanResult.bigFileSize, scanResult.smallFileSize);
+    }
+    auto ret = proxy->StartAncoScanAllDirs(scanResult);
+    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+        HILOGE("Failed to StartAncoScanAllDirs. err = %{public}d", ret);
+        return std::make_tuple(ERR_INVALID_VALUE, scanResult.bigFileSize, scanResult.smallFileSize);
+    }
+    return std::make_tuple(ERR_OK, scanResult.bigFileSize, scanResult.smallFileSize);
+}
+
+void AncoBackupHelper::StartAncoPacket(uint64_t &ancoSmallFileCount)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return;
+    }
+    auto ret = proxy->StartAncoPacket(ancoSmallFileCount);
+    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+        HILOGE("Failed to StartAncoPacket. err = %{public}d", ret);
+    }
+}
+
+void AncoIncrementalRestoreHelper::CreateAncoRestoreTask()
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return;
+    }
+    auto ret = proxy->CreateAncoRestoreTask();
+    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+        HILOGE("Failed to CreateAncoRestoreTask. err = %{public}d", ret);
+    }
+}
+
+void AncoIncrementalRestoreHelper::DestroyAncoRestoreTask()
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return;
+    }
+    auto ret = proxy->DestroyAncoRestoreTask();
+    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+        HILOGE("Failed to DestroyAncoRestoreTask. err = %{public}d", ret);
+    }
+}
+
+ErrCode AncoIncrementalRestoreHelper::StartAncoUnPacket(const std::vector<string> &ancoTarFiles,
+    const std::vector<int64_t> &ancoTarFileSizes, const std::vector<string> &ancoTarFileNames, const string &tempPath)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+    return proxy->StartAncoUnPacket(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames, tempPath);
+}
+
+AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove(
+    const vector<string> &ancoSourcePath, const vector<string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
+{
+    AncoRestoreResult ancoRestoreRes;
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return ancoRestoreRes;
+    }
+    auto ret = proxy->StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats, ancoRestoreRes);
+    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+        HILOGE("Failed to StartAncoMove. err = %{public}d", ret);
+    }
+    return ancoRestoreRes;
 }
 } // namespace OHOS::FileManagement::Backup
