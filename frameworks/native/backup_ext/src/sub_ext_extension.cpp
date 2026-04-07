@@ -2018,7 +2018,7 @@ void AncoBackupHelper::CreateAncoBackupTask(wptr<BackupExtExtension> extension)
         return;
     }
     auto ret = proxy->CreateAncoBackupTask(callback);
-    if (ret != ERR_OK && ret != BError(BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD))) {
+    if (ret != ERR_OK) {
         HILOGE("Failed to CreateAncoBackupTask. err = %{public}d", ret);
     }
 }
@@ -2031,7 +2031,7 @@ void AncoBackupHelper::DestroyAncoBackupTask()
         return;
     }
     auto ret = proxy->DestroyAncoBackupTask();
-    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+    if (ret != ERR_OK) {
         HILOGE("Failed to DestroyAncoBackupTask. err = %{public}d", ret);
     }
 }
@@ -2045,7 +2045,7 @@ void AncoBackupHelper::FilterAndSaveBackupPaths(std::set<std::string> &includes,
         return;
     }
     auto ret = proxy->FilterAndSaveBackupPaths(includes, compatIncludes, excludes);
-    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+    if (ret != ERR_OK) {
         HILOGE("Failed to FilterAndSaveBackupPaths. err = %{public}d", ret);
     }
 }
@@ -2059,7 +2059,7 @@ std::tuple<ErrCode, int64_t, int64_t> AncoBackupHelper::StartAncoScanAllDirs()
         return std::make_tuple(ERR_INVALID_OPERATION, scanResult.bigFileSize, scanResult.smallFileSize);
     }
     auto ret = proxy->StartAncoScanAllDirs(scanResult);
-    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+    if (ret != ERR_OK) {
         HILOGE("Failed to StartAncoScanAllDirs. err = %{public}d", ret);
         return std::make_tuple(ERR_INVALID_VALUE, scanResult.bigFileSize, scanResult.smallFileSize);
     }
@@ -2074,7 +2074,7 @@ void AncoBackupHelper::StartAncoPacket(uint64_t &ancoSmallFileCount)
         return;
     }
     auto ret = proxy->StartAncoPacket(ancoSmallFileCount);
-    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+    if (ret != ERR_OK) {
         HILOGE("Failed to StartAncoPacket. err = %{public}d", ret);
     }
 }
@@ -2087,7 +2087,7 @@ void AncoIncrementalRestoreHelper::CreateAncoRestoreTask()
         return;
     }
     auto ret = proxy->CreateAncoRestoreTask();
-    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+    if (ret != ERR_OK) {
         HILOGE("Failed to CreateAncoRestoreTask. err = %{public}d", ret);
     }
 }
@@ -2100,7 +2100,7 @@ void AncoIncrementalRestoreHelper::DestroyAncoRestoreTask()
         return;
     }
     auto ret = proxy->DestroyAncoRestoreTask();
-    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+    if (ret != ERR_OK) {
         HILOGE("Failed to DestroyAncoRestoreTask. err = %{public}d", ret);
     }
 }
@@ -2126,7 +2126,7 @@ AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove(
         return ancoRestoreRes;
     }
     auto ret = proxy->StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats, ancoRestoreRes);
-    if (ret != ERR_OK && ret != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+    if (ret != ERR_OK) {
         HILOGE("Failed to StartAncoMove. err = %{public}d", ret);
     }
     return ancoRestoreRes;
