@@ -154,6 +154,31 @@ static bool GetResultIsUri(string &path)
     return false;
 }
 
+struct PathConvertRule {
+    std::string sourcePath;
+    std::string targetPath;
+};
+
+static const PathConvertRule PATH_CONVERT_RULES[] = {
+    {"/storage/users/currentuser/", "/storage/Users/currentUser/"},
+    {"/storage/users/currentUser/", "/storage/Users/currentUser/"},
+    {"/storage/Users/currentuser/", "/storage/Users/currentUser/"},
+    {"/storage/external/", "/storage/External/"}
+};
+
+static const size_t PATH_CONVERT_RULES_SIZE = sizeof(PATH_CONVERT_RULES) / sizeof(PATH_CONVERT_RULES[0]);
+
+static void ConvertCurrentUserPath(std::string &path)
+{
+    for (size_t i = 0; i < PATH_CONVERT_RULES_SIZE; i++) {
+        if (path.find(PATH_CONVERT_RULES[i].sourcePath) == 0) {
+            std::string remainingPath = path.substr(PATH_CONVERT_RULES[i].sourcePath.length());
+            path = PATH_CONVERT_RULES[i].targetPath + remainingPath;
+            return;
+        }
+    }
+}
+
 string CommonFunc::GetUriFromPath(const string &path)
 {
     if (!SandboxHelper::IsValidPath(path)) {
@@ -169,13 +194,14 @@ string CommonFunc::GetUriFromPath(const string &path)
         realPath = SandboxHelper::Encode(realPath);
         return realPath.replace(realPath.find(MEDIA_FUSE_PATH_HEAD), MEDIA_FUSE_PATH_HEAD.length(), MEDIA_AUTHORITY);
     }
-    string packageName;
+    ConvertCurrentUserPath(realPath);
     if (GetResultIsUri(realPath)) {
         return realPath;
     }
     if (realPath.find(FILE_MNT_DATA) == 0) {
         return FILE_SCHEME_PREFIX + DLP_PACKAGE_NAME + SandboxHelper::Encode(realPath);
     }
+    string packageName;
     {
         std::lock_guard<std::mutex> lock(g_globalMutex);
         if (g_bundleName == "") {
