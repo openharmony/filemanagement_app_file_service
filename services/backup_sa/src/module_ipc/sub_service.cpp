@@ -1923,7 +1923,7 @@ ErrCode Service::CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback)
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("CreateAncoBackupTask, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->CreateAncoBackupTask(callerName, callback);
     } catch (const BError &e) {
@@ -1946,7 +1946,7 @@ ErrCode Service::DestroyAncoBackupTask()
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("DestroyAncoBackupTask, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->DestroyAncoBackupTask(callerName);
     } catch (const BError &e) {
@@ -1970,7 +1970,7 @@ ErrCode Service::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("FilterAndSaveBackupPaths, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->FilterAndSaveBackupPaths(callerName, includes, compatIncludes, excludes);
     } catch (const BError &e) {
@@ -1993,7 +1993,7 @@ ErrCode Service::StartAncoScanAllDirs(AncoScanResult &scanResult)
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("StartAncoScanAllDirs, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->StartAncoScanAllDirs(callerName, scanResult);
     } catch (const BError &e) {
@@ -2016,7 +2016,7 @@ ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("StartAncoPacket, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->StartAncoPacket(callerName, smallFileCount);
     } catch (const BError &e) {
@@ -2039,7 +2039,7 @@ ErrCode Service::CreateAncoRestoreTask()
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("CreateAncoRestoreTask, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->CreateAncoRestoreTask(callerName);
     } catch (const BError &e) {
@@ -2062,7 +2062,7 @@ ErrCode Service::DestroyAncoRestoreTask()
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("DestroyAncoRestoreTask, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->DestroyAncoRestoreTask(callerName);
     } catch (const BError &e) {
@@ -2086,7 +2086,7 @@ ErrCode Service::StartAncoUnPacket(const std::vector<string> &tarFiles, const st
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("StartAncoUnPacket, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->StartAncoUnPacket(callerName, tarFiles, tarFileSizes, tarFileNames, rootPath);
     } catch (const BError &e) {
@@ -2111,7 +2111,7 @@ ErrCode Service::StartAncoMove(
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("StartAncoMove, enhance service is not loaded");
-            return BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD);
+            return BError(BError::Codes::OK);
         }
         return enhanceService->StartAncoMove(callerName, ancoSourcePath, ancoTargetPath, ancoStats, ancoRestoreRes);
     } catch (const BError &e) {

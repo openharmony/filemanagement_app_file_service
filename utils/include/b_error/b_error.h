@@ -107,9 +107,6 @@ public:
         SA_EXT_ERR_CALL = 0x6000,
         SA_EXT_ERR_SAMGR = 0x6001,
         SA_EXT_RELOAD_FAIL = 0x6002,
-
-        // 0x7000~0x7999 enhance service错误
-        ENHANCE_SERVICE_NOT_LOAD = 0x7000,
     };
 
     enum BackupErrorCode {

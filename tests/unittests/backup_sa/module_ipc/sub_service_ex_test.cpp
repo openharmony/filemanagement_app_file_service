@@ -95,7 +95,7 @@ HWTEST_F(ServiceTest, SUB_Service_CreateAncoBackupTask_0003, testing::ext::TestS
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    EXPECT_EQ(service->CreateAncoBackupTask(nullptr), BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD));
+    EXPECT_EQ(service->CreateAncoBackupTask(nullptr), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CreateAncoBackupTask_0003";
 }
@@ -182,7 +182,7 @@ HWTEST_F(ServiceTest, SUB_Service_DestroyAncoBackupTask_0003, testing::ext::Test
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    EXPECT_EQ(service->DestroyAncoBackupTask(), BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD));
+    EXPECT_EQ(service->DestroyAncoBackupTask(), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DestroyAncoBackupTask_0003";
 }
@@ -284,7 +284,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoScanAllDirs_0003, testing::ext::TestS
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
     AncoScanResult scanResult;
-    EXPECT_EQ(service->StartAncoScanAllDirs(scanResult), BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD));
+    EXPECT_EQ(service->StartAncoScanAllDirs(scanResult), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoScanAllDirs_0003";
 }
@@ -380,7 +380,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoPacket_0003, testing::ext::TestSize.L
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
     uint64_t smallFileCount;
-    EXPECT_EQ(service->StartAncoPacket(smallFileCount), BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD));
+    EXPECT_EQ(service->StartAncoPacket(smallFileCount), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoPacket_0003";
 }
@@ -467,7 +467,7 @@ HWTEST_F(ServiceTest, SUB_Service_CreateAncoRestoreTask_0003, testing::ext::Test
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    EXPECT_EQ(service->CreateAncoRestoreTask(), BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD));
+    EXPECT_EQ(service->CreateAncoRestoreTask(), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CreateAncoRestoreTask_0003";
 }
@@ -554,7 +554,7 @@ HWTEST_F(ServiceTest, SUB_Service_DestroyAncoRestoreTask_0003, testing::ext::Tes
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    EXPECT_EQ(service->DestroyAncoRestoreTask(), BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD));
+    EXPECT_EQ(service->DestroyAncoRestoreTask(), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DestroyAncoRestoreTask_0003";
 }
@@ -662,7 +662,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0003, testing::ext::TestSize
     std::vector<std::string> tarFileNames;
     std::string rootPath;
     EXPECT_EQ(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
-        BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD));
+        BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0003";
 }
@@ -782,7 +782,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoMove_0003, testing::ext::TestSize.Lev
     std::vector<StatInfo> ancoStats;
     AncoRestoreResult ancoRestoreRes;
     EXPECT_EQ(service->StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats, ancoRestoreRes),
-        BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD));
+        BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoMove_0003";
 }

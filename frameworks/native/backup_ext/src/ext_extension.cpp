@@ -925,7 +925,7 @@ int BackupExtExtension::DoIncrementalRestore()
         auto [ancoTarFiles, ancoTarFileSizes, ancoTarFileNames] = ancoTarInfo;
         auto errCode =
             AncoIncrementalRestoreHelper::StartAncoUnPacket(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames, tempPath);
-        if (errCode != ERR_OK && errCode != BError(BError::Codes::ENHANCE_SERVICE_NOT_LOAD)) {
+        if (errCode != ERR_OK) {
             err = errCode;
         }
     }
