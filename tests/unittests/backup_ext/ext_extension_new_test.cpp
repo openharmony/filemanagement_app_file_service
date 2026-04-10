@@ -69,6 +69,8 @@ public:
         std::queue<std::shared_ptr<IFileInfo>> emptyQueue;
         ScanFileSingleton::GetInstance().pendingFileQueue_.swap(emptyQueue);
         ScanFileSingleton::GetInstance().smallFiles_.clear();
+        extBackupMock_ = make_shared<ExtBackupMock>();
+        ExtBackupMock::extBackup = extBackupMock_;  
     };
     void TearDown() override
     {
@@ -76,6 +78,8 @@ public:
         funcMock_ = nullptr;
         ServiceClient::serviceProxy_ = nullptr;
         serviceMock_ = nullptr;
+        ExtBackupMock::extBackup = nullptr;
+        extBackupMock_ = nullptr;
     };
     static inline sptr<BackupExtExtension> extExtension_ = nullptr;
     static inline shared_ptr<ExtBackup> extension_ = nullptr;
@@ -94,9 +98,6 @@ void ExtExtensionNewTest::SetUpTestCase(void)
     extExtension_ = sptr<BackupExtExtension>(new BackupExtExtension(nullptr, "test.example.com"));
     extension_ = make_shared<ExtBackup>();
     extExtension_->extension_ = extension_;
-
-    extBackupMock_ = make_shared<ExtBackupMock>();
-    ExtBackupMock::extBackup = extBackupMock_;
 };
 
 void ExtExtensionNewTest::TearDownTestCase(void)
@@ -108,9 +109,6 @@ void ExtExtensionNewTest::TearDownTestCase(void)
 
     extension_ = nullptr;
     extExtension_ = nullptr;
-
-    ExtBackupMock::extBackup = nullptr;
-    extBackupMock_ = nullptr;
 };
 
 /**
@@ -1041,6 +1039,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0000, testing::e
     extManageInfo.back().isUserTar = true;
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
 
+    // -------------------------- if - true
+    // 3
     std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
     EXPECT_CALL(*extBackupMock_, GetExtensionAction()).WillOnce(Return(BConstants::ExtensionAction::BACKUP));
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), EPERM);
@@ -1081,6 +1081,10 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0001, testing::e
     extManageInfo.back().hashName = "1.tar";
     extManageInfo.back().isUserTar = false;
     auto backInput = std::make_tuple(item, extManageInfo, ancoTarInfo, tempPath);
+
+    EXPECT_CALL(*extBackupMock_, GetExtensionAction()).WillRepeatedly(Return(BConstants::ExtensionAction::RESTORE));
+    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Return(0));
+
     // 5
     std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;
     item = "1_anco.tar";
@@ -1130,6 +1134,18 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0002, testing::e
     extManageInfo.back().hashName = "1.tar";
     extManageInfo.back().isUserTar = false;
     auto backInput = std::make_tuple(item, extManageInfo, ancoTarInfo, tempPath);
+
+    EXPECT_CALL(*extBackupMock_, GetExtensionAction()).WillRepeatedly(Return(BConstants::ExtensionAction::RESTORE));
+    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Invoke([&](const char *filename, int flags, ...) {
+        errno = ERR_NO_PERMISSION;
+        return -1;
+    }));
+    EXPECT_CALL(*funcMock_, fopen(_, _)).WillRepeatedly(Invoke([&](const char *pathname, const char *mode) {
+        errno = ERR_OK;
+        return nullptr;
+    }));
+    EXPECT_CALL(*funcMock_, RemoveFile(_)).WillRepeatedly(Return(true));
 
     // 7
     std::tie(item, extManageInfo, ancoTarInfo, tempPath) = backInput;

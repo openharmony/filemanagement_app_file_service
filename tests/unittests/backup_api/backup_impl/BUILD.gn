@@ -169,6 +169,7 @@ group("backup_impl_test") {
 
   deps = [
     ":b_file_info_test",
+    ":backup_ipc_struct_param_test",
     ":b_file_info_sub_test",
     ":backup_sa_impl_test",
   ]
