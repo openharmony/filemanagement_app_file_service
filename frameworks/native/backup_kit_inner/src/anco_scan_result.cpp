@@ -15,7 +15,6 @@
 
 #include "anco_scan_result.h"
 #include "filemgmt_libhilog.h"
-#include "message_parcel.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;

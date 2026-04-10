@@ -17,7 +17,6 @@
 
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
-#include "message_parcel.h"
 #include <cstdint>
 
 namespace OHOS::FileManagement::Backup {
