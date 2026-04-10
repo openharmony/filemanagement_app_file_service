@@ -293,8 +293,6 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0401, testing::ext::Te
 
         EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1)).WillOnce(Return(1));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
@@ -310,8 +308,7 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_0401, testing::ext::Te
         EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1)).WillOnce(Return(1));
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
-            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(nullptr));
+            .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
         ret = config.FindClearBundleRecord(bundleName);
         EXPECT_FALSE(ret);
@@ -571,7 +568,6 @@ HWTEST_F(BJsonClearDataConfigTest, Clear_Data_Config_Test_1000, testing::ext::Te
         EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1)).WillOnce(Return(0));
         EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _))
             .WillOnce(Return(reinterpret_cast<cJSON *>(&cjson)))
-            .WillOnce(Return(nullptr))
             .WillOnce(Return(nullptr));
         EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return()).WillOnce(Return());
         ret = config.InsertClearBundleRecord(bundleName);
