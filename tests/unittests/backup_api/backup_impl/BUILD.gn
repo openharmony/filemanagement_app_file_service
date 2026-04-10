@@ -73,7 +73,10 @@ ohos_unittest("backup_ipc_struct_param_test") {
     "${path_backup}/utils:backup_utils",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog",
+    "c_utils:utils",
+  ]
 
   use_exceptions = true
 }
