@@ -695,7 +695,7 @@ HWTEST_F(FileUriTest, File_uri_GetUriFromPath_0010, testing::ext::TestSize.Level
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require:
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_IsRemoteUri_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0000";
@@ -715,5 +715,185 @@ HWTEST_F(FileUriTest, File_uri_IsRemoteUri_0000, testing::ext::TestSize.Level1)
     FileUri fileUriObject4(fileStr4);
     EXPECT_EQ(fileUriObject4.IsRemoteUri(), true);
     GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_External_0000
+ * @tc.desc: Test function of GetUriFromPath() for /storage/external path.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_External_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_External_0000";
+    std::string path = "/storage/external/test.txt";
+    std::string expectedUri = "file://docs/storage/External/test.txt";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_External_0000";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_External_0001
+ * @tc.desc: Test function of GetUriFromPath() for /storage/external path with subdirectories.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_External_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_External_0001";
+    std::string path = "/storage/external/Photos/test.jpg";
+    std::string expectedUri = "file://docs/storage/External/Photos/test.jpg";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_External_0001";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_CurrentUser_0000
+ * @tc.desc: Test function of GetUriFromPath() for /storage/users/currentuser path.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_CurrentUser_0000";
+    std::string path = "/storage/users/currentuser/Documents/file.txt";
+    std::string expectedUri = "file://docs/storage/Users/currentUser/Documents/file.txt";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0000";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_CurrentUser_0001
+ * @tc.desc: Test function of GetUriFromPath() for /storage/users/currentuser path with appdata.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_CurrentUser_0001";
+    std::string path = "/storage/users/currentuser/appdata/el2/base/com.example.app/test.txt";
+    std::string expectedUri = "file://com.example.app/data/storage/el2/base/test.txt";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0001";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_CurrentUser_0002
+ * @tc.desc: Test function of GetUriFromPath() for /storage/users/currentuser path with appdata and subdirectories.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_CurrentUser_0002";
+    std::string path = "/storage/users/currentuser/appdata/el2/base/com.example.app/files/subdir/test.txt";
+    std::string expectedUri = "file://com.example.app/data/storage/el2/base/files/subdir/test.txt";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0002";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_CurrentUser_0003
+ * @tc.desc: Test function of GetUriFromPath() for /storage/users/currentuser path with different encryption level.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_CurrentUser_0003";
+    std::string path = "/storage/users/currentuser/appdata/el1/database/com.example.app/data.db";
+    std::string expectedUri = "file://com.example.app/data/storage/el1/database/data.db";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0003";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_CurrentUser_0004
+ * @tc.desc: Test function of GetUriFromPath() for /storage/users/currentUser path (mixed case).
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_CurrentUser_0004";
+    std::string path = "/storage/users/currentUser/Documents/file.txt";
+    std::string expectedUri = "file://docs/storage/Users/currentUser/Documents/file.txt";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0004";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_CurrentUser_0005
+ * @tc.desc: Test function of GetUriFromPath() for /storage/users/currentUser path with appdata (mixed case).
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_CurrentUser_0005";
+    std::string path = "/storage/users/currentUser/appdata/el2/base/com.example.app/test.txt";
+    std::string expectedUri = "file://com.example.app/data/storage/el2/base/test.txt";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0005";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_CurrentUser_0006
+ * @tc.desc: Test function of GetUriFromPath() for /storage/Users/currentuser path (mixed case).
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_CurrentUser_0006";
+    std::string path = "/storage/Users/currentuser/Documents/file.txt";
+    std::string expectedUri = "file://docs/storage/Users/currentUser/Documents/file.txt";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0006";
+}
+
+/**
+ * @tc.name: File_uri_GetUriFromPath_CurrentUser_0007
+ * @tc.desc: Test function of GetUriFromPath() for /storage/Users/currentuser path with appdata (mixed case).
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0007, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_CurrentUser_0007";
+    std::string path = "/storage/Users/currentuser/appdata/el2/base/com.example.app/test.txt";
+    std::string expectedUri = "file://com.example.app/data/storage/el2/base/test.txt";
+    FileUri fileUri(path);
+    EXPECT_EQ(fileUri.ToString(), expectedUri);
+    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0007";
 }
 }
