@@ -70,7 +70,7 @@ public:
         ScanFileSingleton::GetInstance().pendingFileQueue_.swap(emptyQueue);
         ScanFileSingleton::GetInstance().smallFiles_.clear();
         extBackupMock_ = make_shared<ExtBackupMock>();
-        ExtBackupMock::extBackup = extBackupMock_;  
+        ExtBackupMock::extBackup = extBackupMock_;
     };
     void TearDown() override
     {
