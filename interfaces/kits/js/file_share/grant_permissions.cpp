@@ -76,6 +76,47 @@ static napi_value GetResultData(napi_env env, const vector<bool> &results)
     return res;
 }
 
+static napi_value ConvertUriPoliciesToJSArray(napi_env env, const std::vector<UriPolicyInfo> &uriPolicies)
+{
+    napi_value res = nullptr;
+    napi_status status = napi_create_array(env, &res);
+    if (status != napi_ok) {
+        LOGE("Failed to create array");
+        napi_value undefined;
+        napi_get_undefined(env, &undefined);
+        return undefined;
+    }
+
+    for (size_t i = 0; i < uriPolicies.size(); i++) {
+        const auto& uriPolicy = uriPolicies[i];
+        
+        napi_value policyObj;
+        status = napi_create_object(env, &policyObj);
+        if (status != napi_ok) {
+            continue;
+        }
+
+        napi_value uriValue;
+        status = napi_create_string_utf8(env, uriPolicy.uri.c_str(), NAPI_AUTO_LENGTH, &uriValue);
+        if (status == napi_ok) {
+            napi_set_named_property(env, policyObj, "uri", uriValue);
+        }
+
+        napi_value modeValue;
+        status = napi_create_uint32(env, uriPolicy.mode, &modeValue);
+        if (status == napi_ok) {
+            napi_set_named_property(env, policyObj, "operationMode", modeValue);
+        }
+
+        status = napi_set_element(env, res, i, policyObj);
+        if (status != napi_ok) {
+            LOGE("Failed to set element on data");
+        }
+    }
+    
+    return res;
+}
+
 static napi_status GetUriPolicy(napi_env env, napi_value agrv, std::vector<UriPolicyInfo> &uriPolicies, uint32_t index)
 {
     napi_value object;
@@ -261,14 +302,31 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
-napi_value RevokePermission(napi_env env, napi_callback_info info)
+static napi_value HandleRevokeByTokenId(napi_env env, NFuncArg &funcArg, uint32_t tokenId)
 {
-    NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        LOGE("RevokePermission Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
+    if (!IsSystemApp()) {
+        LOGE("FileShare::HandleRevokeByTokenId is not System App!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
         return nullptr;
     }
+
+    auto cbExec = [tokenId {move(tokenId)}]() -> NError {
+        int32_t ret = FilePermission::UnPersistPolicyByTokenId(tokenId);
+        return NError(ret);
+    };
+    auto cbCompl = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+    const string procedureName = "revoke_permission_by_token_id";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+static napi_value HandleRevokeByUriPolicies(napi_env env, NFuncArg &funcArg)
+{
     std::vector<UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(env, funcArg[NARG_POS::FIRST], uriPolicies) != napi_ok) {
         NError(E_PARAMS).ThrowErr(env);
@@ -299,6 +357,138 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
         return NVal::CreateUndefined(env);
     };
     const string procedureName = "revoke_permission";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+static napi_value HandleRevokeByTokenIdAndPolicies(napi_env env, NFuncArg &funcArg)
+{
+    if (!IsSystemApp()) {
+        LOGE("FileShare::HandleRevokeByTokenIdAndPolicies is not System App!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToUint32();
+    if (!succTokenId || tokenId == 0) {
+        LOGE("Failed to get tokenid or tokenid is 0");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
+    std::vector<UriPolicyInfo> uriPolicies;
+    if (GetUriPoliciesArg(env, funcArg[NARG_POS::SECOND], uriPolicies) != napi_ok) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    shared_ptr<PolicyErrorArgs> arg = make_shared<PolicyErrorArgs>();
+    if (arg == nullptr) {
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = [tokenId {move(tokenId)}, uriPolicies, arg]() -> NError {
+        arg->errNo = FilePermission::UnPersistPolicyByTokenIdAndPolicies(tokenId, uriPolicies, arg->errorResults);
+        return NError(arg->errNo);
+    };
+    auto cbCompl = [arg](napi_env env, NError err) -> NVal {
+        if (err) {
+            if (arg->errNo == EPERM) {
+                napi_value data = err.GetNapiErr(env);
+                napi_set_named_property(env, data, FILEIO_TAG_ERR_DATA.c_str(), GetErrData(env, arg->errorResults));
+                return NVal(env, data);
+            }
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+    const string procedureName = "revoke_permission_by_token_id_and_policies";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+napi_value RevokePermission(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        LOGE("RevokePermission Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    size_t argc = funcArg.GetArgc();
+    if (argc == NARG_CNT::ONE) {
+        napi_valuetype valuetype;
+        napi_typeof(env, funcArg[NARG_POS::FIRST], &valuetype);
+
+        if (valuetype == napi_number) {
+            auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToUint32();
+            if (!succTokenId || tokenId == 0) {
+                LOGE("Failed to get tokenid or tokenid is 0");
+                NError(EINVAL).ThrowErr(env);
+                return nullptr;
+            }
+            return HandleRevokeByTokenId(env, funcArg, tokenId);
+        } else {
+            return HandleRevokeByUriPolicies(env, funcArg);
+        }
+    } else if (argc == NARG_CNT::TWO) {
+        return HandleRevokeByTokenIdAndPolicies(env, funcArg);
+    } else {
+        LOGE("RevokePermission invalid number of arguments");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+}
+
+napi_value GetPersistentPolicy(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("GetPersistentPolicy Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToUint32();
+    if (!succTokenId || tokenId == 0) {
+        LOGE("Failed to get tokenid or tokenid is 0");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
+    struct GetPolicyResult {
+        int32_t errNo = 0;
+        std::vector<UriPolicyInfo> uriPolicies;
+    };
+    shared_ptr<GetPolicyResult> arg = make_shared<GetPolicyResult>();
+    if (arg == nullptr) {
+        LOGE("Make_shared is failed");
+        std::tuple<uint32_t, std::string> errInfo =
+            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+        ErrParam errorParam = [errInfo]() { return errInfo; };
+        NError(errorParam).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = [tokenId {move(tokenId)}, arg]() -> NError {
+        arg->errNo = FilePermission::GetPersistPolicyByTokenId(tokenId, arg->uriPolicies);
+        return NError(arg->errNo);
+    };
+    auto cbCompl = [arg](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+
+        napi_value res = ConvertUriPoliciesToJSArray(env, arg->uriPolicies);
+        return NVal(env, res);
+    };
+    const string procedureName = "get_persist_permission";
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
 }
@@ -549,6 +739,133 @@ napi_value GrantDecUriPermission(napi_env env, FileManagement::LibN::NFuncArg &f
         return NVal::CreateUndefined(env);
     };
     const string procedureName = "grant_permission";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+napi_value GrantSharedDirectoryPermission(napi_env env, napi_callback_info info)
+{
+    if (!IsSystemApp()) {
+        LOGE("FileShare::GrantSharedDirectoryPermission is not System App!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+
+    LOGI("GrantSharedDirectoryPermission called via NAPI");
+    
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(0)) {
+        LOGE("GrantSharedDirectoryPermission Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = []() -> NError {
+        int32_t ret = FilePermission::GrantSharedDirectoryPermission();
+        return NError(ret);
+    };
+    auto cbCompl = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+    const string procedureName = "grant_shared_directory_permission";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+napi_value RevokeSharedDirectoryPermission(napi_env env, napi_callback_info info)
+{
+    if (!IsSystemApp()) {
+        LOGE("FileShare::RevokeSharedDirectoryPermission is not System App!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+
+    LOGI("RevokeSharedDirectoryPermission called via NAPI");
+    
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(0)) {
+        LOGE("RevokeSharedDirectoryPermission Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = []() -> NError {
+        int32_t ret = FilePermission::RevokeSharedDirectoryPermission();
+        return NError(ret);
+    };
+    auto cbCompl = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+    const string procedureName = "revoke_shared_directory_permission";
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
+}
+
+napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info)
+{
+    if (!IsSystemApp()) {
+        LOGE("FileShare::GetSharedDirectoryInfo is not System App!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(0)) {
+        LOGE("GetSharedDirectoryInfo Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    // Create shared pointer to store result data
+    shared_ptr<vector<SharedDirectoryInfo>> resultData = make_shared<vector<SharedDirectoryInfo>>();
+    if (resultData == nullptr) {
+        LOGE("GetSharedDirectoryInfo make_shared is failed");
+        NError(E_NOMEM).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = [resultData]() -> NError {
+        // Call the underlying FilePermission::GetSharedDirectoryInfo function
+        int32_t ret = FilePermission::GetSharedDirectoryInfo(*resultData);
+        return NError(ret);
+    };
+    
+    auto cbCompl = [resultData](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        
+        // Convert result to JavaScript array
+        napi_value res = nullptr;
+        napi_status status = napi_create_array(env, &res);
+        if (status != napi_ok) {
+            LOGE("Failed to create array for GetSharedDirectoryInfo");
+            return NVal::CreateUndefined(env);
+        }
+        
+        size_t index = 0;
+        for (const auto &info : *resultData) {
+            NVal obj = NVal::CreateObject(env);
+            obj.AddProp("bundleName", NVal::CreateUTF8String(env, info.bundleName).val_);
+            obj.AddProp("path", NVal::CreateUTF8String(env, info.path).val_);
+            obj.AddProp("permissionMode", NVal::CreateUint32(env, info.permissionMode).val_);
+
+            status = napi_set_element(env, res, index++, obj.val_);
+            if (status != napi_ok) {
+                LOGE("Failed to set element on data for GetSharedDirectoryInfo");
+                return NVal::CreateUndefined(env);
+            }
+        }
+        return NVal(env, res);
+    };
+    
+    const string procedureName = "get_shared_directory_info";
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
 }
