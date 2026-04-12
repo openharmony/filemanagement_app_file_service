@@ -44,6 +44,12 @@ struct PathPolicyInfo {
     operationMode: OperationMode;
 }
 
+struct SharedDirectoryInfo {
+    bundleName: String;
+    path: String;
+    permissionMode: i32;
+}
+
 enum PolicyType: i32 {
     TEMPORARY_TYPE = 0,
     PERSISTENT_TYPE = 1,
@@ -93,3 +99,28 @@ function RevokePermissionSync( policies: Array<PolicyInfo> ): void;
 
 @gen_promise("persistPermission")
 function PersistPermissionSync( policies: Array<PolicyInfo> ): void;
+
+@gen_promise("revokePermission")
+function RevokeAllPermissionSync(
+    tokenID: i32,
+): void;
+
+@gen_promise("revokePermission")
+function RevokePermissionWithTokenSync(
+    tokenID: i32,
+    policies: Array<PolicyInfo>,
+): void;
+
+@gen_promise("getPersistentPolicy")
+function GetPersistentPolicySync(
+    tokenID: i32,
+): Array<PolicyInfo>;
+
+@gen_promise("grantSharedDirectoryPermission")
+function GrantSharedDirectoryPermissionSync(): void;
+
+@gen_promise("revokeSharedDirectoryPermission")
+function RevokeSharedDirectoryPermissionSync(): void;
+
+@gen_promise("getSharedDirectoryInfo")
+function GetSharedDirectoryInfoSync(): Array<SharedDirectoryInfo>;

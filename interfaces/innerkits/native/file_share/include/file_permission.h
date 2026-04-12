@@ -29,6 +29,12 @@ using namespace std;
 #ifdef SANDBOX_MANAGER
 using namespace AccessControl::SandboxManager;
 #endif
+// Define local structure to ensure interface consistency
+struct SharedDirectoryInfo {
+    string bundleName;
+    string path;
+    uint32_t permissionMode;
+};
 constexpr const int32_t MAX_ARRAY_SIZE = 500;
 typedef enum OperationMode {
     READ_MODE = 1 << 0,
@@ -92,6 +98,13 @@ public:
                                                 vector<bool> &errorResults);
     static int32_t GrantPermission(const vector<UriPolicyInfo> &uriPolicies, const std::string &bundleName,
         int32_t appCloneIndex, deque<struct PolicyErrorResult> &errorResults);
+    static int32_t UnPersistPolicyByTokenId(uint32_t tokenId);
+    static int32_t UnPersistPolicyByTokenIdAndPolicies(uint32_t tokenId,
+        const vector<UriPolicyInfo> &uriPolicies, deque<struct PolicyErrorResult> &errorResults);
+    static int32_t GetPersistPolicyByTokenId(uint32_t tokenId, vector<UriPolicyInfo> &uriPolicies);
+    static int32_t GrantSharedDirectoryPermission();
+    static int32_t RevokeSharedDirectoryPermission();
+    static int32_t GetSharedDirectoryInfo(vector<SharedDirectoryInfo> &sharedDirectories);
 #ifdef SANDBOX_MANAGER
 private:
     static void ParseErrorResults(const vector<uint32_t> &resultCodes,

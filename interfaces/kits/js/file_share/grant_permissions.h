@@ -28,11 +28,15 @@ namespace ModuleFileShare {
 using ErrParam = std::function<std::tuple<uint32_t, std::string>()>;
 napi_value PersistPermission(napi_env env, napi_callback_info info);
 napi_value RevokePermission(napi_env env, napi_callback_info info);
+napi_value GetPersistentPolicy(napi_env env, napi_callback_info info);
 napi_value ActivatePermission(napi_env env, napi_callback_info info);
 napi_value DeactivatePermission(napi_env env, napi_callback_info info);
 napi_value CheckPersistentPermission(napi_env env, napi_callback_info info);
 napi_value CheckPathPermission(napi_env env, napi_callback_info info);
 napi_value GrantDecUriPermission(napi_env env, FileManagement::LibN::NFuncArg &funcArg);
+napi_value GrantSharedDirectoryPermission(napi_env env, napi_callback_info info);
+napi_value RevokeSharedDirectoryPermission(napi_env env, napi_callback_info info);
+napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info);
 
 struct PolicyErrorArgs {
     deque<PolicyErrorResult> errorResults;
