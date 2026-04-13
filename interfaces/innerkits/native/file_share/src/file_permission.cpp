@@ -22,6 +22,7 @@
 #include <unordered_set>
 #ifdef SANDBOX_MANAGER
 #include "sandbox_manager_err_code.h"
+#include "sandbox_manager_kit.h"
 #include "uri_permission_manager_client.h"
 #endif
 #include "bundle_constants.h"
@@ -464,6 +465,138 @@ string FilePermission::GetPathByPermission(const std::string &userName, const st
         return path;
     }
     return "";
+}
+
+int32_t FilePermission::UnPersistPolicyByTokenId(uint32_t tokenId)
+{
+#ifdef SANDBOX_MANAGER
+    if (tokenId == 0) {
+        LOGE("tokenId is invalid");
+        return FileManagement::LibN::E_PARAMS;
+    }
+
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(tokenId);
+    return ErrorCodeConversion(sandboxManagerErrorCode);
+#else
+    LOGW("Sandbox manager bundle not exist, device not support.");
+    return FileManagement::LibN::E_DEVICENOTSUPPORT;
+#endif
+}
+
+int32_t FilePermission::UnPersistPolicyByTokenIdAndPolicies(uint32_t tokenId,
+    const vector<UriPolicyInfo> &uriPolicies, deque<struct PolicyErrorResult> &errorResults)
+{
+#ifdef SANDBOX_MANAGER
+    if (tokenId == 0) {
+        LOGE("tokenId is invalid");
+        return FileManagement::LibN::E_PARAMS;
+    }
+
+    if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
+        LOGE("The number of result codes exceeds the maximum");
+        return FileManagement::LibN::E_PARAMS;
+    }
+
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    if (pathPolicies.size() == 0) {
+        return EPERM;
+    }
+
+    vector<uint32_t> resultCodes;
+    LOGI("UnPersistPolicyByTokenIdAndPolicies pathPolicies size: %{public}zu", pathPolicies.size());
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(tokenId, pathPolicies, resultCodes);
+    
+    int32_t errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    if (errorCode == EPERM) {
+        ParseErrorResults(resultCodes, pathPolicies, errorResults);
+    }
+
+    return errorCode;
+#else
+    LOGW("Sandbox manager bundle not exist, device not support.");
+    return FileManagement::LibN::E_DEVICENOTSUPPORT;
+#endif
+}
+
+int32_t FilePermission::GetPersistPolicyByTokenId(uint32_t tokenId, vector<UriPolicyInfo> &uriPolicies)
+{
+#ifdef SANDBOX_MANAGER
+    if (tokenId == 0) {
+        LOGE("tokenId is invalid");
+        return FileManagement::LibN::E_PARAMS;
+    }
+
+    std::vector<PolicyInfo> policies;
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::GetPersistPolicy(tokenId, policies);
+
+    for (const auto& policy : policies) {
+        UriPolicyInfo uriPolicy;
+        uriPolicy.uri = policy.path;
+        uriPolicy.mode = policy.mode;
+        uriPolicies.push_back(uriPolicy);
+    }
+
+    return ErrorCodeConversion(sandboxManagerErrorCode);
+#else
+    LOGW("Sandbox manager bundle not exist, device not support.");
+    return FileManagement::LibN::E_DEVICENOTSUPPORT;
+#endif
+}
+
+int32_t FilePermission::GrantSharedDirectoryPermission()
+{
+    LOGI("GrantSharedDirectoryPermission called");
+#ifdef SANDBOX_MANAGER
+    int32_t ret = SandboxManagerKit::GrantSharedDirectoryPermission();
+    int32_t errorCode = ErrorCodeConversion(ret);
+    LOGI("SandboxManagerKit::GrantSharedDirectoryPermission() returned: %{public}d, converted to: %{public}d",
+        ret, errorCode);
+    return errorCode;
+#else
+    LOGW("Sandbox manager bundle not exist, device not support.");
+    return FileManagement::LibN::E_DEVICENOTSUPPORT;
+#endif
+}
+
+int32_t FilePermission::RevokeSharedDirectoryPermission()
+{
+    LOGI("RevokeSharedDirectoryPermission called");
+#ifdef SANDBOX_MANAGER
+    int32_t ret = SandboxManagerKit::RevokeSharedDirectoryPermission();
+    int32_t errorCode = ErrorCodeConversion(ret);
+    LOGI("SandboxManagerKit::RevokeSharedDirectoryPermission() returned: %{public}d, converted to: %{public}d",
+        ret, errorCode);
+    return errorCode;
+#else
+    LOGW("Sandbox manager bundle not exist, device not support.");
+    return FileManagement::LibN::E_DEVICENOTSUPPORT;
+#endif
+}
+
+int32_t FilePermission::GetSharedDirectoryInfo(vector<SharedDirectoryInfo> &sharedDirectories)
+{
+    LOGI("GetSharedDirectoryInfo called");
+#ifdef SANDBOX_MANAGER
+    std::vector<OHOS::AccessControl::SandboxManager::SharedDirectoryInfo> sandboxSharedDirectories;
+    int32_t ret = SandboxManagerKit::GetSharedDirectoryInfo(sandboxSharedDirectories);
+    
+    // Convert SandboxManager::SharedDirectoryInfo to AppFileService::SharedDirectoryInfo
+    sharedDirectories.clear();
+    for (const auto &info : sandboxSharedDirectories) {
+        SharedDirectoryInfo appInfo;
+        appInfo.bundleName = info.bundleName;
+        appInfo.path = info.path;
+        appInfo.permissionMode = static_cast<uint32_t>(info.permissionMode);  // Convert OperateMode to uint32_t
+        sharedDirectories.push_back(appInfo);
+    }
+    
+    int32_t errorCode = ErrorCodeConversion(ret);
+    LOGI("SandboxManagerKit::GetSharedDirectoryInfo() returned: %{public}d, converted to: %{public}d", ret, errorCode);
+    return errorCode;
+#else
+    LOGW("Sandbox manager bundle not exist, device not support.");
+    return FileManagement::LibN::E_DEVICENOTSUPPORT;
+#endif
 }
 } // namespace AppFileService
 } // namespace OHOS
