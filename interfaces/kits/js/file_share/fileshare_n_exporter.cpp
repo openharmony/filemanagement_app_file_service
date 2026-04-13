@@ -35,14 +35,19 @@ napi_value FileShareExport(napi_env env, napi_value exports)
     InitPathPolicyInfo(env, exports);
     InitPolicyErrorCode(env, exports);
     InitPolicyErrorResult(env, exports);
+    InitSharedDirectoryInfo(env, exports);
     static napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("grantUriPermission", GrantUriPermission::Async),
         DECLARE_NAPI_FUNCTION("persistPermission", PersistPermission),
         DECLARE_NAPI_FUNCTION("revokePermission", RevokePermission),
+        DECLARE_NAPI_FUNCTION("getPersistentPolicy", GetPersistentPolicy),
         DECLARE_NAPI_FUNCTION("activatePermission", ActivatePermission),
         DECLARE_NAPI_FUNCTION("deactivatePermission", DeactivatePermission),
         DECLARE_NAPI_FUNCTION("checkPersistentPermission", CheckPersistentPermission),
         DECLARE_NAPI_FUNCTION("checkPathPermission", CheckPathPermission),
+        DECLARE_NAPI_FUNCTION("grantSharedDirectoryPermission", GrantSharedDirectoryPermission),
+        DECLARE_NAPI_FUNCTION("revokeSharedDirectoryPermission", RevokeSharedDirectoryPermission),
+        DECLARE_NAPI_FUNCTION("getSharedDirectoryInfo", GetSharedDirectoryInfo),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;
@@ -219,6 +224,30 @@ void InitPathPolicyInfo(napi_env env, napi_value exports)
     status = napi_set_named_property(env, exports, className, obj);
     if (status != napi_ok) {
         HILOGE("Failed to set direction property at initializing PathPolicyInfo");
+        return;
+    }
+}
+
+void InitSharedDirectoryInfo(napi_env env, napi_value exports)
+{
+    char className[] = "SharedDirectoryInfo";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("bundleName", NVal::CreateUTF8String(env, "bundleName").val_),
+        DECLARE_NAPI_STATIC_PROPERTY("path", NVal::CreateUTF8String(env, "path").val_),
+        DECLARE_NAPI_STATIC_PROPERTY("permissionMode", NVal::CreateUint32(env,
+            static_cast<uint32_t>(OperationMode::READ_MODE)).val_),
+    };
+    napi_value obj = nullptr;
+    napi_status status = napi_define_class(env, className, NAPI_AUTO_LENGTH, InitPolicyConstructor, nullptr,
+                                           sizeof(desc) / sizeof(desc[0]), desc, &obj);
+    napi_create_object(env, &obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to define class at initializing SharedDirectoryInfo");
+        return;
+    }
+    status = napi_set_named_property(env, exports, className, obj);
+    if (status != napi_ok) {
+        HILOGE("Failed to set direction property at initializing SharedDirectoryInfo");
         return;
     }
 }
