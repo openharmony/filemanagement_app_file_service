@@ -16,7 +16,6 @@
 #include "stat_info.h"
 
 #include "filemgmt_libhilog.h"
-#include "message_parcel.h"
 
 #include <tuple>
 

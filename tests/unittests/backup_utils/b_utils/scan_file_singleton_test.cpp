@@ -118,7 +118,7 @@ HWTEST_F(ScanFileSingletonTest, ANCO_FILE_INFO_TEST_001, testing::ext::TestSize.
     UniqueFd fd1(234);
     GTEST_LOG_(INFO) << "2. test AncoFileInfo";
     std::shared_ptr<IFileInfo> fInfo2 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd1));
-    EXPECT_EQ(fInfo2->GetFd(), fd);
+    EXPECT_EQ(fInfo2->GetFd(), UniqueFd(234));
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end ANCO_FILE_INFO_TEST_001";
 }
 
