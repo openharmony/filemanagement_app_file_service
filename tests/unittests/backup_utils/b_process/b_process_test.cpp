@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 
 #include "b_process/b_process.h"
+#include "b_process/b_userid.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -118,5 +119,29 @@ HWTEST_F(BProcessTest, SUB_backup_tool_BProcess_1000, testing::ext::TestSize.Lev
         GTEST_LOG_(INFO) << "BProcessTest-an exception occurred.";
     }
     GTEST_LOG_(INFO) << "BProcessTest-end SUB_backup_tool_BProcess_1000";
+}
+
+class BUserIdTest : public testing::Test {
+public:
+    static void SetUpTestCase() {};
+    static void TearDownTestCase() {};
+    void SetUp() override {};
+    void TearDown() override {};
+};
+
+/**
+ * @tc.number: SUB_backup_tool_BUserId_0000
+ * @tc.name: SUB_backup_tool_BUserId_0000
+ * @tc.desc: 测试GetUserId
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BUserIdTest, SUB_backup_tool_BUserId_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BUserIdTest-begin SUB_backup_tool_BUserId_0000";
+    EXPECT_GE(BUserId::GetUserId(), 100);
+    GTEST_LOG_(INFO) << "BUserIdTest-end SUB_backup_tool_BUserId_0000";
 }
 } // namespace OHOS::FileManagement::Backup
