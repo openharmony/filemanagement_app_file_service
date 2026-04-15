@@ -1022,7 +1022,7 @@ ErrCode ExtBackupJs::OnRelease(std::function<void(ErrCode, const std::string)> c
 {
     HILOGI("BackupExtensionAbility(JS) OnRelease begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the OnProcess interface.");
+                          "The app does not provide the OnRelease interface.");
     scenario_ = scenario;
     onReleaseCallback_ = std::make_shared<CallbackInfo>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {onReleaseCallback_}](napi_env env,
