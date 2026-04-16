@@ -238,8 +238,8 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
         errFileInfos_.size());
     if (errFiles.size()) {
         std::stringstream ss;
-        ss << R"("totalFile": )" << endFileInfos_.size() << R"(, "restoreFile": )"
-            << endFileInfos_.size() - errFileInfos_.size();
+        size_t diff = endFileInfos_.size() > errFileInfos_.size() ? (endFileInfos_.size() - errFileInfos_.size()) : 0;
+        ss << R"("totalFile": )" << endFileInfos_.size() << R"(, "restoreFile": )" << diff;
         AppRadar::Info info (bundleName_, "", ss.str());
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::CheckRestoreFileInfos",
             AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CHECK_DATA_FAIL,
