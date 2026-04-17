@@ -21,7 +21,7 @@ sequenceable BackupFileInfo..OHOS.FileManagement.Backup.BFileInfo;
 sequenceable BackupIncrementalData..OHOS.FileManagement.Backup.BIncrementalData;
 sequenceable OHOS.FileManagement.Backup.StatInfo;
 sequenceable OHOS.FileManagement.Backup.AncoScanResult;
-rawdata OHOS.FileManagement.Backup.AncoRestoreResult;
+sequenceable OHOS.FileManagement.Backup.AncoRestoreResult;
 interface OHOS.FileManagement.Backup.IService{
     [ipccode 39] void InitRestoreSession([in] IServiceReverse reverseIpcRemoteObject);
     [ipccode 1] void InitRestoreSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject,

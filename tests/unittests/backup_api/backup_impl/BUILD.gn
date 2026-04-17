@@ -57,19 +57,15 @@ ohos_unittest("backup_ipc_struct_param_test") {
   module_out_path = path_module_out_tests
 
   sources = [
-    "${path_backup}/tests/mock/cJson/src/cJsonMock.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/anco_restore_result.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/anco_scan_result.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/stat_info.cpp",
     "backup_ipc_struct_param_test.cpp",
   ]
-  sources += backup_mock_parameter_src
   sources += backup_mock_parcel_src
 
-  include_dirs = [
-    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
-    "${path_backup}/frameworks/native/backup_kit_inner/src",
-    "${path_backup}/tests/mock/cJson/include",
-    "${path_backup}/utils/src/b_json",
-  ]
-  include_dirs += backup_mock_parameter_include_dirs
+  include_dirs =
+      [ "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl" ]
   include_dirs += backup_mock_parcel_include_dirs
 
   deps = [
@@ -79,13 +75,7 @@ ohos_unittest("backup_ipc_struct_param_test") {
 
   external_deps = [
     "hilog:libhilog",
-    "cJSON:cjson",
     "c_utils:utils",
-    "googletest:gmock_main",
-  ]
-
-  defines = [
-    "private = public",
   ]
 
   use_exceptions = true

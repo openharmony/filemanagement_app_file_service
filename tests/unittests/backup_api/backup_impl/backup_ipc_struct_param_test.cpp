@@ -16,17 +16,10 @@
 #include <gtest/gtest.h>
 
 #include "parcel.h"
-#include "b_error/b_error.h"
 #include "stat_info.h"
 #include "anco_restore_result.h"
 #include "anco_scan_result.h"
-#include "cJsonMock.h"
-
-#include "cjson_func_define.h"
-#include "anco_restore_result.cpp"
-#include "cjson_func_undef.h"
-#include "anco_scan_result.cpp"
-#include "stat_info.cpp"
+#include "b_error/b_error.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -132,148 +125,280 @@ public:
     static void TearDownTestCase() {};
     void SetUp() override
     {
-        cJsonMock = make_shared<CJsonMock>();
-        CJson::cJsonPtr = cJsonMock;
+        ResetParcelState();
     };
-    void TearDown() override
-    {
-        CJson::cJsonPtr = nullptr;
-        cJsonMock = nullptr;
-    };
-
-    static inline shared_ptr<CJsonMock> cJsonMock = nullptr;
+    void TearDown() override {};
 };
 
 /**
-* @tc.number: SUB_AncoRestoreResult_Serialize_0100
-* @tc.name: SUB_AncoRestoreResult_Serialize_0100
-* @tc.desc: Test function of Serialize interface for SUCCESS.
+* @tc.number: SUB_AncoRestoreResult_Marshalling_0100
+* @tc.name: SUB_AncoRestoreResult_Marshalling_0100
+* @tc.desc: Test function of Marshalling interface for SUCCESS.
 * @tc.size: MEDIUM
 * @tc.type: FUNC
 * @tc.level Level 1
 * @tc.require: I6F3GV
 */
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Serialize_0100, testing::ext::TestSize.Level1)
+HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Marshalling_0100, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Serialize_0100";
-    AncoRestoreResult res;
-    auto mockRoot = make_shared<cJSON>();
-
-    EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillOnce(Return(nullptr));
-    res.Serialize();
-
-    std::vector<ErrCode> codes;
-    codes.push_back(BError(BError::Codes::OK));
-    res.endFileInfos.emplace("1", 0);
-    res.errFileInfos.emplace("1", codes);
-    EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_AddNumberToObject(_, _, _)).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillRepeatedly(Return(const_cast<char*>("{}")));
-
-    res.Serialize();
-    EXPECT_NE(res.data, nullptr);
-
-    EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_EQ(res.RawDataCpy(res.data), 0);
-
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Serialize_0100";
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Marshalling_0100";
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos;
+    std::vector<ErrCode> errCodes;
+    errCodes.push_back(BError(BError::Codes::OK));
+    endFileInfos.emplace("123", 123);
+    errFileInfos.emplace("123", errCodes);
+    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
+    Parcel parcel;
+    // marshalling
+    constexpr uint64_t mask1 = 0x1e; // string, int64, uint64, int32
+    for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
+        SetParcelState(i);
+        if (CanCaseSuccess(mask1, i)) {
+            EXPECT_TRUE(result.Marshalling(parcel));
+        } else {
+            EXPECT_FALSE(result.Marshalling(parcel));
+        }
+    }
+    // unmarshalling
+    constexpr uint64_t mask2 = 0xc; // int64, uint64
+    for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
+        SetParcelState(i);
+        if (CanCaseSuccess(mask2, i)) {
+            EXPECT_NE(result.Unmarshalling(parcel), nullptr);
+        } else {
+            EXPECT_EQ(result.Unmarshalling(parcel), nullptr);
+        }
+    }
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Marshalling_0100";
 }
 
 /**
-* @tc.number: SUB_AncoRestoreResult_Serialize_0200
-* @tc.name: SUB_AncoRestoreResult_Serialize_0200
-* @tc.desc: Test function of Serialize interface for SUCCESS with empty data.
+* @tc.number: SUB_AncoRestoreResult_Marshalling_0101
+* @tc.name: SUB_AncoRestoreResult_Marshalling_0101
+* @tc.desc: Test function of Marshalling interface for FAILURE.
 * @tc.size: MEDIUM
 * @tc.type: FUNC
 * @tc.level Level 1
 * @tc.require: I6F3GV
 */
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Serialize_0200, testing::ext::TestSize.Level1) {
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Serialize_0200";
-    AncoRestoreResult res;
-    auto mockRoot = make_shared<cJSON>();
-
-    EXPECT_CALL(*cJsonMock, cJSON_CreateObject()).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_AddNumberToObject(_, _, _)).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_AddItemToObject(_, _, _)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*cJsonMock, cJSON_CreateArray()).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_AddItemToArray(_, _)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(const_cast<char*>("{}")));
-
-    res.Serialize();
-    EXPECT_NE(res.data, nullptr);
-
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Serialize_0200";
+HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Marshalling_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Marshalling_0101";
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos;
+    std::vector<ErrCode> errCodes;
+    errCodes.push_back(BError(BError::Codes::OK));
+    endFileInfos.emplace("123", 123);
+    errFileInfos.emplace("123", errCodes);
+    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
+    Parcel parcel;
+    parcel.SetEasyMode(false);
+    // marshalling
+    std::vector<bool> sequence = {
+        true, // WriteInt64
+        true, // WriteInt64
+        true, // WriteInt64
+        true, // WriteMap - WriteUint64
+        true, // WriteMap - WriteString
+        true, // WriteMap - WriteInt64
+        false, // WriteMap2 - WriteUint64
+    };
+    SetSpecialParcelSequence(sequence);
+    EXPECT_NE(result.Marshalling(parcel), true);
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Marshalling_0101";
 }
 
 /**
-* @tc.number: SUB_AncoRestoreResult_RawDataCpy_0100
-* @tc.name: SUB_AncoRestoreResult_RawDataCpy_0100
-* @tc.desc: Test function of RawDataCpy interface for SUCCESS.
+* @tc.number: SUB_AncoRestoreResult_Marshalling_0102
+* @tc.name: SUB_AncoRestoreResult_Marshalling_0102
+* @tc.desc: Test function of Marshalling interface for FAILURE.
 * @tc.size: MEDIUM
 * @tc.type: FUNC
 * @tc.level Level 1
 * @tc.require: I6F3GV
 */
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_RawDataCpy_0100, testing::ext::TestSize.Level1) {
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_RawDataCpy_0100";
-    AncoRestoreResult res;
-    auto mockRoot = make_shared<cJSON>();
-
-    EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_IsNumber(_)).WillRepeatedly(Return(true));
-
-    res.RawDataCpy("{}");
-    EXPECT_EQ(res.RawDataCpy(nullptr), -1);
-
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_RawDataCpy_0100";
+HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Marshalling_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Marshalling_0102";
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos;
+    std::vector<ErrCode> errCodes;
+    errCodes.push_back(BError(BError::Codes::OK));
+    endFileInfos.emplace("123", 123);
+    errFileInfos.emplace("123", errCodes);
+    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
+    Parcel parcel;
+    parcel.SetEasyMode(false);
+    // marshalling
+    std::vector<bool> sequence = {
+        true, // WriteInt64
+        true, // WriteInt64
+        true, // WriteInt64
+        true, // WriteMap - WriteUint64
+        true, // WriteMap - WriteString
+        true, // WriteMap - WriteInt64
+        true, // WriteMap2 - WriteUint64
+        true, // WriteMap2 - WriteString
+        false, // WriteVector - WriteUint64
+    };
+    SetSpecialParcelSequence(sequence);
+    EXPECT_NE(result.Marshalling(parcel), true);
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Marshalling_0102";
 }
 
 /**
-* @tc.number: SUB_AncoRestoreResult_RawDataCpy_0200
-* @tc.name: SUB_AncoRestoreResult_RawDataCpy_0200
-* @tc.desc: Test function of RawDataCpy interface for FAILURE.
+* @tc.number: SUB_AncoRestoreResult_ReadFromParcel_0100
+* @tc.name: SUB_AncoRestoreResult_ReadFromParcel_0100
+* @tc.desc: Test function of ReadFromParcel interface for SUCCESS.
 * @tc.size: MEDIUM
 * @tc.type: FUNC
 * @tc.level Level 1
 * @tc.require: I6F3GV
 */
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_RawDataCpy_0200, testing::ext::TestSize.Level1) {
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_RawDataCpy_0200";
-    AncoRestoreResult res;
-
-    EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
-    EXPECT_EQ(res.RawDataCpy("{}"), -1);
-
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_RawDataCpy_0200";
+HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ReadFromParcel_0100";
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos;
+    std::vector<ErrCode> errCodes;
+    errCodes.push_back(BError(BError::Codes::OK));
+    endFileInfos.emplace("123", 123);
+    errFileInfos.emplace("123", errCodes);
+    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
+    Parcel parcel;
+    parcel.SetEasyMode(false);
+    // marshalling
+    EXPECT_TRUE(result.Marshalling(parcel));
+    // unmarshalling
+    AncoRestoreResult tempRes;
+    tempRes.ReadFromParcel(parcel);
+    EXPECT_EQ(tempRes.successCount, result.successCount);
+    EXPECT_EQ(tempRes.duplicateCount, result.duplicateCount);
+    EXPECT_EQ(tempRes.failedCount, result.failedCount);
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ReadFromParcel_0100";
 }
 
 /**
-* @tc.number: SUB_AncoRestoreResult_ParseBasicCounts_0100
-* @tc.name: SUB_AncoRestoreResult_ParseBasicCounts_0100
-* @tc.desc: Test function of ParseBasicCounts interface for SUCCESS.
+* @tc.number: SUB_AncoRestoreResult_ReadFromParcel_0101
+* @tc.name: SUB_AncoRestoreResult_ReadFromParcel_0101
+* @tc.desc: Test function of ReadFromParcel interface for FAILURE.
 * @tc.size: MEDIUM
 * @tc.type: FUNC
 * @tc.level Level 1
 * @tc.require: I6F3GV
 */
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ParseBasicCounts_0100, testing::ext::TestSize.Level1) {
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ParseBasicCounts_0100";
-    AncoRestoreResult res;
-    auto mockRoot = make_shared<cJSON>();
+HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ReadFromParcel_0101";
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos;
+    std::vector<ErrCode> errCodes;
+    errCodes.push_back(BError(BError::Codes::OK));
+    endFileInfos.emplace("123", 123);
+    errFileInfos.emplace("123", errCodes);
+    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
+    Parcel parcel;
+    parcel.SetEasyMode(false);
+    // marshalling
+    EXPECT_TRUE(result.Marshalling(parcel));
+    // unmarshalling
+    std::vector<bool> sequence = {
+        true, // ReadInt64
+        true, // ReadInt64
+        true, // ReadInt64
+        true, // ReadMap - ReadUint64
+        true, // ReadMap - ReadString
+        true, // ReadMap - ReadInt64
+        false, // ReadMap2 - ReadUint64
+    };
+    SetSpecialParcelSequence(sequence);
+    AncoRestoreResult tempRes;
+    EXPECT_EQ(tempRes.Unmarshalling(parcel), nullptr);
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ReadFromParcel_0101";
+}
 
-    EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
-    EXPECT_CALL(*cJsonMock, cJSON_IsNumber(_)).WillRepeatedly(Return(true));
+/**
+* @tc.number: SUB_AncoRestoreResult_ReadFromParcel_0102
+* @tc.name: SUB_AncoRestoreResult_ReadFromParcel_0102
+* @tc.desc: Test function of ReadFromParcel interface for FAILURE.
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ReadFromParcel_0102";
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos;
+    std::vector<ErrCode> errCodes;
+    errCodes.push_back(BError(BError::Codes::OK));
+    endFileInfos.emplace("123", 123);
+    errFileInfos.emplace("123", errCodes);
+    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
+    Parcel parcel;
+    parcel.SetEasyMode(false);
+    // marshalling
+    EXPECT_TRUE(result.Marshalling(parcel));
+    // unmarshalling
+    std::vector<bool> sequence = {
+        true, // ReadInt64
+        true, // ReadInt64
+        true, // ReadInt64
+        true, // ReadMap - ReadUint64
+        true, // ReadMap - ReadString
+        true, // ReadMap - ReadInt64
+        true, // ReadMap2 - ReadUint64
+        true, // ReadMap2 - ReadString
+        false, // ReadVector - ReadUint64
+    };
+    SetSpecialParcelSequence(sequence);
+    AncoRestoreResult tempRes;
+    EXPECT_EQ(tempRes.Unmarshalling(parcel), nullptr);
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ReadFromParcel_0102";
+}
 
-    res.ParseBasicCounts(mockRoot.get());
-    EXPECT_TRUE(res.ParseBasicCounts(nullptr));
-
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ParseBasicCounts_0100";
+/**
+* @tc.number: SUB_AncoRestoreResult_ReadFromParcel_0103
+* @tc.name: SUB_AncoRestoreResult_ReadFromParcel_0103
+* @tc.desc: Test function of ReadFromParcel interface for FAILURE.
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ReadFromParcel_0103";
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos;
+    std::vector<ErrCode> errCodes;
+    errCodes.push_back(BError(BError::Codes::OK));
+    endFileInfos.emplace("123", 123);
+    errFileInfos.emplace("123", errCodes);
+    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
+    Parcel parcel;
+    parcel.SetEasyMode(false);
+    // marshalling
+    EXPECT_TRUE(result.Marshalling(parcel));
+    // unmarshalling
+    std::vector<bool> sequence = {
+        true, // ReadInt64
+        true, // ReadInt64
+        true, // ReadInt64
+        true, // ReadMap - ReadUint64
+        true, // ReadMap - ReadString
+        true, // ReadMap - ReadInt64
+        true, // ReadMap2 - ReadUint64
+        true, // ReadMap2 - ReadString
+        true, // ReadVector - ReadUint64
+        false, // ReadVector - ReadInt32
+    };
+    SetSpecialParcelSequence(sequence);
+    AncoRestoreResult tempRes;
+    EXPECT_EQ(tempRes.Unmarshalling(parcel), nullptr);
+    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ReadFromParcel_0103";
 }
 
 class AncoScanResultTest : public testing::Test {
