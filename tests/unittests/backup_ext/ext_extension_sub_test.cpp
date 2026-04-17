@@ -35,6 +35,7 @@
 #include "untar_file.h"
 
 #include "sub_ext_extension.cpp"
+#include "backup_helper.cpp"
 #include "service_proxy_mock.h"
 #include "service_client.h"
 

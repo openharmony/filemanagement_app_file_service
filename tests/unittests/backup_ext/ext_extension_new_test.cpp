@@ -37,6 +37,7 @@
 #define Persist GetFd
 #include "ext_extension.cpp"
 #include "sub_ext_extension.cpp"
+#include "backup_helper.cpp"
 #include "library_func_undef.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -938,22 +939,15 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0002, testin
     int fdNum = 0;
 
     // success
-    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
-    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
-    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
-    EXPECT_CALL(*funcMock_, RemoveFile(_)).WillOnce(Return(true));
-
+    EXPECT_CALL(*serviceMock_, AppAncoFileReady(_, _, _)).WillOnce(Return(0));
     EXPECT_TRUE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
 
     // fail
-    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
-    EXPECT_CALL(*serviceMock_, AppFileReadyWithoutFd(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*serviceMock_, AppAncoFileReady(_, _, _)).WillOnce(Return(-1));
     EXPECT_FALSE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo2, fdNum)));
 
     // fail
-    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
     ServiceClient::serviceProxy_ = nullptr;
-    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
     EXPECT_EQ(extExtension_->ReportAppFileReady(fileInfo, fdNum),
         static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL));
     ServiceClient::serviceProxy_ = serviceMock_;
@@ -976,10 +970,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0003, testin
     auto fileInfo = make_shared<AncoCompatibleFileInfo>("", "", sta, true, "");
     int fdNum = 0;
 
-    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
-    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
-    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
-
+    EXPECT_CALL(*serviceMock_, AppAncoFileReady(_, _, _)).WillOnce(Return(0));
     EXPECT_TRUE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ReportAppFileReady_Test_0003";
 }

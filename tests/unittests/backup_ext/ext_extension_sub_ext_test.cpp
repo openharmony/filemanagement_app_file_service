@@ -244,3 +244,34 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupCallback_WaitForPacketFlag_0000, tes
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupCallback_WaitForPacketFlag_0000";
 }
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsAndClean_0000
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsAndClean_0000
+ * @tc.desc: 测试 AddAncoMovePathsAndClean 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsAndClean_0000,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsAndClean_0000";
+    std::vector<std::string> ancoSourcePath;
+ 	std::vector<std::string> ancoTargetPath;
+    std::vector<StatInfo> ancoStats;
+
+    ServiceClient::serviceProxy_ = nullptr;
+    AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+
+    ServiceClient::serviceProxy_ = proxy;
+    EXPECT_CALL(*proxy, AddAncoMovePaths(_, _, _)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
+    AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+
+    ancoSourcePath.resize(1);
+    EXPECT_CALL(*proxy, AddAncoMovePaths(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+    AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_TRUE(ancoSourcePath.size(), 0);
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsAndClean_0000";
+}

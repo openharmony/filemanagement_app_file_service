@@ -30,6 +30,7 @@
 #include "b_resources/b_constants.h"
 #include "ext_extension.cpp"
 #include "sub_ext_extension.cpp"
+#include "backup_helper.cpp"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;

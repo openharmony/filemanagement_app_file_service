@@ -770,3 +770,107 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoMove_0003, testing::ext::TestSize.Lev
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoMove_0003";
 }
+
+/**
+ * @tc.number: SUB_Service_AddAncoMovePaths_0000
+ * @tc.name: SUB_Service_AddAncoMovePaths_0000
+ * @tc.desc: 测试 AddAncoMovePaths 的正常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddAncoMovePaths_0000";
+    EXPECT_CALL(*mockEnhanceService, AddAncoMovePaths(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::vector<std::string> ancoSourcePath;
+ 	std::vector<std::string> ancoTargetPath;
+    std::vector<StatInfo> ancoStats;
+    EXPECT_EQ(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoMovePaths_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_AddAncoMovePaths_0001
+ * @tc.name: SUB_Service_AddAncoMovePaths_0001
+ * @tc.desc: 测试 AddAncoMovePaths 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddAncoMovePaths_0001";
+    AncoRestoreResult retAncoRestoreRes;
+    retAncoRestoreRes.successCount = 100;
+    retAncoRestoreRes.duplicateCount = 200;
+    retAncoRestoreRes.failedCount = 300;
+    EXPECT_CALL(*mockEnhanceService, AddAncoMovePaths(_, _, _, _))
+        .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::vector<std::string> ancoSourcePath;
+ 	std::vector<std::string> ancoTargetPath;
+    std::vector<StatInfo> ancoStats;
+    EXPECT_NE(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoMovePaths_0001";
+}
+
+/**
+ * @tc.number: SUB_Service_AddAncoMovePaths_0002
+ * @tc.name: SUB_Service_AddAncoMovePaths_0002
+ * @tc.desc: 测试 AddAncoMovePaths 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddAncoMovePaths_0002";
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+
+    std::vector<std::string> ancoSourcePath;
+ 	std::vector<std::string> ancoTargetPath;
+    std::vector<StatInfo> ancoStats;
+    EXPECT_NE(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoMovePaths_0002";
+}
+
+/**
+ * @tc.number: SUB_Service_AddAncoMovePaths_0003
+ * @tc.name: SUB_Service_AddAncoMovePaths_0003
+ * @tc.desc: 测试 AddAncoMovePaths 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddAncoMovePaths_0003";
+    auto backupService = EnhanceServiceManager().GetInstance().service_;
+    EnhanceServiceManager().GetInstance().service_ = nullptr;
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::vector<std::string> ancoSourcePath;
+ 	std::vector<std::string> ancoTargetPath;
+    std::vector<StatInfo> ancoStats;
+    EXPECT_EQ(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
+    EnhanceServiceManager().GetInstance().service_ = backupService;
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoMovePaths_0003";
+}
