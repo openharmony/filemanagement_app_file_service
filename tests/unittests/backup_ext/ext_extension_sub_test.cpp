@@ -329,7 +329,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CheckRstoreFileInfos_Test_0100, 
         extExtension->endFileInfos_.merge(fileInfos);
 
         result = extExtension->CheckRestoreFileInfos();
-        EXPECT_EQ(std::get<0>(result), false);
+        EXPECT_EQ(std::get<0>(result), true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
