@@ -259,7 +259,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsA
 {
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsAndClean_0000";
     std::vector<std::string> ancoSourcePath;
- 	std::vector<std::string> ancoTargetPath;
+    std::vector<std::string> ancoTargetPath;
     std::vector<StatInfo> ancoStats;
 
     ServiceClient::serviceProxy_ = nullptr;

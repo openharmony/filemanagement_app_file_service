@@ -790,7 +790,7 @@ HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0000, testing::ext::TestSize.
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
 
     std::vector<std::string> ancoSourcePath;
- 	std::vector<std::string> ancoTargetPath;
+    std::vector<std::string> ancoTargetPath;
     std::vector<StatInfo> ancoStats;
     EXPECT_EQ(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoMovePaths_0000";
