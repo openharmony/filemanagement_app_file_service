@@ -24,6 +24,7 @@ CJSON_PUBLIC(void) CJSONDelete(cJSON *item);
 CJSON_PUBLIC(cJSON_bool) CJSONIsArray(const cJSON * const item);
 CJSON_PUBLIC(void) CJSONFree(void *object);
 CJSON_PUBLIC(cJSON_bool) CJSONIsString(const cJSON * const item);
+CJSON_PUBLIC(cJSON_bool) cJSONIsNumber(const cJSON * const item);
 
 namespace OHOS::FileManagement::Backup {
 class CJson {
@@ -49,6 +50,7 @@ public:
     virtual cJSON_bool cJSON_IsString(const cJSON * const item) = 0;
     virtual cJSON* cJSON_AddNumberToObject(cJSON *const object, const char *const name, const double number) = 0;
     virtual cJSON* cJSON_AddArrayToObject(cJSON * const object, const char * const name) = 0;
+    virtual cJSON_bool cJSON_IsNumber(const cJSON * const item) = 0;
 
 public:
     static inline std::shared_ptr<CJson> cJsonPtr = nullptr;
@@ -74,6 +76,7 @@ public:
     MOCK_METHOD1(cJSON_IsString, cJSON_bool(const cJSON * const item));
     MOCK_METHOD3(cJSON_AddNumberToObject, cJSON*(cJSON *const object, const char *const name, const double number));
     MOCK_METHOD2(cJSON_AddArrayToObject, cJSON* (cJSON * const object, const char * const name));
+    MOCK_METHOD1(cJSON_IsNumber, cJSON_bool(const cJSON * const item));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif

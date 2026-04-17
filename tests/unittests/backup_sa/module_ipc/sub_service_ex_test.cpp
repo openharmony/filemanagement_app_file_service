@@ -820,7 +820,7 @@ HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0001, testing::ext::TestSize.
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
 
     std::vector<std::string> ancoSourcePath;
- 	std::vector<std::string> ancoTargetPath;
+    std::vector<std::string> ancoTargetPath;
     std::vector<StatInfo> ancoStats;
     EXPECT_NE(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoMovePaths_0001";
@@ -842,7 +842,7 @@ HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0002, testing::ext::TestSize.
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
 
     std::vector<std::string> ancoSourcePath;
- 	std::vector<std::string> ancoTargetPath;
+    std::vector<std::string> ancoTargetPath;
     std::vector<StatInfo> ancoStats;
     EXPECT_NE(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoMovePaths_0002";
@@ -868,7 +868,7 @@ HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0003, testing::ext::TestSize.
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
 
     std::vector<std::string> ancoSourcePath;
- 	std::vector<std::string> ancoTargetPath;
+    std::vector<std::string> ancoTargetPath;
     std::vector<StatInfo> ancoStats;
     EXPECT_EQ(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;

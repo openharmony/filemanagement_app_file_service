@@ -16,14 +16,17 @@
 #ifndef OHOS_FILEMGMT_BACKUP_ANCO_RESTORE_RESULT_H
 #define OHOS_FILEMGMT_BACKUP_ANCO_RESTORE_RESULT_H
 
-#include "parcel.h"
 #include <string>
 #include <vector>
 #include <map>
 
+using cJSON = struct cJSON;
 namespace OHOS::FileManagement::Backup {
 using ErrCode = int;
-struct AncoRestoreResult : public Parcelable {
+class AncoRestoreResult {
+public:
+    uint32_t size{0};
+    const void* data{nullptr};
     int64_t successCount{0};
     int64_t duplicateCount{0};
     int64_t failedCount{0};
@@ -37,11 +40,17 @@ struct AncoRestoreResult : public Parcelable {
         : successCount(successCount_), duplicateCount(duplicateCount_), failedCount(failedCount_),
         endFileInfos(endFileInfos_), errFileInfos(errFileInfos_)
     {}
-    ~AncoRestoreResult() override = default;
+    ~AncoRestoreResult() = default;
 
-    bool ReadFromParcel(Parcel &parcel);
-    bool Marshalling(Parcel &parcel) const override;
-    static AncoRestoreResult *Unmarshalling(Parcel &parcel);
+    void Serialize();
+    int32_t RawDataCpy(const void* readdata);
+
+private:
+    void AddEndFileInfos(cJSON* root);
+    void AddErrFileInfos(cJSON* root);
+    bool ParseBasicCounts(cJSON* root);
+    bool ParseEndFileInfos(cJSON* root);
+    bool ParseErrFileInfos(cJSON* root);
 };
 }  // namespace OHOS::FileManagement::Backup
 #endif

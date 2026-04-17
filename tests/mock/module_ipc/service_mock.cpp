@@ -534,6 +534,8 @@ ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath
 
 ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
 {
+    ancoRestoreRes.size = 0;
+    ancoRestoreRes.data = nullptr;
     ancoRestoreRes.duplicateCount = 0;
     ancoRestoreRes.failedCount = 0;
     ancoRestoreRes.successCount = 0;

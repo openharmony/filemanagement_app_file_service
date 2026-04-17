@@ -214,18 +214,23 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
     vector<string> errFiles;
     struct stat curFileStat {};
     for (const auto &it : endFileInfos_) {
-        if (lstat(it.first.c_str(), &curFileStat) != 0) {
-            HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
-            errFiles.emplace_back(it.first);
-            errFileInfos_[it.first].emplace_back(errno);
-        } else if (curFileStat.st_size != it.second) {
-            HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
-                GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
-            errFiles.emplace_back(it.first);
-            errFileInfos_[it.first].emplace_back(errno);
+        if (it.first.find(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)) != std::string::npos) {
+            if (lstat(it.first.c_str(), &curFileStat) != 0) {
+                HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
+                errFiles.emplace_back(it.first);
+                errFileInfos_[it.first].emplace_back(errno);
+            } else if (curFileStat.st_size != it.second && (!S_ISDIR(curFileStat.st_mode))) {
+                HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
+                    GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
+                errFiles.emplace_back(it.first);
+                errFileInfos_[it.first].emplace_back(errno);
+            }
         }
     }
     for (const auto &it : errFileInfos_) {
+        if (!it.first.empty() && it.first.front() == '#') {
+            errFiles.emplace_back(it.first.substr(1));
+        }
         for (const auto &codeIt : it.second) {
             AuditLog auditLog = {false, "errFileInfos_", "ADD", "", 1, "FAILED", "CheckRestoreFileInfos",
                 "Restore File", GetAnonyPath(it.first)};
@@ -238,8 +243,8 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
         errFileInfos_.size());
     if (errFiles.size()) {
         std::stringstream ss;
-        size_t diff = endFileInfos_.size() > errFileInfos_.size() ? (endFileInfos_.size() - errFileInfos_.size()) : 0;
-        ss << R"("totalFile": )" << endFileInfos_.size() << R"(, "restoreFile": )" << diff;
+        ss << R"("totalFile": )" << endFileInfos_.size() << R"(, "restoreFile": )"
+            << endFileInfos_.size() - errFileInfos_.size();
         AppRadar::Info info (bundleName_, "", ss.str());
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "BackupExtExtension::CheckRestoreFileInfos",
             AppRadar::GetInstance().GetUserId(), BizStageRestore::BIZ_STAGE_CHECK_DATA_FAIL,
