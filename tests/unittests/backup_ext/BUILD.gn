@@ -577,7 +577,6 @@ ohos_unittest("ext_extension_new_test") {
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
-    "cJSON:cjson",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -589,6 +588,7 @@ ohos_unittest("ext_extension_new_test") {
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "cJSON:cjson",
   ]
 
   defines = [

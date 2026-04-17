@@ -274,6 +274,6 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsA
     ancoSourcePath.resize(1);
     EXPECT_CALL(*proxy, AddAncoMovePaths(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
     AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
-    EXPECT_TRUE(ancoSourcePath.size(), 0);
+    EXPECT_EQ(ancoSourcePath.size(), 0);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsAndClean_0000";
 }
