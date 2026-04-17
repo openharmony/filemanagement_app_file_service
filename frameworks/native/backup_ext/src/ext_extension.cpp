@@ -73,6 +73,7 @@ const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACK
                                              append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
 const string MEDIA_LIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 const string FILE_MANAGER_BUNDLE_NAME = "com.ohos.filepicker";
+const int MAX_IPC_SEND_DATA_SIZE = static_cast<int>(200 * 1024 * 0.8);
 using namespace std;
 
 static void RecordDoRestoreRes(const std::string &bundleName, const std::string &func,
@@ -499,12 +500,12 @@ ErrCode BackupExtExtension::ReportAppFileReady(const std::shared_ptr<IFileInfo>&
     ErrCode subRet = ERR_OK;
     if (fileInfo->isAncoFile_) {
         if (fileInfo->isBigFile_) {
-            subRet = ReportAncoAppFileReady(fileInfo->filename_, fileInfo->filePath_, fileInfo->GetFd());
+            subRet = ReportAncoAppFileReady(fileInfo->filename_, fileInfo->filePath_);
             appStatistic_->bigFileCount_++;
             UpdateFileStat(fileInfo->filePath_, fileInfo->sta_.st_size);
             fdNum++;
         } else {
-            subRet = ReportAncoAppFileReady(fileInfo->filename_, fileInfo->filePath_, fileInfo->GetFd(), true);
+            subRet = ReportAncoAppFileReady(fileInfo->filename_, fileInfo->filePath_, true);
             fdNum += BConstants::FILE_AND_MANIFEST_FD_COUNT;
         }
     } else {
@@ -556,36 +557,15 @@ ErrCode BackupExtExtension::ReportNormalAppFileReady(const string& filename, con
     return reportRs;
 }
 
-ErrCode BackupExtExtension::ReportAncoAppFileReady(
-    const string &filename, const string &filePath, int fdval, bool needDelete)
+ErrCode BackupExtExtension::ReportAncoAppFileReady(const string &filename, const string &filePath, bool needDelete)
 {
-    HILOGD("[DTC_TEST] filename:%{public}s, filePath:%{public}s, fdval:%{public}d, needDelete:%{public}d",
-        filename.c_str(),
-        filePath.c_str(),
-        fdval,
-        needDelete);
-    int32_t errCode = ERR_OK;
-    std::string newPath = BExcepUltils::Canonicalize(filePath);
-    fdsan_exchange_owner_tag(fdval, 0, BConstants::FDSAN_EXT_TAG);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("ServiceClient is null");
-        CloseFileWithFDSan(fdval);
         return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
     }
-    int reportRs =
-        fdval < 0 ? proxy->AppFileReadyWithoutFd(filename, errCode) : proxy->AppFileReady(filename, fdval, errCode);
-    CloseFileWithFDSan(fdval);
-    if (SUCCEEDED(reportRs)) {
-        HILOGD("Report app file ready success, filename: %{public}s", filename.c_str());
-        if (needDelete) {
-            auto ret = RemoveFile(newPath);
-            HILOGD("RemoveFile result:%{public}d, newPath:%{public}s", ret, newPath.c_str());
-        }
-    } else {
-        HILOGW("Report app file ready failed, ret: %{public}d, filename: %{public}s", reportRs, filename.c_str());
-    }
-    return reportRs;
+    std::string newPath = BExcepUltils::Canonicalize(filePath);
+    return proxy->AppAncoFileReady(filename, newPath, needDelete);
 }
 
 ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
@@ -1258,17 +1238,13 @@ static bool RestoreBigFilePrecheck(string &fileName, const string &path, const s
     return true;
 }
 
-void BackupExtExtension::RestoreBigFileAfter(const string &filePath, const struct stat &sta,
-    std::vector<StatInfo> &ancoStats)
+void BackupExtExtension::RestoreBigFileAfter(const string &filePath, const struct stat &sta)
 {
     if (chmod(filePath.c_str(), sta.st_mode) != 0) {
         errFileInfos_[filePath].emplace_back(errno);
         HILOGE("Failed to chmod filePath, err = %{public}d", errno);
     }
     struct timespec tv[2] = {sta.st_atim, sta.st_mtim};
-    if (filePath.find(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO) != std::string::npos) {
-        ancoStats.push_back(sta);
-    }
     UniqueFd fd(open(filePath.data(), O_RDONLY));
     if (fd < 0) {
         errFileInfos_[filePath].emplace_back(errno);
@@ -1281,11 +1257,9 @@ void BackupExtExtension::RestoreBigFileAfter(const string &filePath, const struc
     }
 }
 
-void BackupExtExtension::RestoreOneBigFile(const std::string &path,
-    const ExtManageInfo &item, const bool appendTargetPath, std::vector<StatInfo> &ancoStats)
+void BackupExtExtension::RestoreOneBigFile(const std::string &path, const ExtManageInfo &item,
+    const bool appendTargetPath)
 {
-    radarRestoreInfo_.bigFileNum++;
-    radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
     string itemHashName = item.hashName;
     string itemFileName = item.fileName;
     // check if item.hasName and fileName need decode by report item attribute
@@ -1312,14 +1286,12 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path,
     if (!RestoreBigFilePrecheck(fileName, path, item.hashName, filePath)) {
         return;
     }
-    if (!StringUtils::IsSandboxAncoPath(path)) {
-        if (!BFile::MoveFile(fileName, filePath)) {
-            errFileInfos_[filePath].emplace_back(errno);
-            HILOGE("failed to move the file. err = %{public}d", errno);
-            return;
-        }
+    if (!BFile::MoveFile(fileName, filePath)) {
+        errFileInfos_[filePath].emplace_back(errno);
+        HILOGE("failed to move the file. err = %{public}d", errno);
+        return;
     }
-    RestoreBigFileAfter(filePath, item.sta, ancoStats);
+    RestoreBigFileAfter(filePath, item.sta);
 }
 
 void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
@@ -1338,20 +1310,35 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
     auto start = std::chrono::system_clock::now();
     vector<string> ancoSourcePath;
     vector<string> ancoTargetPath;
-    std::vector<StatInfo> ancoStats;
+    vector<StatInfo> ancoStats;
+    size_t curIpcDataSize = 0;
     for (const auto &item : info) {
         if (item.hashName.empty() || (!item.isUserTar && !item.isBigFile)) {
             continue;
         }
+        radarRestoreInfo_.bigFileNum++;
+        radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
         // 获取索引文件内容
         string path = GetRestoreTempPath(bundleName_, item.hashName);
         if (StringUtils::IsSandboxAncoPath(path)) {
-            ancoSourcePath.push_back(path + item.hashName);
+            const string srcPath = path + item.hashName;
+            const size_t byteSize = srcPath.size() + item.fileName.size() + sizeof(StatInfo);
+            if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+                AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+                curIpcDataSize = 0;
+            }
+            ancoSourcePath.push_back(srcPath);
             ancoTargetPath.push_back(item.fileName);
+            ancoStats.push_back(item.sta);
+            curIpcDataSize += byteSize;
+            continue;
         }
-        RestoreOneBigFile(path, item, appendTargetPath, ancoStats);
+        RestoreOneBigFile(path, item, appendTargetPath);
     }
-    ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats);
+    if (curIpcDataSize > 0) {
+        AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+    }
+    ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove();
     endFileInfos_.merge(ancoRestoreRes_.endFileInfos);
     errFileInfos_.merge(ancoRestoreRes_.errFileInfos);
     auto end = std::chrono::system_clock::now();

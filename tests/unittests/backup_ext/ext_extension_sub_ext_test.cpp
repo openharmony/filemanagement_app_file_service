@@ -211,19 +211,16 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_StartAncoMove_000
     testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_StartAncoMove_0000";
-    std::vector<string> ancoSourcePath;
-    std::vector<string> ancoTargetPath;
-    std::vector<StatInfo> ancoStats;
 
     ServiceClient::serviceProxy_ = nullptr;
-    AncoIncrementalRestoreHelper::StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats);
+    AncoIncrementalRestoreHelper::StartAncoMove();
 
     ServiceClient::serviceProxy_ = proxy;
-    EXPECT_CALL(*proxy, StartAncoMove(_, _, _, _)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
-    AncoIncrementalRestoreHelper::StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_CALL(*proxy, StartAncoMove(_)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
+    AncoIncrementalRestoreHelper::StartAncoMove();
 
-    EXPECT_CALL(*proxy, StartAncoMove(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
-    AncoIncrementalRestoreHelper::StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_CALL(*proxy, StartAncoMove(_)).WillOnce(Return(BError(BError::Codes::OK)));
+    AncoIncrementalRestoreHelper::StartAncoMove();
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_StartAncoMove_0000";
 }

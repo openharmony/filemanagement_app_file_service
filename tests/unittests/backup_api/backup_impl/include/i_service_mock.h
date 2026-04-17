@@ -38,6 +38,7 @@ public:
 
     MOCK_METHOD(ErrCode, AppFileReady, (const std::string &fileName, int, int32_t errCode));
     MOCK_METHOD(ErrCode, AppFileReadyWithoutFd, (const std::string &fileName, int32_t errCode));
+    MOCK_METHOD(ErrCode, AppAncoFileReady, (const std::string &, const std::string &, bool));
     MOCK_METHOD(ErrCode, AppDone, (int32_t errCode));
     MOCK_METHOD(ErrCode, AppIncrementalFileReady, (const std::string &, int, int, int32_t));
     MOCK_METHOD(ErrCode, AppIncrementalFileReadyWithoutFd, (const std::string &, int32_t));
@@ -57,9 +58,9 @@ public:
     MOCK_METHOD(ErrCode, StartAncoUnPacket,
         (const std::vector<std::string> &, const std::vector<int64_t> &, const std::vector<std::string> &,
             const std::string &));
-    MOCK_METHOD(ErrCode, StartAncoMove,
-        (const std::vector<std::string> &, const std::vector<std::string> &, const std::vector<StatInfo> &,
-            AncoRestoreResult &));
+    MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::vector<std::string> &, const std::vector<std::string> &,
+        const std::vector<StatInfo> &));
+    MOCK_METHOD(ErrCode, StartAncoMove, (AncoRestoreResult &));
 
     int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {

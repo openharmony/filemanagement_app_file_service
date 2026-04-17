@@ -1958,17 +1958,17 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
 }
 
 ErrCode AncoBackupCallback::OnBigFileReadyCallback(
-    const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo, int fd)
+    const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo)
 {
     if (StringUtils::CheckOverLongPath(filePath) >= BConstants::MAX_PATH_LEN) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
-    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, statInfo.sta, UniqueFd(fd));
+    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, statInfo.sta);
     return ErrCode(BError::Codes::OK);
 }
 
 ErrCode AncoBackupCallback::OnTarFileReadyCallback(
-    const std::string &fileName, const std::string &filePath, const StatInfo &statInfo, int fd)
+    const std::string &fileName, const std::string &filePath, const StatInfo &statInfo)
 {
     auto extensionPtr = extension_.promote();
     if (!extensionPtr) {
@@ -1979,7 +1979,7 @@ ErrCode AncoBackupCallback::OnTarFileReadyCallback(
     }
     extensionPtr->appStatistic_->tarFileSize_ += TarFile::GetInstance().GetTarFileSize();
     extensionPtr->appStatistic_->tarFileCount_++;
-    ScanFileSingleton::GetInstance().AddAncoTarFile(fileName, filePath, statInfo.sta, UniqueFd(fd));
+    ScanFileSingleton::GetInstance().AddAncoTarFile(fileName, filePath, statInfo.sta);
     return ErrCode(BError::Codes::OK);
 }
 
@@ -2116,8 +2116,24 @@ ErrCode AncoIncrementalRestoreHelper::StartAncoUnPacket(const std::vector<string
     return proxy->StartAncoUnPacket(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames, tempPath);
 }
 
-AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove(
-    const vector<string> &ancoSourcePath, const vector<string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
+void AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(std::vector<std::string> &ancoSourcePath,
+    std::vector<std::string> &ancoTargetPath, std::vector<StatInfo> &ancoStats)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return;
+    }
+    auto ret = proxy->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to AddAncoMovePaths. err = %{public}d", ret);
+    }
+    ancoSourcePath.clear();
+    ancoTargetPath.clear();
+    ancoStats.clear();
+}
+
+AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove()
 {
     AncoRestoreResult ancoRestoreRes;
     auto proxy = ServiceClient::GetInstance();
@@ -2125,7 +2141,7 @@ AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove(
         HILOGE("Failed to get backup service");
         return ancoRestoreRes;
     }
-    auto ret = proxy->StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats, ancoRestoreRes);
+    auto ret = proxy->StartAncoMove(ancoRestoreRes);
     if (ret != ERR_OK) {
         HILOGE("Failed to StartAncoMove. err = %{public}d", ret);
     }

@@ -96,6 +96,11 @@ ErrCode ServiceProxy::AppFileReadyWithoutFd(const string &fileName, int32_t errC
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceProxy::AppAncoFileReady(const std::string &fileName, const std::string &filePath, bool needDelete)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode ServiceProxy::AppDone(ErrCode errCode)
 {
     return BError(BError::Codes::OK);

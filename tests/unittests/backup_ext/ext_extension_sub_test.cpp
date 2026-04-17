@@ -1602,8 +1602,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Test_0300, testing::ext::TestSize.Le
         const string fileName = "test.txt";
         StatInfo statInfo;
         statInfo.sta.st_size = 1024;
-        int fd = 3;
-        auto ret = backupCallback->OnTarFileReadyCallback(fileName, filePath, statInfo, fd);
+        auto ret = backupCallback->OnTarFileReadyCallback(fileName, filePath, statInfo);
         EXPECT_EQ(ret, ErrCode(BError::Codes::EXT_INVAL_ARG));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1629,8 +1628,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Test_0301, testing::ext::TestSize.Le
         const string restorePath = "/test/restore/path/file.txt";
         StatInfo statInfo;
         statInfo.sta.st_size = 1024;
-        int fd = 0;
-        auto ret = backupCallback->OnBigFileReadyCallback(longPath, restorePath, statInfo, fd);
+        auto ret = backupCallback->OnBigFileReadyCallback(longPath, restorePath, statInfo);
         EXPECT_EQ(ret, ErrCode(BError::Codes::EXT_INVAL_ARG));
     } catch (...) {
         EXPECT_TRUE(false);

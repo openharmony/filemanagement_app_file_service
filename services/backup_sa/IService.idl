@@ -93,6 +93,8 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 53] void DestroyAncoRestoreTask();
     [ipccode 54] void StartAncoUnPacket([in] String[] tarFiles, [in] long[] tarFileSizes, [in] String[] tarFileNames,
         [in] String rootPath);
-    [ipccode 55] void StartAncoMove([in] String[] ancoSourcePath, [in] String[] ancoTargetPath,
-        [in] StatInfo[] ancoStats, [out] AncoRestoreResult ancoRestoreRes);
+    [ipccode 55] void AddAncoMovePaths([in] String[] ancoSourcePath, [in] String[] ancoTargetPath,
+        [in] StatInfo[] ancoStats);
+    [ipccode 56] void StartAncoMove([out] AncoRestoreResult ancoRestoreRes);
+    [ipccode 57] void AppAncoFileReady([in] String fileName, [in] String filePath, [in] boolean needDelete);
  }

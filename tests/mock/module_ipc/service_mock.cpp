@@ -96,6 +96,11 @@ ErrCode Service::AppFileReadyWithoutFd(const string &fileName, int32_t errCode)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::AppAncoFileReady(const std::string &fileName, const std::string &filePath, bool needDelete)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::AppDone(ErrCode errCode)
 {
     return BError(BError::Codes::OK);
@@ -521,9 +526,13 @@ ErrCode Service::StartAncoUnPacket(const std::vector<std::string> &tarFiles, con
     return BError(BError::Codes::OK);
 }
  
-ErrCode Service::StartAncoMove(const std::vector<std::string> &ancoSourcePath,
-    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats,
-    AncoRestoreResult &ancoRestoreRes)
+ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
 {
     ancoRestoreRes.duplicateCount = 0;
     ancoRestoreRes.failedCount = 0;

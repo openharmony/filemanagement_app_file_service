@@ -36,7 +36,6 @@ class IFileInfo {
 public:
     virtual ~IFileInfo() {};
     virtual std::string GetRestorePath() = 0;
-    virtual int GetFd() = 0;
     IFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile,
         bool isAncoFile)
         : filename_(filename), filePath_(filePath), sta_(sta), isBigFile_(isBigFile), isAncoFile_(isAncoFile) {};
@@ -51,7 +50,6 @@ struct FileInfo : public IFileInfo {
     FileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile)
         : IFileInfo(filename, filePath, sta, isBigFile, false) {};
     std::string GetRestorePath() override;
-    int GetFd() override;
 };
 
 struct CompatibleFileInfo : public IFileInfo {
@@ -60,25 +58,20 @@ struct CompatibleFileInfo : public IFileInfo {
         restorePath_(restorePath) {};
     std::string GetRestorePath() override;
     std::string restorePath_ = "";
-    int GetFd() override;
 };
 
 struct AncoFileInfo : public IFileInfo {
-    AncoFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile,
-        UniqueFd fd) : IFileInfo(filename, filePath, sta, isBigFile, true), fd_(std::move(fd)) {};
+    AncoFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile)
+        : IFileInfo(filename, filePath, sta, isBigFile, true) {};
     std::string GetRestorePath() override;
-    int GetFd() override;
-    UniqueFd fd_;
 };
 
 struct AncoCompatibleFileInfo : public IFileInfo {
     AncoCompatibleFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta,
-    bool isBigFile, const std::string& restorePath, UniqueFd fd) : IFileInfo(filename, filePath, sta, isBigFile, true),
-        restorePath_(restorePath), fd_(std::move(fd)) {};
+    bool isBigFile, const std::string& restorePath) : IFileInfo(filename, filePath, sta, isBigFile, true),
+        restorePath_(restorePath) {};
     std::string GetRestorePath() override;
-    int GetFd() override;
     std::string restorePath_ = "";
-    UniqueFd fd_;
 };
 
 class ISmallFileInfo {
@@ -109,8 +102,8 @@ public:
     void AddBigFile(const std::string& filePath, const struct stat& sta, const std::string& restorePath = "");
     void AddTarFile(const std::string& filename, const std::string& filePath, const struct stat& sta);
     void AddAncoBigFile(
-        const std::string &filePath, const std::string &restorePath, const struct stat &sta, UniqueFd fd);
-    void AddAncoTarFile(const std::string &filename, const std::string &filePath, const struct stat &sta, UniqueFd fd);
+        const std::string &filePath, const std::string &restorePath, const struct stat &sta);
+    void AddAncoTarFile(const std::string &filename, const std::string &filePath, const struct stat &sta);
     std::shared_ptr<IFileInfo> GetFileInfo();
     bool HasFileReady();
 

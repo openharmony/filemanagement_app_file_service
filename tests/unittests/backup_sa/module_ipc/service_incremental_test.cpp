@@ -50,6 +50,7 @@ public:
     virtual ErrCode PublishFile(const BFileInfo&) = 0;
     virtual ErrCode AppFileReady(const std::string &, int, int32_t) = 0;
     virtual ErrCode AppFileReadyWithoutFd(const std::string &, int32_t) = 0;
+    virtual ErrCode AppAncoFileReady(const std::string &, const std::string &, bool) = 0;
     virtual ErrCode AppDone(ErrCode) = 0;
     virtual ErrCode ServiceResultReport(const std::string, BackupRestoreScenario, ErrCode) = 0;
     virtual ErrCode AppendBundlesRestoreSessionDataByDetail(int, const std::vector<std::string>&,
@@ -106,9 +107,9 @@ public:
     virtual ErrCode StartAncoUnPacket(const std::vector<std::string> &tarFiles,
         const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames,
         const std::string &rootPath) = 0;
-    virtual ErrCode StartAncoMove(
-        const std::vector<std::string> &ancoSourcePath, const std::vector<std::string> &ancoTargetPath,
-        const std::vector<StatInfo> &ancoStats, AncoRestoreResult &ancoRestoreRes) = 0;
+    virtual ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
+        const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) = 0;
+    virtual ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 #ifdef POWER_MANAGER_ENABLED
@@ -134,6 +135,7 @@ public:
     MOCK_METHOD(ErrCode, PublishFile, (const BFileInfo&));
     MOCK_METHOD(ErrCode, AppFileReady, (const string&, int, int32_t));
     MOCK_METHOD(ErrCode, AppFileReadyWithoutFd, (const string&, int32_t));
+    MOCK_METHOD(ErrCode, AppAncoFileReady, (const std::string &, const std::string &, bool));
     MOCK_METHOD(ErrCode, AppDone, (ErrCode));
     MOCK_METHOD(ErrCode, ServiceResultReport, (const std::string, BackupRestoreScenario, ErrCode));
     MOCK_METHOD(ErrCode, AppendBundlesRestoreSessionDataByDetail, (int, (const std::vector<std::string>&),
@@ -195,9 +197,9 @@ public:
     MOCK_METHOD(ErrCode, StartAncoUnPacket,
         (const std::vector<std::string> &, const std::vector<int64_t> &, const std::vector<std::string> &,
             const std::string &));
-    MOCK_METHOD(ErrCode, StartAncoMove,
-        (const std::vector<std::string> &, const std::vector<std::string> &, const std::vector<StatInfo> &,
-            AncoRestoreResult &));
+    MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::vector<std::string> &, const std::vector<std::string> &,
+        const std::vector<StatInfo> &));
+    MOCK_METHOD(ErrCode, StartAncoMove, (AncoRestoreResult &));
 };
 
 void Service::OnStart() {}
@@ -261,6 +263,11 @@ ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t appFi
 ErrCode Service::AppFileReadyWithoutFd(const std::string &fileName, int32_t appFileReadyErrCode)
 {
     return BService::serviceMock->AppFileReadyWithoutFd(fileName, appFileReadyErrCode);
+}
+
+ErrCode Service::AppAncoFileReady(const std::string &fileName, const std::string &filePath, bool needDelete)
+{
+    return BService::serviceMock->AppAncoFileReady(fileName, filePath, needDelete);
 }
 
 ErrCode Service::AppDone(int32_t appDoneErrCode)
@@ -641,11 +648,15 @@ ErrCode Service::StartAncoUnPacket(const std::vector<std::string> &tarFiles, con
     return BService::serviceMock->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath);
 }
  
-ErrCode Service::StartAncoMove(const std::vector<std::string> &ancoSourcePath,
-    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats,
-    AncoRestoreResult &ancoRestoreRes)
+ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
 {
-    return BService::serviceMock->StartAncoMove(ancoSourcePath, ancoTargetPath, ancoStats, ancoRestoreRes);
+    return BService::serviceMock->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+}
+
+ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
+{
+    return BService::serviceMock->StartAncoMove(ancoRestoreRes);
 }
 } // namespace OHOS::FileManagement::Backup
 

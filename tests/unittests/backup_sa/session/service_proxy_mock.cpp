@@ -319,9 +319,13 @@ ErrCode ServiceProxy::StartAncoUnPacket(const std::vector<std::string> &tarFiles
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::StartAncoMove(const std::vector<std::string> &ancoSourcePath,
-    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats,
-    AncoRestoreResult &ancoRestoreRes)
+ErrCode ServiceProxy::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
 {
     ancoRestoreRes.duplicateCount = 0;
     ancoRestoreRes.failedCount = 0;

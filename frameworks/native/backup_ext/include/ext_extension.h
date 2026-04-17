@@ -53,9 +53,9 @@ public:
     ~AncoBackupCallback() = default;
 
     ErrCode OnBigFileReadyCallback(
-        const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo, int fd) override;
+        const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo) override;
     ErrCode OnTarFileReadyCallback(
-        const std::string &fileName, const std::string &filePath, const StatInfo &statInfo, int fd) override;
+        const std::string &fileName, const std::string &filePath, const StatInfo &statInfo) override;
 ErrCode WaitForPacketFlag() override;
     ErrCode ReportErrFileByProc(const std::string &msg, int32_t err) override;
     ErrCode UpdateFileStat(const std::string &filePath, const StatInfo &statInfo) override;
@@ -81,6 +81,9 @@ public:
         const std::string &tempPath);
     static AncoRestoreResult StartAncoMove(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats);
+    static void AddAncoMovePathsAndClean(std::vector<std::string> &ancoSourcePath,
+        std::vector<std::string> &ancoTargetPath, std::vector<StatInfo> &ancoStats);
+    static AncoRestoreResult StartAncoMove();
 };
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
     map<string, struct ReportFileInfo>, map<string, struct ReportFileInfo>>;
@@ -377,7 +380,7 @@ private:
     ErrCode RestoreTarForSpecialCloneCloud(const ExtManageInfo &item);
     void RestoreBigFiles(bool appendTargetPath);
     void FillEndFileInfos(const std::string &path, const unordered_map<string, struct ReportFileInfo> &result);
-    void RestoreBigFileAfter(const string &filePath, const struct stat &sta, std::vector<StatInfo> &ancoStats);
+    void RestoreBigFileAfter(const string &filePath, const struct stat &sta);
     void DealIncreUnPacketResult(const off_t tarFileSize, const std::string &tarFileName,
         const std::tuple<int, EndFileInfo, ErrFileInfo> &result);
 
@@ -395,8 +398,7 @@ private:
     std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
         BackupRestoreScenario scenario);
     std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForNormalVersion(const std::string &fileName);
-    void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath,
- 	    std::vector<StatInfo> &ancoStats);
+    void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath);
     int DealIncreRestoreBigAndTarFile();
     ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo, const vector<struct ReportFileInfo> &srcFiles,
         sptr<IService> proxy);
@@ -449,7 +451,7 @@ private:
     ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>> &allFiles);
     ErrCode ReportAppFileReady(const std::shared_ptr<IFileInfo> &fileInfo, int &fdNum);
     ErrCode ReportNormalAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
-    ErrCode ReportAncoAppFileReady(const string &filename, const string &filePath, int fd, bool needDelete = false);
+    ErrCode ReportAncoAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
 
     // Helper function to open a file with O_RDONLY and set fdsan ownership tag
     int OpenFileWithFDSan(const std::string &path);
