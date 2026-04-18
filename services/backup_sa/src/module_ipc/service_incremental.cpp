@@ -802,7 +802,7 @@ ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const 
     int fdVal = BConstants::INVALID_FD_NUM;
     int reportFdVal = BConstants::INVALID_FD_NUM;
     int errCode = BConstants::INVALID_FD_NUM;
-    if (fileName.find('_') != string::npos) {
+    if (fileName.find(BConstants::ANCO_TAG) != string::npos) {
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("SendIncrementalFileHandle, enhance service is not loaded");

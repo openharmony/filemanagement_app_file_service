@@ -100,8 +100,3 @@ CJSON_PUBLIC(cJSON*) cJSON_AddArrayToObject(cJSON * const object, const char * c
 {
     return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_AddArrayToObject(object, name);
 }
-
-CJSON_PUBLIC(cJSON_bool) cJSONIsNumber(const cJSON * const item)
-{
-    return OHOS::FileManagement::Backup::CJson::cJsonPtr->cJSON_IsNumber(item);
-}

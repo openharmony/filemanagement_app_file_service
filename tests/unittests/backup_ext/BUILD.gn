@@ -588,7 +588,6 @@ ohos_unittest("ext_extension_new_test") {
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "cJSON:cjson",
   ]
 
   defines = [
