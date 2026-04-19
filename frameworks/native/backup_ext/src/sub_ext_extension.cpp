@@ -221,7 +221,7 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
             HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
             errFiles.emplace_back(it.first);
             errFileInfos_[it.first].emplace_back(errno);
-        } else if (curFileStat.st_size != it.second && (!S_ISDIR(curFileStat.st_mode))) {
+        } else if (curFileStat.st_size != it.second) {
             HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
                 GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
             errFiles.emplace_back(it.first);
