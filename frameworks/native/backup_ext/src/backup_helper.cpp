@@ -63,7 +63,7 @@ ErrCode AncoBackupCallback::ReportErrFileByProc(const std::string &msg, int32_t 
     if (!extensionPtr) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
-    extensionPtr->ReportErrFileByProc(extensionPtr, extensionPtr->curScenario_)(msg, err);
+    extensionPtr->ReportErrFileByProc(extension_, extensionPtr->curScenario_)(msg, err);
     return ErrCode(BError::Codes::OK);
 }
 
