@@ -216,17 +216,17 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyBundleName_0100, tes
         string bundleName = BUNDLE_NAME;
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->impl_.clientToken = 0;
-        ErrCode ret = sessionManagerPtr_->VerifyBundleName(bundleName);
+        ErrCode ret = sessionManagerPtr_->VerifyBundleName(bundleName, true);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap.clear();
-        ret = sessionManagerPtr_->VerifyBundleName(bundleName);
+        ret = sessionManagerPtr_->VerifyBundleName(bundleName, true);
         EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
         sessionManagerPtr_->impl_.clientToken = CLIENT_TOKEN_ID;
         sessionManagerPtr_->impl_.backupExtNameMap[BUNDLE_NAME] = {};
-        ret = sessionManagerPtr_->VerifyBundleName(bundleName);
+        ret = sessionManagerPtr_->VerifyBundleName(bundleName, true);
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
