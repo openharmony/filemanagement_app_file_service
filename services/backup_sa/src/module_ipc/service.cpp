@@ -384,7 +384,7 @@ void Service::PermissionCheckFailRadar(const std::string &info, const std::strin
                                                  BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 }
 
-ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
+ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName, bool isStrict)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
@@ -398,7 +398,7 @@ ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
         }
         std::string bundleNameIndexInfo =
             BJsonUtil::BuildBundleNameIndexInfo(hapTokenInfo.bundleName, hapTokenInfo.instIndex);
-        ErrCode ret = session_->VerifyBundleName(bundleNameIndexInfo);
+        ErrCode ret = session_->VerifyBundleName(bundleNameIndexInfo, isStrict);
         if (ret != ERR_OK) {
             HILOGE("Verify bundle name failed, bundleNameIndexInfo:%{public}s", bundleNameIndexInfo.c_str());
             return ret;

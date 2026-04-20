@@ -101,6 +101,10 @@ ErrCode SvcSessionManager::Active(Impl newImpl, bool isOccupyingSession)
         }
     }
     impl_ = newImpl;
+    {
+        unique_lock<shared_mutex> lockEnhance(lockEnhance_);
+        implEnhance_.clientToken = impl_.clientToken;
+    }
     IncreaseSessionCnt(__PRETTY_FUNCTION__);
     return BError(BError::Codes::OK);
 }
@@ -134,24 +138,45 @@ ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, b
     HILOGI("Succeed to deactive a session");
     impl_ = {};
     extConnectNum_ = 0;
+    {
+        unique_lock<shared_mutex> lockEnhance(lockEnhance_);
+        implEnhance_ = {};
+    }
     DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return BError(BError::Codes::OK);
 }
 
-ErrCode SvcSessionManager::VerifyBundleName(string &bundleName)
+ErrCode SvcSessionManager::VerifyBundleName(string &bundleName, bool isStrict)
 {
-    shared_lock<shared_mutex> lock(lock_);
-    if (!impl_.clientToken) {
-        HILOGE("Verify bundle name failed, No caller token was specified, bundleName:%{public}s", bundleName.c_str());
-        return BError(BError::Codes::SA_INVAL_ARG);
+    if (isStrict) {
+        shared_lock<shared_mutex> lock(lock_);
+        if (!impl_.clientToken) {
+            HILOGE("Verify bundle name failed, No caller token was specified, bundleName:%{public}s",
+                bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        auto asVerify = [&bundleName](const auto &it) { return it.first == bundleName; };
+        if (none_of(impl_.backupExtNameMap.begin(), impl_.backupExtNameMap.end(), asVerify)) {
+            HILOGE("Could not find the bundle from current session, bundleName:%{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_REFUSED_ACT);
+        }
+        HILOGD("Succeed to verify the bundleName");
+        return BError(BError::Codes::OK);
+    } else {
+        shared_lock<shared_mutex> lockEnhance(lockEnhance_);
+        if (!implEnhance_.clientToken) {
+            HILOGE("Verify bundle name failed, No caller token was specified, bundleName:%{public}s",
+                bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        auto asVerify = [&bundleName](const auto &it) { return it == bundleName; };
+        if (none_of(implEnhance_.backupExtNames.begin(), implEnhance_.backupExtNames.end(), asVerify)) {
+            HILOGE("Could not find the bundle from current session, bundleName:%{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_REFUSED_ACT);
+        }
+        HILOGD("Succeed to verify the bundleName");
+        return BError(BError::Codes::OK);
     }
-    auto asVerify = [&bundleName](const auto &it) { return it.first == bundleName; };
-    if (none_of(impl_.backupExtNameMap.begin(), impl_.backupExtNameMap.end(), asVerify)) {
-        HILOGE("Could not find the bundle from current session, bundleName:%{public}s", bundleName.c_str());
-        return BError(BError::Codes::SA_REFUSED_ACT);
-    }
-    HILOGD("Succeed to verify the bundleName");
-    return BError(BError::Codes::OK);
 }
 
 sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()
@@ -288,6 +313,10 @@ void SvcSessionManager::RemoveExtInfo(const string &bundleName)
         return;
     }
     impl_.backupExtNameMap.erase(it);
+    {
+        unique_lock<shared_mutex> lockEnhance(lockEnhance_);
+        implEnhance_.backupExtNames.erase(bundleName);
+    }
 }
 
 wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &bundleName)
@@ -689,6 +718,10 @@ void SvcSessionManager::AppendBundles(const vector<BundleName> &bundleNames, vec
             info.backUpConnection = GetBackupAbilityExt(bundleName);
         }
         impl_.backupExtNameMap.emplace(make_pair(bundleName, info));
+        {
+            unique_lock<shared_mutex> lockEnhance(lockEnhance_);
+            implEnhance_.backupExtNames.insert(bundleName);
+        }
     }
     impl_.isBackupStart = true;
     impl_.isAppendFinish = true;
@@ -1087,6 +1120,10 @@ ErrCode SvcSessionManager::ClearSessionData()
         it.second.schedAction = BConstants::ServiceSchedAction::FINISH;
     }
     impl_.backupExtNameMap.clear();
+    {
+        unique_lock<shared_mutex> lockEnhance(lockEnhance_);
+        implEnhance_.backupExtNames.clear();
+    }
     return BError(BError::Codes::OK);
 }
 
@@ -1205,12 +1242,13 @@ bool SvcSessionManager::ValidRestoreDataType(RestoreTypeEnum restoreDataType)
     return impl_.restoreDataType == restoreDataType;
 }
 
-bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList)
+void SvcSessionManager::CleanAndCheckIfNeedWaitInner(ErrCode &ret, std::vector<std::string> &bundleNameList,
+    std::vector<std::string> &cleaned)
 {
-    unique_lock<shared_mutex> lock(lock_);
     for (auto it = impl_.backupExtNameMap.begin(); it != impl_.backupExtNameMap.end();) {
         HILOGI("BundleName: %{public}s, schedAction: %{public}d", it->first.c_str(), it->second.schedAction);
         if (it->second.schedAction == BConstants::ServiceSchedAction::WAIT) {
+            cleaned.emplace_back(it->first);
             it = impl_.backupExtNameMap.erase(it);
         } else if (it->second.schedAction == BConstants::ServiceSchedAction::START ||
             (it->second.schedAction == BConstants::ServiceSchedAction::RUNNING && !it->second.isInPublishFile)) {
@@ -1222,6 +1260,7 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
             auto backUpConnection = it->second.backUpConnection;
             if (backUpConnection == nullptr) {
                 HILOGE("Clear session error, backUpConnection is empty, bundleName: %{public}s", it->first.c_str());
+                cleaned.emplace_back(it->first);
                 it = impl_.backupExtNameMap.erase(it);
                 continue;
             }
@@ -1230,6 +1269,7 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
             if (proxy == nullptr) {
                 HILOGE("Clear session error, BackupExtProxy is empty, bundleName: %{public}s", it->first.c_str());
                 backUpConnection->DisconnectBackupExtAbility();
+                cleaned.emplace_back(it->first);
                 it = impl_.backupExtNameMap.erase(it);
                 continue;
             }
@@ -1246,9 +1286,23 @@ bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::s
             HandleOnRelease(proxy);
             backUpConnection->DisconnectBackupExtAbility();
             HILOGI("Disconnect extensionAbility, bundleName: %{public}s", it->first.c_str());
+            cleaned.emplace_back(it->first);
             it = impl_.backupExtNameMap.erase(it);
         } else {
             ++it;
+        }
+    }
+}
+
+bool SvcSessionManager::CleanAndCheckIfNeedWait(ErrCode &ret, std::vector<std::string> &bundleNameList)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    std::vector<std::string> cleanedBundleNames;
+    CleanAndCheckIfNeedWaitInner(ret, bundleNameList, cleanedBundleNames);
+    {
+        unique_lock<shared_mutex> lockEnhance(lockEnhance_);
+        for (const auto &bundleName : cleanedBundleNames) {
+            implEnhance_.backupExtNames.erase(bundleName);
         }
     }
     if (impl_.backupExtNameMap.empty()) {

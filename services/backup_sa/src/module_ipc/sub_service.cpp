@@ -1915,7 +1915,7 @@ ErrCode Service::CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback)
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("CreateAncoBackupTask error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
@@ -1933,12 +1933,12 @@ ErrCode Service::CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback)
         return EPERM;
     }
 }
- 
+
 ErrCode Service::DestroyAncoBackupTask()
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("DestroyAncoBackupTask error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
@@ -1956,13 +1956,13 @@ ErrCode Service::DestroyAncoBackupTask()
         return EPERM;
     }
 }
- 
+
 ErrCode Service::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
     const std::vector<std::string> &excludes)
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("FilterAndSaveBackupPaths error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
@@ -1980,12 +1980,12 @@ ErrCode Service::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::
         return EPERM;
     }
 }
- 
+
 ErrCode Service::StartAncoScanAllDirs(AncoScanResult &scanResult)
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("StartAncoScanAllDirs error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
@@ -2003,12 +2003,12 @@ ErrCode Service::StartAncoScanAllDirs(AncoScanResult &scanResult)
         return EPERM;
     }
 }
- 
+
 ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("StartAncoPacket error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
@@ -2026,12 +2026,12 @@ ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
         return EPERM;
     }
 }
- 
+
 ErrCode Service::CreateAncoRestoreTask()
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("CreateAncoRestoreTask error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
@@ -2049,12 +2049,12 @@ ErrCode Service::CreateAncoRestoreTask()
         return EPERM;
     }
 }
- 
+
 ErrCode Service::DestroyAncoRestoreTask()
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("DestroyAncoRestoreTask error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
@@ -2072,13 +2072,13 @@ ErrCode Service::DestroyAncoRestoreTask()
         return EPERM;
     }
 }
- 
+
 ErrCode Service::StartAncoUnPacket(const std::vector<string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
     const std::vector<string> &tarFileNames, const std::string &rootPath)
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("StartAncoUnPacket error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
@@ -2096,14 +2096,14 @@ ErrCode Service::StartAncoUnPacket(const std::vector<string> &tarFiles, const st
         return EPERM;
     }
 }
- 
+
 ErrCode Service::StartAncoMove(
     const std::vector<std::string> &ancoSourcePath, const std::vector<std::string> &ancoTargetPath,
     const std::vector<StatInfo> &ancoStats, AncoRestoreResult &ancoRestoreRes)
 {
     try {
         string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
             HILOGE("StartAncoMove error, Get bundle name failed, ret:%{public}d", ret);
             return ret;

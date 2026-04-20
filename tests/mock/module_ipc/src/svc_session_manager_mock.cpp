@@ -36,7 +36,7 @@ ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &, bool)
     return BError(BError::Codes::OK);
 }
 
-ErrCode SvcSessionManager::VerifyBundleName(string &bundleName)
+ErrCode SvcSessionManager::VerifyBundleName(string &bundleName, bool isStrict)
 {
     return BError(BError::Codes::OK);
 }
