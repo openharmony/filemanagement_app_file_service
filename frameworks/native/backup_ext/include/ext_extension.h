@@ -79,8 +79,6 @@ public:
     static ErrCode StartAncoUnPacket(const std::vector<std::string> &ancoTarFiles,
         const std::vector<int64_t> &ancoTarFileSizes, const std::vector<std::string> &ancoTarFileNames,
         const std::string &tempPath);
-    static AncoRestoreResult StartAncoMove(const std::vector<std::string> &ancoSourcePath,
-        const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats);
     static void AddAncoMovePathsAndClean(std::vector<std::string> &ancoSourcePath,
         std::vector<std::string> &ancoTargetPath, std::vector<StatInfo> &ancoStats);
     static AncoRestoreResult StartAncoMove();
