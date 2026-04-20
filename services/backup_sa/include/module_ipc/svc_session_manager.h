@@ -24,6 +24,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <shared_mutex>
 #include <vector>
 
@@ -100,6 +101,10 @@ public:
         std::string callerName {};
         std::string activeTime {};
     };
+    struct ImplEnhance {
+        uint32_t clientToken {0};
+        std::set<BundleName> backupExtNames;
+    };
 
 public:
     /**
@@ -138,7 +143,7 @@ public:
      * @param bundleName 调用者名称
      * @return ErrCode 调用者不是会话所有者
      */
-    ErrCode VerifyBundleName(std::string &bundleName);
+    ErrCode VerifyBundleName(std::string &bundleName, bool isStrict = true);
 
     /**
      * @brief 获取IServiceReverse
@@ -651,6 +656,9 @@ private:
      */
     uint32_t CalAppProcessTime(const std::string &bundleName);
 
+    void CleanAndCheckIfNeedWaitInner(ErrCode &ret, std::vector<std::string> &bundleNameList,
+        std::vector<std::string> &cleaned);
+
 public:
     /**
      * @brief Construct a new Svc Session object
@@ -668,9 +676,11 @@ public:
 
 private:
     mutable std::shared_mutex lock_;
+    mutable std::shared_mutex lockEnhance_;
     wptr<Service> reversePtr_;
     sptr<SvcDeathRecipient> deathRecipient_;
     Impl impl_;
+    ImplEnhance implEnhance_;
     uint32_t extConnectNum_ {0};
     Utils::Timer timer_ {"backupTimer"};
     std::atomic<int> sessionCnt_ {0};

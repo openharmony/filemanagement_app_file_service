@@ -556,3 +556,41 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetDelayTime_0100, testing
     }
     GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_GetDelayTime_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_sa_session_VerifyBundleName_0101
+ * @tc.name: SUB_backup_sa_session_VerifyBundleName_0101
+ * @tc.desc: 测试 VerifyBundleName 检验调用者给定的bundleName是否是有效的
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_VerifyBundleName_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_VerifyBundleName_0101";
+    try {
+        string bundleName = BUNDLE_NAME;
+        EXPECT_TRUE(sessionManagerPtr_ != nullptr);
+        sessionManagerPtr_->implEnhance_.clientToken = 0;
+        ErrCode ret = sessionManagerPtr_->VerifyBundleName(bundleName, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        sessionManagerPtr_->implEnhance_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->implEnhance_.backupExtNames.clear();
+        ret = sessionManagerPtr_->VerifyBundleName(bundleName, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+
+        sessionManagerPtr_->implEnhance_.clientToken = CLIENT_TOKEN_ID;
+        sessionManagerPtr_->implEnhance_.backupExtNames.insert(BUNDLE_NAME);
+        ret = sessionManagerPtr_->VerifyBundleName(bundleName, false);
+        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+
+        sessionManagerPtr_->implEnhance_.clientToken = 0;
+        sessionManagerPtr_->implEnhance_.backupExtNames.clear();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by VerifyBundleName.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_VerifyBundleName_0101";
+}

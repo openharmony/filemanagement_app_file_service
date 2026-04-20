@@ -34,9 +34,9 @@ ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, b
     return BackupSvcSessionManager::session->Deactive(remoteInAction, force);
 }
 
-ErrCode SvcSessionManager::VerifyBundleName(string &bundleName)
+ErrCode SvcSessionManager::VerifyBundleName(string &bundleName, bool isStrict)
 {
-    return BackupSvcSessionManager::session->VerifyBundleName(bundleName);
+    return BackupSvcSessionManager::session->VerifyBundleName(bundleName, isStrict);
 }
 
 sptr<IServiceReverse> SvcSessionManager::GetServiceReverseProxy()

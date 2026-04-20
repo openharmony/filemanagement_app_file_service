@@ -493,7 +493,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppFileReady_0100, testing::ext::Te
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         int fd = 1;
         auto ret = service->AppFileReady(fileName, fd, 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
@@ -502,7 +502,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppFileReady_0100, testing::ext::Te
         EXPECT_CALL(*token, GetTokenType(_))
             .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_, _)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
         ret = service->AppFileReady(fileName, fd, 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
     } catch (...) {
@@ -530,7 +530,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppDone_0100, testing::ext::TestSiz
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         auto ret = service->AppDone(0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
@@ -617,7 +617,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_OnBackupExtensionDied_0100, testing
         EXPECT_CALL(*sessionMock, GetScenario())
             .WillOnce(Return(IServiceReverseType::Scenario::CLEAN))
             .WillOnce(Return(IServiceReverseType::Scenario::CLEAN));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         EXPECT_CALL(*sessionMock, StopFwkTimer(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
             return true;
@@ -1140,7 +1140,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalFileReady_0100, testi
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         int fd = 1;
         auto ret = service->AppIncrementalFileReady(fileName, fd, fd, 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
@@ -1149,7 +1149,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalFileReady_0100, testi
         EXPECT_CALL(*token, GetTokenType(_))
             .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_, _)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
         ret = service->AppIncrementalFileReady(fileName, fd, fd, 0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
     } catch (...) {
@@ -1178,7 +1178,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalDone_0100, testing::e
             .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
         auto ret = service->AppIncrementalDone(0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
@@ -1186,7 +1186,7 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_AppIncrementalDone_0100, testing::e
         EXPECT_CALL(*token, GetTokenType(_))
             .WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
-        EXPECT_CALL(*sessionMock, VerifyBundleName(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
+        EXPECT_CALL(*sessionMock, VerifyBundleName(_, _)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT)));
         ret = service->AppIncrementalDone(0);
         EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
     } catch (...) {

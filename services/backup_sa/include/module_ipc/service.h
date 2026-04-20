@@ -436,7 +436,7 @@ private:
      *
      * @return ErrCode
      */
-    ErrCode VerifyCallerAndGetCallerName(std::string &bundleName);
+    ErrCode VerifyCallerAndGetCallerName(std::string &bundleName, bool isStrict = true);
 
     /**
      * @brief 清除Session Sched相关资源

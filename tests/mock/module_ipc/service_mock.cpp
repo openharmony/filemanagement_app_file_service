@@ -47,7 +47,7 @@ ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)
 
 void Service::StopAll(const wptr<IRemoteObject> &obj, bool force) {}
 
-ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName)
+ErrCode Service::VerifyCallerAndGetCallerName(std::string &bundleName, bool isStrict)
 {
     return BError(BError::Codes::OK);
 }
