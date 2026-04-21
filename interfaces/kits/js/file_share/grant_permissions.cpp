@@ -752,11 +752,11 @@ napi_value GrantSharedDirectoryPermission(napi_env env, napi_callback_info info)
     }
 
     LOGI("GrantSharedDirectoryPermission called via NAPI");
-    
+
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(0)) {
         LOGE("GrantSharedDirectoryPermission Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
+        NError(E_PERM).ThrowErr(env);
         return nullptr;
     }
 
@@ -784,11 +784,11 @@ napi_value RevokeSharedDirectoryPermission(napi_env env, napi_callback_info info
     }
 
     LOGI("RevokeSharedDirectoryPermission called via NAPI");
-    
+
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(0)) {
         LOGE("RevokeSharedDirectoryPermission Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
+        NError(E_PERM).ThrowErr(env);
         return nullptr;
     }
 
@@ -818,7 +818,7 @@ napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info)
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(0)) {
         LOGE("GetSharedDirectoryInfo Number of arguments unmatched");
-        NError(E_PARAMS).ThrowErr(env);
+        NError(E_PERM).ThrowErr(env);
         return nullptr;
     }
 
@@ -835,12 +835,12 @@ napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info)
         int32_t ret = FilePermission::GetSharedDirectoryInfo(*resultData);
         return NError(ret);
     };
-    
+
     auto cbCompl = [resultData](napi_env env, NError err) -> NVal {
         if (err) {
             return {env, err.GetNapiErr(env)};
         }
-        
+
         // Convert result to JavaScript array
         napi_value res = nullptr;
         napi_status status = napi_create_array(env, &res);
@@ -848,7 +848,7 @@ napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info)
             LOGE("Failed to create array for GetSharedDirectoryInfo");
             return NVal::CreateUndefined(env);
         }
-        
+
         size_t index = 0;
         for (const auto &info : *resultData) {
             NVal obj = NVal::CreateObject(env);
@@ -864,7 +864,7 @@ napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info)
         }
         return NVal(env, res);
     };
-    
+
     const string procedureName = "get_shared_directory_info";
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
