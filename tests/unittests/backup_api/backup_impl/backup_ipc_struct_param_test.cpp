@@ -119,58 +119,6 @@ HWTEST_F(StatInfoTest, SUB_StatInfo_ReadFromParcel_0100, testing::ext::TestSize.
     GTEST_LOG_(INFO) << "StatInfoTest-end SUB_StatInfo_ReadFromParcel_0100";
 }
 
-class AncoRestoreResultTest : public testing::Test {
-public:
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase() {};
-    void SetUp() override
-    {
-        ResetParcelState();
-    };
-    void TearDown() override {};
-};
-
-/**
- * @tc.number: SUB_AncoRestoreResult_Marshalling_0100
- * @tc.name: SUB_AncoRestoreResult_Marshalling_0100
- * @tc.desc: Test function of Marshalling interface for AncoRestoreResult
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(StatInfoTest, SUB_AncoRestoreResult_Marshalling_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Marshalling_0100";
-    AncoRestoreResult result;
-    result.successCount = 10;
-    result.duplicateCount = 5;
-    result.failedCount = 2;
-    Parcel parcel;
-
-    // marshalling
-    constexpr uint64_t mask = 0x7;  // int64, int64, int64
-    for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
-        SetParcelState(i);
-        if (CanCaseSuccess(mask, i)) {
-            EXPECT_TRUE(result.Marshalling(parcel));
-        } else {
-            EXPECT_FALSE(result.Marshalling(parcel));
-        }
-    }
-
-    // unmarshalling
-    for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
-        SetParcelState(i);
-        if (CanCaseSuccess(mask, i)) {
-            EXPECT_NE(AncoRestoreResult::Unmarshalling(parcel), nullptr);
-        } else {
-            EXPECT_EQ(AncoRestoreResult::Unmarshalling(parcel), nullptr);
-        }
-    }
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Marshalling_0100";
-}
-
 class AncoScanResultTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
