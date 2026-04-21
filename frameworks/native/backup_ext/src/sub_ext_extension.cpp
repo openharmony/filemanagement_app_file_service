@@ -221,8 +221,6 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
         }
         std::string sandboxRoot = std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME) + BConstants::BACKSLASH;
         if (canonicalPath.rfind(sandboxRoot, 0) != 0) {
-            HILOGW("CheckRestoreFileInfos skip, path outside sandbox: %{public}s",
-                GetAnonyPath(canonicalPath).c_str());
             continue;
         }
         if (lstat(it.first.c_str(), &curFileStat) != 0) {
