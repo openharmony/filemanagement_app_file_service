@@ -608,6 +608,10 @@ void BDir::ClearDirectory(const std::string path)
         HILOGE("Failed to access dir, errno = %{public}d", errno);
         return;
     }
+    if (!std::filesystem::is_directory(path)) {
+        HILOGE("Path is not a directory");
+        return;
+    }
     try {
         for (const auto& entry : std::filesystem::directory_iterator(path)) {
             std::filesystem::remove_all(entry.path());

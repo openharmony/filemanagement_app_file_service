@@ -623,7 +623,7 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0300, testing::ext::TestSize.Level1)
 /**
  * @tc.number: SUB_backup_b_dir_ClearDirectory_0400
  * @tc.name: b_dir_ClearDirectory_0400
- * @tc.desc: Test function of ClearDirectory interface for Exception (Passing a file path)
+ * @tc.desc: Test function of ClearDirectory interface for Non-Directory Path
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -639,6 +639,8 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0400, testing::ext::TestSize.Level1)
         
         system((std::string("touch ") + filePath).c_str());
         
+        // Passing a file path to ClearDirectory
+        // access(F_OK) passes, but is_directory check should fail and return early
         BDir::ClearDirectory(filePath);
         
         EXPECT_TRUE(true);
