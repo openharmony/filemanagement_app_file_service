@@ -86,7 +86,7 @@ ErrCode AncoRestoreCallback::ReportFileInfos(const std::map<std::string, int64_t
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
     for (const auto &[fileName, code] : endFileInfos) {
-        extensionPtr->errFileInfos_.emplace(fileName, static_cast<off_t>(code));
+        extensionPtr->endFileInfos_.emplace(fileName, static_cast<off_t>(code));
     }
     for (const auto &[fileName, codes] : errFileInfos) {
         std::vector<ErrCode> convertCodes;
