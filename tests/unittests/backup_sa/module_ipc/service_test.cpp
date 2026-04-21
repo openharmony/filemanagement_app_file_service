@@ -35,6 +35,7 @@
 #include "service.cpp"
 #include "sub_service.cpp"
 #include "service_enhance.cpp"
+#include "ienhance_service_mock.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -61,6 +62,8 @@ public:
         RunningLockMock::runninglock_ = runningLockMock_;
         servicePtr_->runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>(ERROR_OK);
 #endif
+        mockEnhanceService = new MockIEnhanceService();
+        EnhanceServiceManager::GetInstance().service_ = mockEnhanceService;
     };
     void TearDown()
     {
@@ -78,6 +81,9 @@ public:
         powerClientMock_ = nullptr;
         runningLockMock_ = nullptr;
 #endif
+        EnhanceServiceManager::GetInstance().service_ = nullptr;
+        delete mockEnhanceService;
+        mockEnhanceService = nullptr;
     };
 
     ErrCode Init(IServiceReverseType::Scenario scenario);
@@ -96,6 +102,7 @@ public:
 #endif
     static inline bool boolVal_ = false;
     static inline int intVal_ = 0;
+    static inline MockIEnhanceService* mockEnhanceService = nullptr;
 };
 
 void ServiceTest::SetUpTestCase(void)
@@ -479,6 +486,147 @@ HWTEST_F(ServiceTest, SUB_Service_AppFileReadyWithoutFd_0100, testing::ext::Test
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppFileReady_0103";
+}
+
+/**
+ * @tc.number: SUB_Service_AppAncoFileReady_0100
+ * @tc.name: SUB_Service_AppAncoFileReady_0100
+ * @tc.desc: 测试 AppAncoFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppAncoFileReady_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppAncoFileReady_0100";
+    try {
+        string fileName = "/manage.json";
+        string filePath = "1/manage.json";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        EXPECT_CALL(*mockEnhanceService, OpenAncoFileReadOnly(_)).WillRepeatedly(Invoke([&](const std::string &) {
+            errno = ERR_NO_PERMISSION;
+            return -1;
+        }));
+        auto ret = servicePtr_->AppAncoFileReady(fileName, filePath, false);
+        EXPECT_EQ(ret, ERR_NO_PERMISSION);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppAncoFileReady_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_AppAncoFileReady_0101
+ * @tc.name: SUB_Service_AppAncoFileReady_0101
+ * @tc.desc: 测试 AppAncoFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppAncoFileReady_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppAncoFileReady_0101";
+    try {
+        string fileName = "/manage.json";
+        string filePath = "1/manage.json";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = nullptr;
+        auto ret = servicePtr_->AppAncoFileReady(fileName, filePath, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+        servicePtr_->session_ = session_;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppAncoFileReady_0101";
+}
+
+/**
+ * @tc.number: SUB_Service_AppAncoFileReady_0102
+ * @tc.name: SUB_Service_AppAncoFileReady_0102
+ * @tc.desc: 测试 AppAncoFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppAncoFileReady_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppAncoFileReady_0102";
+    try {
+        string fileName = "/manage.json";
+        string filePath = "1/manage.json";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        EnhanceServiceManager::GetInstance().service_ = nullptr;
+        auto ret = servicePtr_->AppAncoFileReady(fileName, filePath, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+        EnhanceServiceManager::GetInstance().service_ = mockEnhanceService;
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppAncoFileReady_0102";
+}
+
+/**
+ * @tc.number: SUB_Service_AppAncoFileReady_0103
+ * @tc.name: SUB_Service_AppAncoFileReady_0103
+ * @tc.desc: 测试 AppAncoFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppAncoFileReady_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppAncoFileReady_0103";
+    try {
+        string fileName = "/manage.json";
+        string filePath = "1/manage.json";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        EXPECT_CALL(*mockEnhanceService, OpenAncoFileReadOnly(_)).WillRepeatedly(Invoke([&](const std::string &) {
+            errno = ERR_OK;
+            return -1;
+        }));
+        auto ret = servicePtr_->AppAncoFileReady(fileName, filePath, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppAncoFileReady_0103";
+}
+
+/**
+ * @tc.number: SUB_Service_AppAncoFileReady_0104
+ * @tc.name: SUB_Service_AppAncoFileReady_0104
+ * @tc.desc: 测试 AppAncoFileReady 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ServiceTest, SUB_Service_AppAncoFileReady_0104, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AppAncoFileReady_0104";
+    try {
+        string fileName = "/manage.json";
+        string filePath = "1/manage.json";
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        EXPECT_CALL(*mockEnhanceService, OpenAncoFileReadOnly(_)).WillRepeatedly(Invoke([&](const std::string &) {
+            errno = ERR_OK;
+            return 100;
+        }));
+        auto ret = servicePtr_->AppAncoFileReady(fileName, filePath, false);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by AppFileReady.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AppAncoFileReady_0104";
 }
 
 /**

@@ -338,6 +338,49 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CheckRstoreFileInfos_Test_0100, 
 }
 
 /**
+ * @tc.number: Ext_Extension_Sub_CheckRstoreFileInfos_Test_0200
+ * @tc.name: Ext_Extension_Sub_CheckRstoreFileInfos_Test_0200
+ * @tc.desc: 测试CheckRstoreFileInfos
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CheckRstoreFileInfos_Test_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_CheckRstoreFileInfos_Test_0200";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        tuple<bool, vector<string>> result;
+        std::vector<ErrCode> errCodes;
+
+        extExtension->endFileInfos_.clear();
+        extExtension->errFileInfos_.clear();
+        string tarName = PATH_BUNDLE_BACKUP_HOME + "/part0.tar";
+        extExtension->errFileInfos_[tarName] = errCodes;
+        result = extExtension->CheckRestoreFileInfos();
+        EXPECT_TRUE(std::get<0>(result));
+
+        extExtension->endFileInfos_.clear();
+        extExtension->errFileInfos_.clear();
+        extExtension->errFileInfos_[""] = errCodes;
+        result = extExtension->CheckRestoreFileInfos();
+        EXPECT_TRUE(std::get<0>(result));
+
+        extExtension->endFileInfos_.clear();
+        extExtension->errFileInfos_.clear();
+        extExtension->errFileInfos_["#"] = errCodes;
+        result = extExtension->CheckRestoreFileInfos();
+        EXPECT_FALSE(std::get<0>(result));
+
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_CheckRstoreFileInfos_Test_0200";
+}
+
+/**
  * @tc.number: Ext_Extension_Sub_OnRestoreCallback_Test_0100
  * @tc.name: Ext_Extension_Sub_OnRestoreCallback_Test_0100
  * @tc.desc: 测试OnRestoreCallback
@@ -1636,6 +1679,56 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Test_0301, testing::ext::TestSize.Le
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0301";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_0302
+ * @tc.name: SUB_Ext_Extension_0302
+ * @tc.desc: 测试 UpdateFileStat
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_0302, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin SUB_Ext_Extension_0302";
+    try {
+        std::string filePath;
+        StatInfo statInfo;
+        auto ret = backupCallback->UpdateFileStat(filePath, statInfo);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end SUB_Ext_Extension_0302";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_0303
+ * @tc.name: SUB_Ext_Extension_0303
+ * @tc.desc: 测试 UpdateFileStat
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_0303, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin SUB_Ext_Extension_0303";
+    try {
+        auto restoreCallback = sptr<AncoRestoreCallback>(new AncoRestoreCallback(
+            wptr<AncoRestoreCallback>(extExtension)));
+        std::map<std::string, int64_t> endFileInfos;
+        std::map<std::string, std::vector<int32_t>> errFileInfos;
+        auto ret = restoreCallback->ReportFileInfos(endFileInfos, errFileInfos);
+        EXPECT_EQ(ret, ErrCode(BError::Codes::OK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end SUB_Ext_Extension_0303";
 }
 
 #include "ext_extension_sub_ext_test.cpp"
