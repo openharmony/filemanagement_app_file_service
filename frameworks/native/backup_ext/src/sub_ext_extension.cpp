@@ -183,6 +183,10 @@ void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
     auto idxFileInfos = GetIdxFileInfos(isSpecialVersion);
     struct stat attr;
     for (const auto &it : idxFileInfos) {
+        std::string sandboxRoot = std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME) + BConstants::BACKSLASH;
+        if (it.first.rfind(sandboxRoot, 0) != 0) {
+            continue;
+        }
         if (it.first.size() >= PATH_MAX || stat(it.first.data(), &attr) == -1) {
             HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(it.first).c_str(),
                 errno);

@@ -80,13 +80,14 @@ ErrCode AncoBackupCallback::UpdateFileStat(const std::string &filePath, const St
 ErrCode AncoRestoreCallback::ReportFileInfos(const std::map<std::string, int64_t> &endFileInfos,
     const std::map<std::string, std::vector<int32_t>> &errFileInfos)
 {
-    HILOGD("ReportFileInfos enter");
+    HILOGI("ReportFileInfos: endFileInfos size: %{public}zu, errFileInfos size: %{public}zu",
+        endFileInfos.size(), errFileInfos.size());
     auto extensionPtr = extension_.promote();
     if (!extensionPtr) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
-    for (const auto &[fileName, code] : endFileInfos) {
-        extensionPtr->endFileInfos_.emplace(fileName, static_cast<off_t>(code));
+    for (const auto &[fileName, size] : endFileInfos) {
+        extensionPtr->endFileInfos_.emplace(fileName, static_cast<off_t>(size));
     }
     for (const auto &[fileName, codes] : errFileInfos) {
         std::vector<ErrCode> convertCodes;
