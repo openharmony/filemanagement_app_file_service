@@ -214,7 +214,15 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
     vector<string> errFiles;
     struct stat curFileStat {};
     for (const auto &it : endFileInfos_) {
-        if (it.first.find(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)) == std::string::npos) {
+        std::string canonicalPath = BExcepUltils::Canonicalize(it.first);
+        if (canonicalPath.empty()) {
+            HILOGW("CheckRestoreFileInfos skip, invalid path: %{public}s", GetAnonyPath(it.first).c_str());
+            continue;
+        }
+        std::string sandboxRoot = std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME);
+        if (canonicalPath.rfind(sandboxRoot, 0) != 0) {
+            HILOGW("CheckRestoreFileInfos skip, path outside sandbox: %{public}s",
+                GetAnonyPath(canonicalPath).c_str());
             continue;
         }
         if (lstat(it.first.c_str(), &curFileStat) != 0) {

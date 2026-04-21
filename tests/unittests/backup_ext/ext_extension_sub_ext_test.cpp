@@ -265,15 +265,15 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsA
     std::vector<StatInfo> ancoStats;
 
     ServiceClient::serviceProxy_ = nullptr;
-    AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_NO_THROW(AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats));
 
     ServiceClient::serviceProxy_ = proxy;
     EXPECT_CALL(*proxy, AddAncoMovePaths(_, _, _)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
-    AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_NO_THROW(AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats));
 
     ancoSourcePath.resize(1);
     EXPECT_CALL(*proxy, AddAncoMovePaths(_, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
-    AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_NO_THROW(AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats));
     EXPECT_EQ(ancoSourcePath.size(), 0);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePathsAndClean_0000";
 }

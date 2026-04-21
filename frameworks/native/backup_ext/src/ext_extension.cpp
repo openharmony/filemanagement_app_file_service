@@ -73,7 +73,7 @@ const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACK
                                              append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
 const string MEDIA_LIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 const string FILE_MANAGER_BUNDLE_NAME = "com.ohos.filepicker";
-const int MAX_IPC_SEND_DATA_SIZE = static_cast<int>(200 * 1024 * 0.8);
+const size_t MAX_IPC_SEND_DATA_SIZE = static_cast<int>(200 * 1024 * 0.8);
 using namespace std;
 
 static void RecordDoRestoreRes(const std::string &bundleName, const std::string &func,
