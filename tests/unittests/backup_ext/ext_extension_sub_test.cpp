@@ -108,8 +108,7 @@ void ExtExtensionSubTest::SetUpTestCase(void)
     proxy = sptr<ServiceProxyMock>(new ServiceProxyMock(nullptr));
     ServiceClient::serviceProxy_ = proxy;
  
-    backupCallback = sptr<AncoBackupCallback>(new AncoBackupCallback(
-        wptr<BackupExtExtension>(extExtension)));
+    backupCallback = sptr<AncoBackupCallback>(new AncoBackupCallback(extExtension));
 };
 
 void ExtExtensionSubTest::TearDownTestCase(void)
@@ -1718,8 +1717,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_0303, testing::ext::TestSize.Lev
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin SUB_Ext_Extension_0303";
     try {
-        auto restoreCallback = sptr<AncoRestoreCallback>(new AncoRestoreCallback(
-            wptr<AncoRestoreCallback>(extExtension)));
+        auto restoreCallback = sptr<AncoRestoreCallback>(new AncoRestoreCallback(extExtension));
         std::map<std::string, int64_t> endFileInfos;
         std::map<std::string, std::vector<int32_t>> errFileInfos;
         auto ret = restoreCallback->ReportFileInfos(endFileInfos, errFileInfos);
