@@ -22,6 +22,7 @@
 #include <errors.h>
 #include <file_ex.h>
 #include <gtest/gtest.h>
+#include <filesystem>
 #include <memory>
 
 #include "b_filesystem/b_dir.h"
@@ -537,4 +538,115 @@ HWTEST_F(BDirTest, PROCESS_FILE_TEST_001, testing::ext::TestSize.Level1) {
 
     GTEST_LOG_(INFO) << "BDirTest-end: PROCESS_FILE_TEST_001";
 }
+
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0100
+ * @tc.name: b_dir_ClearDirectory_0100
+ * @tc.desc: Test function of ClearDirectory interface for Invalid Path
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0100";
+    try {
+        std::string invalidPath = "../test/../test1";
+        BDir::ClearDirectory(invalidPath);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0200
+ * @tc.name: b_dir_ClearDirectory_0200
+ * @tc.desc: Test function of ClearDirectory interface for Non-existent Dir
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0200";
+    try {
+        TestManager tm("b_dir_ClearDirectory_0200");
+        std::string nonExistentPath = tm.GetRootDirCurTest() + "non_existent_dir";
+        BDir::ClearDirectory(nonExistentPath);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0300
+ * @tc.name: b_dir_ClearDirectory_0300
+ * @tc.desc: Test function of ClearDirectory interface for Success
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0300";
+    try {
+        TestManager tm("b_dir_ClearDirectory_0300");
+        std::string targetDir = tm.GetRootDirCurTest();
+        
+        system((std::string("mkdir -p ") + targetDir + "sub").c_str());
+        system((std::string("touch ") + targetDir + "file.txt").c_str());
+        
+        EXPECT_TRUE(std::filesystem::exists(targetDir + "sub"));
+        EXPECT_TRUE(std::filesystem::exists(targetDir + "file.txt"));
+
+        BDir::ClearDirectory(targetDir);
+
+        EXPECT_FALSE(std::filesystem::exists(targetDir + "sub"));
+        EXPECT_FALSE(std::filesystem::exists(targetDir + "file.txt"));
+        EXPECT_TRUE(std::filesystem::exists(targetDir));
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0400
+ * @tc.name: b_dir_ClearDirectory_0400
+ * @tc.desc: Test function of ClearDirectory interface for Exception (Passing a file path)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0400";
+    try {
+        TestManager tm("b_dir_ClearDirectory_0400");
+        std::string targetDir = tm.GetRootDirCurTest();
+        std::string filePath = targetDir + "test_file.txt";
+        
+        system((std::string("touch ") + filePath).c_str());
+        
+        BDir::ClearDirectory(filePath);
+        
+        EXPECT_TRUE(true);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0400";
+}
+
 } // namespace OHOS::FileManagement::Backup

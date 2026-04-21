@@ -597,4 +597,24 @@ bool BDir::IsDirsMatch(const vector<string> &excludePaths, const string &path)
     }
     return false;
 }
+
+void BDir::ClearDirectory(const std::string path)
+{
+    if (!IsFilePathValid(path)) {
+        HILOGE("Invalid path for clearing Dir");
+        return;
+    }
+    if (access(path.c_str(), F_OK) != ERR_OK) {
+        HILOGE("Failed to access dir, errno = %{public}d", errno);
+        return;
+    }
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(path)) {
+            std::filesystem::remove_all(entry.path());
+        }
+        HILOGD("Clear Directory finished");
+    } catch (const std::filesystem::filesystem_error &e) {
+        HILOGE("Clear Directory failed: %{public}s", e.what());
+    }
+}
 } // namespace OHOS::FileManagement::Backup
