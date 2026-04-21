@@ -140,7 +140,7 @@ ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
     }
 }
 
-ErrCode Service::CreateAncoRestoreTask()
+ErrCode Service::CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback)
 {
     try {
         string callerName;
@@ -154,7 +154,7 @@ ErrCode Service::CreateAncoRestoreTask()
             HILOGW("CreateAncoRestoreTask, enhance service is not loaded");
             return BError(BError::Codes::OK);
         }
-        return enhanceService->CreateAncoRestoreTask(callerName);
+        return enhanceService->CreateAncoRestoreTask(callerName, callback);
     } catch (const BError &e) {
         return e.GetCode();
     } catch (...) {

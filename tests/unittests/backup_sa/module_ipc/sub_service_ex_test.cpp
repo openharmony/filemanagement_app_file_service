@@ -397,13 +397,13 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoPacket_0003, testing::ext::TestSize.L
 HWTEST_F(ServiceTest, SUB_Service_CreateAncoRestoreTask_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_CreateAncoRestoreTask_0000";
-    EXPECT_CALL(*mockEnhanceService, CreateAncoRestoreTask(_)).WillOnce(Return(BError(BError::Codes::OK)));
+    EXPECT_CALL(*mockEnhanceService, CreateAncoRestoreTask(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    EXPECT_EQ(service->CreateAncoRestoreTask(), BError(BError::Codes::OK));
+    EXPECT_EQ(service->CreateAncoRestoreTask(nullptr), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CreateAncoRestoreTask_0000";
 }
  
@@ -419,13 +419,13 @@ HWTEST_F(ServiceTest, SUB_Service_CreateAncoRestoreTask_0000, testing::ext::Test
 HWTEST_F(ServiceTest, SUB_Service_CreateAncoRestoreTask_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_CreateAncoRestoreTask_0001";
-    EXPECT_CALL(*mockEnhanceService, CreateAncoRestoreTask(_)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+    EXPECT_CALL(*mockEnhanceService, CreateAncoRestoreTask(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    EXPECT_NE(service->CreateAncoRestoreTask(), BError(BError::Codes::OK));
+    EXPECT_NE(service->CreateAncoRestoreTask(nullptr), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CreateAncoRestoreTask_0001";
 }
  
@@ -444,7 +444,7 @@ HWTEST_F(ServiceTest, SUB_Service_CreateAncoRestoreTask_0002, testing::ext::Test
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
  
-    EXPECT_NE(service->CreateAncoRestoreTask(), BError(BError::Codes::OK));
+    EXPECT_NE(service->CreateAncoRestoreTask(nullptr), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CreateAncoRestoreTask_0002";
 }
  
@@ -467,7 +467,7 @@ HWTEST_F(ServiceTest, SUB_Service_CreateAncoRestoreTask_0003, testing::ext::Test
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    EXPECT_EQ(service->CreateAncoRestoreTask(), BError(BError::Codes::OK));
+    EXPECT_EQ(service->CreateAncoRestoreTask(nullptr), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CreateAncoRestoreTask_0003";
 }

@@ -157,7 +157,7 @@ public:
         const std::vector<std::string> &excludes) override;
     ErrCode StartAncoScanAllDirs(AncoScanResult &scanResult) override;
     ErrCode StartAncoPacket(uint64_t &smallFileCount) override;
-    ErrCode CreateAncoRestoreTask() override;
+    ErrCode CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback) override;
     ErrCode DestroyAncoRestoreTask() override;
     ErrCode StartAncoUnPacket(const std::vector<std::string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
         const std::vector<std::string> &tarFileNames, const std::string &rootPath) override;

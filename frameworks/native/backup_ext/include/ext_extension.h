@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 
 #include "anco_backup_callback_stub.h"
+#include "anco_restore_callback_stub.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_json/b_json_entity_ext_manage.h"
 #include "b_json/b_report_entity.h"
@@ -56,10 +57,21 @@ public:
         const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo) override;
     ErrCode OnTarFileReadyCallback(
         const std::string &fileName, const std::string &filePath, const StatInfo &statInfo) override;
-ErrCode WaitForPacketFlag() override;
+    ErrCode WaitForPacketFlag() override;
     ErrCode ReportErrFileByProc(const std::string &msg, int32_t err) override;
     ErrCode UpdateFileStat(const std::string &filePath, const StatInfo &statInfo) override;
 
+private:
+    wptr<BackupExtExtension> extension_;
+};
+class AncoRestoreCallback : public AncoRestoreCallbackStub {
+public:
+    AncoRestoreCallback(wptr<BackupExtExtension> extension) : extension_(extension)
+    {}
+    ~AncoRestoreCallback() = default;
+
+    ErrCode ReportFileInfos(const std::map<std::string, int64_t> &endFileInfos,
+        const std::map<std::string, std::vector<int32_t>> &errFileInfos) override;
 private:
     wptr<BackupExtExtension> extension_;
 };
@@ -74,7 +86,7 @@ public:
 };
 class AncoIncrementalRestoreHelper {
 public:
-    static void CreateAncoRestoreTask();
+    static void CreateAncoRestoreTask(wptr<BackupExtExtension> extension);
     static void DestroyAncoRestoreTask();
     static ErrCode StartAncoUnPacket(const std::vector<std::string> &ancoTarFiles,
         const std::vector<int64_t> &ancoTarFileSizes, const std::vector<std::string> &ancoTarFileNames,
@@ -88,6 +100,7 @@ using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
 
 class BackupExtExtension : public ExtensionStub {
     friend class AncoBackupCallback;
+    friend class AncoRestoreCallback;
 public:
     ErrCode GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int& fd) override;
     ErrCode HandleClear() override;

@@ -102,7 +102,7 @@ public:
         const std::vector<std::string> &excludes) = 0;
     virtual ErrCode StartAncoScanAllDirs(AncoScanResult &scanResult) = 0;
     virtual ErrCode StartAncoPacket(uint64_t &smallFileCount) = 0;
-    virtual ErrCode CreateAncoRestoreTask() = 0;
+    virtual ErrCode CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback) = 0;
     virtual ErrCode DestroyAncoRestoreTask() = 0;
     virtual ErrCode StartAncoUnPacket(const std::vector<std::string> &tarFiles,
         const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames,
@@ -192,7 +192,7 @@ public:
         const std::vector<std::string> &));
     MOCK_METHOD(ErrCode, StartAncoScanAllDirs, (AncoScanResult &));
     MOCK_METHOD(ErrCode, StartAncoPacket, (uint64_t &));
-    MOCK_METHOD(ErrCode, CreateAncoRestoreTask, ());
+    MOCK_METHOD(ErrCode, CreateAncoRestoreTask, (const sptr<IAncoRestoreCallback> &));
     MOCK_METHOD(ErrCode, DestroyAncoRestoreTask, ());
     MOCK_METHOD(ErrCode, StartAncoUnPacket,
         (const std::vector<std::string> &, const std::vector<int64_t> &, const std::vector<std::string> &,
@@ -632,9 +632,9 @@ ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
     return BService::serviceMock->StartAncoPacket(smallFileCount);
 }
  
-ErrCode Service::CreateAncoRestoreTask()
+ErrCode Service::CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback)
 {
-    return BService::serviceMock->CreateAncoRestoreTask();
+    return BService::serviceMock->CreateAncoRestoreTask(callback);
 }
  
 ErrCode Service::DestroyAncoRestoreTask()

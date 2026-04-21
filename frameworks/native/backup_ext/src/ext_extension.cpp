@@ -1339,8 +1339,6 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
     }
     ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove();
-    endFileInfos_.merge(ancoRestoreRes_.endFileInfos);
-    errFileInfos_.merge(ancoRestoreRes_.errFileInfos);
     auto end = std::chrono::system_clock::now();
     radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     HILOGI("End Restore Big Files");
@@ -1475,7 +1473,6 @@ int BackupExtExtension::DealIncreRestoreBigAndTarFile()
     if (isDebug_) {
         CheckTmpDirFileInfos();
     }
-    AncoIncrementalRestoreHelper::CreateAncoRestoreTask();
     auto startTime = std::chrono::system_clock::now();
     // 解压
     int ret = ERR_OK;
@@ -1510,6 +1507,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
+            AncoIncrementalRestoreHelper::CreateAncoRestoreTask(obj);
             int ret = ptr->DealIncreRestoreBigAndTarFile();
             if (ret == ERR_OK) {
                 HILOGI("after extra, do incremental restore.");

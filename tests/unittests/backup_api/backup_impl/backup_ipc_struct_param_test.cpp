@@ -131,274 +131,44 @@ public:
 };
 
 /**
-* @tc.number: SUB_AncoRestoreResult_Marshalling_0100
-* @tc.name: SUB_AncoRestoreResult_Marshalling_0100
-* @tc.desc: Test function of Marshalling interface for SUCCESS.
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: I6F3GV
-*/
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Marshalling_0100, testing::ext::TestSize.Level1)
+ * @tc.number: SUB_AncoRestoreResult_Marshalling_0100
+ * @tc.name: SUB_AncoRestoreResult_Marshalling_0100
+ * @tc.desc: Test function of Marshalling interface for AncoRestoreResult
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(StatInfoTest, SUB_AncoRestoreResult_Marshalling_0100, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Marshalling_0100";
-    std::map<std::string, int64_t> endFileInfos;
-    std::map<std::string, std::vector<ErrCode>> errFileInfos;
-    std::vector<ErrCode> errCodes;
-    errCodes.push_back(BError(BError::Codes::OK));
-    endFileInfos.emplace("123", 123);
-    errFileInfos.emplace("123", errCodes);
-    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
+    AncoRestoreResult result;
+    result.successCount = 10;
+    result.duplicateCount = 5;
+    result.failedCount = 2;
     Parcel parcel;
+
     // marshalling
-    constexpr uint64_t mask1 = 0x1e; // string, int64, uint64, int32
+    constexpr uint64_t mask = 0x7;  // int64, int64, int64
     for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
         SetParcelState(i);
-        if (CanCaseSuccess(mask1, i)) {
+        if (CanCaseSuccess(mask, i)) {
             EXPECT_TRUE(result.Marshalling(parcel));
         } else {
             EXPECT_FALSE(result.Marshalling(parcel));
         }
     }
+
     // unmarshalling
-    constexpr uint64_t mask2 = 0xc; // int64, uint64
     for (uint64_t i = 0; i < MAX_STATUS_NUM; i++) {
         SetParcelState(i);
-        if (CanCaseSuccess(mask2, i)) {
-            EXPECT_NE(result.Unmarshalling(parcel), nullptr);
+        if (CanCaseSuccess(mask, i)) {
+            EXPECT_NE(AncoRestoreResult::Unmarshalling(parcel), nullptr);
         } else {
-            EXPECT_EQ(result.Unmarshalling(parcel), nullptr);
+            EXPECT_EQ(AncoRestoreResult::Unmarshalling(parcel), nullptr);
         }
     }
     GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Marshalling_0100";
-}
-
-/**
-* @tc.number: SUB_AncoRestoreResult_Marshalling_0101
-* @tc.name: SUB_AncoRestoreResult_Marshalling_0101
-* @tc.desc: Test function of Marshalling interface for FAILURE.
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: I6F3GV
-*/
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Marshalling_0101, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Marshalling_0101";
-    std::map<std::string, int64_t> endFileInfos;
-    std::map<std::string, std::vector<ErrCode>> errFileInfos;
-    std::vector<ErrCode> errCodes;
-    errCodes.push_back(BError(BError::Codes::OK));
-    endFileInfos.emplace("123", 123);
-    errFileInfos.emplace("123", errCodes);
-    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
-    Parcel parcel;
-    parcel.SetEasyMode(false);
-    // marshalling
-    std::vector<bool> sequence = {
-        true, // WriteInt64
-        true, // WriteInt64
-        true, // WriteInt64
-        true, // WriteMap - WriteUint64
-        true, // WriteMap - WriteString
-        true, // WriteMap - WriteInt64
-        false, // WriteMap2 - WriteUint64
-    };
-    SetSpecialParcelSequence(sequence);
-    EXPECT_NE(result.Marshalling(parcel), true);
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Marshalling_0101";
-}
-
-/**
-* @tc.number: SUB_AncoRestoreResult_Marshalling_0102
-* @tc.name: SUB_AncoRestoreResult_Marshalling_0102
-* @tc.desc: Test function of Marshalling interface for FAILURE.
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: I6F3GV
-*/
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_Marshalling_0102, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_Marshalling_0102";
-    std::map<std::string, int64_t> endFileInfos;
-    std::map<std::string, std::vector<ErrCode>> errFileInfos;
-    std::vector<ErrCode> errCodes;
-    errCodes.push_back(BError(BError::Codes::OK));
-    endFileInfos.emplace("123", 123);
-    errFileInfos.emplace("123", errCodes);
-    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
-    Parcel parcel;
-    parcel.SetEasyMode(false);
-    // marshalling
-    std::vector<bool> sequence = {
-        true, // WriteInt64
-        true, // WriteInt64
-        true, // WriteInt64
-        true, // WriteMap - WriteUint64
-        true, // WriteMap - WriteString
-        true, // WriteMap - WriteInt64
-        true, // WriteMap2 - WriteUint64
-        true, // WriteMap2 - WriteString
-        false, // WriteVector - WriteUint64
-    };
-    SetSpecialParcelSequence(sequence);
-    EXPECT_NE(result.Marshalling(parcel), true);
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_Marshalling_0102";
-}
-
-/**
-* @tc.number: SUB_AncoRestoreResult_ReadFromParcel_0100
-* @tc.name: SUB_AncoRestoreResult_ReadFromParcel_0100
-* @tc.desc: Test function of ReadFromParcel interface for SUCCESS.
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: I6F3GV
-*/
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ReadFromParcel_0100";
-    std::map<std::string, int64_t> endFileInfos;
-    std::map<std::string, std::vector<ErrCode>> errFileInfos;
-    std::vector<ErrCode> errCodes;
-    errCodes.push_back(BError(BError::Codes::OK));
-    endFileInfos.emplace("123", 123);
-    errFileInfos.emplace("123", errCodes);
-    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
-    Parcel parcel;
-    parcel.SetEasyMode(false);
-    // marshalling
-    EXPECT_TRUE(result.Marshalling(parcel));
-    // unmarshalling
-    AncoRestoreResult tempRes;
-    tempRes.ReadFromParcel(parcel);
-    EXPECT_EQ(tempRes.successCount, result.successCount);
-    EXPECT_EQ(tempRes.duplicateCount, result.duplicateCount);
-    EXPECT_EQ(tempRes.failedCount, result.failedCount);
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ReadFromParcel_0100";
-}
-
-/**
-* @tc.number: SUB_AncoRestoreResult_ReadFromParcel_0101
-* @tc.name: SUB_AncoRestoreResult_ReadFromParcel_0101
-* @tc.desc: Test function of ReadFromParcel interface for FAILURE.
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: I6F3GV
-*/
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0101, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ReadFromParcel_0101";
-    std::map<std::string, int64_t> endFileInfos;
-    std::map<std::string, std::vector<ErrCode>> errFileInfos;
-    std::vector<ErrCode> errCodes;
-    errCodes.push_back(BError(BError::Codes::OK));
-    endFileInfos.emplace("123", 123);
-    errFileInfos.emplace("123", errCodes);
-    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
-    Parcel parcel;
-    parcel.SetEasyMode(false);
-    // marshalling
-    EXPECT_TRUE(result.Marshalling(parcel));
-    // unmarshalling
-    std::vector<bool> sequence = {
-        true, // ReadInt64
-        true, // ReadInt64
-        true, // ReadInt64
-        true, // ReadMap - ReadUint64
-        true, // ReadMap - ReadString
-        true, // ReadMap - ReadInt64
-        false, // ReadMap2 - ReadUint64
-    };
-    SetSpecialParcelSequence(sequence);
-    AncoRestoreResult tempRes;
-    EXPECT_EQ(tempRes.Unmarshalling(parcel), nullptr);
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ReadFromParcel_0101";
-}
-
-/**
-* @tc.number: SUB_AncoRestoreResult_ReadFromParcel_0102
-* @tc.name: SUB_AncoRestoreResult_ReadFromParcel_0102
-* @tc.desc: Test function of ReadFromParcel interface for FAILURE.
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: I6F3GV
-*/
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0102, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ReadFromParcel_0102";
-    std::map<std::string, int64_t> endFileInfos;
-    std::map<std::string, std::vector<ErrCode>> errFileInfos;
-    std::vector<ErrCode> errCodes;
-    errCodes.push_back(BError(BError::Codes::OK));
-    endFileInfos.emplace("123", 123);
-    errFileInfos.emplace("123", errCodes);
-    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
-    Parcel parcel;
-    parcel.SetEasyMode(false);
-    // marshalling
-    EXPECT_TRUE(result.Marshalling(parcel));
-    // unmarshalling
-    std::vector<bool> sequence = {
-        true, // ReadInt64
-        true, // ReadInt64
-        true, // ReadInt64
-        true, // ReadMap - ReadUint64
-        true, // ReadMap - ReadString
-        true, // ReadMap - ReadInt64
-        true, // ReadMap2 - ReadUint64
-        true, // ReadMap2 - ReadString
-        false, // ReadVector - ReadUint64
-    };
-    SetSpecialParcelSequence(sequence);
-    AncoRestoreResult tempRes;
-    EXPECT_EQ(tempRes.Unmarshalling(parcel), nullptr);
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ReadFromParcel_0102";
-}
-
-/**
-* @tc.number: SUB_AncoRestoreResult_ReadFromParcel_0103
-* @tc.name: SUB_AncoRestoreResult_ReadFromParcel_0103
-* @tc.desc: Test function of ReadFromParcel interface for FAILURE.
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: I6F3GV
-*/
-HWTEST_F(AncoRestoreResultTest, SUB_AncoRestoreResult_ReadFromParcel_0103, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-begin SUB_AncoRestoreResult_ReadFromParcel_0103";
-    std::map<std::string, int64_t> endFileInfos;
-    std::map<std::string, std::vector<ErrCode>> errFileInfos;
-    std::vector<ErrCode> errCodes;
-    errCodes.push_back(BError(BError::Codes::OK));
-    endFileInfos.emplace("123", 123);
-    errFileInfos.emplace("123", errCodes);
-    AncoRestoreResult result(1, 2, 3, endFileInfos, errFileInfos);
-    Parcel parcel;
-    parcel.SetEasyMode(false);
-    // marshalling
-    EXPECT_TRUE(result.Marshalling(parcel));
-    // unmarshalling
-    std::vector<bool> sequence = {
-        true, // ReadInt64
-        true, // ReadInt64
-        true, // ReadInt64
-        true, // ReadMap - ReadUint64
-        true, // ReadMap - ReadString
-        true, // ReadMap - ReadInt64
-        true, // ReadMap2 - ReadUint64
-        true, // ReadMap2 - ReadString
-        true, // ReadVector - ReadUint64
-        false, // ReadVector - ReadInt32
-    };
-    SetSpecialParcelSequence(sequence);
-    AncoRestoreResult tempRes;
-    EXPECT_EQ(tempRes.Unmarshalling(parcel), nullptr);
-    GTEST_LOG_(INFO) << "AncoRestoreResultTest-end SUB_AncoRestoreResult_ReadFromParcel_0103";
 }
 
 class AncoScanResultTest : public testing::Test {

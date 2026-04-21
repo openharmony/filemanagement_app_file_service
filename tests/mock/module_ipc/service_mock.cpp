@@ -510,7 +510,7 @@ ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
     return BError(BError::Codes::OK);
 }
  
-ErrCode Service::CreateAncoRestoreTask()
+ErrCode Service::CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback)
 {
     return BError(BError::Codes::OK);
 }
@@ -537,8 +537,6 @@ ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
     ancoRestoreRes.duplicateCount = 0;
     ancoRestoreRes.failedCount = 0;
     ancoRestoreRes.successCount = 0;
-    ancoRestoreRes.endFileInfos.clear();
-    ancoRestoreRes.errFileInfos.clear();
     return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

@@ -129,14 +129,14 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_CreateAncoRestore
 {
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_CreateAncoRestoreTask_0000";
     ServiceClient::serviceProxy_ = nullptr;
-    AncoIncrementalRestoreHelper::CreateAncoRestoreTask();
+    AncoIncrementalRestoreHelper::CreateAncoRestoreTask(nullptr);
 
     ServiceClient::serviceProxy_ = proxy;
-    EXPECT_CALL(*proxy, CreateAncoRestoreTask()).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
-    AncoIncrementalRestoreHelper::CreateAncoRestoreTask();
+    EXPECT_CALL(*proxy, CreateAncoRestoreTask(_)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
+    AncoIncrementalRestoreHelper::CreateAncoRestoreTask(nullptr);
 
-    EXPECT_CALL(*proxy, CreateAncoRestoreTask()).WillOnce(Return(BError(BError::Codes::OK)));
-    AncoIncrementalRestoreHelper::CreateAncoRestoreTask();
+    EXPECT_CALL(*proxy, CreateAncoRestoreTask(_)).WillOnce(Return(BError(BError::Codes::OK)));
+    AncoIncrementalRestoreHelper::CreateAncoRestoreTask(nullptr);
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_CreateAncoRestoreTask_0000";
 }

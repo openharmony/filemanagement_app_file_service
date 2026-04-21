@@ -77,6 +77,27 @@ ErrCode AncoBackupCallback::UpdateFileStat(const std::string &filePath, const St
     return ErrCode(BError::Codes::OK);
 }
 
+ErrCode AncoRestoreCallback::ReportFileInfos(const std::map<std::string, int64_t> &endFileInfos,
+    const std::map<std::string, std::vector<int32_t>> &errFileInfos)
+{
+    HILOGD("ReportFileInfos enter");
+    auto extensionPtr = extension_.promote();
+    if (!extensionPtr) {
+        return ErrCode(BError::Codes::EXT_INVAL_ARG);
+    }
+    for (const auto &[fileName, code] : endFileInfos) {
+        extensionPtr->errFileInfos_.emplace(fileName, static_cast<off_t>(code));
+    }
+    for (const auto &[fileName, codes] : errFileInfos) {
+        std::vector<ErrCode> convertCodes;
+        for (auto code : codes) {
+            convertCodes.push_back(code);
+        }
+        extensionPtr->errFileInfos_.emplace(fileName, convertCodes);
+    }
+    return ErrCode(BError::Codes::OK);
+}
+
 void AncoBackupHelper::CreateAncoBackupTask(wptr<BackupExtExtension> extension)
 {
     auto callback = sptr<AncoBackupCallback>::MakeSptr(extension);
@@ -147,14 +168,15 @@ void AncoBackupHelper::StartAncoPacket(uint64_t &ancoSmallFileCount)
     }
 }
 
-void AncoIncrementalRestoreHelper::CreateAncoRestoreTask()
+void AncoIncrementalRestoreHelper::CreateAncoRestoreTask(wptr<BackupExtExtension> extension)
 {
+    auto callback = sptr<AncoRestoreCallback>::MakeSptr(extension);
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
         return;
     }
-    auto ret = proxy->CreateAncoRestoreTask();
+    auto ret = proxy->CreateAncoRestoreTask(callback);
     if (ret != ERR_OK) {
         HILOGE("Failed to CreateAncoRestoreTask. err = %{public}d", ret);
     }

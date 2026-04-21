@@ -28,7 +28,7 @@ public:
         std::set<std::string> &, const std::vector<std::string> &), (override));
     MOCK_METHOD(ErrCode, StartAncoScanAllDirs, (const std::string &, AncoScanResult &), (override));
     MOCK_METHOD(ErrCode, StartAncoPacket, (const std::string &, uint64_t &), (override));
-    MOCK_METHOD(ErrCode, CreateAncoRestoreTask, (const std::string &), (override));
+    MOCK_METHOD(ErrCode, CreateAncoRestoreTask, (const std::string &, const sptr<IAncoRestoreCallback> &), (override));
     MOCK_METHOD(ErrCode, DestroyAncoRestoreTask, (const std::string &), (override));
     MOCK_METHOD(ErrCode, StartAncoUnPacket, (const std::string &, const std::vector<std::string> &,
         const std::vector<int64_t> &, const std::vector<std::string> &, const std::string &), (override));
