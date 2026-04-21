@@ -152,7 +152,7 @@ public:
     /**
      * @brief 清空当前目录
      */
-    static void ClearDirectory(const std::string path);
+    static void ClearDirectory(const std::string &path);
 };
 } // namespace OHOS::FileManagement::Backup
 

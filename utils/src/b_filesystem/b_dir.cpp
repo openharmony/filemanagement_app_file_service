@@ -598,7 +598,7 @@ bool BDir::IsDirsMatch(const vector<string> &excludePaths, const string &path)
     return false;
 }
 
-void BDir::ClearDirectory(const std::string path)
+void BDir::ClearDirectory(const std::string &path)
 {
     if (!IsFilePathValid(path)) {
         HILOGE("Invalid path for clearing Dir");
