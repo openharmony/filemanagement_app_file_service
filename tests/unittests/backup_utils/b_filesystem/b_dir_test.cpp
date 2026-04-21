@@ -601,10 +601,10 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0300, testing::ext::TestSize.Level1)
     try {
         TestManager tm("b_dir_ClearDirectory_0300");
         std::string targetDir = tm.GetRootDirCurTest();
-        
+
         system((std::string("mkdir -p ") + targetDir + "sub").c_str());
         system((std::string("touch ") + targetDir + "file.txt").c_str());
-        
+
         EXPECT_TRUE(std::filesystem::exists(targetDir + "sub"));
         EXPECT_TRUE(std::filesystem::exists(targetDir + "file.txt"));
 
@@ -636,13 +636,11 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0400, testing::ext::TestSize.Level1)
         TestManager tm("b_dir_ClearDirectory_0400");
         std::string targetDir = tm.GetRootDirCurTest();
         std::string filePath = targetDir + "test_file.txt";
-        
+
         system((std::string("touch ") + filePath).c_str());
-        
-        // Passing a file path to ClearDirectory
-        // access(F_OK) passes, but is_directory check should fail and return early
+
         BDir::ClearDirectory(filePath);
-        
+
         EXPECT_TRUE(true);
     } catch (...) {
         GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
