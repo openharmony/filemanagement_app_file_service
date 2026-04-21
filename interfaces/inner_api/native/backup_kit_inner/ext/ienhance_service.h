@@ -38,7 +38,8 @@ public:
         std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes) = 0;
     virtual ErrCode StartAncoScanAllDirs(const std::string &bundleName, AncoScanResult &scanResult) = 0;
     virtual ErrCode StartAncoPacket(const std::string &bundleName, uint64_t &smallFileCount) = 0;
-    virtual ErrCode CreateAncoRestoreTask(const std::string &bundleName, const sptr<IAncoRestoreCallback> &callback) = 0;
+    virtual ErrCode CreateAncoRestoreTask(const std::string &bundleName,
+        const sptr<IAncoRestoreCallback> &callback) = 0;
     virtual ErrCode DestroyAncoRestoreTask(const std::string &bundleName) = 0;
     virtual ErrCode StartAncoUnPacket(const std::string &bundleName, const std::vector<std::string> &tarFiles,
         const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames,
