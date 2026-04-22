@@ -49,6 +49,7 @@
 #include "hisysevent.h"
 #include "ipc_skeleton.h"
 #include "module_external/bms_adapter.h"
+#include "module_ipc/enhance_service_manager.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
 #include "module_notify/notify_work_service.h"
@@ -798,20 +799,29 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
 
 ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
 {
-    auto backUpConnection = session_->GetExtConnection(bundleName);
-    if (backUpConnection == nullptr) {
-        HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
-    auto proxy = backUpConnection->GetBackupExtProxy();
-    if (!proxy) {
-        HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
     int fdVal = BConstants::INVALID_FD_NUM;
     int reportFdVal = BConstants::INVALID_FD_NUM;
     int errCode = BConstants::INVALID_FD_NUM;
-    proxy->GetIncrementalFileHandle(fileName, fdVal, reportFdVal, errCode);
+    if (fileName.find(BConstants::ANCO_TAG) != string::npos) {
+        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
+        if (!enhanceService) {
+            HILOGW("SendIncrementalFileHandle, enhance service is not loaded");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        enhanceService->GetIncrementalAncoFileHandle(bundleName, fileName, fdVal, reportFdVal, errCode);
+    } else {
+        auto backUpConnection = session_->GetExtConnection(bundleName);
+        if (backUpConnection == nullptr) {
+            HILOGE("backUpConnection is empty, bundle:%{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        auto proxy = backUpConnection->GetBackupExtProxy();
+        if (!proxy) {
+            HILOGE("GetIncrementalFileHandle failed, bundleName:%{public}s", bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        proxy->GetIncrementalFileHandle(fileName, fdVal, reportFdVal, errCode);
+    }
     UniqueFd fd(fdVal);
     UniqueFd reportFd(reportFdVal);
     auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);

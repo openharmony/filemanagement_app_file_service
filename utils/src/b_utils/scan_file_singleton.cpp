@@ -28,11 +28,6 @@ std::string FileInfo::GetRestorePath()
     return "";
 }
 
-int FileInfo::GetFd()
-{
-    return -1;
-}
-
 std::string CompatibleFileInfo::GetRestorePath()
 {
     return restorePath_;
@@ -43,29 +38,14 @@ std::string SmallFileInfo::GetRestorePath()
     return "";
 }
 
-int CompatibleFileInfo::GetFd()
-{
-    return -1;
-}
-
 std::string AncoFileInfo::GetRestorePath()
 {
     return "";
 }
 
-int AncoFileInfo::GetFd()
-{
-    return fd_.Get();
-}
-
 std::string AncoCompatibleFileInfo::GetRestorePath()
 {
     return restorePath_;
-}
-
-int AncoCompatibleFileInfo::GetFd()
-{
-    return fd_.Get();
 }
 
 std::string CompatibleSmallFileInfo::GetRestorePath()
@@ -109,7 +89,7 @@ void ScanFileSingleton::AddTarFile(const std::string& filename, const std::strin
 }
 
 void ScanFileSingleton::AddAncoBigFile(
-    const std::string &filePath, const std::string &restorePath, const struct stat &sta, UniqueFd fd)
+    const std::string &filePath, const std::string &restorePath, const struct stat &sta)
 {
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
     std::string hashName = StringUtils::GenHashName(filePath);
@@ -119,19 +99,18 @@ void ScanFileSingleton::AddAncoBigFile(
     hashNameSet_.emplace(hashName);
     hashName += BConstants::ANCO_TAG;
     if (restorePath.empty()) {
-        pendingFileQueue_.push(std::make_shared<AncoFileInfo>(hashName, filePath, sta, true, std::move(fd)));
+        pendingFileQueue_.push(std::make_shared<AncoFileInfo>(hashName, filePath, sta, true));
     } else {
         pendingFileQueue_.push(
-            std::make_shared<AncoCompatibleFileInfo>(hashName, filePath, sta, true, restorePath, std::move(fd)));
+            std::make_shared<AncoCompatibleFileInfo>(hashName, filePath, sta, true, restorePath));
     }
     waitFilesReady_.notify_all();
 }
 
-void ScanFileSingleton::AddAncoTarFile(
-    const std::string &filename, const std::string &filePath, const struct stat &sta, UniqueFd fd)
+void ScanFileSingleton::AddAncoTarFile(const std::string &filename, const std::string &filePath, const struct stat &sta)
 {
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
-    pendingFileQueue_.push(std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd)));
+    pendingFileQueue_.push(std::make_shared<AncoFileInfo>(filename, filePath, sta, false));
     currentTarSize_.fetch_add(sta.st_size);
     if (currentTarSize_.load() > MAX_TAR_SIZE || currentTarSize_.load() > percentSizeLimit_.load()) {
         HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",

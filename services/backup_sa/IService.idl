@@ -16,6 +16,7 @@
 package OHOS.FileManagement.Backup;
 import ServiceType;
 import IAncoBackupCallback;
+import IAncoRestoreCallback;
 interface OHOS.FileManagement.Backup.IServiceReverse;
 sequenceable BackupFileInfo..OHOS.FileManagement.Backup.BFileInfo;
 sequenceable BackupIncrementalData..OHOS.FileManagement.Backup.BIncrementalData;
@@ -89,10 +90,12 @@ interface OHOS.FileManagement.Backup.IService{
         [inout] Set<String> compatibleIncludes, [in] String[] excludes);
     [ipccode 50] void StartAncoScanAllDirs([out] AncoScanResult scanResult);
     [ipccode 51] void StartAncoPacket([out] unsigned long smallFileCount);
-    [ipccode 52] void CreateAncoRestoreTask();
+    [ipccode 52] void CreateAncoRestoreTask([in] IAncoRestoreCallback cb);
     [ipccode 53] void DestroyAncoRestoreTask();
     [ipccode 54] void StartAncoUnPacket([in] String[] tarFiles, [in] long[] tarFileSizes, [in] String[] tarFileNames,
         [in] String rootPath);
-    [ipccode 55] void StartAncoMove([in] String[] ancoSourcePath, [in] String[] ancoTargetPath,
-        [in] StatInfo[] ancoStats, [out] AncoRestoreResult ancoRestoreRes);
+    [ipccode 55] void AddAncoMovePaths([in] String[] ancoSourcePath, [in] String[] ancoTargetPath,
+        [in] StatInfo[] ancoStats);
+    [ipccode 56] void StartAncoMove([out] AncoRestoreResult ancoRestoreRes);
+    [ipccode 57] void AppAncoFileReady([in] String fileName, [in] String filePath, [in] boolean needDelete);
  }

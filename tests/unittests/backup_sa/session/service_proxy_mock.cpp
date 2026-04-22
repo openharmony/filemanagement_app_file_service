@@ -303,7 +303,7 @@ ErrCode ServiceProxy::StartAncoPacket(uint64_t &smallFileCount)
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::CreateAncoRestoreTask()
+ErrCode ServiceProxy::CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback)
 {
     return BError(BError::Codes::OK);
 }
@@ -319,15 +319,17 @@ ErrCode ServiceProxy::StartAncoUnPacket(const std::vector<std::string> &tarFiles
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::StartAncoMove(const std::vector<std::string> &ancoSourcePath,
-    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats,
-    AncoRestoreResult &ancoRestoreRes)
+ErrCode ServiceProxy::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
 {
     ancoRestoreRes.duplicateCount = 0;
     ancoRestoreRes.failedCount = 0;
     ancoRestoreRes.successCount = 0;
-    ancoRestoreRes.endFileInfos.clear();
-    ancoRestoreRes.errFileInfos.clear();
     return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup

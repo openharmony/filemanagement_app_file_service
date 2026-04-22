@@ -28,6 +28,7 @@ idl_gen_interface("backup_idl") {
   ]
   sources_callback = [
     "IAncoBackupCallback.idl",
+    "IAncoRestoreCallback.idl",
   ]
   hitrace = "HITRACE_TAG_FILEMANAGEMENT"
   log_domainid = "0xD004313"
@@ -98,6 +99,7 @@ ohos_source_set("backup_extension_stub_idl") {
   sources = [
     "${target_gen_dir}/extension_stub.cpp",
     "${target_gen_dir}/anco_backup_callback_stub.cpp",
+    "${target_gen_dir}/anco_restore_callback_stub.cpp",
   ]
   public_configs = [ ":public_idl_config" ]
   deps = [
@@ -269,6 +271,7 @@ ohos_shared_library("backup_sa") {
     "src/module_external/sms_adapter.cpp",
     "src/module_ipc/sa_backup_connection.cpp",
     "src/module_ipc/service.cpp",
+    "src/module_ipc/service_enhance.cpp",
     "src/module_ipc/service_incremental.cpp",
     "src/module_ipc/sub_service.cpp",
     "src/module_ipc/svc_backup_connection.cpp",

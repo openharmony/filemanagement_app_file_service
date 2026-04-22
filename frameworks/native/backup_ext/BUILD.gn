@@ -37,6 +37,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "src/ext_extension.cpp",
     "src/installd_un_tar_file.cpp",
     "src/sub_ext_extension.cpp",
+    "src/backup_helper.cpp",
     "src/tar_file.cpp",
     "src/untar_file.cpp",
   ]

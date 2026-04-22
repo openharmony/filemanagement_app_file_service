@@ -93,6 +93,7 @@ public:
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, int fd, int32_t errCode) override;
     ErrCode AppFileReadyWithoutFd(const std::string &fileName, int32_t errCode) override;
+    ErrCode AppAncoFileReady(const std::string &fileName, const std::string &filePath, bool needDelete) override;
     ErrCode AppDone(ErrCode errCode) override;
     ErrCode ServiceResultReport(const std::string& restoreRetInfo,
         BackupRestoreScenario sennario, ErrCode errCode) override;
@@ -152,17 +153,17 @@ public:
     ErrCode StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime) override;
     ErrCode CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback) override;
     ErrCode DestroyAncoBackupTask() override;
-        ErrCode FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
+    ErrCode FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
         const std::vector<std::string> &excludes) override;
     ErrCode StartAncoScanAllDirs(AncoScanResult &scanResult) override;
     ErrCode StartAncoPacket(uint64_t &smallFileCount) override;
-    ErrCode CreateAncoRestoreTask() override;
+    ErrCode CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback) override;
     ErrCode DestroyAncoRestoreTask() override;
     ErrCode StartAncoUnPacket(const std::vector<std::string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
         const std::vector<std::string> &tarFileNames, const std::string &rootPath) override;
-    ErrCode StartAncoMove(
-        const std::vector<std::string> &ancoSourcePath, const std::vector<std::string> &ancoTargetPath,
-        const std::vector<StatInfo> &ancoStats, AncoRestoreResult &ancoRestoreRes) override;
+    ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
+        const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) override;
+    ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) override;
     // 以下都是非IPC接口
 public:
     void OnStart() override;

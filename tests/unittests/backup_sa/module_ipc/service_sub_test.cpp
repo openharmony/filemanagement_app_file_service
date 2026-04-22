@@ -34,6 +34,7 @@
 
 #include "service.cpp"
 #include "sub_service.cpp"
+#include "service_enhance.cpp"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;

@@ -37,6 +37,7 @@
 #define Persist GetFd
 #include "ext_extension.cpp"
 #include "sub_ext_extension.cpp"
+#include "backup_helper.cpp"
 #include "library_func_undef.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -933,27 +934,20 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0002, testin
 {
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ReportAppFileReady_Test_0002";
     struct stat sta;
-    auto fileInfo = make_shared<AncoFileInfo>("", "", sta, false, UniqueFd(100));
-    auto fileInfo2 = make_shared<AncoFileInfo>("", "", sta, false, UniqueFd(-1));
+    auto fileInfo = make_shared<AncoFileInfo>("", "", sta, false);
+    auto fileInfo2 = make_shared<AncoFileInfo>("", "", sta, false);
     int fdNum = 0;
 
     // success
-    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
-    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
-    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
-    EXPECT_CALL(*funcMock_, RemoveFile(_)).WillOnce(Return(true));
-
+    EXPECT_CALL(*serviceMock_, AppAncoFileReady(_, _, _)).WillOnce(Return(0));
     EXPECT_TRUE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
 
     // fail
-    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
-    EXPECT_CALL(*serviceMock_, AppFileReadyWithoutFd(_, _)).WillOnce(Return(-1));
+    EXPECT_CALL(*serviceMock_, AppAncoFileReady(_, _, _)).WillOnce(Return(-1));
     EXPECT_FALSE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo2, fdNum)));
 
     // fail
-    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
     ServiceClient::serviceProxy_ = nullptr;
-    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
     EXPECT_EQ(extExtension_->ReportAppFileReady(fileInfo, fdNum),
         static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL));
     ServiceClient::serviceProxy_ = serviceMock_;
@@ -973,13 +967,10 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportAppFileReady_Test_0003, testin
 {
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ReportAppFileReady_Test_0003";
     struct stat sta;
-    auto fileInfo = make_shared<AncoCompatibleFileInfo>("", "", sta, true, "", UniqueFd(100));
+    auto fileInfo = make_shared<AncoCompatibleFileInfo>("", "", sta, true, "");
     int fdNum = 0;
 
-    EXPECT_CALL(*funcMock_, fdsan_exchange_owner_tag(_, _, _)).WillOnce(Return());
-    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillOnce(Return(0));
-    EXPECT_CALL(*funcMock_, fdsan_close_with_tag(_, _)).WillOnce(Return(0));
-
+    EXPECT_CALL(*serviceMock_, AppAncoFileReady(_, _, _)).WillOnce(Return(0));
     EXPECT_TRUE(SUCCEEDED(extExtension_->ReportAppFileReady(fileInfo, fdNum)));
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ReportAppFileReady_Test_0003";
 }
@@ -1177,7 +1168,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_RestoreBigFileAfter_Test_0000, testi
     string filePath = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE)
         .append("1.txt");
     struct stat sta;
-    std::vector<StatInfo> ancoStats;
+    extExtension_->errFileInfos_.clear();
 
     // 1
     EXPECT_CALL(*funcMock_, chmod(_, _)).WillOnce(Return(0));
@@ -1185,19 +1176,19 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_RestoreBigFileAfter_Test_0000, testi
         errno = ERR_NO_PERMISSION;
         return -1;
     }));
-    extExtension_->RestoreBigFileAfter(filePath, sta, ancoStats);
-    EXPECT_EQ(ancoStats.size(), 1);
+    extExtension_->RestoreBigFileAfter(filePath, sta);
+    EXPECT_NE(extExtension_->errFileInfos_.find(filePath), extExtension_->errFileInfos_.end());
 
     // 2
-    ancoStats.clear();
+    extExtension_->errFileInfos_.clear();
     EXPECT_CALL(*funcMock_, chmod(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*funcMock_, open(_, _)).WillOnce(Invoke([&](const char *filename, int flags, ...) {
         errno = ERR_OK;
         return 100;
     }));
     EXPECT_CALL(*funcMock_, futimens(_, _)).WillOnce(Return(0));
-    extExtension_->RestoreBigFileAfter(filePath, sta, ancoStats);
-    EXPECT_EQ(ancoStats.size(), 1);
+    extExtension_->RestoreBigFileAfter(filePath, sta);
+    EXPECT_EQ(extExtension_->errFileInfos_.find(filePath), extExtension_->errFileInfos_.end());
 
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_RestoreBigFileAfter_Test_0000";
 }

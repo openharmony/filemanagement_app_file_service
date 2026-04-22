@@ -28,12 +28,16 @@ public:
         std::set<std::string> &, const std::vector<std::string> &), (override));
     MOCK_METHOD(ErrCode, StartAncoScanAllDirs, (const std::string &, AncoScanResult &), (override));
     MOCK_METHOD(ErrCode, StartAncoPacket, (const std::string &, uint64_t &), (override));
-    MOCK_METHOD(ErrCode, CreateAncoRestoreTask, (const std::string &), (override));
+    MOCK_METHOD(ErrCode, CreateAncoRestoreTask, (const std::string &, const sptr<IAncoRestoreCallback> &), (override));
     MOCK_METHOD(ErrCode, DestroyAncoRestoreTask, (const std::string &), (override));
     MOCK_METHOD(ErrCode, StartAncoUnPacket, (const std::string &, const std::vector<std::string> &,
         const std::vector<int64_t> &, const std::vector<std::string> &, const std::string &), (override));
-    MOCK_METHOD(ErrCode, StartAncoMove, (const std::string &, const std::vector<std::string> &,
-        const std::vector<std::string> &, const std::vector<StatInfo> &, AncoRestoreResult &), (override));
+    MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::string &, const std::vector<std::string> &,
+        const std::vector<std::string> &, const std::vector<StatInfo> &), (override));
+    MOCK_METHOD(ErrCode, StartAncoMove, (const std::string &, AncoRestoreResult &), (override));
+    MOCK_METHOD(int, OpenAncoFileReadOnly, (const std::string &));
+    MOCK_METHOD(bool, RemoveAncoFile, (const std::string &));
+    MOCK_METHOD(void, GetIncrementalAncoFileHandle, (const std::string &, const std::string &, int &, int &, int &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_MOCK_IENHANCE_SERVICE_H

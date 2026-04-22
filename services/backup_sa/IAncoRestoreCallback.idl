@@ -14,11 +14,6 @@
  */
 
 package OHOS.FileManagement.Backup;
-sequenceable OHOS.FileManagement.Backup.StatInfo;
-[callback] interface IAncoBackupCallback {
-    void OnBigFileReadyCallback([in] String filePath, [in] String restorePath, [in] StatInfo sta);
-    void OnTarFileReadyCallback([in] String fileName, [in] String filePath, [in] StatInfo sta);
-    void WaitForPacketFlag();
-    void ReportErrFileByProc([in] String msg, [in] int err);
-    void UpdateFileStat([in] String filePath, [in] StatInfo sta);
+[callback] interface IAncoRestoreCallback {
+    void ReportFileInfos([in] OrderedMap<String, long> endFileInfos, [in] OrderedMap<String, int[]> errFileInfos);
 };

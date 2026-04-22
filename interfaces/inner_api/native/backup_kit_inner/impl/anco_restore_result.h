@@ -27,15 +27,10 @@ struct AncoRestoreResult : public Parcelable {
     int64_t successCount{0};
     int64_t duplicateCount{0};
     int64_t failedCount{0};
-    std::map<std::string, int64_t> endFileInfos;
-    std::map<std::string, std::vector<ErrCode>> errFileInfos;
 
     AncoRestoreResult() = default;
-    AncoRestoreResult(int64_t successCount_, int64_t duplicateCount_, int64_t failedCount_,
-        const std::map<std::string, int64_t> &endFileInfos_,
-        const std::map<std::string, std::vector<ErrCode>> &errFileInfos_)
-        : successCount(successCount_), duplicateCount(duplicateCount_), failedCount(failedCount_),
-        endFileInfos(endFileInfos_), errFileInfos(errFileInfos_)
+    AncoRestoreResult(int64_t successCount_, int64_t duplicateCount_, int64_t failedCount_)
+        : successCount(successCount_), duplicateCount(duplicateCount_), failedCount(failedCount_)
     {}
     ~AncoRestoreResult() override = default;
 

@@ -76,6 +76,7 @@ const int32_t MAX_FILE_READY_REPORT_TIME = 2;
 const int32_t WAIT_SCANNING_INFO_SEND_TIME = 5;
 const int ERR_SIZE = -1;
 const int32_t MAX_TRY_CLEAR_DISPOSE_NUM = 3;
+const int ERR_NO_PERMISSION = 13;
 } // namespace
 
 void Service::AppendBundles(const std::vector<std::string> &bundleNames)
@@ -326,6 +327,55 @@ ErrCode Service::AppFileReady(const std::string &fileName, int fd, int32_t errCo
 ErrCode Service::AppFileReadyWithoutFd(const std::string &fileName, int32_t errCode)
 {
     return AppFileReady(fileName, UniqueFd(INVALID_FD), errCode);
+}
+
+ErrCode Service::AppAncoFileReady(const std::string &fileName, const std::string &filePath, bool needDelete)
+{
+    try {
+        if (session_ == nullptr) {
+            HILOGE("AppAncoFileReady error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        string callerName;
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("AppAncoFileReady error, Get bundle name failed, ret:%{public}d", ret);
+            return ret;
+        }
+        int32_t errCode = ERR_OK;
+        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
+        if (!enhanceService) {
+            HILOGW("AppAncoFileReady, enhance service is not loaded");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        auto fd = UniqueFd(enhanceService->OpenAncoFileReadOnly(filePath));
+        if (fd < 0) {
+            errCode = errno;
+            HILOGE("open file failed, filename: %{public}s, err: %{public}d", GetAnonyString(filePath).c_str(),
+                errCode);
+            if (errCode == ERR_NO_PERMISSION) {
+                HILOGW("noPermissionFile, don't need to backup, path: %{public}s", GetAnonyString(filePath).c_str());
+                return errCode;
+            }
+        }
+        auto reportRs =
+            fd < 0 ? AppFileReadyWithoutFd(fileName, errCode) : AppFileReady(fileName, std::move(fd), errCode);
+        if (SUCCEEDED(reportRs)) {
+            HILOGD("Report app file ready success, filename: %{public}s", fileName.c_str());
+            if (needDelete) {
+                auto ret = enhanceService->RemoveAncoFile(filePath);
+                HILOGD("RemoveFile result:%{public}d, filepath:%{public}s", ret, filePath.c_str());
+            }
+        } else {
+            HILOGW("Report app file ready failed, ret: %{public}d, filename: %{public}s", reportRs, fileName.c_str());
+        }
+        return reportRs;
+    } catch (const BError &e) {
+        return e.GetCode();  // 任意异常产生，终止监听该任务
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
+    }
 }
 
 ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCode)
@@ -1908,217 +1958,6 @@ void Service::SleepForDelayTime(const std::string &bundleName)
         HILOGI("Sleep start, delay time is %{public}d", delayTime);
         std::this_thread::sleep_for(std::chrono::seconds(delayTime));
         HILOGI("Sleep end, delay time is %{public}d", delayTime);
-    }
-}
-
-ErrCode Service::CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback)
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("CreateAncoBackupTask error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("CreateAncoBackupTask, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->CreateAncoBackupTask(callerName, callback);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("CreateAncoBackupTask, Unexpected exception");
-        return EPERM;
-    }
-}
-
-ErrCode Service::DestroyAncoBackupTask()
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("DestroyAncoBackupTask error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("DestroyAncoBackupTask, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->DestroyAncoBackupTask(callerName);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("DestroyAncoBackupTask, Unexpected exception");
-        return EPERM;
-    }
-}
-
-ErrCode Service::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
-    const std::vector<std::string> &excludes)
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("FilterAndSaveBackupPaths error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("FilterAndSaveBackupPaths, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->FilterAndSaveBackupPaths(callerName, includes, compatIncludes, excludes);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("FilterAndSaveBackupPaths, Unexpected exception");
-        return EPERM;
-    }
-}
-
-ErrCode Service::StartAncoScanAllDirs(AncoScanResult &scanResult)
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("StartAncoScanAllDirs error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("StartAncoScanAllDirs, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->StartAncoScanAllDirs(callerName, scanResult);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("StartAncoScanAllDirs, Unexpected exception");
-        return EPERM;
-    }
-}
-
-ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("StartAncoPacket error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("StartAncoPacket, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->StartAncoPacket(callerName, smallFileCount);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("StartAncoPacket, Unexpected exception");
-        return EPERM;
-    }
-}
-
-ErrCode Service::CreateAncoRestoreTask()
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("CreateAncoRestoreTask error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("CreateAncoRestoreTask, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->CreateAncoRestoreTask(callerName);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("CreateAncoRestoreTask, Unexpected exception");
-        return EPERM;
-    }
-}
-
-ErrCode Service::DestroyAncoRestoreTask()
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("DestroyAncoRestoreTask error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("DestroyAncoRestoreTask, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->DestroyAncoRestoreTask(callerName);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("DestroyAncoRestoreTask, Unexpected exception");
-        return EPERM;
-    }
-}
-
-ErrCode Service::StartAncoUnPacket(const std::vector<string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
-    const std::vector<string> &tarFileNames, const std::string &rootPath)
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("StartAncoUnPacket error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("StartAncoUnPacket, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->StartAncoUnPacket(callerName, tarFiles, tarFileSizes, tarFileNames, rootPath);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("StartAncoUnPacket, Unexpected exception");
-        return EPERM;
-    }
-}
-
-ErrCode Service::StartAncoMove(
-    const std::vector<std::string> &ancoSourcePath, const std::vector<std::string> &ancoTargetPath,
-    const std::vector<StatInfo> &ancoStats, AncoRestoreResult &ancoRestoreRes)
-{
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("StartAncoMove error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("StartAncoMove, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
-        return enhanceService->StartAncoMove(callerName, ancoSourcePath, ancoTargetPath, ancoStats, ancoRestoreRes);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("StartAncoMove, Unexpected exception");
-        return EPERM;
     }
 }
 }

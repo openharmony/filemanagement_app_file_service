@@ -77,33 +77,6 @@ HWTEST_F(ScanFileSingletonTest, FILE_INFO_TEST_001, testing::ext::TestSize.Level
 * @tc.level Level 1
 * @tc.require: NA
 */
-HWTEST_F(ScanFileSingletonTest, FILE_INFO_TEST_002, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin FILE_INFO_TEST_002";
-    GTEST_LOG_(INFO) << "1. test FileInfo";
-    std::string filename = "test1";
-    std::string filePath = "/tmp/test1";
-    struct stat sta = {};
-    std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<FileInfo>(filename, filePath, sta, false);
-    EXPECT_EQ(fInfo1->GetFd(), -1);
-
-    GTEST_LOG_(INFO) << "2. test CompatFileInfo";
-    std::string restorePath = "/tmp/restore/test2";
-    std::shared_ptr<IFileInfo> fInfo2 = std::make_shared<CompatibleFileInfo>(filename, filePath, sta, false,
-        restorePath);
-    EXPECT_EQ(fInfo2->GetFd(), -1);
-    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end FILE_INFO_TEST_001";
-}
-
-/**
-* @tc.number: FILE_INFO_TEST_002
-* @tc.name: FILE_INFO_TEST_002
-* @tc.desc: Test function of FileInfo and CompatFileInfo
-* @tc.size: SMALL
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: NA
-*/
 HWTEST_F(ScanFileSingletonTest, ANCO_FILE_INFO_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin ANCO_FILE_INFO_TEST_001";
@@ -111,14 +84,12 @@ HWTEST_F(ScanFileSingletonTest, ANCO_FILE_INFO_TEST_001, testing::ext::TestSize.
     std::string filename = "test_anco";
     std::string filePath = "/tmp/test_anco";
     struct stat sta = {};
-    UniqueFd fd(123);
-    std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd));
+    std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false);
     EXPECT_EQ(fInfo1->GetRestorePath(), "");
 
-    UniqueFd fd1(234);
     GTEST_LOG_(INFO) << "2. test AncoFileInfo";
-    std::shared_ptr<IFileInfo> fInfo2 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false, std::move(fd1));
-    EXPECT_EQ(fInfo2->GetFd(), UniqueFd(234));
+    std::shared_ptr<IFileInfo> fInfo2 = std::make_shared<AncoFileInfo>(filename, filePath, sta, false);
+    EXPECT_EQ(fInfo2->filename_, filename);
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end ANCO_FILE_INFO_TEST_001";
 }
 
@@ -138,11 +109,10 @@ HWTEST_F(ScanFileSingletonTest, ANCO_COMPATIBLEFILE_FILE_INFO_TEST_001, testing:
     std::string filename = "test_anco_compatible";
     std::string filePath = "/tmp/test_anco_compatible";
     struct stat sta = {};
-    UniqueFd fd(456);
     std::string restorePath = "/tmp/restore/test_anco_compatible";
     std::shared_ptr<IFileInfo> fInfo1 = std::make_shared<AncoCompatibleFileInfo>(filename, filePath, sta, false,
-        restorePath, std::move(fd));
-    EXPECT_EQ(fInfo1->GetFd(), 456);
+        restorePath);
+    EXPECT_EQ(fInfo1->GetRestorePath(), restorePath);
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end ANCO_COMPATIBLEFILE_FILE_INFO_TEST_001";
 }
 
@@ -491,10 +461,9 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_BIG_FILE_TEST_001, testing::ext::TestSi
     std::string filePath = "/test/path/to/anco_file";
     std::string restorePath = "/restore/path/to/anco_file";
     struct stat sta = {};
-    UniqueFd fd(123); // 假设 UniqueFd 是一个智能文件描述符
 
     // 调用被测函数
-    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, sta, std::move(fd));
+    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, sta);
 
     auto fileInfo = ScanFileSingleton::GetInstance().GetFileInfo();
     ASSERT_NE(fileInfo, nullptr);
@@ -520,10 +489,9 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_001, testing::ext::TestSiz
     std::string filePath = "/data/test/test.tar";
     struct stat sta = {};
     sta.st_size = 1024 * 1024;
-    UniqueFd fd = UniqueFd(42);
 
     // 执行测试操作
-    ScanFileSingleton::GetInstance().AddAncoTarFile(filename, filePath, sta, std::move(fd));
+    ScanFileSingleton::GetInstance().AddAncoTarFile(filename, filePath, sta);
 
     // 验证结果
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
@@ -547,9 +515,8 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_BIGFILE_TEST_002, testing::ext::TestSiz
     std::string filePath = "/test/path/to/anco_file";
     std::string restorePath = "";
     struct stat sta = {};
-    UniqueFd fd(123);
 
-    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, sta, std::move(fd));
+    ScanFileSingleton::GetInstance().AddAncoBigFile(filePath, restorePath, sta);
 
     auto fileInfo = ScanFileSingleton::GetInstance().GetFileInfo();
     ASSERT_NE(fileInfo, nullptr);
@@ -565,13 +532,12 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_002, testing::ext::TestSiz
     std::string filePath = "/data/test/test.tar";
     struct stat sta = {};
     sta.st_size = 1024 * 1024;
-    UniqueFd fd = UniqueFd(42);
 
     ScanFileSingleton& instance = ScanFileSingleton::GetInstance();
     instance.currentTarSize_.store(0);
     instance.percentSizeLimit_.store(1.5 * 1024 * 1024);
 
-    ScanFileSingleton::GetInstance().AddAncoTarFile(filename, filePath, sta, std::move(fd));
+    ScanFileSingleton::GetInstance().AddAncoTarFile(filename, filePath, sta);
 
     EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
     auto frontItem = ScanFileSingleton::GetInstance().pendingFileQueue_.front();

@@ -86,12 +86,13 @@ public:
         const std::vector<std::string> &));
     MOCK_METHOD1(StartAncoScanAllDirs, ErrCode(AncoScanResult &));
     MOCK_METHOD1(StartAncoPacket, ErrCode(uint64_t &));
-    MOCK_METHOD0(CreateAncoRestoreTask, ErrCode());
+    MOCK_METHOD1(CreateAncoRestoreTask, ErrCode(const sptr<IAncoRestoreCallback> &));
     MOCK_METHOD0(DestroyAncoRestoreTask, ErrCode());
     MOCK_METHOD4(StartAncoUnPacket, ErrCode(const std::vector<std::string> &, const std::vector<int64_t> &,
         const std::vector<std::string> &, const std::string &));
-    MOCK_METHOD4(StartAncoMove, ErrCode(const std::vector<std::string> &, const std::vector<std::string> &,
-        const std::vector<StatInfo> &, AncoRestoreResult &));
+    MOCK_METHOD3(AddAncoMovePaths, ErrCode(const std::vector<std::string> &, const std::vector<std::string> &,
+        const std::vector<StatInfo> &));
+    MOCK_METHOD1(StartAncoMove, ErrCode(AncoRestoreResult &));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

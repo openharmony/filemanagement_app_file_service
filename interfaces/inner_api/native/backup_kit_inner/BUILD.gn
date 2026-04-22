@@ -73,6 +73,7 @@ ohos_shared_library("backup_kit_inner") {
   ]
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
