@@ -64,6 +64,29 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_DestroyAncoBackupTask_0000, t
 }
 
 /**
+ * @tc.number: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0000
+ * @tc.name: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0000
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0000";
+    ServiceClient::serviceProxy_ = nullptr;
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+
+    EXPECT_NO_THROW(AncoBackupHelper::FilterAndSaveBackupPaths(includes, compatIncludes, excludes));
+
+    ServiceClient::serviceProxy_ = proxy;
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0000";
+}
+
+/**
  * @tc.number: SUB_AncoBackupHelper_StartAncoScanAllDirs_0000
  * @tc.name: SUB_AncoBackupHelper_StartAncoScanAllDirs_0000
  * @tc.desc: 测试 StartAncoScanAllDirs 接口
@@ -227,7 +250,6 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_StartAncoMove_000
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_StartAncoMove_0000";
 }
 
-
 /**
  * @tc.number: SUB_AncoBackupCallback_WaitForPacketFlag_0000
  * @tc.name: SUB_AncoBackupCallback_WaitForPacketFlag_0000
@@ -245,6 +267,130 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupCallback_WaitForPacketFlag_0000, tes
     callback->WaitForPacketFlag();
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupCallback_WaitForPacketFlag_0000";
+}
+
+/**
+ * @tc.number: SUB_AncoBackupCallback_ReportErrFileByProc_0000
+ * @tc.name: SUB_AncoBackupCallback_ReportErrFileByProc_0000
+ * @tc.desc: 测试 ReportErrFileByProc 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupCallback_ReportErrFileByProc_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupCallback_ReportErrFileByProc_0000";
+    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
+    auto callback = sptr<AncoBackupCallback>::MakeSptr(extExtension);
+    std::string msg = "";
+    int32_t err = 0;
+
+    EXPECT_CALL(*extExtensionMock, ReportErrFileByProc(_, _)).WillRepeatedly(Return([](std::string, int) {}));
+    EXPECT_EQ(callback->ReportErrFileByProc(msg, err), ErrCode(BError::Codes::OK));
+
+    auto callback2 = sptr<AncoBackupCallback>::MakeSptr(nullptr);
+    EXPECT_EQ(callback2->ReportErrFileByProc(msg, err), ErrCode(BError::Codes::EXT_INVAL_ARG));
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupCallback_ReportErrFileByProc_0000";
+}
+
+/**
+ * @tc.number: SUB_AncoBackupCallback_OnBigFileReadyCallback_0000
+ * @tc.name: SUB_AncoBackupCallback_OnBigFileReadyCallback_0000
+ * @tc.desc: 测试 OnBigFileReadyCallback 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupCallback_OnBigFileReadyCallback_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupCallback_OnBigFileReadyCallback_0000";
+    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
+    auto callback = sptr<AncoBackupCallback>::MakeSptr(extExtension);
+    std::string filePath = "";
+    std::string restorePath = "";
+    StatInfo statInfo;
+
+    EXPECT_EQ(callback->OnBigFileReadyCallback(filePath, restorePath, statInfo), ErrCode(BError::Codes::OK));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupCallback_OnBigFileReadyCallback_0000";
+}
+
+/**
+ * @tc.number: SUB_AncoBackupCallback_OnTarFileReadyCallback_0000
+ * @tc.name: SUB_AncoBackupCallback_OnTarFileReadyCallback_0000
+ * @tc.desc: 测试 OnTarFileReadyCallback 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupCallback_OnTarFileReadyCallback_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupCallback_OnTarFileReadyCallback_0000";
+    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
+    auto callback = sptr<AncoBackupCallback>::MakeSptr(nullptr);
+    std::string fileName = "";
+    std::string filePath = "";
+    StatInfo statInfo;
+    EXPECT_EQ(callback->OnTarFileReadyCallback(fileName, filePath, statInfo), ErrCode(BError::Codes::EXT_INVAL_ARG));
+
+    auto callback2 = sptr<AncoBackupCallback>::MakeSptr(extExtension);
+    EXPECT_EQ(callback2->OnTarFileReadyCallback(fileName, filePath, statInfo), ErrCode(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupCallback_OnTarFileReadyCallback_0000";
+}
+
+/**
+ * @tc.number: SUB_AncoBackupCallback_UpdateFileStat_0000
+ * @tc.name: SUB_AncoBackupCallback_UpdateFileStat_0000
+ * @tc.desc: 测试 UpdateFileStat 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupCallback_UpdateFileStat_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupCallback_UpdateFileStat_0000";
+    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
+    auto callback = sptr<AncoBackupCallback>::MakeSptr(nullptr);
+    std::string filePath = "";
+    StatInfo statInfo;
+    EXPECT_EQ(callback->UpdateFileStat(filePath, statInfo), ErrCode(BError::Codes::EXT_INVAL_ARG));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupCallback_UpdateFileStat_0000";
+}
+
+/**
+ * @tc.number: SUB_AncoRestoreCallback_ReportFileInfos_0000
+ * @tc.name: SUB_AncoRestoreCallback_ReportFileInfos_0000
+ * @tc.desc: 测试 ReportFileInfos 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoRestoreCallback_ReportFileInfos_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoRestoreCallback_ReportFileInfos_0000";
+    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
+    auto callback = sptr<AncoRestoreCallback>::MakeSptr(nullptr);
+
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<int32_t>> errFileInfos;
+    EXPECT_EQ(callback->ReportFileInfos(endFileInfos, errFileInfos), ErrCode(BError::Codes::EXT_INVAL_ARG));
+
+    endFileInfos.emplace("1", 0);
+    std::vector<int32_t> errCodes;
+    errCodes.push_back(0);
+    errFileInfos.emplace("2", errCodes);
+    auto callback2 = sptr<AncoRestoreCallback>::MakeSptr(extExtension);
+    EXPECT_EQ(callback2->ReportFileInfos(endFileInfos, errFileInfos), ErrCode(BError::Codes::OK));
+
+    extExtension->endFileInfos_.clear();
+    extExtension->errFileInfos_.clear();
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoRestoreCallback_ReportFileInfos_0000";
 }
 
 /**

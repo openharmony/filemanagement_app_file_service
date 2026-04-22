@@ -1294,6 +1294,18 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path, const ExtMan
     RestoreBigFileAfter(filePath, item.sta);
 }
 
+static bool CheckAndTryAddAncoMovePaths(size_t byteSize, vector<string> &ancoSourcePath,
+    vector<string> &ancoTargetPath, vector<StatInfo> &ancoStats, size_t &curIpcDataSize) {
+    if (byteSize > MAX_IPC_SEND_DATA_SIZE) {
+        return false;
+    }
+    if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+        AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
+        curIpcDataSize = 0;
+    }
+    return true;
+}
+
 void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1323,9 +1335,8 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         if (StringUtils::IsSandboxAncoPath(path)) {
             const string srcPath = path + item.hashName;
             const size_t byteSize = srcPath.size() + item.fileName.size() + sizeof(StatInfo);
-            if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
-                AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
-                curIpcDataSize = 0;
+            if (!CheckAndTryAddAncoMovePaths(byteSize, ancoSourcePath, ancoTargetPath, ancoStats, curIpcDataSize)) {
+                continue;
             }
             ancoSourcePath.push_back(srcPath);
             ancoTargetPath.push_back(item.fileName);
