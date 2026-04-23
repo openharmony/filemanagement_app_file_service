@@ -608,7 +608,7 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0300, testing::ext::TestSize.Level1)
         close(fd);
 
         auto subs = GetSubDir(targetDir);
-        EXPECT_EQ(subs.size(), 2); 
+        EXPECT_EQ(subs.size(), 2);
 
         BDir::ClearDirectory(targetDir);
 
