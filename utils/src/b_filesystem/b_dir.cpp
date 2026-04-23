@@ -611,14 +611,10 @@ void BDir::ClearDirectory(const std::string &path)
         if (item.empty()) {
             continue;
         }
-        bool isRemoveSuccess = false;
         if (item.back() == BConstants::FILE_SEPARATOR_CHAR) {
-            isRemoveSuccess = ForceRemoveDirectoryBMS(item);
+            ForceRemoveDirectoryBMS(item);
         } else {
-            isRemoveSuccess = RemoveFile(item);
-        }
-        if (!isRemoveSuccess) {
-            HILOGE("Failed to remove item: %{public}s", GetAnonyPath(item).data());
+            RemoveFile(item);
         }
     }
     HILOGD("Clear Directory finished");

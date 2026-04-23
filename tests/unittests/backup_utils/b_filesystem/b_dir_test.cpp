@@ -651,33 +651,4 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0400, testing::ext::TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0400";
 }
-
-/**
- * @tc.number: SUB_backup_b_dir_ClearDirectory_0500
- * @tc.name: b_dir_ClearDirectory_0500
- * @tc.desc: Test function of ClearDirectory interface for Remove Fail
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(BDirTest, b_dir_ClearDirectory_0500, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0500";
-    try {
-        TestManager tm("ClearDirectory_RemoveFail_0500");
-        std::string targetDir = tm.GetRootDirCurTest();
-        mkdir((targetDir + "sub").c_str(), 0755);
-        int fd = open((targetDir + "file.txt").c_str(), O_CREAT | O_RDWR, 0644);
-        close(fd);
-        chmod(targetDir.c_str(), 0555);
-        BDir::ClearDirectory(targetDir);
-        EXPECT_TRUE(true);
-        chmod(targetDir.c_str(), 0755);
-    } catch (...) {
-        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
-        EXPECT_TRUE(false);
-    }
-    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0500";
-}
 } // namespace OHOS::FileManagement::Backup
