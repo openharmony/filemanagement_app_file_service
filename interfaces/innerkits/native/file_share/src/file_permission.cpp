@@ -132,6 +132,65 @@ int32_t ErrorCodeConversion(int32_t sandboxManagerErrorCode)
     }
     return FileManagement::LibN::E_UNKNOWN_ERROR;
 }
+
+/* Use these conversions for later APIs. */
+int32_t ConvertSandboxManagerError(int32_t sandboxManagerErrorCode)
+{
+    if (sandboxManagerErrorCode == SANDBOX_MANAGER_OK) {
+        return 0;
+    }
+
+    if (sandboxManagerErrorCode == PERMISSION_DENIED) {
+        LOGE("The app does not have the authorization URI permission");
+        return FileManagement::LibN::E_PERMISSION;
+    }
+
+    // return 13900020 for new api.
+    if (sandboxManagerErrorCode == INVALID_PARAMTER) {
+        return EINVAL;
+    }
+
+    if (sandboxManagerErrorCode == SANDBOX_MANAGER_NOT_SYS_APP) {
+        return FileManagement::LibN::E_PERMISSION_SYS;
+    }
+
+    return EPERM;
+}
+
+int32_t ConvertSandboxManagerError(int32_t sandboxManagerErrorCode,
+    const deque<struct PolicyErrorResult> &errorResults, const vector<uint32_t> &resultCodes)
+{
+    if (sandboxManagerErrorCode == PERMISSION_DENIED) {
+        LOGE("The app does not have the authorization URI permission");
+        return FileManagement::LibN::E_PERMISSION;
+    }
+    if (sandboxManagerErrorCode == SANDBOX_MANAGER_NOT_SYS_APP) {
+        LOGE("The app is not system app");
+        return FileManagement::LibN::E_PERMISSION_SYS;
+    }
+    if (sandboxManagerErrorCode == INVALID_PARAMTER) {
+        return EINVAL;
+    }
+    if (!errorResults.empty()) {
+        LOGE("Some of the incoming URIs failed");
+        return EPERM;
+    }
+    if (resultCodes.size() == 0) {
+        LOGE("Sandboxmanager not processed");
+        return EPERM;
+    }
+    for (size_t i = 0; i < resultCodes.size(); i++) {
+        if (resultCodes[i] != 0) {
+            LOGE("Reason for URI authorization failure");
+            return EPERM;
+        }
+    }
+    if (sandboxManagerErrorCode == SANDBOX_MANAGER_OK) {
+        return 0;
+    }
+    return EPERM;
+}
+
 } // namespace
 void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
                                        const vector<PolicyInfo> &pathPolicies,
@@ -470,13 +529,8 @@ string FilePermission::GetPathByPermission(const std::string &userName, const st
 int32_t FilePermission::UnPersistPolicyByTokenId(uint32_t tokenId)
 {
 #ifdef SANDBOX_MANAGER
-    if (tokenId == 0) {
-        LOGE("tokenId is invalid");
-        return FileManagement::LibN::E_PARAMS;
-    }
-
     int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(tokenId);
-    return ErrorCodeConversion(sandboxManagerErrorCode);
+    return ConvertSandboxManagerError(sandboxManagerErrorCode);
 #else
     LOGW("Sandbox manager bundle not exist, device not support.");
     return FileManagement::LibN::E_DEVICENOTSUPPORT;
@@ -487,11 +541,6 @@ int32_t FilePermission::UnPersistPolicyByTokenIdAndPolicies(uint32_t tokenId,
     const vector<UriPolicyInfo> &uriPolicies, deque<struct PolicyErrorResult> &errorResults)
 {
 #ifdef SANDBOX_MANAGER
-    if (tokenId == 0) {
-        LOGE("tokenId is invalid");
-        return FileManagement::LibN::E_PARAMS;
-    }
-
     if (uriPolicies.size() == 0 || uriPolicies.size() > MAX_ARRAY_SIZE) {
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
@@ -506,7 +555,7 @@ int32_t FilePermission::UnPersistPolicyByTokenIdAndPolicies(uint32_t tokenId,
     LOGI("UnPersistPolicyByTokenIdAndPolicies pathPolicies size: %{public}zu", pathPolicies.size());
     int32_t sandboxManagerErrorCode = SandboxManagerKit::UnPersistPolicy(tokenId, pathPolicies, resultCodes);
     
-    int32_t errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
+    int32_t errorCode = ConvertSandboxManagerError(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
@@ -521,11 +570,6 @@ int32_t FilePermission::UnPersistPolicyByTokenIdAndPolicies(uint32_t tokenId,
 int32_t FilePermission::GetPersistPolicyByTokenId(uint32_t tokenId, vector<UriPolicyInfo> &uriPolicies)
 {
 #ifdef SANDBOX_MANAGER
-    if (tokenId == 0) {
-        LOGE("tokenId is invalid");
-        return FileManagement::LibN::E_PARAMS;
-    }
-
     std::vector<PolicyInfo> policies;
     int32_t sandboxManagerErrorCode = SandboxManagerKit::GetPersistPolicy(tokenId, policies);
 
@@ -536,7 +580,7 @@ int32_t FilePermission::GetPersistPolicyByTokenId(uint32_t tokenId, vector<UriPo
         uriPolicies.push_back(uriPolicy);
     }
 
-    return ErrorCodeConversion(sandboxManagerErrorCode);
+    return ConvertSandboxManagerError(sandboxManagerErrorCode);
 #else
     LOGW("Sandbox manager bundle not exist, device not support.");
     return FileManagement::LibN::E_DEVICENOTSUPPORT;
@@ -548,7 +592,7 @@ int32_t FilePermission::GrantSharedDirectoryPermission()
     LOGI("GrantSharedDirectoryPermission called");
 #ifdef SANDBOX_MANAGER
     int32_t ret = SandboxManagerKit::GrantSharedDirectoryPermission();
-    int32_t errorCode = ErrorCodeConversion(ret);
+    int32_t errorCode = ConvertSandboxManagerError(ret);
     LOGI("SandboxManagerKit::GrantSharedDirectoryPermission() returned: %{public}d, converted to: %{public}d",
         ret, errorCode);
     return errorCode;
@@ -563,7 +607,7 @@ int32_t FilePermission::RevokeSharedDirectoryPermission()
     LOGI("RevokeSharedDirectoryPermission called");
 #ifdef SANDBOX_MANAGER
     int32_t ret = SandboxManagerKit::RevokeSharedDirectoryPermission();
-    int32_t errorCode = ErrorCodeConversion(ret);
+    int32_t errorCode = ConvertSandboxManagerError(ret);
     LOGI("SandboxManagerKit::RevokeSharedDirectoryPermission() returned: %{public}d, converted to: %{public}d",
         ret, errorCode);
     return errorCode;
@@ -590,7 +634,7 @@ int32_t FilePermission::GetSharedDirectoryInfo(vector<SharedDirectoryInfo> &shar
         sharedDirectories.push_back(appInfo);
     }
     
-    int32_t errorCode = ErrorCodeConversion(ret);
+    int32_t errorCode = ConvertSandboxManagerError(ret);
     LOGI("SandboxManagerKit::GetSharedDirectoryInfo() returned: %{public}d, converted to: %{public}d", ret, errorCode);
     return errorCode;
 #else
