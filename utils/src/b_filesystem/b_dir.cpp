@@ -604,21 +604,23 @@ void BDir::ClearDirectory(const std::string &path)
         HILOGE("Invalid path for clearing Dir");
         return;
     }
-    if (access(path.c_str(), F_OK) != ERR_OK) {
-        HILOGE("Failed to access dir, errno = %{public}d", errno);
-        return;
-    }
-    if (!std::filesystem::is_directory(path)) {
-        HILOGE("Path is not a directory");
-        return;
-    }
-    try {
-        for (const auto& entry : std::filesystem::directory_iterator(path)) {
-            std::filesystem::remove_all(entry.path());
+
+    std::set<std::string> subItems = GetSubDir(path);
+
+    for (const auto& item : subItems) {
+        if (item.empty()) {
+            continue;
         }
-        HILOGD("Clear Directory finished");
-    } catch (const std::filesystem::filesystem_error &e) {
-        HILOGE("Clear Directory failed: %{public}s", e.what());
+        if (item.back() == BConstants::FILE_SEPARATOR_CHAR) {
+            if (!ForceRemoveDirectoryBMS(item)) {
+                HILOGE("Failed to remove dir: %{public}s", item.c_str());
+            }
+        } else {
+            if (!RemoveFile(item)) {
+                HILOGE("Failed to remove file: %{public}s", item.c_str());
+            }
+        }
     }
+    HILOGD("Clear Directory finished");
 }
 } // namespace OHOS::FileManagement::Backup

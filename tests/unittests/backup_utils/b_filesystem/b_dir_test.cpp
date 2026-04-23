@@ -18,6 +18,7 @@
 
 #include <dirent.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <errors.h>
 #include <file_ex.h>
@@ -601,18 +602,20 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0300, testing::ext::TestSize.Level1)
     try {
         TestManager tm("b_dir_ClearDirectory_0300");
         std::string targetDir = tm.GetRootDirCurTest();
+        
+        mkdir((targetDir + "sub").c_str(), 0755);
+        int fd = open((targetDir + "file.txt").c_str(), O_CREAT | O_RDWR, 0644);
+        close(fd);
 
-        system((std::string("mkdir -p ") + targetDir + "sub").c_str());
-        system((std::string("touch ") + targetDir + "file.txt").c_str());
-
-        EXPECT_TRUE(std::filesystem::exists(targetDir + "sub"));
-        EXPECT_TRUE(std::filesystem::exists(targetDir + "file.txt"));
+        auto subs = GetSubDir(targetDir);
+        EXPECT_EQ(subs.size(), 2); 
 
         BDir::ClearDirectory(targetDir);
 
-        EXPECT_FALSE(std::filesystem::exists(targetDir + "sub"));
-        EXPECT_FALSE(std::filesystem::exists(targetDir + "file.txt"));
-        EXPECT_TRUE(std::filesystem::exists(targetDir));
+        subs = GetSubDir(targetDir);
+        EXPECT_EQ(subs.size(), 0);
+
+        EXPECT_EQ(access(targetDir.c_str(), F_OK), 0);
     } catch (...) {
         GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
         EXPECT_TRUE(false);
@@ -637,10 +640,10 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0400, testing::ext::TestSize.Level1)
         std::string targetDir = tm.GetRootDirCurTest();
         std::string filePath = targetDir + "test_file.txt";
 
-        system((std::string("touch ") + filePath).c_str());
+        int fd = open(filePath.c_str(), O_CREAT | O_RDWR, 0644);
+        close(fd);
 
         BDir::ClearDirectory(filePath);
-
         EXPECT_TRUE(true);
     } catch (...) {
         GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
@@ -649,4 +652,32 @@ HWTEST_F(BDirTest, b_dir_ClearDirectory_0400, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0400";
 }
 
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0500
+ * @tc.name: b_dir_ClearDirectory_0500
+ * @tc.desc: Test function of ClearDirectory interface for Remove Fail
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0500";
+    try {
+        TestManager tm("ClearDirectory_RemoveFail_0500");
+        std::string targetDir = tm.GetRootDirCurTest();
+        mkdir((targetDir + "sub").c_str(), 0755);
+        int fd = open((targetDir + "file.txt").c_str(), O_CREAT | O_RDWR, 0644);
+        close(fd);
+        chmod(targetDir.c_str(), 0555);
+        BDir::ClearDirectory(targetDir);
+        EXPECT_TRUE(true);
+        chmod(targetDir.c_str(), 0755);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0500";
+}
 } // namespace OHOS::FileManagement::Backup
