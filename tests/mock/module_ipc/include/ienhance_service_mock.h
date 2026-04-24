@@ -38,6 +38,8 @@ public:
     MOCK_METHOD(int, OpenAncoFileReadOnly, (const std::string &));
     MOCK_METHOD(bool, RemoveAncoFile, (const std::string &));
     MOCK_METHOD(void, GetIncrementalAncoFileHandle, (const std::string &, const std::string &, int &, int &, int &));
+    MOCK_METHOD(int32_t, MoveFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
+    MOCK_METHOD(int32_t, OpenFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_MOCK_IENHANCE_SERVICE_H
