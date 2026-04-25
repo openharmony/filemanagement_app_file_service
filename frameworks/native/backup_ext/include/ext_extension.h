@@ -88,11 +88,11 @@ class AncoIncrementalRestoreHelper {
 public:
     static void CreateAncoRestoreTask(wptr<BackupExtExtension> extension);
     static void DestroyAncoRestoreTask();
-    static ErrCode StartAncoUnPacket(const std::vector<std::string> &ancoTarFiles,
-        const std::vector<int64_t> &ancoTarFileSizes, const std::vector<std::string> &ancoTarFileNames,
-        const std::string &tempPath);
-    static void AddAncoMovePathsAndClean(std::vector<std::string> &ancoSourcePath,
-        std::vector<std::string> &ancoTargetPath, std::vector<StatInfo> &ancoStats);
+    static ErrCode AddAncoTars(const std::vector<std::string> &ancoTarFiles,
+        const std::vector<int64_t> &ancoTarFileSizes, const std::vector<std::string> &ancoTarFileNames);
+    static ErrCode StartAncoUnPacket(const std::string &tempPath);
+    static ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
+        const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats);
     static AncoRestoreResult StartAncoMove();
 };
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,

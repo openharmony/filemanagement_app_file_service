@@ -159,8 +159,9 @@ public:
     ErrCode StartAncoPacket(uint64_t &smallFileCount) override;
     ErrCode CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback) override;
     ErrCode DestroyAncoRestoreTask() override;
-    ErrCode StartAncoUnPacket(const std::vector<std::string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
-        const std::vector<std::string> &tarFileNames, const std::string &rootPath) override;
+    ErrCode AddAncoTars(const std::vector<std::string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
+        const std::vector<std::string> &tarFileNames) override;
+    ErrCode StartAncoUnPacket(const std::string &rootPath) override;
     ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) override;
     ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) override;

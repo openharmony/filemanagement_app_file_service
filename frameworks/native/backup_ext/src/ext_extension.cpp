@@ -73,7 +73,6 @@ const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACK
                                              append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
 const string MEDIA_LIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 const string FILE_MANAGER_BUNDLE_NAME = "com.ohos.filepicker";
-const size_t MAX_IPC_SEND_DATA_SIZE = static_cast<int>(200 * 1024 * 0.8);
 using namespace std;
 
 static void RecordDoRestoreRes(const std::string &bundleName, const std::string &func,
@@ -111,7 +110,7 @@ static string GetRestoreTempPath(const string &bundleName, const string &hashNam
 {
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
-        if (hashName.find('_') != string::npos) {
+        if (hashName.find(BConstants::ANCO_TAG) != string::npos) {
             path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         } else {
             if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
@@ -903,8 +902,11 @@ int BackupExtExtension::DoIncrementalRestore()
     if (tempPath == std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO)
         .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) {
         auto [ancoTarFiles, ancoTarFileSizes, ancoTarFileNames] = ancoTarInfo;
-        auto errCode =
-            AncoIncrementalRestoreHelper::StartAncoUnPacket(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames, tempPath);
+        auto errCode = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
+        if (errCode != ERR_OK) {
+            err = errCode;
+        }
+        errCode = AncoIncrementalRestoreHelper::StartAncoUnPacket(tempPath);
         if (errCode != ERR_OK) {
             err = errCode;
         }
@@ -1294,18 +1296,6 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path, const ExtMan
     RestoreBigFileAfter(filePath, item.sta);
 }
 
-static bool CheckAndTryAddAncoMovePaths(size_t byteSize, vector<string> &ancoSourcePath,
-    vector<string> &ancoTargetPath, vector<StatInfo> &ancoStats, size_t &curIpcDataSize) {
-    if (byteSize > MAX_IPC_SEND_DATA_SIZE) {
-        return false;
-    }
-    if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
-        AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
-        curIpcDataSize = 0;
-    }
-    return true;
-}
-
 void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -1323,7 +1313,6 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
     vector<string> ancoSourcePath;
     vector<string> ancoTargetPath;
     vector<StatInfo> ancoStats;
-    size_t curIpcDataSize = 0;
     for (const auto &item : info) {
         if (item.hashName.empty() || (!item.isUserTar && !item.isBigFile)) {
             continue;
@@ -1333,22 +1322,14 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         // 获取索引文件内容
         string path = GetRestoreTempPath(bundleName_, item.hashName);
         if (StringUtils::IsSandboxAncoPath(path)) {
-            const string srcPath = path + item.hashName;
-            const size_t byteSize = srcPath.size() + item.fileName.size() + sizeof(StatInfo);
-            if (!CheckAndTryAddAncoMovePaths(byteSize, ancoSourcePath, ancoTargetPath, ancoStats, curIpcDataSize)) {
-                continue;
-            }
-            ancoSourcePath.push_back(srcPath);
+            ancoSourcePath.push_back(path + item.hashName);
             ancoTargetPath.push_back(item.fileName);
             ancoStats.push_back(item.sta);
-            curIpcDataSize += byteSize;
             continue;
         }
         RestoreOneBigFile(path, item, appendTargetPath);
     }
-    if (curIpcDataSize > 0) {
-        AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(ancoSourcePath, ancoTargetPath, ancoStats);
-    }
+    AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
     ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove();
     auto end = std::chrono::system_clock::now();
     radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -1490,7 +1471,6 @@ int BackupExtExtension::DealIncreRestoreBigAndTarFile()
     ret = DoIncrementalRestore();
     if (ret != ERR_OK) {
         HILOGE("Do incremental restore err");
-        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
         return ret;
     }
     // 恢复用户tar包以及大文件

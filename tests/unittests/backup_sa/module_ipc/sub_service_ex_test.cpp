@@ -571,17 +571,14 @@ HWTEST_F(ServiceTest, SUB_Service_DestroyAncoRestoreTask_0003, testing::ext::Tes
 HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StartAncoUnPacket_0000";
-    EXPECT_CALL(*mockEnhanceService, StartAncoUnPacket(_, _, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+    EXPECT_CALL(*mockEnhanceService, StartAncoUnPacket(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    std::vector<std::string> tarFiles;
-    std::vector<int64_t> tarFileSizes;
-    std::vector<std::string> tarFileNames;
     std::string rootPath;
-    EXPECT_EQ(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
+    EXPECT_EQ(service->StartAncoUnPacket(rootPath),
         BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0000";
 }
@@ -598,18 +595,15 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0000, testing::ext::TestSize
 HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StartAncoUnPacket_0001";
-    EXPECT_CALL(*mockEnhanceService, StartAncoUnPacket(_, _, _, _, _))
+    EXPECT_CALL(*mockEnhanceService, StartAncoUnPacket(_, _))
         .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
- 
-    std::vector<std::string> tarFiles;
-    std::vector<int64_t> tarFileSizes;
-    std::vector<std::string> tarFileNames;
+
     std::string rootPath;
-    EXPECT_NE(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
+    EXPECT_NE(service->StartAncoUnPacket(rootPath),
         BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0001";
 }
@@ -629,11 +623,8 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0002, testing::ext::TestSize
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
  
-    std::vector<std::string> tarFiles;
-    std::vector<int64_t> tarFileSizes;
-    std::vector<std::string> tarFileNames;
     std::string rootPath;
-    EXPECT_NE(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
+    EXPECT_NE(service->StartAncoUnPacket(rootPath),
         BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0002";
 }
@@ -657,11 +648,8 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0003, testing::ext::TestSize
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    std::vector<std::string> tarFiles;
-    std::vector<int64_t> tarFileSizes;
-    std::vector<std::string> tarFileNames;
     std::string rootPath;
-    EXPECT_EQ(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
+    EXPECT_EQ(service->StartAncoUnPacket(rootPath),
         BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0003";

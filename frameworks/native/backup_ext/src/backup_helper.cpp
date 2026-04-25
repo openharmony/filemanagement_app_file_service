@@ -25,6 +25,10 @@
 #include "service_client.h"
 
 namespace OHOS::FileManagement::Backup {
+constexpr size_t MAX_IPC_SEND_DATA_SIZE = static_cast<size_t>(131071 * 1024);
+constexpr double IPC_SEND_DATA_SCALE_FACTOR = 0.8;
+constexpr size_t SAFE_IPC_SEND_DATA_SIZE = static_cast<size_t>(MAX_IPC_SEND_DATA_SIZE * IPC_SEND_DATA_SCALE_FACTOR);
+
 ErrCode AncoBackupCallback::OnBigFileReadyCallback(
     const std::string &filePath, const std::string &restorePath, const StatInfo &statInfo)
 {
@@ -126,18 +130,131 @@ void AncoBackupHelper::DestroyAncoBackupTask()
     }
 }
 
-void AncoBackupHelper::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
+static bool FilterAndSaveBackupPathsInner(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
     const std::vector<std::string> &excludes)
 {
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
-        return;
+        return false;
     }
     auto ret = proxy->FilterAndSaveBackupPaths(includes, compatIncludes, excludes);
     if (ret != ERR_OK) {
         HILOGE("Failed to FilterAndSaveBackupPaths. err = %{public}d", ret);
+        return false;
     }
+    return true;
+}
+
+static bool FilterAndSaveBackupPathsSendIncludes(std::set<std::string> &includes)
+{
+    std::set<std::string> sliceIncludes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+    std::set<std::string> filteredIncludes;
+    size_t curIpcDataSize = 0;
+    for (const auto &path : includes) {
+        const size_t byteSize = path.size();
+        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+            HILOGW("path is too long");
+            return false;
+        }
+        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+            if (!FilterAndSaveBackupPathsInner(sliceIncludes, compatIncludes, excludes)) {
+                return false;
+            }
+            filteredIncludes.merge(sliceIncludes);
+            sliceIncludes.clear();
+            curIpcDataSize = 0;
+        }
+        sliceIncludes.insert(path);
+        curIpcDataSize += byteSize;
+    }
+    if (curIpcDataSize > 0 && !FilterAndSaveBackupPathsInner(sliceIncludes, compatIncludes, excludes)) {
+        return false;
+    }
+    includes = move(filteredIncludes);
+    return true;
+}
+
+static bool FilterAndSaveBackupPathsSendCompatIncludes(std::set<std::string> &compatIncludes)
+{
+    std::set<std::string> includes;
+    std::set<std::string> sliceCompatIncludes;
+    std::vector<std::string> excludes;
+    std::set<std::string> filteredSliceCompatIncludes;
+    size_t curIpcDataSize = 0;
+    for (const auto &path : compatIncludes) {
+        const size_t byteSize = path.size();
+        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+            HILOGW("path is too long");
+            return false;
+        }
+        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+            if (!FilterAndSaveBackupPathsInner(includes, sliceCompatIncludes, excludes)) {
+                return false;
+            }
+            filteredSliceCompatIncludes.merge(sliceCompatIncludes);
+            sliceCompatIncludes.clear();
+            curIpcDataSize = 0;
+        }
+        sliceCompatIncludes.insert(path);
+        curIpcDataSize += byteSize;
+    }
+    if (curIpcDataSize > 0 && !FilterAndSaveBackupPathsInner(includes, sliceCompatIncludes, excludes)) {
+        return false;
+    }
+    compatIncludes = move(filteredSliceCompatIncludes);
+    return true;
+}
+
+static bool FilterAndSaveBackupPathsSendExcludes(const std::vector<std::string> &excludes)
+{
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> sliceExcludes;
+    size_t curIpcDataSize = 0;
+    for (const auto &path : excludes) {
+        const size_t byteSize = path.size();
+        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+            HILOGW("path is too long");
+            return false;
+        }
+        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+            if (!FilterAndSaveBackupPathsInner(includes, compatIncludes, sliceExcludes)) {
+                return false;
+            }
+            sliceExcludes.clear();
+            curIpcDataSize = 0;
+        }
+        sliceExcludes.push_back(path);
+        curIpcDataSize += byteSize;
+    }
+    if (curIpcDataSize > 0 && !FilterAndSaveBackupPathsInner(includes, compatIncludes, sliceExcludes)) {
+        return false;
+    }
+    return true;
+}
+
+void AncoBackupHelper::FilterAndSaveBackupPaths(std::set<std::string> &includes, std::set<std::string> &compatIncludes,
+    const std::vector<std::string> &excludes)
+{
+    HILOGI("<before> includes: %{public}zu, compatIncludes: %{public}zu, excludes: %{public}zu",
+        includes.size(), compatIncludes.size(), excludes.size());
+    if (!FilterAndSaveBackupPathsSendIncludes(includes)) {
+        HILOGE("Failed to FilterAndSaveBackupPaths includes.");
+        return;
+    }
+    if (!FilterAndSaveBackupPathsSendCompatIncludes(compatIncludes)) {
+        HILOGE("Failed to FilterAndSaveBackupPaths compatIncludes.");
+        return;
+    }
+    if (!FilterAndSaveBackupPathsSendExcludes(excludes)) {
+        HILOGE("Failed to FilterAndSaveBackupPaths excludes.");
+        return;
+    }
+    HILOGI("<after> includes: %{public}zu, compatIncludes: %{public}zu, excludes: %{public}zu",
+        includes.size(), compatIncludes.size(), excludes.size());
 }
 
 std::tuple<ErrCode, int64_t, int64_t> AncoBackupHelper::StartAncoScanAllDirs()
@@ -196,32 +313,114 @@ void AncoIncrementalRestoreHelper::DestroyAncoRestoreTask()
     }
 }
 
-ErrCode AncoIncrementalRestoreHelper::StartAncoUnPacket(const std::vector<string> &ancoTarFiles,
-    const std::vector<int64_t> &ancoTarFileSizes, const std::vector<string> &ancoTarFileNames, const string &tempPath)
+ErrCode AncoIncrementalRestoreHelper::AddAncoTars(const std::vector<string> &ancoTarFiles,
+    const std::vector<int64_t> &ancoTarFileSizes, const std::vector<string> &ancoTarFileNames)
 {
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
         return BError(BError::Codes::EXT_INVAL_ARG);
     }
-    return proxy->StartAncoUnPacket(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames, tempPath);
+    if (!(ancoTarFiles.size() == ancoTarFileSizes.size() && ancoTarFiles.size() == ancoTarFileNames.size())) {
+        HILOGE("size is not equal");
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+
+    std::vector<string> sliceTarFiles;
+    std::vector<int64_t> sliceTarFileSizes;
+    std::vector<string> sliceTarFileNames;
+    size_t curIpcDataSize = 0;
+    for (size_t i = 0; i < ancoTarFiles.size(); ++i) {
+        const size_t byteSize = ancoTarFiles[i].size() + ancoTarFileNames[i].size() + sizeof(int64_t);
+        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+            HILOGW("path is too long");
+            continue;
+        }
+        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+            auto ret = proxy->AddAncoTars(sliceTarFiles, sliceTarFileSizes, sliceTarFileNames);
+            if (ret != ERR_OK) {
+                HILOGE("Failed to AddAncoTars, err = %{public}d", ret);
+                return ret;
+            }
+            sliceTarFiles.clear();
+            sliceTarFileSizes.clear();
+            sliceTarFileNames.clear();
+            curIpcDataSize = 0;
+        }
+        sliceTarFiles.push_back(ancoTarFiles[i]);
+        sliceTarFileSizes.push_back(ancoTarFileSizes[i]);
+        sliceTarFileNames.push_back(ancoTarFileNames[i]);
+        curIpcDataSize += byteSize;
+    }
+    if (curIpcDataSize == 0) {
+        return BError(BError::Codes::OK);
+    }
+    auto ret = proxy->AddAncoTars(sliceTarFiles, sliceTarFileSizes, sliceTarFileNames);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to AddAncoTars, err = %{public}d", ret);
+        return ret;
+    }
+    return BError(BError::Codes::OK);
 }
 
-void AncoIncrementalRestoreHelper::AddAncoMovePathsAndClean(std::vector<std::string> &ancoSourcePath,
-    std::vector<std::string> &ancoTargetPath, std::vector<StatInfo> &ancoStats)
+ErrCode AncoIncrementalRestoreHelper::StartAncoUnPacket(const string &tempPath)
 {
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("Failed to get backup service");
-        return;
+        return BError(BError::Codes::EXT_INVAL_ARG);
     }
-    auto ret = proxy->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    return proxy->StartAncoUnPacket(tempPath);
+}
+
+ErrCode AncoIncrementalRestoreHelper::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+    if (!(ancoSourcePath.size() == ancoTargetPath.size() && ancoSourcePath.size() == ancoStats.size())) {
+        HILOGE("size is not equal");
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+
+    std::vector<std::string> sliceSourcePath;
+    std::vector<std::string> sliceTargetPath;
+    std::vector<StatInfo> sliceStats;
+    size_t curIpcDataSize = 0;
+    for (size_t i = 0; i < ancoSourcePath.size(); ++i) {
+        const size_t byteSize = ancoSourcePath[i].size() + ancoTargetPath[i].size() + sizeof(StatInfo);
+        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+            HILOGW("path is too long");
+            continue;
+        }
+        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+            auto ret = proxy->AddAncoMovePaths(sliceSourcePath, sliceTargetPath, sliceStats);
+            if (ret != ERR_OK) {
+                HILOGE("Failed to AddAncoMovePaths, err = %{public}d", ret);
+                return ret;
+            }
+            sliceSourcePath.clear();
+            sliceTargetPath.clear();
+            sliceStats.clear();
+            curIpcDataSize = 0;
+        }
+        sliceSourcePath.push_back(ancoSourcePath[i]);
+        sliceTargetPath.push_back(ancoTargetPath[i]);
+        sliceStats.push_back(ancoStats[i]);
+        curIpcDataSize += byteSize;
+    }
+    if (curIpcDataSize == 0) {
+        return BError(BError::Codes::OK);
+    }
+    auto ret = proxy->AddAncoMovePaths(sliceSourcePath, sliceTargetPath, sliceStats);
     if (ret != ERR_OK) {
-        HILOGE("Failed to AddAncoMovePaths. err = %{public}d", ret);
+        HILOGE("Failed to AddAncoMovePaths, err = %{public}d", ret);
+        return ret;
     }
-    ancoSourcePath.clear();
-    ancoTargetPath.clear();
-    ancoStats.clear();
+    return BError(BError::Codes::OK);
 }
 
 AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove()

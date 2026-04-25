@@ -41,9 +41,9 @@ public:
     virtual ErrCode CreateAncoRestoreTask(const std::string &bundleName,
         const sptr<IAncoRestoreCallback> &callback) = 0;
     virtual ErrCode DestroyAncoRestoreTask(const std::string &bundleName) = 0;
-    virtual ErrCode StartAncoUnPacket(const std::string &bundleName, const std::vector<std::string> &tarFiles,
-        const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames,
-        const std::string &rootPath) = 0;
+    virtual ErrCode AddAncoTars(const std::string &bundleName, const std::vector<std::string> &tarFiles,
+        const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames) = 0;
+    virtual ErrCode StartAncoUnPacket(const std::string &bundleName, const std::string &rootPath) = 0;
     virtual ErrCode AddAncoMovePaths(const std::string &bundleName, const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) = 0;
     virtual ErrCode StartAncoMove(const std::string &bundleName, AncoRestoreResult &ancoRestoreRes) = 0;
