@@ -603,8 +603,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0001, testing::ext::TestSize
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
 
     std::string rootPath;
-    EXPECT_NE(service->StartAncoUnPacket(rootPath),
-        BError(BError::Codes::OK));
+    EXPECT_NE(service->StartAncoUnPacket(rootPath), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0001";
 }
  
@@ -624,8 +623,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0002, testing::ext::TestSize
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
  
     std::string rootPath;
-    EXPECT_NE(service->StartAncoUnPacket(rootPath),
-        BError(BError::Codes::OK));
+    EXPECT_NE(service->StartAncoUnPacket(rootPath), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0002";
 }
  

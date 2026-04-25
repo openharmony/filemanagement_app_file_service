@@ -155,11 +155,11 @@ static bool FilterAndSaveBackupPathsSendIncludes(std::set<std::string> &includes
     size_t curIpcDataSize = 0;
     for (const auto &path : includes) {
         const size_t byteSize = path.size();
-        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+        if (byteSize > MAX_IPC_SEND_DATA_SIZE) {
             HILOGW("path is too long");
             return false;
         }
-        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+        if (curIpcDataSize + byteSize > SAFE_IPC_SEND_DATA_SIZE) {
             if (!FilterAndSaveBackupPathsInner(sliceIncludes, compatIncludes, excludes)) {
                 return false;
             }
@@ -173,6 +173,7 @@ static bool FilterAndSaveBackupPathsSendIncludes(std::set<std::string> &includes
     if (curIpcDataSize > 0 && !FilterAndSaveBackupPathsInner(sliceIncludes, compatIncludes, excludes)) {
         return false;
     }
+    filteredIncludes.merge(sliceIncludes);
     includes = move(filteredIncludes);
     return true;
 }
@@ -186,11 +187,11 @@ static bool FilterAndSaveBackupPathsSendCompatIncludes(std::set<std::string> &co
     size_t curIpcDataSize = 0;
     for (const auto &path : compatIncludes) {
         const size_t byteSize = path.size();
-        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+        if (byteSize > MAX_IPC_SEND_DATA_SIZE) {
             HILOGW("path is too long");
             return false;
         }
-        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+        if (curIpcDataSize + byteSize > SAFE_IPC_SEND_DATA_SIZE) {
             if (!FilterAndSaveBackupPathsInner(includes, sliceCompatIncludes, excludes)) {
                 return false;
             }
@@ -204,6 +205,7 @@ static bool FilterAndSaveBackupPathsSendCompatIncludes(std::set<std::string> &co
     if (curIpcDataSize > 0 && !FilterAndSaveBackupPathsInner(includes, sliceCompatIncludes, excludes)) {
         return false;
     }
+    filteredSliceCompatIncludes.merge(sliceCompatIncludes);
     compatIncludes = move(filteredSliceCompatIncludes);
     return true;
 }
@@ -216,11 +218,11 @@ static bool FilterAndSaveBackupPathsSendExcludes(const std::vector<std::string> 
     size_t curIpcDataSize = 0;
     for (const auto &path : excludes) {
         const size_t byteSize = path.size();
-        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+        if (byteSize > MAX_IPC_SEND_DATA_SIZE) {
             HILOGW("path is too long");
             return false;
         }
-        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+        if (curIpcDataSize + byteSize > SAFE_IPC_SEND_DATA_SIZE) {
             if (!FilterAndSaveBackupPathsInner(includes, compatIncludes, sliceExcludes)) {
                 return false;
             }
@@ -332,11 +334,11 @@ ErrCode AncoIncrementalRestoreHelper::AddAncoTars(const std::vector<string> &anc
     size_t curIpcDataSize = 0;
     for (size_t i = 0; i < ancoTarFiles.size(); ++i) {
         const size_t byteSize = ancoTarFiles[i].size() + ancoTarFileNames[i].size() + sizeof(int64_t);
-        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+        if (byteSize > MAX_IPC_SEND_DATA_SIZE) {
             HILOGW("path is too long");
             continue;
         }
-        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+        if (curIpcDataSize + byteSize > SAFE_IPC_SEND_DATA_SIZE) {
             auto ret = proxy->AddAncoTars(sliceTarFiles, sliceTarFileSizes, sliceTarFileNames);
             if (ret != ERR_OK) {
                 HILOGE("Failed to AddAncoTars, err = %{public}d", ret);
@@ -392,11 +394,11 @@ ErrCode AncoIncrementalRestoreHelper::AddAncoMovePaths(const std::vector<std::st
     size_t curIpcDataSize = 0;
     for (size_t i = 0; i < ancoSourcePath.size(); ++i) {
         const size_t byteSize = ancoSourcePath[i].size() + ancoTargetPath[i].size() + sizeof(StatInfo);
-        if (byteSize > SAFE_IPC_SEND_DATA_SIZE) {
+        if (byteSize > MAX_IPC_SEND_DATA_SIZE) {
             HILOGW("path is too long");
             continue;
         }
-        if (curIpcDataSize + byteSize > MAX_IPC_SEND_DATA_SIZE) {
+        if (curIpcDataSize + byteSize > SAFE_IPC_SEND_DATA_SIZE) {
             auto ret = proxy->AddAncoMovePaths(sliceSourcePath, sliceTargetPath, sliceStats);
             if (ret != ERR_OK) {
                 HILOGE("Failed to AddAncoMovePaths, err = %{public}d", ret);
