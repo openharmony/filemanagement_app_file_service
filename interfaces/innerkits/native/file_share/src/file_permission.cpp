@@ -76,10 +76,17 @@ bool CheckValidUri(const string &uriStr, const string &path, bool checkAccess)
         LOGI("media path, skip access check");
         return true;
     }
-    // check if path can be accessed
-    if (checkAccess && (access(path.c_str(), F_OK) != 0)) {
-        LOGE("access path failed");
-        return false;
+    // check if path exists and is not a symbolic link
+    if (checkAccess) {
+        struct stat st;
+        if (lstat(path.c_str(), &st) != 0) {
+            LOGE("lstat path failed, errno: %{public}d", errno);
+            return false;
+        }
+        if (S_ISLNK(st.st_mode)) {
+            LOGE("path is a symbolic link, rejected for security");
+            return false;
+        }
     }
     return true;
 }
