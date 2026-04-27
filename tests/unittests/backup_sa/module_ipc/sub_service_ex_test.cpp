@@ -578,8 +578,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0000, testing::ext::TestSize
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
     std::string rootPath;
-    EXPECT_EQ(service->StartAncoUnPacket(rootPath),
-        BError(BError::Codes::OK));
+    EXPECT_EQ(service->StartAncoUnPacket(rootPath), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0000";
 }
  
