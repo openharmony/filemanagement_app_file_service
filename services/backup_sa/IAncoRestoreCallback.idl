@@ -15,6 +15,6 @@
 
 package OHOS.FileManagement.Backup;
 [callback] interface IAncoRestoreCallback {
-    [ipcincapacity 131071] void ReportFileInfos([in] OrderedMap<String, long> endFileInfos,
+    [ipcincapacity 1024] void ReportFileInfos([in] OrderedMap<String, long> endFileInfos,
         [in] OrderedMap<String, int[]> errFileInfos);
 };
