@@ -87,6 +87,121 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0000
 }
 
 /**
+ * @tc.number: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0001
+ * @tc.name: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0001
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 接口 - 输入路径过长
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0001";
+    ServiceClient::serviceProxy_ = proxy;
+    std::set<std::string> includes = {std::string(10000, 'a')}; // 创建一个长路径
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+
+    EXPECT_NO_THROW(AncoBackupHelper::FilterAndSaveBackupPaths(includes, compatIncludes, excludes));
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0001";
+}
+
+/**
+ * @tc.number: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0002
+ * @tc.name: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0002
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 接口 - 输入路径数量超过限制
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0002";
+    ServiceClient::serviceProxy_ = proxy;
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+
+    // 添加超过限制的路径
+    for (size_t i = 0; i < SET_MAX_SIZE + 1; ++i) {
+        includes.insert("/data/path" + std::to_string(i));
+    }
+
+    EXPECT_NO_THROW(AncoBackupHelper::FilterAndSaveBackupPaths(includes, compatIncludes, excludes));
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0002";
+}
+
+/**
+ * @tc.number: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0003
+ * @tc.name: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0003
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 接口 - 输入路径总大小超过限制
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0003";
+    ServiceClient::serviceProxy_ = proxy;
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+
+    // 添加总大小超过限制的路径
+    for (size_t i = 0; i < 100; ++i) {
+        includes.insert(std::string(10000, 'a')); // 每个路径长度为10000
+    }
+
+    EXPECT_NO_THROW(AncoBackupHelper::FilterAndSaveBackupPaths(includes, compatIncludes, excludes));
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0003";
+}
+
+/**
+ * @tc.number: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0004
+ * @tc.name: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0004
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 接口 - 输入路径为空
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0004";
+    ServiceClient::serviceProxy_ = proxy;
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+
+    EXPECT_NO_THROW(AncoBackupHelper::FilterAndSaveBackupPaths(includes, compatIncludes, excludes));
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0004";
+}
+
+/**
+ * @tc.number: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0005
+ * @tc.name: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0005
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 接口 - 输入路径正常
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0005";
+    ServiceClient::serviceProxy_ = proxy;
+    std::set<std::string> includes = {"/data/path1", "/data/path2"};
+    std::set<std::string> compatIncludes = {"/data/compat1", "/data/compat2"};
+    std::vector<std::string> excludes = {"/data/exclude1", "/data/exclude2"};
+
+    EXPECT_NO_THROW(AncoBackupHelper::FilterAndSaveBackupPaths(includes, compatIncludes, excludes));
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0005";
+}
+
+/**
  * @tc.number: SUB_AncoBackupHelper_StartAncoScanAllDirs_0000
  * @tc.name: SUB_AncoBackupHelper_StartAncoScanAllDirs_0000
  * @tc.desc: 测试 StartAncoScanAllDirs 接口
@@ -191,6 +306,131 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_DestroyAncoRestor
 }
 
 /**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0000
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0000
+ * @tc.desc: 测试 AddAncoTars 接口 - 正常情况
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoTars_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoTars_0000";
+
+    ServiceClient::serviceProxy_ = proxy;
+    std::vector<std::string> ancoTarFiles = {"/data/test1.tar", "/data/test2.tar"};
+    std::vector<int64_t> ancoTarFileSizes = {1024, 2048};
+    std::vector<std::string> ancoTarFileNames = {"test1.tar", "test2.tar"};
+
+    EXPECT_CALL(*proxy, AddAncoTars(_, _, _)).WillRepeatedly(Return(BError(BError::Codes::OK)));
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoTars_0000";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0001
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0001
+ * @tc.desc: 测试 AddAncoTars 接口 - 输入向量大小不一致
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoTars_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoTars_0001";
+
+    ServiceClient::serviceProxy_ = proxy;
+    std::vector<std::string> ancoTarFiles = {"/data/test1.tar"};
+    std::vector<int64_t> ancoTarFileSizes = {1024, 2048};
+    std::vector<std::string> ancoTarFileNames = {"test1.tar", "test2.tar"};
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
+    EXPECT_EQ(result, BError(BError::Codes::EXT_INVAL_ARG));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoTars_0001";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0002
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0002
+ * @tc.desc: 测试 AddAncoTars 接口 - 路径过长
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoTars_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoTars_0002";
+
+    ServiceClient::serviceProxy_ = proxy;
+    std::string longPath(1024 * 1024 + 1, 'a');  // 创建一个长路径
+    std::vector<std::string> ancoTarFiles = {longPath};
+    std::vector<int64_t> ancoTarFileSizes = {1024};
+    std::vector<std::string> ancoTarFileNames = {"test1.tar"};
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoTars_0002";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0003
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0003
+ * @tc.desc: 测试 AddAncoTars 接口 - 服务代理为空
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoTars_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoTars_0003";
+
+    ServiceClient::serviceProxy_ = nullptr;
+    std::vector<std::string> ancoTarFiles = {"/data/test1.tar"};
+    std::vector<int64_t> ancoTarFileSizes = {1024};
+    std::vector<std::string> ancoTarFileNames = {"test1.tar"};
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
+    EXPECT_EQ(result, BError(BError::Codes::EXT_INVAL_ARG));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoTars_0003";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0004
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoTars_0004
+ * @tc.desc: 测试 AddAncoTars 接口 - 服务调用失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoTars_0004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoTars_0004";
+
+    ServiceClient::serviceProxy_ = proxy;
+    std::vector<std::string> ancoTarFiles = {"/data/test1.tar"};
+    std::vector<int64_t> ancoTarFileSizes = {1024};
+    std::vector<std::string> ancoTarFileNames = {"test1.tar"};
+
+    EXPECT_CALL(*proxy, AddAncoTars(_, _, _)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
+    EXPECT_EQ(result, BError(BError::Codes::SDK_INVAL_ARG));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoTars_0004";
+}
+
+/**
  * @tc.number: SUB_AncoIncrementalRestoreHelper_StartAncoUnPacket_0000
  * @tc.name: SUB_AncoIncrementalRestoreHelper_StartAncoUnPacket_0000
  * @tc.desc: 测试 StartAncoUnPacket 接口
@@ -216,6 +456,131 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_StartAncoUnPacket
     AncoIncrementalRestoreHelper::StartAncoUnPacket(tempPath);
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_StartAncoUnPacket_0000";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0000
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0000
+ * @tc.desc: 测试 AddAncoMovePaths 接口 - 正常情况
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0000";
+
+    ServiceClient::serviceProxy_ = proxy;
+    std::vector<std::string> ancoSourcePath = {"/data/src1", "/data/src2"};
+    std::vector<std::string> ancoTargetPath = {"/data/dst1", "/data/dst2"};
+    std::vector<StatInfo> ancoStats = {{}, {}};
+
+    EXPECT_CALL(*proxy, AddAncoMovePaths(_, _, _)).WillRepeatedly(Return(BError(BError::Codes::OK)));
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0000";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0001
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0001
+ * @tc.desc: 测试 AddAncoMovePaths 接口 - 输入向量大小不一致
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0001";
+
+    ServiceClient::serviceProxy_ = proxy;
+    std::vector<std::string> ancoSourcePath = {"/data/src1"};
+    std::vector<std::string> ancoTargetPath = {"/data/dst1", "/data/dst2"};
+    std::vector<StatInfo> ancoStats = {{}, {}};
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_EQ(result, BError(BError::Codes::EXT_INVAL_ARG));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0001";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0002
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0002
+ * @tc.desc: 测试 AddAncoMovePaths 接口 - 路径过长
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0002";
+
+    ServiceClient::serviceProxy_ = proxy;
+    std::string longPath(1024 * 1024 + 1, 'a');  // 创建一个长路径
+    std::vector<std::string> ancoSourcePath = {longPath};
+    std::vector<std::string> ancoTargetPath = {"/data/dst1"};
+    std::vector<StatInfo> ancoStats = {{}};
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0002";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0003
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0003
+ * @tc.desc: 测试 AddAncoMovePaths 接口 - 服务代理为空
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0003";
+
+    ServiceClient::serviceProxy_ = nullptr;
+    std::vector<std::string> ancoSourcePath = {"/data/src1"};
+    std::vector<std::string> ancoTargetPath = {"/data/dst1"};
+    std::vector<StatInfo> ancoStats = {{}};
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_EQ(result, BError(BError::Codes::EXT_INVAL_ARG));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0003";
+}
+
+/**
+ * @tc.number: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0004
+ * @tc.name: SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0004
+ * @tc.desc: 测试 AddAncoMovePaths 接口 - 服务调用失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0004";
+
+    ServiceClient::serviceProxy_ = proxy;
+    std::vector<std::string> ancoSourcePath = {"/data/src1"};
+    std::vector<std::string> ancoTargetPath = {"/data/dst1"};
+    std::vector<StatInfo> ancoStats = {{}};
+
+    EXPECT_CALL(*proxy, AddAncoMovePaths(_, _, _)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
+
+    auto result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_EQ(result, BError(BError::Codes::SDK_INVAL_ARG));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0004";
 }
 
 /**
