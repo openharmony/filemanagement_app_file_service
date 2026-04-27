@@ -28,6 +28,30 @@
 #include "b_error/b_error.h"
 
 namespace OHOS::FileManagement::Backup {
+static constexpr int32_t MIGRATE_LEN_FILE_PATH = 4096;
+static constexpr int32_t MIGRATE_PERM_LEN = 16;
+static constexpr int32_t MIGRATE_ID_LEN = 36;
+struct FileBackupParam {
+    char srcFilePath[MIGRATE_LEN_FILE_PATH];
+    char dstFilePath[MIGRATE_LEN_FILE_PATH];
+    char uid[MIGRATE_ID_LEN] = {0};
+    char gid[MIGRATE_ID_LEN] = {0};
+    char perm[MIGRATE_PERM_LEN] = {0};
+    int32_t recurseOpt = 0;
+};
+
+struct ResultParam {
+    char filePath[MIGRATE_LEN_FILE_PATH];
+    int32_t fd;
+};
+
+struct FileBackupResultMsg {
+    int32_t cmdId;
+    int32_t result;
+    int32_t errorCode;
+    std::vector<ResultParam> resInfo;
+};
+
 class IEnhanceService {
 public:
     virtual ~IEnhanceService() = default;
@@ -51,6 +75,8 @@ public:
     virtual bool RemoveAncoFile(const std::string &sandboxPath) = 0;
     virtual void GetIncrementalAncoFileHandle(const std::string &bundleName, const std::string &fileName, int &fdVal,
         int &reportFdVal, int &errCode) = 0;
+    virtual int32_t MoveFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
+    virtual int32_t OpenFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
 };
 }  // namespace OHOS::FileManagement::Backup
 #endif
