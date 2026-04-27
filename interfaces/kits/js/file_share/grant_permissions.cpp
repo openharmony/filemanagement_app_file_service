@@ -304,12 +304,6 @@ napi_value PersistPermission(napi_env env, napi_callback_info info)
 
 static napi_value HandleRevokeByTokenId(napi_env env, NFuncArg &funcArg, uint32_t tokenId)
 {
-    if (!IsSystemApp()) {
-        LOGE("FileShare::HandleRevokeByTokenId is not System App!");
-        NError(E_PERMISSION_SYS).ThrowErr(env);
-        return nullptr;
-    }
-
     auto cbExec = [tokenId {move(tokenId)}]() -> NError {
         int32_t ret = FilePermission::UnPersistPolicyByTokenId(tokenId);
         return NError(ret);
@@ -363,16 +357,10 @@ static napi_value HandleRevokeByUriPolicies(napi_env env, NFuncArg &funcArg)
 
 static napi_value HandleRevokeByTokenIdAndPolicies(napi_env env, NFuncArg &funcArg)
 {
-    if (!IsSystemApp()) {
-        LOGE("FileShare::HandleRevokeByTokenIdAndPolicies is not System App!");
-        NError(E_PERMISSION_SYS).ThrowErr(env);
-        return nullptr;
-    }
-
     auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToUint32();
-    if (!succTokenId || tokenId == 0) {
-        LOGE("Failed to get tokenid or tokenid is 0");
-        NError(EINVAL).ThrowErr(env);
+    if (!succTokenId) {
+        LOGE("Failed to get tokenid");
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -386,7 +374,7 @@ static napi_value HandleRevokeByTokenIdAndPolicies(napi_env env, NFuncArg &funcA
     if (arg == nullptr) {
         LOGE("Make_shared is failed");
         std::tuple<uint32_t, std::string> errInfo =
-            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+            std::make_tuple(E_NOMEM, "Out of memory, execute make_shared function failed");
         ErrParam errorParam = [errInfo]() { return errInfo; };
         NError(errorParam).ThrowErr(env);
         return nullptr;
@@ -428,8 +416,8 @@ napi_value RevokePermission(napi_env env, napi_callback_info info)
 
         if (valuetype == napi_number) {
             auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToUint32();
-            if (!succTokenId || tokenId == 0) {
-                LOGE("Failed to get tokenid or tokenid is 0");
+            if (!succTokenId) {
+                LOGE("Failed to get tokenid");
                 NError(EINVAL).ThrowErr(env);
                 return nullptr;
             }
@@ -456,8 +444,8 @@ napi_value GetPersistentPolicy(napi_env env, napi_callback_info info)
     }
 
     auto [succTokenId, tokenId] = NVal(env, funcArg[NARG_POS::FIRST]).ToUint32();
-    if (!succTokenId || tokenId == 0) {
-        LOGE("Failed to get tokenid or tokenid is 0");
+    if (!succTokenId) {
+        LOGE("Failed to get tokenid");
         NError(EINVAL).ThrowErr(env);
         return nullptr;
     }
@@ -470,7 +458,7 @@ napi_value GetPersistentPolicy(napi_env env, napi_callback_info info)
     if (arg == nullptr) {
         LOGE("Make_shared is failed");
         std::tuple<uint32_t, std::string> errInfo =
-            std::make_tuple(E_UNKNOWN_ERROR, "Out of memory, execute make_shared function failed");
+            std::make_tuple(E_NOMEM, "Out of memory, execute make_shared function failed");
         ErrParam errorParam = [errInfo]() { return errInfo; };
         NError(errorParam).ThrowErr(env);
         return nullptr;

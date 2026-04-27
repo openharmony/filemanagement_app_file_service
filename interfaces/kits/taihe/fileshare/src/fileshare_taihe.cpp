@@ -566,26 +566,11 @@ void PersistPermissionSync(::taihe::array_view<::ohos::fileshare::fileShare::Pol
 void RevokeAllPermissionSync(int32_t tokenID)
 {
     LOGI("fileShare::RevokeAllPermissionSync begin, tokenID: %{public}d", tokenID);
-    if (!IsSystemApp()) {
-        LOGE("fileShare::RevokeAllPermissionSync is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
-            "fileShare::RevokeAllPermissionSync is not System App!");
-        return;
-    }
-
-    std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
-    if (arg == nullptr) {
-        LOGE("PolicyErrorArgs make make_shared failed.");
-        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR),
-            GetErrorMessage(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR));
-        return;
-    }
 
     auto errCode = OHOS::AppFileService::FilePermission::UnPersistPolicyByTokenId(tokenID);
-    arg->errNo = ErrorCodeConversion(errCode);
-    if (arg->errNo) {
-        LOGE("RevokeAllPermission failed with error code: %{public}d", arg->errNo);
-        GetErrorCodeConversion(arg->errNo);
+    if (errCode) {
+        LOGE("RevokeAllPermission failed with error code: %{public}d", errCode);
+        GetErrorCodeConversion(errCode);
         return;
     }
     LOGI("fileShare::RevokeAllPermissionSync end successfully");
@@ -596,32 +581,24 @@ void RevokePermissionWithTokenSync(int32_t tokenID,
 {
     LOGI("fileShare::RevokePermissionWithTokenSync begin, tokenID: %{public}d, policy count: %{public}zu",
          tokenID, policies.size());
-    if (!IsSystemApp()) {
-        LOGE("fileShare::RevokePermissionWithTokenSync is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
-            "fileShare::RevokePermissionWithTokenSync is not System App!");
-        return;
-    }
 
     std::vector<OHOS::AppFileService::UriPolicyInfo> uriPolicies;
     if (GetUriPoliciesArg(policies, uriPolicies)) {
         LOGE("Failed to get uriPolicies.");
         taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_PARAMS),
-                                  GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
+            GetErrorMessage(OHOS::FileManagement::LibN::E_PARAMS));
         return;
     }
 
     std::shared_ptr<PolicyErrorArgs> arg = std::make_shared<PolicyErrorArgs>();
     if (arg == nullptr) {
         LOGE("PolicyErrorArgs make make_shared failed.");
-        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR),
-                                  GetErrorMessage(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR));
+        taihe::set_business_error(ERR_ENOMEM, "Out of memory, execute make_shared function failed");
         return;
     }
 
-    auto errCode = OHOS::AppFileService::FilePermission::UnPersistPolicyByTokenIdAndPolicies(tokenID,
+    arg->errNo = OHOS::AppFileService::FilePermission::UnPersistPolicyByTokenIdAndPolicies(tokenID,
         uriPolicies, arg->errorResults);
-    arg->errNo = ErrorCodeConversion(errCode);
     if (arg->errNo) {
         LOGE("RevokePermissionWithTokenSync failed with error code: %{public}d", arg->errNo);
         GetErrorCodeConversion(arg->errNo);
@@ -633,20 +610,11 @@ void RevokePermissionWithTokenSync(int32_t tokenID,
 taihe::array<ohos::fileshare::fileShare::PolicyInfo> GetPersistentPolicySync(int32_t tokenID)
 {
     LOGI("fileShare::GetPersistentPolicySync begin, tokenID: %{public}d", tokenID);
-    if (!IsSystemApp()) {
-        LOGE("fileShare::GetPersistentPolicySync is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
-            "fileShare::GetPersistentPolicySync is not System App!");
-        std::vector<ohos::fileshare::fileShare::PolicyInfo> emptyResult;
-        return taihe::array<ohos::fileshare::fileShare::PolicyInfo>(
-            taihe::copy_data_t{}, emptyResult.begin(), emptyResult.size());
-    }
 
     std::shared_ptr<UriPolicyInfoResultArgs> arg = std::make_shared<UriPolicyInfoResultArgs>();
     if (arg == nullptr) {
         LOGE("UriPolicyInfoResultArgs make make_shared failed.");
-        taihe::set_business_error(ErrorCodeConversion(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR),
-            GetErrorMessage(OHOS::FileManagement::LibN::E_UNKNOWN_ERROR));
+        taihe::set_business_error(ERR_ENOMEM, "Out of memory, execute make_shared function failed");
         std::vector<ohos::fileshare::fileShare::PolicyInfo> emptyResult;
         return taihe::array<ohos::fileshare::fileShare::PolicyInfo>(
             taihe::copy_data_t{}, emptyResult.begin(), emptyResult.size());
@@ -656,7 +624,7 @@ taihe::array<ohos::fileshare::fileShare::PolicyInfo> GetPersistentPolicySync(int
         arg->uriPolicyInfoResults);
     if (errCode != OHOS::FileManagement::LibN::ERRNO_NOERR) {
         LOGE("GetPersistentPolicy failed with error code: %{public}d.", errCode);
-        taihe::set_business_error(ErrorCodeConversion(errCode), GetErrorMessage(ErrorCodeConversion(errCode)));
+        GetErrorCodeConversion(errCode);
         std::vector<ohos::fileshare::fileShare::PolicyInfo> emptyResult;
         return taihe::array<ohos::fileshare::fileShare::PolicyInfo>(
             taihe::copy_data_t{}, emptyResult.begin(), emptyResult.size());
@@ -677,18 +645,11 @@ taihe::array<ohos::fileshare::fileShare::PolicyInfo> GetPersistentPolicySync(int
 void GrantSharedDirectoryPermissionSync()
 {
     LOGI("GrantSharedDirectoryPermissionSync called");
-    if (!IsSystemApp()) {
-        LOGE("GrantSharedDirectoryPermissionSync is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
-            "GrantSharedDirectoryPermissionSync is not System App!");
-        return;
-    }
 
     auto errCode = OHOS::AppFileService::FilePermission::GrantSharedDirectoryPermission();
-    int32_t convertedErrCode = ErrorCodeConversion(errCode);
-    if (convertedErrCode != ERR_OK) {
+    if (errCode != ERR_OK) {
         LOGE("GrantSharedDirectoryPermission failed with error code: %{public}d", errCode);
-        taihe::set_business_error(convertedErrCode, GetErrorMessage(convertedErrCode));
+        GetErrorCodeConversion(errCode);
         return;
     }
 }
@@ -696,18 +657,11 @@ void GrantSharedDirectoryPermissionSync()
 void RevokeSharedDirectoryPermissionSync()
 {
     LOGI("RevokeSharedDirectoryPermissionSync called");
-    if (!IsSystemApp()) {
-        LOGE("RevokeSharedDirectoryPermissionSync is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
-            "RevokeSharedDirectoryPermissionSync is not System App!");
-        return;
-    }
 
     auto errCode = OHOS::AppFileService::FilePermission::RevokeSharedDirectoryPermission();
-    int32_t convertedErrCode = ErrorCodeConversion(errCode);
-    if (convertedErrCode != ERR_OK) {
+    if (errCode != ERR_OK) {
         LOGE("RevokeSharedDirectoryPermission failed with error code: %{public}d", errCode);
-        taihe::set_business_error(convertedErrCode, GetErrorMessage(convertedErrCode));
+        GetErrorCodeConversion(errCode);
         return;
     }
 }
@@ -715,21 +669,12 @@ void RevokeSharedDirectoryPermissionSync()
 taihe::array<ohos::fileshare::fileShare::SharedDirectoryInfo> GetSharedDirectoryInfoSync()
 {
     LOGI("GetSharedDirectoryInfoSync called");
-    if (!IsSystemApp()) {
-        LOGE("GetSharedDirectoryInfoSync is not System App!");
-        taihe::set_business_error(OHOS::FileManagement::LibN::E_PERMISSION_SYS,
-            "GetSharedDirectoryInfoSync is not System App!");
-        std::vector<ohos::fileshare::fileShare::SharedDirectoryInfo> emptyResult;
-        return taihe::array<ohos::fileshare::fileShare::SharedDirectoryInfo>(
-            taihe::copy_data_t{}, emptyResult.begin(), emptyResult.size());
-    }
 
     std::vector<OHOS::AppFileService::SharedDirectoryInfo> sharedDirectories;
     auto errCode = OHOS::AppFileService::FilePermission::GetSharedDirectoryInfo(sharedDirectories);
-    int32_t convertedErrCode = ErrorCodeConversion(errCode);
-    if (convertedErrCode != ERR_OK) {
+    if (errCode != ERR_OK) {
         LOGE("GetSharedDirectoryInfo failed with error code: %{public}d", errCode);
-        taihe::set_business_error(convertedErrCode, GetErrorMessage(convertedErrCode));
+        GetErrorCodeConversion(errCode);
         std::vector<ohos::fileshare::fileShare::SharedDirectoryInfo> emptyResult;
         return taihe::array<ohos::fileshare::fileShare::SharedDirectoryInfo>(
             taihe::copy_data_t{}, emptyResult.begin(), emptyResult.size());
