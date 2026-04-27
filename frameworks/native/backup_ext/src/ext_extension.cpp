@@ -563,7 +563,8 @@ ErrCode BackupExtExtension::ReportAncoAppFileReady(const string &filename, const
         HILOGE("ServiceClient is null");
         return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
     }
-    return proxy->AppAncoFileReady(filename, filePath, needDelete);
+    std::string newPath = BExcepUltils::Canonicalize(filePath);
+    return proxy->AppAncoFileReady(filename, newPath, needDelete);
 }
 
 ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
