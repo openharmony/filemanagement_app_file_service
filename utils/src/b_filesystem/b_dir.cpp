@@ -613,7 +613,7 @@ void BDir::ClearDirectory(const std::string &path)
         }
         bool isRemoveSuccess = false;
         if (item.back() == BConstants::FILE_SEPARATOR_CHAR) {
-            isRemoveSuccess = ForceRemoveDirectoryBMS(item);
+            isRemoveSuccess = ForceRemoveDirectory(item);
         } else {
             isRemoveSuccess = RemoveFile(item);
         }

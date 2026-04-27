@@ -150,8 +150,10 @@ BJsonCachedEntity<BJsonEntityCaps> Service::CreateJsonEntity(UniqueFd &fd,
     if (isCreatingIncreaseFile_.load() <= 0) {
         isCreatingIncreaseFile_.store(0);
         const int userId = GetUserIdDefault();
-        string backupRootDir = BConstants::GetSaBundleBackupRootDir(userId);
-        BDir::ClearDirectory(backupRootDir);
+        for (const auto &bundleInfo : bundleInfos) {
+            ClearIncrementalStatFile(userId, bundleInfo.name + ":" + std::to_string(bundleInfo.appIndex));
+        }
+        HILOGI("do ClearIncrementalStatFile finished");
     }
     return cachedEntity;
 }

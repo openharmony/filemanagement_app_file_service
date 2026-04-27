@@ -42,6 +42,7 @@
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
+#include "b_filesystem/b_dir.h"
 #include "b_file_info.h"
 #include "b_hiaudit/hi_audit.h"
 #include "b_json/b_json_cached_entity.h"
@@ -303,6 +304,7 @@ UniqueFd Service::GetLocalCapabilities()
         string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         CreateDirIfNotExist(path);
+        BDir::ClearDirectory(path);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open config file = %{public}s, err = %{public}d", GetAnonyPath(path).c_str(), errno);
