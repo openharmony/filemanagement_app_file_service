@@ -202,6 +202,32 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0005
 }
 
 /**
+ * @tc.number: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0006
+ * @tc.name: SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0006
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0006";
+    ServiceClient::serviceProxy_ = proxy;
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes = {std::string(MAX_IPC_SEND_DATA_SIZE, 'a')}; // 创建一个长路径
+    std::vector<std::string> excludes;
+
+    EXPECT_NO_THROW(AncoBackupHelper::FilterAndSaveBackupPaths(includes, compatIncludes, excludes));
+
+    compatIncludes.clear();
+    excludes = {std::string(MAX_IPC_SEND_DATA_SIZE, 'a')}; // 创建一个长路径
+    EXPECT_NO_THROW(AncoBackupHelper::FilterAndSaveBackupPaths(includes, compatIncludes, excludes));
+
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0006";
+}
+
+/**
  * @tc.number: AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000
  * @tc.name: AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000
  * @tc.desc: 测试 FilterAndSaveBackupPathsSendIncludes 接口
@@ -219,7 +245,7 @@ HWTEST_F(ExtExtensionSubTest, AncoBackupHelper_FilterAndSaveBackupPathsSendInclu
     EXPECT_FALSE(FilterAndSaveBackupPathsSendIncludes(includes));
 
     ServiceClient::serviceProxy_ = nullptr;
-    includes = {std::string(SAFE_IPC_SEND_DATA_SIZE + 1, 'a')};
+    includes = {std::string(SAFE_IPC_SEND_DATA_SIZE / STRING_MEM_FACTOR_16  + 2, 'a')};
     EXPECT_FALSE(FilterAndSaveBackupPathsSendIncludes(includes));
 
     ServiceClient::serviceProxy_ = proxy;
@@ -246,7 +272,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPathsSendC
     EXPECT_FALSE(FilterAndSaveBackupPathsSendCompatIncludes(compatIncludes));
 
     ServiceClient::serviceProxy_ = nullptr;
-    compatIncludes = {std::string(SAFE_IPC_SEND_DATA_SIZE + 1, 'a')};
+    compatIncludes = {std::string(SAFE_IPC_SEND_DATA_SIZE / STRING_MEM_FACTOR_16  + 2, 'a')};
     EXPECT_FALSE(FilterAndSaveBackupPathsSendCompatIncludes(compatIncludes));
 
     ServiceClient::serviceProxy_ = proxy;
@@ -272,7 +298,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPathsSendE
     EXPECT_FALSE(FilterAndSaveBackupPathsSendExcludes(excludes));
 
     ServiceClient::serviceProxy_ = nullptr;
-    excludes = {std::string(SAFE_IPC_SEND_DATA_SIZE + 1, 'a')};
+    excludes = {std::string(SAFE_IPC_SEND_DATA_SIZE / STRING_MEM_FACTOR_16  + 2, 'a')};
     EXPECT_FALSE(FilterAndSaveBackupPathsSendExcludes(excludes));
 
     ServiceClient::serviceProxy_ = proxy;
@@ -406,7 +432,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoTars_0000,
     auto result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
     EXPECT_EQ(result, BError(BError::Codes::OK));
 
-    ancoTarFiles = {std::string(SAFE_IPC_SEND_DATA_SIZE + 1, 'a')};
+    ancoTarFiles = {std::string(SAFE_IPC_SEND_DATA_SIZE / STRING_MEM_FACTOR_16 + 2, 'a')};
     ancoTarFileSizes = {1024};
     ancoTarFileNames = {"test1.tar"};
     result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
@@ -434,6 +460,13 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoTars_0001,
     std::vector<std::string> ancoTarFileNames = {"test1.tar", "test2.tar"};
 
     auto result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
+    EXPECT_EQ(result, BError(BError::Codes::EXT_INVAL_ARG));
+
+    EXPECT_CALL(*proxy, AddAncoTars(_, _, _)).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG)));
+    ancoTarFiles = {std::string(SAFE_IPC_SEND_DATA_SIZE / STRING_MEM_FACTOR_16 + 2, 'a')};
+    ancoTarFileSizes = {1024};
+    ancoTarFileNames = {"test1.tar"};
+    result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
     EXPECT_EQ(result, BError(BError::Codes::EXT_INVAL_ARG));
 
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoTars_0001";
@@ -565,7 +598,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_
     auto result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
     EXPECT_EQ(result, BError(BError::Codes::OK));
 
-    ancoSourcePath = {std::string(SAFE_IPC_SEND_DATA_SIZE + 1, 'a')};
+    ancoSourcePath = {std::string(SAFE_IPC_SEND_DATA_SIZE / STRING_MEM_FACTOR_16 + 2, 'a')};
     ancoTargetPath = {"/data/dst1"};
     ancoStats = {{}};
     result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
