@@ -110,7 +110,7 @@ static string GetRestoreTempPath(const string &bundleName, const string &hashNam
 {
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
-        if (hashName.find(BConstants::ANCO_TAG) != string::npos) {
+        if (StringUtils::IsAncoFile(hashName)) {
             path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         } else {
             if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
