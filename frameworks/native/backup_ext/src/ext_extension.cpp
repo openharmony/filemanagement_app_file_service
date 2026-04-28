@@ -321,7 +321,7 @@ static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string
 {
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
-        if (fileName.find('_') != string::npos) {
+        if (StringUtils::IsAncoFile(fileName)) {
             if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).data(), S_IRWXU) && errno != EEXIST) {
                 string errMsg =
                     string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
