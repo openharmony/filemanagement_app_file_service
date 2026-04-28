@@ -403,6 +403,12 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoTars_0000,
     auto result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
     EXPECT_EQ(result, BError(BError::Codes::OK));
 
+    ancoTarFiles = {std::string(SAFE_IPC_SEND_DATA_SIZE + 1, 'a')};
+    ancoTarFileSizes = {1024};
+    ancoTarFileNames = {"test1.tar"};
+    result = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoTars_0000";
 }
 
@@ -554,6 +560,12 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_
     EXPECT_CALL(*proxy, AddAncoMovePaths(_, _, _)).WillRepeatedly(Return(BError(BError::Codes::OK)));
 
     auto result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    EXPECT_EQ(result, BError(BError::Codes::OK));
+
+    ancoSourcePath = {std::string(SAFE_IPC_SEND_DATA_SIZE + 1, 'a')};
+    ancoTargetPath = {"/data/dst1"};
+    ancoStats = {{}};
+    result = AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
     EXPECT_EQ(result, BError(BError::Codes::OK));
 
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_AddAncoMovePaths_0000";
