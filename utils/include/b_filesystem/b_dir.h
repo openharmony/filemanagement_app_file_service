@@ -148,6 +148,11 @@ public:
      * @brief 将包含通配符的路径转换成详细的路径列表
      */
     static void PreDealExcludes(std::vector<std::string> &excludes);
+
+    /**
+     * @brief 清空当前目录
+     */
+    static void ClearDirectory(const std::string &path);
 };
 } // namespace OHOS::FileManagement::Backup
 

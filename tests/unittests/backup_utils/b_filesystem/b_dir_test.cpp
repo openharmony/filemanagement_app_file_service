@@ -18,10 +18,12 @@
 
 #include <dirent.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <errors.h>
 #include <file_ex.h>
 #include <gtest/gtest.h>
+#include <filesystem>
 #include <memory>
 
 #include "b_filesystem/b_dir.h"
@@ -536,5 +538,117 @@ HWTEST_F(BDirTest, PROCESS_FILE_TEST_001, testing::ext::TestSize.Level1) {
     }
 
     GTEST_LOG_(INFO) << "BDirTest-end: PROCESS_FILE_TEST_001";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0100
+ * @tc.name: b_dir_ClearDirectory_0100
+ * @tc.desc: Test function of ClearDirectory interface for Invalid Path
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0100";
+    try {
+        std::string invalidPath = "../test/../test1";
+        BDir::ClearDirectory(invalidPath);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0200
+ * @tc.name: b_dir_ClearDirectory_0200
+ * @tc.desc: Test function of ClearDirectory interface for Non-existent Dir
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0200";
+    try {
+        TestManager tm("b_dir_ClearDirectory_0200");
+        std::string nonExistentPath = tm.GetRootDirCurTest() + "non_existent_dir";
+        BDir::ClearDirectory(nonExistentPath);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0200";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0300
+ * @tc.name: b_dir_ClearDirectory_0300
+ * @tc.desc: Test function of ClearDirectory interface for Success
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0300";
+    try {
+        TestManager tm("b_dir_ClearDirectory_0300");
+        std::string targetDir = tm.GetRootDirCurTest();
+        
+        mkdir((targetDir + "sub").c_str(), 0755);
+        int fd = open((targetDir + "file.txt").c_str(), O_CREAT | O_RDWR, 0644);
+        close(fd);
+
+        auto subs = GetSubDir(targetDir);
+        EXPECT_EQ(subs.size(), 2);
+
+        BDir::ClearDirectory(targetDir);
+
+        subs = GetSubDir(targetDir);
+        EXPECT_EQ(subs.size(), 0);
+
+        EXPECT_EQ(access(targetDir.c_str(), F_OK), 0);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0300";
+}
+
+/**
+ * @tc.number: SUB_backup_b_dir_ClearDirectory_0400
+ * @tc.name: b_dir_ClearDirectory_0400
+ * @tc.desc: Test function of ClearDirectory interface for Non-Directory Path
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BDirTest, b_dir_ClearDirectory_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BDirTest-begin b_dir_ClearDirectory_0400";
+    try {
+        TestManager tm("b_dir_ClearDirectory_0400");
+        std::string targetDir = tm.GetRootDirCurTest();
+        std::string filePath = targetDir + "test_file.txt";
+
+        int fd = open(filePath.c_str(), O_CREAT | O_RDWR, 0644);
+        close(fd);
+
+        BDir::ClearDirectory(filePath);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        GTEST_LOG_(INFO) << "BDirTest-an exception occurred.";
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BDirTest-end b_dir_ClearDirectory_0400";
 }
 } // namespace OHOS::FileManagement::Backup

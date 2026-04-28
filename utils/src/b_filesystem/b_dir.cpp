@@ -597,4 +597,30 @@ bool BDir::IsDirsMatch(const vector<string> &excludePaths, const string &path)
     }
     return false;
 }
+
+void BDir::ClearDirectory(const std::string &path)
+{
+    if (!IsFilePathValid(path)) {
+        HILOGE("Invalid path for clearing Dir");
+        return;
+    }
+
+    std::set<std::string> subItems = GetSubDir(path);
+
+    for (const auto& item : subItems) {
+        if (item.empty()) {
+            continue;
+        }
+        bool isRemoveSuccess = false;
+        if (item.back() == BConstants::FILE_SEPARATOR_CHAR) {
+            isRemoveSuccess = ForceRemoveDirectory(item);
+        } else {
+            isRemoveSuccess = RemoveFile(item);
+        }
+        if (!isRemoveSuccess) {
+            HILOGE("Failed to remove item: %{public}s", GetAnonyPath(item).data());
+        }
+    }
+    HILOGD("Clear Directory finished");
+}
 } // namespace OHOS::FileManagement::Backup
