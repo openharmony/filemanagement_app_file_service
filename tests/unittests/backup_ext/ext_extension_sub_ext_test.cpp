@@ -202,17 +202,17 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPaths_0005
 }
 
 /**
- * @tc.number: SUB_AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000
- * @tc.name: SUB_AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000
+ * @tc.number: AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000
+ * @tc.name: AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000
  * @tc.desc: 测试 FilterAndSaveBackupPathsSendIncludes 接口
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: NA
  */
-HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionSubTest, AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000";
     ServiceClient::serviceProxy_ = proxy;
     std::set<std::string> includes = {std::string(MAX_IPC_SEND_DATA_SIZE + 1, 'a')}; // 创建一个长路径
 
@@ -223,7 +223,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_FilterAndSaveBackupPathsSendI
     EXPECT_FALSE(FilterAndSaveBackupPathsSendIncludes(includes));
 
     ServiceClient::serviceProxy_ = proxy;
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end AncoBackupHelper_FilterAndSaveBackupPathsSendIncludes_0000";
 }
 
 /**
