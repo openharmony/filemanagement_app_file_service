@@ -104,9 +104,9 @@ public:
     virtual ErrCode StartAncoPacket(uint64_t &smallFileCount) = 0;
     virtual ErrCode CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback) = 0;
     virtual ErrCode DestroyAncoRestoreTask() = 0;
-    virtual ErrCode StartAncoUnPacket(const std::vector<std::string> &tarFiles,
-        const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames,
-        const std::string &rootPath) = 0;
+    virtual ErrCode AddAncoTars(const std::vector<std::string> &tarFiles,
+        const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames) = 0;
+    virtual ErrCode StartAncoUnPacket(const std::string &rootPath) = 0;
     virtual ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) = 0;
     virtual ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) = 0;
@@ -194,9 +194,9 @@ public:
     MOCK_METHOD(ErrCode, StartAncoPacket, (uint64_t &));
     MOCK_METHOD(ErrCode, CreateAncoRestoreTask, (const sptr<IAncoRestoreCallback> &));
     MOCK_METHOD(ErrCode, DestroyAncoRestoreTask, ());
-    MOCK_METHOD(ErrCode, StartAncoUnPacket,
-        (const std::vector<std::string> &, const std::vector<int64_t> &, const std::vector<std::string> &,
-            const std::string &));
+    MOCK_METHOD(ErrCode, AddAncoTars,
+        (const std::vector<std::string> &, const std::vector<int64_t> &, const std::vector<std::string> &));
+    MOCK_METHOD(ErrCode, StartAncoUnPacket, (const std::string &));
     MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::vector<std::string> &, const std::vector<std::string> &,
         const std::vector<StatInfo> &));
     MOCK_METHOD(ErrCode, StartAncoMove, (AncoRestoreResult &));
@@ -642,10 +642,15 @@ ErrCode Service::DestroyAncoRestoreTask()
     return BService::serviceMock->DestroyAncoRestoreTask();
 }
  
-ErrCode Service::StartAncoUnPacket(const std::vector<std::string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
-    const std::vector<std::string> &tarFileNames, const std::string &rootPath)
+ErrCode Service::AddAncoTars(const std::vector<std::string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
+    const std::vector<std::string> &tarFileNames)
 {
-    return BService::serviceMock->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath);
+    return BService::serviceMock->AddAncoTars(tarFiles, tarFileSizes, tarFileNames);
+}
+
+ErrCode Service::StartAncoUnPacket(const std::string &rootPath)
+{
+    return BService::serviceMock->StartAncoUnPacket(rootPath);
 }
  
 ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,

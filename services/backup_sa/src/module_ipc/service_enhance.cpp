@@ -186,8 +186,31 @@ ErrCode Service::DestroyAncoRestoreTask()
     }
 }
 
-ErrCode Service::StartAncoUnPacket(const std::vector<string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
-    const std::vector<string> &tarFileNames, const std::string &rootPath)
+ErrCode Service::AddAncoTars(const std::vector<string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
+    const std::vector<string> &tarFileNames)
+{
+    try {
+        string callerName;
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
+        if (ret != ERR_OK) {
+            HILOGE("AddAncoTars error, Get bundle name failed, ret:%{public}d", ret);
+            return ret;
+        }
+        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
+        if (!enhanceService) {
+            HILOGW("AddAncoTars, enhance service is not loaded");
+            return BError(BError::Codes::OK);
+        }
+        return enhanceService->AddAncoTars(callerName, tarFiles, tarFileSizes, tarFileNames);
+    } catch (const BError &e) {
+        return e.GetCode();
+    } catch (...) {
+        HILOGE("AddAncoTars, Unexpected exception");
+        return EPERM;
+    }
+}
+
+ErrCode Service::StartAncoUnPacket(const std::string &rootPath)
 {
     try {
         string callerName;
@@ -201,7 +224,7 @@ ErrCode Service::StartAncoUnPacket(const std::vector<string> &tarFiles, const st
             HILOGW("StartAncoUnPacket, enhance service is not loaded");
             return BError(BError::Codes::OK);
         }
-        return enhanceService->StartAncoUnPacket(callerName, tarFiles, tarFileSizes, tarFileNames, rootPath);
+        return enhanceService->StartAncoUnPacket(callerName, rootPath);
     } catch (const BError &e) {
         return e.GetCode();
     } catch (...) {

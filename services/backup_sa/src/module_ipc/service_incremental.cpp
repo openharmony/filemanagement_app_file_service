@@ -45,6 +45,7 @@
 #include "b_resources/b_constants.h"
 #include "b_sa/b_sa_utils.h"
 #include "b_utils/b_time.h"
+#include "b_utils/string_utils.h"
 #include "filemgmt_libhilog.h"
 #include "hisysevent.h"
 #include "ipc_skeleton.h"
@@ -802,7 +803,7 @@ ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const 
     int fdVal = BConstants::INVALID_FD_NUM;
     int reportFdVal = BConstants::INVALID_FD_NUM;
     int errCode = BConstants::INVALID_FD_NUM;
-    if (fileName.find(BConstants::ANCO_TAG) != string::npos) {
+    if (StringUtils::IsAncoFile(fileName)) {
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("SendIncrementalFileHandle, enhance service is not loaded");

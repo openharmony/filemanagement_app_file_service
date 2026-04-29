@@ -55,9 +55,9 @@ public:
     MOCK_METHOD(ErrCode, StartAncoPacket, (uint64_t &));
     MOCK_METHOD(ErrCode, CreateAncoRestoreTask, (const sptr<IAncoRestoreCallback> &));
     MOCK_METHOD(ErrCode, DestroyAncoRestoreTask, ());
-    MOCK_METHOD(ErrCode, StartAncoUnPacket,
-        (const std::vector<std::string> &, const std::vector<int64_t> &, const std::vector<std::string> &,
-            const std::string &));
+    MOCK_METHOD(ErrCode, AddAncoTars,
+        (const std::vector<std::string> &, const std::vector<int64_t> &, const std::vector<std::string> &));
+    MOCK_METHOD(ErrCode, StartAncoUnPacket, (const std::string &));
     MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::vector<std::string> &, const std::vector<std::string> &,
         const std::vector<StatInfo> &));
     MOCK_METHOD(ErrCode, StartAncoMove, (AncoRestoreResult &));

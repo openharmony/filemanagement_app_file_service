@@ -571,18 +571,14 @@ HWTEST_F(ServiceTest, SUB_Service_DestroyAncoRestoreTask_0003, testing::ext::Tes
 HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StartAncoUnPacket_0000";
-    EXPECT_CALL(*mockEnhanceService, StartAncoUnPacket(_, _, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+    EXPECT_CALL(*mockEnhanceService, StartAncoUnPacket(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    std::vector<std::string> tarFiles;
-    std::vector<int64_t> tarFileSizes;
-    std::vector<std::string> tarFileNames;
     std::string rootPath;
-    EXPECT_EQ(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
-        BError(BError::Codes::OK));
+    EXPECT_EQ(service->StartAncoUnPacket(rootPath), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0000";
 }
  
@@ -598,19 +594,15 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0000, testing::ext::TestSize
 HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_StartAncoUnPacket_0001";
-    EXPECT_CALL(*mockEnhanceService, StartAncoUnPacket(_, _, _, _, _))
+    EXPECT_CALL(*mockEnhanceService, StartAncoUnPacket(_, _))
         .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
- 
-    std::vector<std::string> tarFiles;
-    std::vector<int64_t> tarFileSizes;
-    std::vector<std::string> tarFileNames;
+
     std::string rootPath;
-    EXPECT_NE(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
-        BError(BError::Codes::OK));
+    EXPECT_NE(service->StartAncoUnPacket(rootPath), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0001";
 }
  
@@ -629,12 +621,8 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0002, testing::ext::TestSize
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
  
-    std::vector<std::string> tarFiles;
-    std::vector<int64_t> tarFileSizes;
-    std::vector<std::string> tarFileNames;
     std::string rootPath;
-    EXPECT_NE(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
-        BError(BError::Codes::OK));
+    EXPECT_NE(service->StartAncoUnPacket(rootPath), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0002";
 }
  
@@ -657,11 +645,8 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoUnPacket_0003, testing::ext::TestSize
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
-    std::vector<std::string> tarFiles;
-    std::vector<int64_t> tarFileSizes;
-    std::vector<std::string> tarFileNames;
     std::string rootPath;
-    EXPECT_EQ(service->StartAncoUnPacket(tarFiles, tarFileSizes, tarFileNames, rootPath),
+    EXPECT_EQ(service->StartAncoUnPacket(rootPath),
         BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoUnPacket_0003";
@@ -873,4 +858,204 @@ HWTEST_F(ServiceTest, SUB_Service_AddAncoMovePaths_0003, testing::ext::TestSize.
     EXPECT_EQ(service->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoMovePaths_0003";
+}
+
+/**
+ * @tc.number: SUB_Service_FilterAndSaveBackupPaths_0000
+ * @tc.name: SUB_Service_FilterAndSaveBackupPaths_0000
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 的正常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_FilterAndSaveBackupPaths_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_FilterAndSaveBackupPaths_0000";
+    EXPECT_CALL(*mockEnhanceService, FilterAndSaveBackupPaths(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+    EXPECT_EQ(service->FilterAndSaveBackupPaths(includes, compatIncludes, excludes), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_FilterAndSaveBackupPaths_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_FilterAndSaveBackupPaths_0001
+ * @tc.name: SUB_Service_FilterAndSaveBackupPaths_0001
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_FilterAndSaveBackupPaths_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_FilterAndSaveBackupPaths_0001";
+    EXPECT_CALL(*mockEnhanceService, FilterAndSaveBackupPaths(_, _, _, _))
+        .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+    EXPECT_NE(service->FilterAndSaveBackupPaths(includes, compatIncludes, excludes), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_FilterAndSaveBackupPaths_0001";
+}
+
+/**
+ * @tc.number: SUB_Service_FilterAndSaveBackupPaths_0002
+ * @tc.name: SUB_Service_FilterAndSaveBackupPaths_0002
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_FilterAndSaveBackupPaths_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_FilterAndSaveBackupPaths_0002";
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+    EXPECT_NE(service->FilterAndSaveBackupPaths(includes, compatIncludes, excludes), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_FilterAndSaveBackupPaths_0002";
+}
+
+/**
+ * @tc.number: SUB_Service_FilterAndSaveBackupPaths_0003
+ * @tc.name: SUB_Service_FilterAndSaveBackupPaths_0003
+ * @tc.desc: 测试 FilterAndSaveBackupPaths 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_FilterAndSaveBackupPaths_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_FilterAndSaveBackupPaths_0003";
+    auto backupService = EnhanceServiceManager().GetInstance().service_;
+    EnhanceServiceManager().GetInstance().service_ = nullptr;
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::set<std::string> includes;
+    std::set<std::string> compatIncludes;
+    std::vector<std::string> excludes;
+    EXPECT_EQ(service->FilterAndSaveBackupPaths(includes, compatIncludes, excludes), BError(BError::Codes::OK));
+    EnhanceServiceManager().GetInstance().service_ = backupService;
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_FilterAndSaveBackupPaths_0003";
+}
+
+/**
+ * @tc.number: SUB_Service_AddAncoTars_0000
+ * @tc.name: SUB_Service_AddAncoTars_0000
+ * @tc.desc: 测试 AddAncoTars 的正常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddAncoTars_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddAncoTars_0000";
+    EXPECT_CALL(*mockEnhanceService, AddAncoTars(_, _, _, _)).WillOnce(Return(BError(BError::Codes::OK)));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::vector<string> tarFiles;
+    std::vector<int64_t> tarFileSizes;
+    std::vector<string> tarFileNames;
+    EXPECT_EQ(service->AddAncoTars(tarFiles, tarFileSizes, tarFileNames), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoTars_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_AddAncoTars_0001
+ * @tc.name: SUB_Service_AddAncoTars_0001
+ * @tc.desc: 测试 AddAncoTars 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddAncoTars_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddAncoTars_0001";
+    EXPECT_CALL(*mockEnhanceService, AddAncoTars(_, _, _, _))
+        .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::vector<string> tarFiles;
+    std::vector<int64_t> tarFileSizes;
+    std::vector<string> tarFileNames;
+    EXPECT_NE(service->AddAncoTars(tarFiles, tarFileSizes, tarFileNames), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoTars_0001";
+}
+
+/**
+ * @tc.number: SUB_Service_AddAncoTars_0002
+ * @tc.name: SUB_Service_AddAncoTars_0002
+ * @tc.desc: 测试 AddAncoTars 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddAncoTars_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddAncoTars_0002";
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
+
+    std::vector<string> tarFiles;
+    std::vector<int64_t> tarFileSizes;
+    std::vector<string> tarFileNames;
+    EXPECT_NE(service->AddAncoTars(tarFiles, tarFileSizes, tarFileNames), BError(BError::Codes::OK));
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoTars_0002";
+}
+
+/**
+ * @tc.number: SUB_Service_AddAncoTars_0003
+ * @tc.name: SUB_Service_AddAncoTars_0003
+ * @tc.desc: 测试 AddAncoTars 的异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_AddAncoTars_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_AddAncoTars_0003";
+    auto backupService = EnhanceServiceManager().GetInstance().service_;
+    EnhanceServiceManager().GetInstance().service_ = nullptr;
+    EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
+    EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
+
+    std::vector<string> tarFiles;
+    std::vector<int64_t> tarFileSizes;
+    std::vector<string> tarFileNames;
+    EXPECT_EQ(service->AddAncoTars(tarFiles, tarFileSizes, tarFileNames), BError(BError::Codes::OK));
+    EnhanceServiceManager().GetInstance().service_ = backupService;
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoTars_0003";
 }

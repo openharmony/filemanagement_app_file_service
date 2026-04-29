@@ -313,8 +313,13 @@ ErrCode ServiceProxy::DestroyAncoRestoreTask()
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::StartAncoUnPacket(const std::vector<std::string> &tarFiles,
-    const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames, const std::string &rootPath)
+ErrCode ServiceProxy::AddAncoTars(const std::vector<std::string> &tarFiles,
+    const std::vector<int64_t> &tarFileSizes, const std::vector<std::string> &tarFileNames)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::StartAncoUnPacket(const std::string &rootPath)
 {
     return BError(BError::Codes::OK);
 }

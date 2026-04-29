@@ -20,6 +20,7 @@
 #include "anco_restore_result.h"
 #include "anco_scan_result.h"
 #include "b_error/b_error.h"
+#include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -186,5 +187,30 @@ HWTEST_F(AncoScanResultTest, SUB_AncoScanResult_ReadFromParcel_0100, testing::ex
     // unmarshalling
     result.ReadFromParcel(parcel);
     GTEST_LOG_(INFO) << "AncoScanResultTest-end SUB_AncoScanResult_ReadFromParcel_0100";
+}
+
+/**
+* @tc.number: StringUtils_IsAncoFile_0000
+* @tc.name: StringUtils_IsAncoFile_0000
+* @tc.desc: Test function of ReadFromParcel interface for SUCCESS.
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(AncoScanResultTest, StringUtils_IsAncoFile_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AncoScanResultTest-begin StringUtils_IsAncoFile_0000";
+    EXPECT_FALSE(StringUtils::IsAncoFile("BgncqicvZqoSe0SC0mVxMyIhnVjlF2YCE"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("Bv1Pp2HfJ0lMmhZxc13lB8rVDlWj5yfhT.tar"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("BgncqicvZqoSe0SC0mVxMyIhnVjlF2YC_"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("Bv1Pp2HfJ0lMmhZxc13lB8rVDlWj5yfh_.tar"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("BgncqicvZqoSe0SC0mVxMyIhnVjl_anco"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("BgncqicvZqoSe0SC0mVxMyIhnVjl_anco.tar"));
+    EXPECT_TRUE(StringUtils::IsAncoFile("c2ef43d4b51e3282_anco"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("c2ef43d4b51e3282"));
+    EXPECT_TRUE(StringUtils::IsAncoFile("part_anco.0.tar"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("part.0.tar"));
+    GTEST_LOG_(INFO) << "AncoScanResultTest-end StringUtils_IsAncoFile_0000";
 }
 } // namespace OHOS::FileManagement::Backup
