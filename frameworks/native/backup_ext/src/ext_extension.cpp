@@ -774,7 +774,6 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     bigFileSize += aBigFileSize;
     smallFileSize += aSmallFileSize;
     appStatistic_->scanFileSpend_.End();
-    ScanFileSingleton::GetInstance().UpdateLimitByTotalSize(smallFileSize + bigFileSize);
     if (errCode != 0 || aErrCode != 0) {
         HILOGE("scan dirs fail, err=%{public}d", errCode);
     }

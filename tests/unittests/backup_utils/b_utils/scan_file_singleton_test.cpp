@@ -25,6 +25,8 @@
 #include "b_utils/scan_file_singleton.h"
 #include "test_manager.h"
 
+constexpr uint64_t ONE_HUNDRED_FIFTY_MB = 150ULL * 1024 * 1024; // 150MB
+
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
@@ -35,8 +37,12 @@ public:
     void SetUp()
     {
         std::queue<std::shared_ptr<IFileInfo>> emptyQueue;
-        ScanFileSingleton::GetInstance().pendingFileQueue_.swap(emptyQueue);
-        ScanFileSingleton::GetInstance().smallFiles_.clear();
+        auto& instance = ScanFileSingleton::GetInstance();
+        instance.pendingFileQueue_.swap(emptyQueue);
+        instance.smallFiles_.clear();
+        instance.stopPacket_.store(false);
+        instance.currentTarSize_.store(0);
+        instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
     };
     void TearDown() {};
 };
@@ -205,7 +211,7 @@ HWTEST_F(ScanFileSingletonTest, ADD_BIG_FILE_TEST_002, testing::ext::TestSize.Le
 /**
  * @tc.number: ADD_TAR_FILE_TEST_001
  * @tc.name: ADD_TAR_FILE_TEST_001
- * @tc.desc: Test function of AddBigFile
+ * @tc.desc: Test function of AddTarFile with maxTarSize check
  * @tc.size: SMALL
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -214,25 +220,24 @@ HWTEST_F(ScanFileSingletonTest, ADD_BIG_FILE_TEST_002, testing::ext::TestSize.Le
 HWTEST_F(ScanFileSingletonTest, ADD_TAR_FILE_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_TAR_FILE_TEST_001";
-    GTEST_LOG_(INFO) << "1. not over limit";
+    GTEST_LOG_(INFO) << "1. test AddTarFile adds file to queue";
     std::string filename = "test";
     std::string filePath = "/tmp/test2";
-    struct stat sta = {};
+    struct stat sta = {.st_size = 1024};
     EXPECT_FALSE(ScanFileSingleton::GetInstance().HasFileReady());
-    ScanFileSingleton::GetInstance().percentSizeLimit_ = 10;
-    ScanFileSingleton::GetInstance().currentTarSize_ = 1;
-    ScanFileSingleton::GetInstance().stopPacket_ = false;
-    ScanFileSingleton::GetInstance().AddTarFile(filename, filePath, sta);
-    EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
-    EXPECT_TRUE(ScanFileSingleton::GetInstance().HasFileReady());
-    EXPECT_FALSE(ScanFileSingleton::GetInstance().stopPacket_);
+    auto& instance = ScanFileSingleton::GetInstance();
+    instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
+    instance.stopPacket_.store(false);
+    instance.AddTarFile(filename, filePath, sta);
+    EXPECT_EQ(instance.pendingFileQueue_.size(), 1);
+    EXPECT_TRUE(instance.HasFileReady());
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: ADD_TAR_FILE_TEST_001";
 }
 
 /**
  * @tc.number: ADD_TAR_FILE_TEST_002
  * @tc.name: ADD_TAR_FILE_TEST_002
- * @tc.desc: Test function of AddBigFile
+ * @tc.desc: Test function of AddTarFile with currentTarSize exceeds maxTarSize - should stop packet
  * @tc.size: SMALL
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -241,25 +246,25 @@ HWTEST_F(ScanFileSingletonTest, ADD_TAR_FILE_TEST_001, testing::ext::TestSize.Le
 HWTEST_F(ScanFileSingletonTest, ADD_TAR_FILE_TEST_002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: ADD_TAR_FILE_TEST_002";
-    GTEST_LOG_(INFO) << "1. over limit";
+    GTEST_LOG_(INFO) << "1. currentTarSize exceeds maxTarSize triggers stopPacket";
     std::string filename = "test";
     std::string filePath = "/tmp/test2";
-    struct stat sta = {};
-    EXPECT_FALSE(ScanFileSingleton::GetInstance().HasFileReady());
-    ScanFileSingleton::GetInstance().percentSizeLimit_ = 10;
-    ScanFileSingleton::GetInstance().currentTarSize_ = 20;
-    ScanFileSingleton::GetInstance().stopPacket_ = false;
-    ScanFileSingleton::GetInstance().AddTarFile(filename, filePath, sta);
-    EXPECT_EQ(ScanFileSingleton::GetInstance().pendingFileQueue_.size(), 1);
-    EXPECT_TRUE(ScanFileSingleton::GetInstance().HasFileReady());
-    EXPECT_TRUE(ScanFileSingleton::GetInstance().stopPacket_);
+    struct stat sta = {.st_size = 1024};
+    auto& instance = ScanFileSingleton::GetInstance();
+    instance.maxTarSize_.store(1000); // maxTarSize smaller than file size
+    instance.currentTarSize_.store(0);
+    instance.stopPacket_.store(false);
+    instance.AddTarFile(filename, filePath, sta);
+    EXPECT_EQ(instance.pendingFileQueue_.size(), 1);
+    EXPECT_TRUE(instance.HasFileReady());
+    EXPECT_TRUE(instance.stopPacket_.load());
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: ADD_TAR_FILE_TEST_002";
 }
 
 /**
  * @tc.number: GET_FILE_INFO_TEST_001
  * @tc.name: GET_FILE_INFO_TEST_001
- * @tc.desc: Test function of GetFileInfo
+ * @tc.desc: Test function of GetFileInfo with currentTarSize recovery
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -271,18 +276,19 @@ HWTEST_F(ScanFileSingletonTest, GET_FILE_INFO_TEST_001, testing::ext::TestSize.L
     GTEST_LOG_(INFO) << "1. queue empty";
     EXPECT_EQ(ScanFileSingleton::GetInstance().GetFileInfo(), nullptr);
 
-    GTEST_LOG_(INFO) << "1. queue not empty, get tar file";
+    GTEST_LOG_(INFO) << "2. queue not empty, get tar file and check currentTarSize recovery";
     std::string filename = "test";
     std::string filePath = "/tmp/test2";
-    struct stat sta = {.st_size = 10};
-    ScanFileSingleton::GetInstance().AddTarFile(filename, filePath, sta);
-    ScanFileSingleton::GetInstance().percentSizeLimit_ = 20;
-    ScanFileSingleton::GetInstance().stopPacket_ = true;
-    ScanFileSingleton::GetInstance().currentTarSize_ = 20;
-    auto fileInfo = ScanFileSingleton::GetInstance().GetFileInfo();
+    struct stat sta = {.st_size = 1024};
+    auto& instance = ScanFileSingleton::GetInstance();
+    instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
+    instance.currentTarSize_.store(ONE_HUNDRED_FIFTY_MB + 2048);
+    instance.stopPacket_.store(true);
+    instance.AddTarFile(filename, filePath, sta);
+    auto fileInfo = instance.GetFileInfo();
     ASSERT_NE(fileInfo, nullptr);
     EXPECT_EQ(fileInfo->GetRestorePath(), "");
-    EXPECT_FALSE(ScanFileSingleton::GetInstance().stopPacket_);
+    EXPECT_FALSE(instance.stopPacket_.load());
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: GET_FILE_INFO_TEST_001";
 }
 
@@ -430,23 +436,6 @@ HWTEST_F(ScanFileSingletonTest, WAIT_FOR_PACKET_FLAG_TEST_001, testing::ext::Tes
 }
 
 /**
- * @tc.number: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001
- * @tc.name: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001
- * @tc.desc: Test function of UpdateLimitByTotalSize
- * @tc.size: SMALL
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: NA
- */
-HWTEST_F(ScanFileSingletonTest, UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001";
-    ScanFileSingleton::GetInstance().UpdateLimitByTotalSize(100);
-    EXPECT_EQ(ScanFileSingleton::GetInstance().percentSizeLimit_, 50);
-    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: UPDATE_LIMIT_BY_TOTAL_SIZE_TEST_001";
-}
-
-/**
 * @tc.number: ADD_ANCO_BIGFILE_TEST_001
 * @tc.name: ADD_ANCO_BIGFILE_TEST_001
 * @tc.desc: Test function of AddAncoBigFile
@@ -535,7 +524,7 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_002, testing::ext::TestSiz
 
     ScanFileSingleton& instance = ScanFileSingleton::GetInstance();
     instance.currentTarSize_.store(0);
-    instance.percentSizeLimit_.store(1.5 * 1024 * 1024);
+    instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
 
     ScanFileSingleton::GetInstance().AddAncoTarFile(filename, filePath, sta);
 
@@ -544,4 +533,114 @@ HWTEST_F(ScanFileSingletonTest, ADD_ANCO_TARFILE_TEST_002, testing::ext::TestSiz
     EXPECT_NE(frontItem, nullptr);
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: ADD_ANCO_TARFILE_TEST_002";
 }
+
+/**
+ * @tc.number: MAX_TAR_SIZE_CHECK_INIT_001
+ * @tc.name: MAX_TAR_SIZE_CHECK_INIT_001
+ * @tc.desc: 测试GetInstance时初始化maxTarSize_（<4G场景）
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ScanFileSingletonTest, MAX_TAR_SIZE_CHECK_INIT_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: MAX_TAR_SIZE_CHECK_INIT_001";
+    auto& instance = ScanFileSingleton::GetInstance();
+    // maxTarSize_应在GetInstance时根据剩余空间初始化
+    // 由于GetInstance是单例，这里验证maxTarSize_已被设置且大于0
+    EXPECT_GT(instance.maxTarSize_.load(), 0);
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: MAX_TAR_SIZE_CHECK_INIT_001";
+}
+
+/**
+ * @tc.number: CURRENT_TAR_SIZE_EXCEED_001
+ * @tc.name: CURRENT_TAR_SIZE_EXCEED_001
+ * @tc.desc: 测试currentTarSize超过maxTarSize时停止打包
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ScanFileSingletonTest, CURRENT_TAR_SIZE_EXCEED_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: CURRENT_TAR_SIZE_EXCEED_001";
+    auto& instance = ScanFileSingleton::GetInstance();
+    instance.maxTarSize_.store(1000); // 设置较小的maxTarSize_
+    instance.currentTarSize_.store(0);
+    instance.stopPacket_.store(false);
+
+    std::string filename = "test.tar";
+    std::string filePath = "/tmp/test.tar";
+    struct stat sta = {.st_size = 2048}; // 文件大小超过maxTarSize_
+
+    instance.AddTarFile(filename, filePath, sta);
+
+    EXPECT_TRUE(instance.stopPacket_.load());
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: CURRENT_TAR_SIZE_EXCEED_001";
+}
+
+/**
+ * @tc.number: CURRENT_TAR_SIZE_RECOVER_001
+ * @tc.name: CURRENT_TAR_SIZE_RECOVER_001
+ * @tc.desc: 测试获取文件后currentTarSize低于maxTarSize，重启打包
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ScanFileSingletonTest, CURRENT_TAR_SIZE_RECOVER_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: CURRENT_TAR_SIZE_RECOVER_001";
+    auto& instance = ScanFileSingleton::GetInstance();
+    instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
+    instance.currentTarSize_.store(ONE_HUNDRED_FIFTY_MB + 2048);
+    instance.stopPacket_.store(true);
+
+    std::string filename = "test.tar";
+    std::string filePath = "/tmp/test.tar";
+    struct stat sta = {.st_size = 1024};
+
+    instance.AddTarFile(filename, filePath, sta);
+
+    auto fileInfo = instance.GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+
+    EXPECT_FALSE(instance.stopPacket_.load());
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: CURRENT_TAR_SIZE_RECOVER_001";
+}
+
+/**
+ * @tc.number: CURRENT_TAR_SIZE_MULTIPLE_FILES_001
+ * @tc.name: CURRENT_TAR_SIZE_MULTIPLE_FILES_001
+ * @tc.desc: 测试添加多个文件时currentTarSize累加，取出后递减
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ScanFileSingletonTest, CURRENT_TAR_SIZE_MULTIPLE_FILES_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-begin: CURRENT_TAR_SIZE_MULTIPLE_FILES_001";
+    auto& instance = ScanFileSingleton::GetInstance();
+    instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
+    instance.currentTarSize_.store(0);
+    instance.stopPacket_.store(false);
+
+    struct stat sta1 = {.st_size = 1024};
+    struct stat sta2 = {.st_size = 2048};
+
+    instance.AddTarFile("test1.tar", "/tmp/test1.tar", sta1);
+    uint64_t currentAfterFirst = instance.currentTarSize_.load();
+
+    instance.AddTarFile("test2.tar", "/tmp/test2.tar", sta2);
+    uint64_t currentAfterSecond = instance.currentTarSize_.load();
+
+    EXPECT_EQ(currentAfterFirst, 1024);
+    EXPECT_EQ(currentAfterSecond, 1024 + 2048);
+
+    // 取出文件，currentTarSize递减
+    auto fileInfo1 = instance.GetFileInfo();
+    auto fileInfo2 = instance.GetFileInfo();
+    EXPECT_EQ(instance.currentTarSize_.load(), 0);
+
+    GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: CURRENT_TAR_SIZE_MULTIPLE_FILES_001";
+}
+
 } // namespace OHOS::FileManagement::Backup

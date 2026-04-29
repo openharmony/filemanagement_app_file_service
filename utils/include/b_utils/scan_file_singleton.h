@@ -98,11 +98,10 @@ struct CompatibleSmallFileInfo : public ISmallFileInfo {
 class ScanFileSingleton {
 public:
     static ScanFileSingleton &GetInstance();
-     
+
     void AddBigFile(const std::string& filePath, const struct stat& sta, const std::string& restorePath = "");
     void AddTarFile(const std::string& filename, const std::string& filePath, const struct stat& sta);
-    void AddAncoBigFile(
-        const std::string &filePath, const std::string &restorePath, const struct stat &sta);
+    void AddAncoBigFile(const std::string &filePath, const std::string &restorePath, const struct stat &sta);
     void AddAncoTarFile(const std::string &filename, const std::string &filePath, const struct stat &sta);
     std::shared_ptr<IFileInfo> GetFileInfo();
     bool HasFileReady();
@@ -116,7 +115,6 @@ public:
 
     // 条件等待，等待文件被添加或者扫描完成
     void WaitForFiles();
-    void UpdateLimitByTotalSize(uint64_t allSmallFileSize);
 
     void StartPacket();
     void WaitForPacketFlag();
@@ -134,8 +132,9 @@ private:
     std::condition_variable waitFilesReady_;
     std::atomic<bool> isProcessCompleted_ = false;
     std::atomic<uint64_t> currentTarSize_ = 0;
-    std::atomic<uint64_t> percentSizeLimit_ = 0;
+    std::atomic<uint64_t> maxTarSize_ = 0;
     std::atomic<bool> stopPacket_ = false;
+    std::atomic<bool> isFirstAddTarFile_ = true;
     std::mutex mutexPacket_;
     std::condition_variable waitPacketFlag_;
 };
