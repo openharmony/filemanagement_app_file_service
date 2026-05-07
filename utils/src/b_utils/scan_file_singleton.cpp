@@ -19,9 +19,9 @@
 
 namespace OHOS::FileManagement::Backup {
 
-constexpr uint64_t MAX_TAR_SIZE = 5368709120; // 队列中可存储最大tar包总大小（5G）
-constexpr float MAX_TAR_PERCENT = 0.5; // 队列中可存储的tar文件占所有备份文件总大小最大比例
 constexpr uint32_t MEGA_BYTE = 1048576; // 1M包含多少字节
+constexpr uint64_t MAX_TAR_SIZE = 3 * 1024 * MEGA_BYTE - 100 * MEGA_BYTE; // 队列中可存储最大tar包总大小（3G - 100M）
+constexpr float MAX_TAR_PERCENT = 0.5; // 队列中可存储的tar文件占所有备份文件总大小最大比例
 
 std::string FileInfo::GetRestorePath()
 {
