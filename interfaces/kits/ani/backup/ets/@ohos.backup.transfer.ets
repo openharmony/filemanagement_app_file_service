@@ -61,8 +61,8 @@ export namespace backup {
     export function callback(cleaner: Cleaner): void {
         cleaner.clean();
     }
-    let destroyRegister = new FinalizationRegistry<Cleaner>(callback);
-    let unregisterToken = new object()
+    let destroyRegister: FinalizationRegistry<Cleaner> = new FinalizationRegistry<Cleaner>(callback);
+    let unregisterToken: object = new object()
 
     class BIncrementalData {
         public bundleName: string = '';
