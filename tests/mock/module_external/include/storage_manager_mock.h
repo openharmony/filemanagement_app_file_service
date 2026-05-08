@@ -26,18 +26,4 @@ public:
     virtual int32_t GetFreeSize(int64_t& freeSize) = 0;
 };
 } // namespace OHOS::StorageManager
-
-namespace OHOS::FileManagement::Backup {
-class StorageManagerInterface {
-public:
-    virtual ~StorageManagerInterface() = default;
-    virtual int32_t GetFreeSize(int64_t& freeSize) = 0;
-};
-
-class StorageManagerMock : public StorageManagerInterface {
-public:
-    MOCK_METHOD(int32_t, GetFreeSize, (int64_t&), (override));
-};
-} // namespace OHOS::FileManagement::Backup
-
 #endif // OHOS_FILEMGMT_BACKUP_STORAGE_MANAGER_MOCK_H

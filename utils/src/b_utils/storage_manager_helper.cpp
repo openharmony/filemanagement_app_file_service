@@ -78,9 +78,6 @@ uint64_t StorageManagerHelper::GetFreeSize()
         HILOGE("GetFreeSize failed, ret=%{public}d", ret);
         return 0;
     }
-
-    HILOGI("GetFreeSize success, freeSize=%{public}ld", freeSize);
     return static_cast<uint64_t>(freeSize);
 }
-
 } // namespace OHOS::FileManagement::Backup

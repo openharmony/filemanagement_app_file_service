@@ -22,7 +22,7 @@
 namespace OHOS::FileManagement::Backup {
 
 constexpr uint32_t MEGA_BYTE = 1048576; // 1M包含多少字节
-constexpr uint64_t THREE_GB = 3ULL * 1024 * MEGA_BYTE; // 3GB
+constexpr uint64_t FIVE_GB = 5ULL * 1024 * MEGA_BYTE; // 5GB
 constexpr uint64_t FOUR_GB = 4ULL * 1024 * MEGA_BYTE; // 4GB
 constexpr uint64_t ONE_HUNDRED_FIFTY_MB = 150ULL * MEGA_BYTE; // 150MB
 
@@ -65,10 +65,10 @@ ScanFileSingleton& ScanFileSingleton::GetInstance()
         if (freeSize == 0) {
             HILOGE("get freeSize fail!");
         }
-        if (freeSize < FOUR_GB) {
+        if (freeSize < FIVE_GB) {
             instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
         } else {
-            instance.maxTarSize_.store(freeSize - THREE_GB);
+            instance.maxTarSize_.store(freeSize - FOUR_GB);
         }
     });
     return instance;

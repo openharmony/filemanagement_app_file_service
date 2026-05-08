@@ -23,7 +23,6 @@
 #include "istorage_manager.h"
 
 namespace OHOS::FileManagement::Backup {
-
 class StorageManagerHelper {
 public:
     static StorageManagerHelper& GetInstance();
@@ -39,7 +38,5 @@ private:
     sptr<StorageManager::IStorageManager> storageManagerProxy_ = nullptr;
     std::mutex mutex_;
 };
-
 } // namespace OHOS::FileManagement::Backup
-
 #endif // OHOS_FILEMGMT_BACKUP_STORAGE_MANAGER_HELPER_H
