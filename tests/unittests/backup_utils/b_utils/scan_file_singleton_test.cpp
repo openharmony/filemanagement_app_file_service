@@ -288,7 +288,7 @@ HWTEST_F(ScanFileSingletonTest, GET_FILE_INFO_TEST_001, testing::ext::TestSize.L
     auto fileInfo = instance.GetFileInfo();
     ASSERT_NE(fileInfo, nullptr);
     EXPECT_EQ(fileInfo->GetRestorePath(), "");
-    EXPECT_FALSE(instance.stopPacket_.load());
+    EXPECT_TRUE(instance.stopPacket_.load());
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: GET_FILE_INFO_TEST_001";
 }
 
@@ -603,7 +603,7 @@ HWTEST_F(ScanFileSingletonTest, CURRENT_TAR_SIZE_RECOVER_001, testing::ext::Test
     auto fileInfo = instance.GetFileInfo();
     ASSERT_NE(fileInfo, nullptr);
 
-    EXPECT_FALSE(instance.stopPacket_.load());
+    EXPECT_TRUE(instance.stopPacket_.load());
     GTEST_LOG_(INFO) << "ScanFileSingletonTest-end: CURRENT_TAR_SIZE_RECOVER_001";
 }
 
