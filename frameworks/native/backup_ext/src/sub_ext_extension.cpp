@@ -56,6 +56,7 @@
 #include "b_tarball/b_tarball_factory.h"
 #include "b_utils/scan_file_singleton.h"
 #include "b_utils/string_utils.h"
+#include "clone_file_info_backup_rdbstore.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
 #include "sandbox_helper.h"
@@ -539,6 +540,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::OnBackupExCa
                 auto entity = cachedEntity.Structuralize();
                 extensionPtr->compatibleDirs_ = entity.GetCompatibleDirs();
                 HILOGI("compatibleDirs size=%{public}zu", extensionPtr->compatibleDirs_.size());
+                extensionPtr->dbPath_ = entity.GetStringValue("path");
                 extensionPtr->AsyncTaskBackup(extensionPtr->extension_->GetUsrConfig());
                 extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::FULL_BACKUP);
             }
@@ -1905,6 +1907,13 @@ void BackupExtExtension::GetScanDirList(vector<string>& pathInclude, string type
         pathInclude = usrConfig.GetIncludes();
     } else {
         pathInclude = usrConfig.GetExcludes();
+    }
+    if (extension_->ancoFileListClone_ == "1" && type == BConstants::INCLUDES) {
+        HILOGI("GetScanDirList ancoFileListClone_ is 1");
+        vector<std::string> ancoMediaFilePaths =
+        CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryAncoMediaFile();
+        pathInclude.insert(pathInclude.end(), std::make_move_iterator(ancoMediaFilePaths.begin()),
+            std::make_move_iterator(ancoMediaFilePaths.end()));
     }
 }
 

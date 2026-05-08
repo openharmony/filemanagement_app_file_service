@@ -36,6 +36,7 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/clone_file_info_backup_rdbstore.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
@@ -56,6 +57,7 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
     "${path_backup}/utils:backup_utils",
+    "${path_backup}/frameworks/native/backup_ext:backup_extension_ability_native",
   ]
 
   external_deps = [
@@ -71,6 +73,7 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "cJSON:cjson",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
@@ -78,6 +81,8 @@ ohos_fuzztest("BackupExtFuzzTest") {
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "runtime_core:ani",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
   ]
 
   defines = [

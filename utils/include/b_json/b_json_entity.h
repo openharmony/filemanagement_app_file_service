@@ -65,6 +65,33 @@ public:
     }
 
     /**
+     * @brief 从Json对象中解析指定键的字符串值
+     *
+     * @param key 要解析的键
+     * @return std::string 解析到的字符串值，如果键不存在或值不是字符串类型则返回空字符串
+     */
+    std::string GetStringValue(const std::string& key) const
+    {
+        if (obj_.isNull()) {
+            HILOGE("Uninitialized Json Object reference");
+            return "";
+        }
+        if (!obj_.isObject()) {
+            HILOGE("JSon value is not object");
+            return "";
+        }
+        if (!obj_.isMember(key)) {
+            HILOGE("'%{public}s' field not found", key.c_str());
+            return "";
+        }
+        if (!obj_[key].isString()) {
+            HILOGE("'%{public}s' field must be a string", key.c_str());
+            return "";
+        }
+        return obj_[key].asString();
+    }
+
+    /**
      * @brief 构造方法，具备T(Json::Value&, std::any)能力的构造函数
      *
      * @param obj Json对象引用

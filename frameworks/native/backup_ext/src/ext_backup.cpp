@@ -31,6 +31,7 @@
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
+#include "cJSON.h"
 #include "ext_backup_ani.h"
 #include "ext_backup_js.h"
 #include "ext_extension.h"
@@ -186,8 +187,21 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
     } else if (extAction_ == BConstants::ExtensionAction::BACKUP) {
         backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
         backupScene_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_SCENE_PARA);
-        HILOGI("backupExtInfo_ is %{public}s, backupScene_ is %{public}s",
-            backupExtInfo_.c_str(), backupScene_.c_str());
+        nlohmann::json j = nlohmann::json::parse(backupExtInfo_, nullptr, false);
+        if (j.is_discarded()) {
+            HILOGE("Parse json file path failed, backupExtInfo_ is %{public}s, backupScene_ is %{public}s,"
+                "ancoFileListClone_ is %{public}s",
+                backupExtInfo_.c_str(), backupScene_.c_str(), ancoFileListClone_.c_str());
+            return ERR_OK;
+        }
+        for (const auto &item : j) {
+            if (item["type"] == "anco_file_list_clone") {
+                ancoFileListClone_ = item["detail"];
+                break;
+            }
+        }
+        HILOGI("backupExtInfo_ is %{public}s, backupScene_ is %{public}s, ancoFileListClone_ is %{public}s",
+            backupExtInfo_.c_str(), backupScene_.c_str(), ancoFileListClone_.c_str());
     }
     /* backup don't need parament. */
     return ERR_OK;

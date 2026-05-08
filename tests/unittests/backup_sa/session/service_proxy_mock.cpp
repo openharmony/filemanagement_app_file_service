@@ -330,7 +330,7 @@ ErrCode ServiceProxy::AddAncoMovePaths(const std::vector<std::string> &ancoSourc
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
+ErrCode ServiceProxy::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
 {
     ancoRestoreRes.duplicateCount = 0;
     ancoRestoreRes.failedCount = 0;

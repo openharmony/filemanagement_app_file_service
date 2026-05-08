@@ -60,6 +60,8 @@ ohos_unittest("ext_extension_test") {
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -130,6 +132,7 @@ ohos_unittest("tar_file_test") {
   module_out_path = path_module_out_tests
 
   sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/clone_file_info_backup_rdbstore.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
@@ -181,6 +184,7 @@ ohos_unittest("tar_file_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "cJSON:cjson",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -190,6 +194,8 @@ ohos_unittest("tar_file_test") {
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "runtime_core:ani",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
     "samgr:samgr_proxy",
   ]
 
@@ -211,6 +217,7 @@ ohos_unittest("untar_file_sup_test") {
   module_out_path = path_module_out_tests
 
   sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/clone_file_info_backup_rdbstore.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
@@ -267,6 +274,7 @@ ohos_unittest("untar_file_sup_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "cJSON:cjson",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -276,6 +284,8 @@ ohos_unittest("untar_file_sup_test") {
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "runtime_core:ani",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
     "samgr:samgr_proxy",
   ]
 
@@ -296,6 +306,7 @@ ohos_unittest("untar_file_test") {
   module_out_path = path_module_out_tests
 
   sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/clone_file_info_backup_rdbstore.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_ani.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/ext_backup_context.cpp",
@@ -347,6 +358,7 @@ ohos_unittest("untar_file_test") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "cJSON:cjson",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -356,6 +368,8 @@ ohos_unittest("untar_file_test") {
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "runtime_core:ani",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
     "samgr:samgr_proxy",
   ]
 
@@ -528,6 +542,7 @@ ohos_unittest("ext_extension_new_test") {
   module_out_path = path_module_out_tests
 
   sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/clone_file_info_backup_rdbstore.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/installd_un_tar_file.cpp",
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_js_mock.cpp",
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
@@ -559,6 +574,7 @@ ohos_unittest("ext_extension_new_test") {
   ]
 
   deps = [
+    "${path_backup}/frameworks/native/backup_ext:backup_extension_ability_native",
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",
   ]
@@ -586,6 +602,8 @@ ohos_unittest("ext_extension_new_test") {
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -613,6 +631,7 @@ ohos_unittest("ext_extension_sub_test") {
   module_out_path = path_module_out_tests
 
   sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/clone_file_info_backup_rdbstore.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/tar_file.cpp",
     "${path_backup}/frameworks/native/backup_ext/src/untar_file.cpp",
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_js_mock.cpp",
@@ -671,6 +690,8 @@ ohos_unittest("ext_extension_sub_test") {
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -758,10 +779,49 @@ ohos_unittest("ext_backup_js_sub_test") {
   use_exceptions = true
 }
 
+ohos_unittest("clone_file_info_backup_rdbstore_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup}/frameworks/native/backup_ext/src/clone_file_info_backup_rdbstore.cpp",
+    "${path_backup}/tests/utils/src/test_manager.cpp",
+    "clone_file_info_backup_rdbstore_test.cpp",
+  ]
+
+  include_dirs = [
+    "${path_backup}/frameworks/native/backup_ext/include",
+    "${path_backup}/interfaces/common/include",
+    "${path_backup}/tests/utils/include",
+    "${path_backup}/utils/include",
+  ]
+
+  cflags = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+  cflags_cc = [ "--coverage" ]
+
+  deps = [
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "relational_store:native_rdb",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 group("backup_ext_test") {
   testonly = true
   if (!use_libfuzzer) {
     deps = [
+      ":clone_file_info_backup_rdbstore_test",
       ":ext_backup_js_sub_test",
       ":ext_backup_js_test",
       ":ext_extension_new_test",

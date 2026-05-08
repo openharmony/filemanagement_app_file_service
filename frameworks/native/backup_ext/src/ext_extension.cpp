@@ -121,6 +121,9 @@ static string GetRestoreTempPath(const string &bundleName, const string &hashNam
         }
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
         path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        if (StringUtils::IsAncoFile(hashName)) {
+            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        }
     }
     return path;
 }
@@ -340,6 +343,15 @@ static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string
         }
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
         path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        if (StringUtils::IsAncoFile(fileName)) {
+            if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).data(), S_IRWXU) && errno != EEXIST) {
+                string errMsg =
+                    string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
+                HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
+                return errno;
+            }
+            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        }
     }
     if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
         string errMsg =
@@ -1329,7 +1341,17 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         RestoreOneBigFile(path, item, appendTargetPath);
     }
     AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
-    ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove();
+    UniqueFd cloneFileInfoFd(-1);
+    HILOGI("RestoreBigFiles bundleName_: %{public}s", bundleName_.c_str());
+    ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove(cloneFileInfoFd);
+    if (cloneFileInfoFd > 0 && bundleName_ == MEDIA_LIBRARY_BUNDLE_NAME) {
+        std::string mediaPath = "/storage/media/local/files/.backup/restore/clone_file_info_restore.db";
+        UniqueFd mediaFd(open(mediaPath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
+        if (mediaFd > 0) {
+            HILOGI("copy db start");
+            BFile::SendFile(mediaFd, cloneFileInfoFd);
+        }
+    }
     auto end = std::chrono::system_clock::now();
     radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     HILOGI("End Restore Big Files");
@@ -1732,7 +1754,9 @@ void BackupExtExtension::DoClearInner()
                 string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         }
         AncoBackupHelper::DestroyAncoBackupTask();
-        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
+        if (bundleName_.compare(MEDIA_LIBRARY_BUNDLE_NAME) == 0 || bundleName_.compare(FILE_MANAGER_BUNDLE_NAME) == 0) {
+            AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
+        }
     } catch (...) {
         HILOGE("Failed to clear");
     }

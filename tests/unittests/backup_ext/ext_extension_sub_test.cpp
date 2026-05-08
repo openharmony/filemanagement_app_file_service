@@ -29,9 +29,11 @@
 #include "b_error/b_excep_utils.h"
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
+#include "clone_file_info_backup_rdbstore.h"
 #include "ext_backup_mock.h"
 #include "ext_extension_mock.h"
 #include "tar_file.h"
+#include "test_manager.h"
 #include "untar_file.h"
 
 #include "sub_ext_extension.cpp"
@@ -1331,6 +1333,56 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0100, testin
 }
 
 /**
+ * @tc.number: Ext_Extension_Sub_GetScanDirList_Test_0200
+ * @tc.name: Ext_Extension_Sub_GetScanDirList_Test_0200
+ * @tc.desc: 测试GetScanDirList ancoFileListClone_为1时调用QueryAncoMediaFile
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_GetScanDirList_Test_0200";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        ASSERT_TRUE(extension != nullptr);
+        extExtension->extension_ = extension;
+        extension->backupScene_ = "";
+        extension->ancoFileListClone_ = "1";
+        
+        TestManager tm("Ext_Extension_Sub_GetScanDirList_Test_0200");
+        string root = tm.GetRootDirCurTest();
+        string dbPath = root + "/test_scan_dir.db";
+        extExtension->dbPath_ = dbPath;
+        
+        auto rdbInstance = CloneFileInfoBackupRdbstore::GetInstance(dbPath);
+        EXPECT_NE(rdbInstance, nullptr);
+        
+        vector<string> includes = {};
+        string usrConfig = "{\"includes\":[\"test/\"]}";
+        BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(usrConfig);
+        
+        extExtension->GetScanDirList(includes, BConstants::INCLUDES, cachedEntity.Structuralize());
+        EXPECT_FALSE(includes.empty());
+        
+        extension->ancoFileListClone_ = "";
+        includes.clear();
+        extExtension->GetScanDirList(includes, BConstants::INCLUDES, cachedEntity.Structuralize());
+        EXPECT_FALSE(includes.empty());
+        
+        extension->ancoFileListClone_ = "1";
+        includes.clear();
+        extExtension->GetScanDirList(includes, BConstants::EXCLUDES, cachedEntity.Structuralize());
+        EXPECT_TRUE(includes.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_GetScanDirList_Test_0200";
+}
+
+/**
  * @tc.number: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100
  * @tc.name: Ext_Extension_Sub_PathHasEl3OrEl4_Test_0100
  * @tc.desc: 测试PathHasEl3OrEl4 不包含el3/el4
@@ -1729,5 +1781,97 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_0303, testing::ext::TestSize.Lev
     GTEST_LOG_(INFO) << "ExtExtensionTest-end SUB_Ext_Extension_0303";
 }
 
-#include "ext_extension_sub_ext_test.cpp"
+/**
+ * @tc.number: SUB_Ext_Extension_DoClearInner_0001
+ * @tc.name: SUB_Ext_Extension_DoClearInner_0001
+ * @tc.desc: 测试 DoClearInner bundleName_为MEDIA_LIBRARY_BUNDLE_NAME时调用DestroyAncoRestoreTask
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_DoClearInner_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_DoClearInner_0001";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        extExtension->bundleName_ = BConstants::BUNDLE_MEDIAL_DATA;
+        
+        ServiceClient::serviceProxy_ = nullptr;
+        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
+        
+        ServiceClient::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, DestroyAncoRestoreTask()).WillOnce(Return(BError(BError::Codes::OK)));
+        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
+        
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_DoClearInner_0001";
 }
+
+/**
+ * @tc.number: SUB_Ext_Extension_DoClearInner_0002
+ * @tc.name: SUB_Ext_Extension_DoClearInner_0002
+ * @tc.desc: 测试 DoClearInner bundleName_为FILE_MANAGER_BUNDLE_NAME时调用DestroyAncoRestoreTask
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_DoClearInner_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_DoClearInner_0002";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        extExtension->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
+        
+        ServiceClient::serviceProxy_ = nullptr;
+        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
+        
+        ServiceClient::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, DestroyAncoRestoreTask()).WillOnce(Return(BError(BError::Codes::OK)));
+        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
+        
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_DoClearInner_0002";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_DoClearInner_0003
+ * @tc.name: SUB_Ext_Extension_DoClearInner_0003
+ * @tc.desc: 测试 DoClearInner bundleName_为其他值时不调用DestroyAncoRestoreTask
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I9P3Y3
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_DoClearInner_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_DoClearInner_0003";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+        extExtension->bundleName_ = BUNDLE_NAME;
+        
+        ServiceClient::serviceProxy_ = nullptr;
+        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
+        
+        ServiceClient::serviceProxy_ = proxy;
+        EXPECT_CALL(*proxy, DestroyAncoRestoreTask()).WillOnce(Return(BError(BError::Codes::OK)));
+        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
+        
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_DoClearInner_0003";
+}
+#include "ext_extension_sub_ext_test.cpp"
+} // namespace OHOS::FileManagement::Backup

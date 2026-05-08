@@ -93,7 +93,7 @@ public:
     static ErrCode StartAncoUnPacket(const std::string &tempPath);
     static ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats);
-    static AncoRestoreResult StartAncoMove();
+    static AncoRestoreResult StartAncoMove(UniqueFd& fd);
 };
 using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
     map<string, struct ReportFileInfo>, map<string, struct ReportFileInfo>>;
@@ -526,6 +526,8 @@ private:
     std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并发
     std::mutex updateFileStatLock_;
     AncoRestoreResult ancoRestoreRes_;
+    std::string cloneFileInfoDbPath_;
+    std::string dbPath_;
 };
 } // namespace OHOS::FileManagement::Backup
 
