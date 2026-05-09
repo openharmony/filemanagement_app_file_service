@@ -642,6 +642,7 @@ ohos_unittest("b_utils_test") {
     "hilog:libhilog",
     "jsoncpp:jsoncpp",
     "init:libbegetutil",
+    "ipc:ipc_core",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
