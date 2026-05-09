@@ -625,6 +625,7 @@ ohos_unittest("b_utils_test") {
   sources = [
     "b_utils\scan_file_singleton_test.cpp",
     "b_utils\string_utils_test.cpp",
+    "b_utils\storage_manager_helper_test.cpp",
     "b_utils\b_time_test.cpp",
   ]
 
@@ -641,6 +642,9 @@ ohos_unittest("b_utils_test") {
     "hilog:libhilog",
     "jsoncpp:jsoncpp",
     "init:libbegetutil",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
   defines = [ "private = public" ]
   use_exceptions = true

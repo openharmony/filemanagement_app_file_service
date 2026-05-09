@@ -15,13 +15,16 @@
 #include "b_utils/scan_file_singleton.h"
 #include "b_resources/b_constants.h"
 #include "b_utils/string_utils.h"
+#include "b_error/b_error.h"
+#include "b_utils/storage_manager_helper.h"
 #include <filemgmt_libhilog.h>
 
 namespace OHOS::FileManagement::Backup {
 
-constexpr uint64_t MAX_TAR_SIZE = 5368709120; // 队列中可存储最大tar包总大小（5G）
-constexpr float MAX_TAR_PERCENT = 0.5; // 队列中可存储的tar文件占所有备份文件总大小最大比例
 constexpr uint32_t MEGA_BYTE = 1048576; // 1M包含多少字节
+constexpr uint64_t FIVE_GB = 5ULL * 1024 * MEGA_BYTE; // 5GB
+constexpr uint64_t FOUR_GB = 4ULL * 1024 * MEGA_BYTE; // 4GB
+constexpr uint64_t ONE_HUNDRED_FIFTY_MB = 150ULL * MEGA_BYTE; // 150MB
 
 std::string FileInfo::GetRestorePath()
 {
@@ -56,6 +59,18 @@ std::string CompatibleSmallFileInfo::GetRestorePath()
 ScanFileSingleton& ScanFileSingleton::GetInstance()
 {
     static ScanFileSingleton instance;
+    static std::once_flag initFlag;
+    std::call_once(initFlag, [&]() {
+        uint64_t freeSize = StorageManagerHelper::GetInstance().GetFreeSize();
+        if (freeSize == 0) {
+            HILOGE("get freeSize fail!");
+        }
+        if (freeSize < FIVE_GB) {
+            instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
+        } else {
+            instance.maxTarSize_.store(freeSize - FOUR_GB);
+        }
+    });
     return instance;
 }
 
@@ -78,9 +93,13 @@ void ScanFileSingleton::AddBigFile(const std::string& filePath, const struct sta
 void ScanFileSingleton::AddTarFile(const std::string& filename, const std::string& filePath, const struct stat& sta)
 {
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
+    if (sta.st_size < 0) {
+        HILOGE("st_size is negative, fileName:%{public}s!", filename.c_str());
+        return;
+    }
     pendingFileQueue_.push(std::make_shared<FileInfo>(filename, filePath, sta, false));
     currentTarSize_.fetch_add(sta.st_size);
-    if (currentTarSize_.load() > MAX_TAR_SIZE || currentTarSize_.load() > percentSizeLimit_.load()) {
+    if (currentTarSize_.load() > maxTarSize_.load()) {
         HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",
             static_cast<uint32_t>(currentTarSize_.load() / MEGA_BYTE));
         stopPacket_.store(true);
@@ -112,7 +131,7 @@ void ScanFileSingleton::AddAncoTarFile(const std::string &filename, const std::s
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
     pendingFileQueue_.push(std::make_shared<AncoFileInfo>(filename, filePath, sta, false));
     currentTarSize_.fetch_add(sta.st_size);
-    if (currentTarSize_.load() > MAX_TAR_SIZE || currentTarSize_.load() > percentSizeLimit_.load()) {
+    if (currentTarSize_.load() > maxTarSize_.load()) {
         HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",
             static_cast<uint32_t>(currentTarSize_.load() / MEGA_BYTE));
         stopPacket_.store(true);
@@ -128,7 +147,7 @@ std::shared_ptr<IFileInfo> ScanFileSingleton::GetFileInfo()
         pendingFileQueue_.pop();
         if (fileInfo != nullptr && !fileInfo->isBigFile_) {
             currentTarSize_.fetch_sub(fileInfo->sta_.st_size);
-            if (currentTarSize_.load() < MAX_TAR_SIZE && currentTarSize_.load() < percentSizeLimit_.load()) {
+            if (currentTarSize_.load() < maxTarSize_.load()) {
                 StartPacket();
             }
         }
@@ -196,8 +215,4 @@ void ScanFileSingleton::WaitForPacketFlag()
     waitPacketFlag_.wait(lock, [this] {return !HasFileReady() || !stopPacket_.load(); });
 }
 
-void ScanFileSingleton::UpdateLimitByTotalSize(uint64_t totalFileSize)
-{
-    percentSizeLimit_.store(static_cast<uint64_t>(totalFileSize * MAX_TAR_PERCENT));
-}
 } // namespace OHOS::FileManagement::Backup
