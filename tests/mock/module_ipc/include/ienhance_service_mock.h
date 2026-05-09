@@ -35,7 +35,7 @@ public:
     MOCK_METHOD(ErrCode, StartAncoUnPacket, (const std::string &, const std::string &), (override));
     MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::string &, const std::vector<std::string> &,
         const std::vector<std::string> &, const std::vector<StatInfo> &), (override));
-    MOCK_METHOD(ErrCode, StartAncoMove, (const std::string &, AncoRestoreResult &), (override));
+    MOCK_METHOD(ErrCode, StartAncoMove, (const std::string &, int &, AncoRestoreResult &), (override));
     MOCK_METHOD(int, OpenAncoFileReadOnly, (const std::string &));
     MOCK_METHOD(bool, RemoveAncoFile, (const std::string &));
     MOCK_METHOD(void, GetIncrementalAncoFileHandle, (const std::string &, const std::string &, int &, int &, int &));

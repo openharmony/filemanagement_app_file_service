@@ -70,7 +70,7 @@ public:
     virtual ErrCode StartAncoUnPacket(const std::string &bundleName, const std::string &rootPath) = 0;
     virtual ErrCode AddAncoMovePaths(const std::string &bundleName, const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) = 0;
-    virtual ErrCode StartAncoMove(const std::string &bundleName, AncoRestoreResult &ancoRestoreRes) = 0;
+    virtual ErrCode StartAncoMove(const std::string &bundleName, int &fd, AncoRestoreResult &ancoRestoreRes) = 0;
     virtual int OpenAncoFileReadOnly(const std::string &sandboxPath) = 0;
     virtual bool RemoveAncoFile(const std::string &sandboxPath) = 0;
     virtual void GetIncrementalAncoFileHandle(const std::string &bundleName, const std::string &fileName, int &fdVal,

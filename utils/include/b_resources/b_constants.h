@@ -142,6 +142,7 @@ static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/base/.backup";
 static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME = "/storage/Users/currentUser/.backup";
 static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME_ANCO = "/storage/Users/currentUser/HO_DATA_EXT_MISC/.backup";
+static inline std::string_view PATH_MEDIALDATA_HOME_ANCO = "/storage/media/local/files/Docs/HO_DATA_EXT_MISC";
 static inline std::string_view PATH_MEDIALDATA_BACKUP_HOME = "/storage/media/local/files/.backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
 static inline std::string_view BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR = "/data/backup/incrementalreceived/";
@@ -249,7 +250,7 @@ static inline std::vector<std::string_view> DEFAULT_VERSION_NAMES_VEC = {
     DEFAULT_VERSION_NAME,         DEFAULT_VERSION_NAME_CLONE, DEFAULT_VERSION_NAME_CLONE_2,
     DEFAULT_VERSION_NAME_CLONE_3, DEFAULT_VERSION_NAME_PC,    DEFAULT_VERSION_NAME_CLOUD,
 };
-static inline std::string BACKUP_VERSION = R"({"backupVersion" : "20.2"})";
+static inline std::string BACKUP_VERSION = R"({"backupVersion" : "23"})";
 
 // 应用默认备份的目录，其均为相对根路径的路径。为避免模糊匹配，务必以斜线为结尾。
 static inline std::array<std::string_view, PATHES_TO_BACKUP_SIZE> PATHES_TO_BACKUP = {

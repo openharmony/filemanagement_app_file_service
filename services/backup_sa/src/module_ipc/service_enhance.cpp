@@ -257,7 +257,7 @@ ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath
     }
 }
 
-ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
+ErrCode Service::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
 {
     try {
         string callerName;
@@ -271,7 +271,7 @@ ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
             HILOGW("StartAncoMove, enhance service is not loaded");
             return BError(BError::Codes::OK);
         }
-        return enhanceService->StartAncoMove(callerName, ancoRestoreRes);
+        return enhanceService->StartAncoMove(callerName, fd, ancoRestoreRes);
     } catch (const BError &e) {
         return e.GetCode();
     } catch (...) {

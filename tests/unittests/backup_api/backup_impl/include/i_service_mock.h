@@ -60,7 +60,7 @@ public:
     MOCK_METHOD(ErrCode, StartAncoUnPacket, (const std::string &));
     MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::vector<std::string> &, const std::vector<std::string> &,
         const std::vector<StatInfo> &));
-    MOCK_METHOD(ErrCode, StartAncoMove, (AncoRestoreResult &));
+    MOCK_METHOD(ErrCode, StartAncoMove, (int &, AncoRestoreResult &));
 
     int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {

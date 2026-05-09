@@ -93,7 +93,7 @@ public:
     MOCK_METHOD1(StartAncoUnPacket, ErrCode(const std::string &));
     MOCK_METHOD3(AddAncoMovePaths, ErrCode(const std::vector<std::string> &, const std::vector<std::string> &,
         const std::vector<StatInfo> &));
-    MOCK_METHOD1(StartAncoMove, ErrCode(AncoRestoreResult &));
+    MOCK_METHOD2(StartAncoMove, ErrCode(int &, AncoRestoreResult &));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

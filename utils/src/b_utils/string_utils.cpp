@@ -116,7 +116,8 @@ bool StringUtils::IsSubdirectory(const std::string &parent, const std::string &c
 bool StringUtils::IsSandboxAncoPath(const std::string &path)
 {
     const auto sbAncoPath = BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR;
-    return IsSubdirectory(sbAncoPath, path);
+    return IsSubdirectory(sbAncoPath, path) ||
+        IsSubdirectory(std::string(BConstants::PATH_MEDIALDATA_HOME_ANCO), path);
 }
 
 std::set<std::string> StringUtils::FilterAncoPaths(std::set<std::string> &paths)

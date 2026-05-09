@@ -40,6 +40,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "src/backup_helper.cpp",
     "src/tar_file.cpp",
     "src/untar_file.cpp",
+    "src/clone_file_info_backup_rdbstore.cpp",
   ]
 
   defines = [
@@ -71,12 +72,15 @@ ohos_shared_library("backup_extension_ability_native") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "cJSON:cjson",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "relational_store:native_rdb",
+    "relational_store:rdb_data_share_adapter",
     "runtime_core:ani",
     "samgr:samgr_proxy",
   ]

@@ -164,7 +164,7 @@ public:
     ErrCode StartAncoUnPacket(const std::string &rootPath) override;
     ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) override;
-    ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) override;
+    ErrCode StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes) override;
     // 以下都是非IPC接口
 public:
     void OnStart() override;

@@ -40,6 +40,7 @@
                 "json",
                 "jsoncpp",
                 "napi",
+                "relational_store",
                 "runtime_core",
                 "os_account",
                 "openssl",

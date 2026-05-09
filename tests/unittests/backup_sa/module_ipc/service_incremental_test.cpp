@@ -659,7 +659,7 @@ ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath
     return BService::serviceMock->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
 }
 
-ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
+ErrCode Service::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
 {
     return BService::serviceMock->StartAncoMove(ancoRestoreRes);
 }
