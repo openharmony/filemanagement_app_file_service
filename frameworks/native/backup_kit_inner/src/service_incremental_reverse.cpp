@@ -214,6 +214,17 @@ ErrCode ServiceReverse::IncrementalRestoreOnProcessInfo(const std::string &bundl
     return BError(BError::Codes::OK);
 }
 
+ErrCode ServiceReverse::IncrementalRestoreOnMigrateResult(int32_t errCode, const std::string &bundleName)
+{
+    HILOGI("begin incremental report processInfo, bundleName:%{public}s", bundleName.c_str());
+    if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onMigrateResult) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return BError(BError::Codes::OK);
+    }
+    callbacksIncrementalRestore_.onMigrateResult(errCode, bundleName);
+    return BError(BError::Codes::OK);
+}
+
 ServiceReverse::ServiceReverse(BIncrementalBackupSession::Callbacks callbacks)
     : scenario_(Scenario::BACKUP), callbacksIncrementalBackup_(callbacks)
 {

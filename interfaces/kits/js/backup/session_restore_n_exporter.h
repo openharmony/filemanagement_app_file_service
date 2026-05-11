@@ -44,6 +44,8 @@ public:
     static napi_value AppendBundles(napi_env env, napi_callback_info cbinfo);
     static napi_value PublishFile(napi_env env, napi_callback_info cbinfo);
     static napi_value GetFileHandle(napi_env env, napi_callback_info cbinfo);
+    static napi_value MigrateFile(napi_env env, napi_callback_info cbinfo);
+    static napi_value GetApkFileHandle(napi_env env, napi_callback_info cbinfo);
     static napi_value Release(napi_env env, napi_callback_info cbinfo);
     static napi_value Cancel(napi_env env, napi_callback_info cbinfo);
     static napi_value CleanBundleTempDir(napi_env env, napi_callback_info cbinfo);

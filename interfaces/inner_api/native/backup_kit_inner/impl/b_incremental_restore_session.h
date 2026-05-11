@@ -25,6 +25,7 @@
 #include "errors.h"
 #include "svc_death_recipient.h"
 #include "unique_fd.h"
+#include "backup_path_info.h"
 
 namespace OHOS::FileManagement::Backup {
 class BIncrementalRestoreSession {
@@ -93,6 +94,25 @@ public:
      * @param fileName   文件名称
      */
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName);
+
+    /**
+     * @brief 迁移文件
+     *
+     * @param pathInfo 路径信息
+     * @param bundleName 应用名称
+     * @param fileName 文件名称
+     * @return ErrCode 规范错误码
+     */
+    ErrCode MigrateFile(const BPathInfo &pathInfo, const std::string &bundleName, const std::string &fileName);
+
+    /**
+     * @brief 获取APK文件句柄
+     *
+     * @param path 文件路径
+     * @param fileName 文件名称
+     * @return UniqueFd 文件描述符
+     */
+    UniqueFd GetApkFileHandle(const std::string &path, const std::string &fileName);
 
     /**
      * @brief 用于追加应用，现阶段仅支持在Start之前调用

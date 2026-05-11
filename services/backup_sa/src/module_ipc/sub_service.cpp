@@ -1960,4 +1960,42 @@ void Service::SleepForDelayTime(const std::string &bundleName)
         HILOGI("Sleep end, delay time is %{public}d", delayTime);
     }
 }
+
+ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName)
+{
+    HILOGI("MigrateFile called, srcPath=%{public}s, destPath=%{public}s, bundleName=%{public}s, fileName=%{public}s",
+        path.srcPath.c_str(), path.destPath.c_str(), bundleName.c_str(), GetAnonyPath(fileName).c_str());
+
+    if (path.srcPath.empty() || path.destPath.empty()) {
+        HILOGE("MigrateFile failed: srcPath or destPath is empty");
+        return BError(BError::Codes::SDK_INVAL_ARG, "srcPath or destPath is empty").GetCode();
+    }
+
+    if (bundleName.empty()) {
+        HILOGE("MigrateFile failed: bundleName is empty");
+        return BError(BError::Codes::SDK_INVAL_ARG, "bundleName is empty").GetCode();
+    }
+
+    if (fileName.empty()) {
+        HILOGE("MigrateFile failed: fileName is empty");
+        return BError(BError::Codes::SDK_INVAL_ARG, "fileName is empty").GetCode();
+    }
+
+    std::string srcFile = path.srcPath + "/" + fileName;
+    std::string destFile = path.destPath + "/" + fileName;
+
+    HILOGI("MigrateFile start, srcFile=%{public}s, destFile=%{public}s", GetAnonyPath(srcFile).c_str(),
+        GetAnonyPath(destFile).c_str());
+
+    return ERR_OK;
+}
+
+ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd)
+{
+    HILOGI("GetApkFileHandle called, path=%{public}s, fileName=%{public}s", path.c_str(),
+        GetAnonyPath(fileName).c_str());
+
+    return ERR_OK;
+}
+
 }

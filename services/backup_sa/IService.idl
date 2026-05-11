@@ -23,6 +23,7 @@ sequenceable BackupIncrementalData..OHOS.FileManagement.Backup.BIncrementalData;
 sequenceable OHOS.FileManagement.Backup.StatInfo;
 sequenceable OHOS.FileManagement.Backup.AncoScanResult;
 sequenceable OHOS.FileManagement.Backup.AncoRestoreResult;
+sequenceable BackupPathInfo..OHOS.FileManagement.Backup.BPathInfo;
 interface OHOS.FileManagement.Backup.IService{
     [ipccode 39] void InitRestoreSession([in] IServiceReverse reverseIpcRemoteObject);
     [ipccode 1] void InitRestoreSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject,
@@ -99,4 +100,6 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 57] void AppAncoFileReady([in] String fileName, [in] String filePath, [in] boolean needDelete);
     [ipccode 58, ipcincapacity 1024] void AddAncoTars([in] String[] tarFiles, [in] long[] tarFileSizes,
         [in] String[] tarFileNames);
+    [ipccode 59] void MigrateFile([in] BPathInfo path, [in] String bundleName, [in] String fileName);
+    [ipccode 60] void GetApkFileHandle([in] String path, [in] String fileName, [out] FileDescriptor fd);
  }

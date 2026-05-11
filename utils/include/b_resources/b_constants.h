@@ -271,6 +271,8 @@ static inline std::string MANIFEST_FD = "manifestFd";
 static inline std::string LAST_INCREMENTAL_TIME = "lastIncrementalTime";
 static inline std::string PARAMETERS = "parameters";
 static inline std::string PRIORITY = "priority";
+static inline std::string SRC_PATH = "srcPath";
+static inline std::string DEST_PATH = "destPath";
 
 // unicast
 const std::string UNICAST_TYPE = "unicast";
