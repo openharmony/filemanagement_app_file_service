@@ -62,6 +62,7 @@ constexpr int DEFAULT_USER_ID = 100;
 constexpr int BACKUP_UID = 1089;
 constexpr int EXTENSION_THREAD_POOL_COUNT = 1;
 constexpr int BACKUP_LOADSA_TIMEOUT_MS = 5000;
+constexpr int ENHANCE_SERVICE_LOAD_TIMEOUT_MS = 3000;
 
 constexpr int DECIMAL_BASE = 10; // 十进制基数
 
@@ -296,6 +297,11 @@ constexpr int GC_TASK_TIMEOUT = -16;
 constexpr int GC_MAX_WAIT_TIME_S = 200;
 // 克隆应用bundleName
 static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
+static inline std::string BUNDLE_DATA_CLONE_FULL = "com.huawei.hmos.dataclone";
+// 迁移文件路径标识
+static inline std::string MIGRATE_ANCO_APK_PATH = "app_clone_install";
+static inline std::string MIGRATE_ANCO_DATA_PATH = "anco_hmos_data";
+constexpr int32_t SYSTEM_UID_GID = 1000;
 
 //FdSan
 const uint64_t FDSAN_EXT_TAG = 0xD004303;

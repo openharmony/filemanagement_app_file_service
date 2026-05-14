@@ -451,6 +451,68 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(
     }
 }
 
+ErrCode BackupExtExtension::GetIncrementalRpFileHandle(const std::string &fileName, int32_t &fdErrCode)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    fdErrCode = ERR_OK;
+    try {
+        if (extension_ == nullptr) {
+            HILOGE("Failed to get incremental rp file handle, extension is invalid");
+            throw BError(BError::Codes::EXT_INVAL_ARG, "extension is invalid");
+        }
+        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            HILOGE("Failed to get incremental rp file handle, action is invalid, action %{public}d.",
+                extension_->GetExtensionAction());
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
+        }
+        VerifyCaller();
+
+        vector<string> fileNames;
+        struct stat st {};
+        int ret = stat(fileName.c_str(), &st);
+        if (ret == 0 && S_ISDIR(st.st_mode)) {
+            auto [err, dirFiles] = BDir::GetDirFiles(fileName);
+            if (err != ERR_OK) {
+                HILOGE("Failed to get dir files, path = %{public}s, err = %{public}d",
+                    GetAnonyPath(fileName).c_str(), err);
+                fdErrCode = err;
+                return err;
+            }
+            for (const auto &file : dirFiles) {
+                fileNames.emplace_back(file);
+            }
+        } else {
+            fileNames.emplace_back(fileName);
+        }
+
+        for (const auto &name : fileNames) {
+            if (!BDir::IsFilePathValid(name)) {
+                HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(name).c_str());
+                fdErrCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+                return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+            }
+            string rpFileName = GetReportFileName(name);
+            UniqueFd rpFd(open(rpFileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+            if (rpFd < 0) {
+                HILOGE("Failed to open rp file = %{public}s, err = %{public}d",
+                    GetAnonyPath(rpFileName).c_str(), errno);
+                fdErrCode = errno;
+                return BError::GetCodeByErrno(errno);
+            }
+            HILOGI("Success to create rp file = %{public}s", rpFileName.c_str());
+        }
+        return ERR_OK;
+    } catch (const BError &e) {
+        HILOGE("Failed to get incremental rp file handle, err = %{public}d", e.GetCode());
+        fdErrCode = e.GetCode();
+        return e.GetCode();
+    } catch (...) {
+        HILOGE("Failed to get incremental rp file handle");
+        fdErrCode = BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+        return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+    }
+}
+
 ErrCode BackupExtExtension::HandleClear()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);

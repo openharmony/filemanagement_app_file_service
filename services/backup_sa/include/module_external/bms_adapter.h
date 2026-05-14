@@ -89,6 +89,8 @@ public:
 
     static int64_t GetBundleDataSize(const std::string &bundleName, int32_t userId);
 
+    static bool GetUidGidForBundleName(const std::string &bundleName, int32_t userId, uid_t &uid, gid_t &gid);
+
     static void CreatBackupEnv(const std::vector<BIncrementalData> &bundleNameList, int32_t userId);
 
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForAppendBundles(

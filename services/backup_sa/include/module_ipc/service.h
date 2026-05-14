@@ -794,6 +794,11 @@ private:
     std::vector<std::string> GetCurUsrDispBundleName();
     int32_t GetCurrentActiveAccountUserId();
     void SleepForDelayTime(const std::string &bundleName);
+    ErrCode GetMigrateUidGid(const std::string &destPath, const std::string &bundleName, int32_t userId,
+        uid_t &uid, gid_t &gid);
+    ErrCode DoEnhanceMoveFiles(const std::string &srcFile, const std::string &destFile, uid_t uid, gid_t gid,
+        int32_t &errCode);
+    ErrCode OpenIncrementalRpFile(const std::string &bundleName, const std::string &fileName);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

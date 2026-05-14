@@ -33,6 +33,7 @@ MOCK_METHOD(ErrCode, HandleBackup, (bool));
 MOCK_METHOD(ErrCode, PublishFile, (const std::string &));
 MOCK_METHOD(ErrCode, HandleRestore, (bool));
 MOCK_METHOD(ErrCode, GetIncrementalFileHandle, (const std::string &, int &, int &, int32_t &));
+MOCK_METHOD(ErrCode, GetIncrementalRpFileHandle, (const std::string &, int32_t &));
 MOCK_METHOD(ErrCode, PublishIncrementalFile, (const std::string &));
 MOCK_METHOD(ErrCode, HandleIncrementalBackup, (int32_t, int32_t));
 MOCK_METHOD(ErrCode, IncrementalOnBackup, (bool));

@@ -77,6 +77,7 @@ public:
     MOCK_METHOD(UniqueFd, GetFileHandle, (const string &, int32_t &));
     MOCK_METHOD(ErrCode, GetIncrementalFileHandle, (const string &fileName, int &fd,
         int &reportFd, int32_t &fdErrCode));
+    MOCK_METHOD(ErrCode, GetIncrementalRpFileHandle, (const string &fileName, int32_t &fdErrCode));
     MOCK_METHOD(ErrCode, HandleClear, ());
     MOCK_METHOD(ErrCode, BigFileReady, (TarMap &, sptr<IService>, int));
     MOCK_METHOD(ErrCode, PublishFile, (const std::string &));
