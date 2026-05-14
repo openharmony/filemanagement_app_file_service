@@ -26,7 +26,7 @@
 #include "backup_kit_inner.h"
 #include "filemgmt_libhilog.h"
 #include "service_proxy.h"
-#include "backup_path_info"
+#include "backup_path_info.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -1176,7 +1176,7 @@ napi_value SessionRestoreNExporter::MigrateFile(napi_env env, napi_callback_info
     HILOGI("Called SessionRestore::MigrateFile end.");
 
     NVal thisVar(env, funcArg.GetThisVar());
-    return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(className, cbExec, cbCompl).val_;
+    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
 }
 
 static NContextCBExec GetApkFileHandleCBExec(napi_env env, NFuncArg &funcArg, const std::string &path,

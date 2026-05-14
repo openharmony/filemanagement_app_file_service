@@ -1964,7 +1964,7 @@ void Service::SleepForDelayTime(const std::string &bundleName)
 ErrCode Service::GetMigrateUidGid(const std::string &destPath, const std::string &bundleName, int32_t userId,
     uid_t &uid, gid_t &gid)
 {
-    if (destPath.find(BConstants::MIGRATE_ANCO_APK_PATH) != std::string::npos) {
+    if (destPath.find(BConstants::MIGRATE_ANCO_INSTALL_PATH) != std::string::npos) {
         if (!BundleMgrAdapter::GetUidGidForBundleName(BConstants::BUNDLE_DATA_CLONE_FULL, userId, uid, gid)) {
             HILOGE("GetMigrateUidGid failed: GetUidGidForBundleName failed for clone bundle, bundleName=%{public}s",
                 BConstants::BUNDLE_DATA_CLONE_FULL.c_str());
@@ -1981,7 +1981,7 @@ ErrCode Service::GetMigrateUidGid(const std::string &destPath, const std::string
         }
     }
     HILOGI("GetMigrateUidGid success: path=%{public}s, bundleName=%{public}s, uid=%{public}d, gid=%{public}d,",
-                destPath.c_str(), bundleName.c_str(), uid, gid);
+        destPath.c_str(), bundleName.c_str(), uid, gid);
     return ERR_OK;
 }
 
@@ -2048,6 +2048,29 @@ ErrCode Service::OpenIncrementalRpFile(const std::string &bundleName, const std:
     return (fdErrCode == ERR_OK) ? ERR_OK : BError(BError::Codes::SA_INVAL_ARG).GetCode();
 }
 
+ErrCode Service::MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path)
+{
+    if (session_ == nullptr) {
+        HILOGE("MigrateFile error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
+    if (ret != ERR_OK) {
+        HILOGE("verify caller failed, bundleName:%{public}s", bundleName.c_str());
+        return ret;
+    }
+    if (!VerifyDataClone()) {
+        HILOGE("VerifyDataClone failed, bundleName:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_REFUSED_ACT);
+    }
+    if (!BDir::IsFilePathValid(path.srcPath) || !BDir::IsPathAllowed(path.destPath)) {
+        HILOGE("migrate files forbidden, srcPath:%{public}s, destPath:%{public}s",
+            GetAnonyPath(path.srcPath).c_str(), GetAnonyPath(path.destPath).c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    return ERR_OK;
+}
+
 ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -2056,60 +2079,47 @@ ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleNam
         path.srcPath.c_str(), path.destPath.c_str(), bundleName.c_str(), GetAnonyPath(fileName).c_str());
 
     try {
-            if (session_ == nullptr) {
-                HILOGE("MigrateFile error, session is empty");
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
-            ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
-            if (ret != ERR_OK) {
-                HILOGE("verify caller failed, bundleName:%{public}s", bundleName.c_str());
-                return ret;
-            }
-            if (!VerifyDataClone()) {
-                HILOGE("VerifyDataClone failed, bundleName:%{public}s", bundleName.c_str());
-                return BError(BError::Codes::SA_REFUSED_ACT);
-            }
-            if (!BDir::IsFilePathValid(path.srcPath) || !BDir::IsPathAllowed(path.destPath)) {
-                HILOGE("migrate files forbidden, srcPath:%{public}s, destPath:%{public}s", GetAnonyPath(path.srcPath).c_str(), GetAnonyPath(path.destPath).c_str());
-                return BError(BError::Codes::SA_INVAL_ARG);
-            }
+        ErrCode ret = MigrateFilePrecheck(bundleName, path);
+        if (ret != ERR_OK) {
+            return ret;
+        }
 
-            std::string srcFile;
-            std::string destFile;
-            if (fileName.empty()) {
-                srcFile = path.srcPath;
-                destFile = path.destPath;
-            } else {
-                srcFile = path.srcPath + "/" + fileName;
-                destFile = path.destPath + "/" + fileName;
-            }
+        std::string srcFile;
+        std::string destFile;
+        if (fileName.empty()) {
+            srcFile = path.srcPath;
+            destFile = path.destPath;
+        } else {
+            srcFile = path.srcPath + "/" + fileName;
+            destFile = path.destPath + "/" + fileName;
+        }
 
-            HILOGI("MigrateFile start, srcFile=%{public}s, destFile=%{public}s", GetAnonyPath(srcFile).c_str(),
-                GetAnonyPath(destFile).c_str());
+        HILOGI("MigrateFile start, srcFile=%{public}s, destFile=%{public}s", GetAnonyPath(srcFile).c_str(),
+            GetAnonyPath(destFile).c_str());
 
-            uid_t uid = 0;
-            gid_t gid = 0;
-            int32_t userId = GetUserIdDefault();
-            ErrCode ret = GetMigrateUidGid(path.destPath, bundleName, userId, uid, gid);
-            if (ret != ERR_OK) {
-                return ret;
-            }
+        uid_t uid = 0;
+        gid_t gid = 0;
+        int32_t userId = GetUserIdDefault();
+        ret = GetMigrateUidGid(path.destPath, bundleName, userId, uid, gid);
+        if (ret != ERR_OK) {
+            return ret;
+        }
 
-            int32_t moveErrCode = ERR_OK;
-            ret = DoEnhanceMoveFiles(srcFile, destFile, uid, gid, moveErrCode);
-            if (ret != ERR_OK) {
-                return ret;
-            }
+        int32_t moveErrCode = ERR_OK;
+        ret = DoEnhanceMoveFiles(srcFile, destFile, uid, gid, moveErrCode);
+        if (ret != ERR_OK) {
+            return ret;
+        }
 
-            ret = OpenIncrementalRpFile(bundleName, fileName);
-            if (ret != ERR_OK) {
-                return ret;
-            }
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnMigrateResult(moveErrCode, bundleName);
-            HILOGI("MigrateFile end, srcFile=%{public}s, destFile=%{public}s, errCode=%{public}d", GetAnonyPath(srcFile).c_str(),
-                GetAnonyPath(destFile).c_str(), moveErrCode); 
-            return BError(BError::Codes::OK);
-    } catch (const BError &e){
+        ret = OpenIncrementalRpFile(bundleName, fileName);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnMigrateResult(moveErrCode, bundleName);
+        HILOGI("MigrateFile end, srcFile=%{public}s, destFile=%{public}s, errCode=%{public}d",
+            GetAnonyPath(srcFile).c_str(), GetAnonyPath(destFile).c_str(), moveErrCode);
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
         HILOGE("MigrateFile exception, errCode=%{public}d", e.GetCode());
         return e.GetCode();
     }
@@ -2119,7 +2129,20 @@ ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fi
 {
     HILOGI("GetApkFileHandle called, path=%{public}s, fileName=%{public}s", path.c_str(),
         GetAnonyPath(fileName).c_str());
-
+    ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
+    if (ret != ERR_OK) {
+        HILOGE("verify caller failed, bundleName:%{public}s", bundleName.c_str());
+        return ret;
+    }
+    if (!VerifyDataClone()) {
+        HILOGE("VerifyDataClone failed, bundleName:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_REFUSED_ACT);
+    }
+    std::string filePath = path + "/" + fileName;
+    if (!BDir::IsFilePathValid(filePath)) {
+        HILOGE("files forbidden, filePath:%{public}s", GetAnonyPath(filePath).c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
         HILOGE("GetApkFileHandle failed: enhance service is not loaded");
@@ -2127,8 +2150,7 @@ ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fi
     }
 
     FileBackupParam param;
-    if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), path.c_str(), path.length()) != EOK ||
-        strncpy_s(param.dstFilePath, sizeof(param.dstFilePath), fileName.c_str(), fileName.length()) != EOK) {
+    if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), filePath.c_str(), filePath.length()) != EOK) {
         HILOGE("GetApkFileHandle failed: assemble param error");
         return BError(BError::Codes::SA_INVAL_ARG, "assemble param error").GetCode();
     }

@@ -165,6 +165,7 @@ public:
     ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) override;
     ErrCode StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes) override;
+    ErrCode MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path);
     ErrCode MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd) override;
     // 以下都是非IPC接口

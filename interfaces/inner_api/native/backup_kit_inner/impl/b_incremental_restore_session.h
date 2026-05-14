@@ -97,25 +97,6 @@ public:
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName);
 
     /**
-     * @brief 迁移文件
-     *
-     * @param pathInfo 路径信息
-     * @param bundleName 应用名称
-     * @param fileName 文件名称
-     * @return ErrCode 规范错误码
-     */
-    ErrCode MigrateFile(const BPathInfo &pathInfo, const std::string &bundleName, const std::string &fileName);
-
-    /**
-     * @brief 获取APK文件句柄
-     *
-     * @param path 文件路径
-     * @param fileName 文件名称
-     * @return UniqueFd 文件描述符
-     */
-    UniqueFd GetApkFileHandle(const std::string &path, const std::string &fileName);
-
-    /**
      * @brief 用于追加应用，现阶段仅支持在Start之前调用
      *
      * @param remoteCap 已打开的保存远端设备能力的Json文件。可使用GetLocalCapabilities方法获取
@@ -175,6 +156,25 @@ public:
      * @return ErrCode 规范错误码
      */
     ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo, std::string &compatInfo);
+
+    /**
+     * @brief 迁移文件
+     *
+     * @param pathInfo 路径信息
+     * @param bundleName 应用名称
+     * @param fileName 文件名称
+     * @return ErrCode 规范错误码
+     */
+    ErrCode MigrateFile(const BPathInfo &pathInfo, const std::string &bundleName, const std::string &fileName);
+
+    /**
+     * @brief 获取安装包文件句柄
+     *
+     * @param path 文件路径
+     * @param fileName 文件名称
+     * @return UniqueFd 文件描述符
+     */
+    UniqueFd GetApkFileHandle(const std::string &path, const std::string &fileName);
 
 public:
     ~BIncrementalRestoreSession();

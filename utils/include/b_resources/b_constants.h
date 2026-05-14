@@ -299,7 +299,7 @@ constexpr int GC_MAX_WAIT_TIME_S = 200;
 static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
 static inline std::string BUNDLE_DATA_CLONE_FULL = "com.huawei.hmos.dataclone";
 // 迁移文件路径标识
-static inline std::string MIGRATE_ANCO_APK_PATH = "app_clone_install";
+static inline std::string MIGRATE_ANCO_INSTALL_PATH = "app_clone_install";
 static inline std::string MIGRATE_ANCO_DATA_PATH = "anco_hmos_data";
 constexpr int32_t SYSTEM_UID_GID = 1000;
 
