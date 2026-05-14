@@ -294,10 +294,9 @@ static void OnProcess(weak_ptr<GeneralCallbacks> pCallbacks, const BundleName na
     callbacks->onProcess.CallJsMethod(cbCompl);
 }
 
-// OnMigrateResult 回调处理函数
-static void OnMigrateResult(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode errCode, const BundleName bundleName)
+static void OnMigrateResult(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode errCode, const BundleName name)
 {
-    HILOGI("Callback OnMigrateResult, bundleName=%{public}s, errCode=%{public}d", bundleName.c_str(), errCode);
+    HILOGI("Callback OnMigrateResult, bundleName=%{public}s, errCode=%{public}d", name.c_str(), errCode);
     auto callbacks = pCallbacks.lock();
     if (!callbacks) {
         HILOGI("callback function OnMigrateResult has already been released");
@@ -311,17 +310,26 @@ static void OnMigrateResult(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode errCo
     std::string errMsg = BError::GetBackupMsgByErrno(backupErrCode);
     std::tuple<uint32_t, std::string> errInfo = std::make_tuple(backupErrCode, errMsg);
     HILOGI("callback function OnMigrateResult start errCode: %{public}d", std::get<0>(errInfo));
-    auto cbCompl = [bundleName {bundleName}, errCode {errCode}, errInfo](napi_env env, NError err) -> NVal {
-        NVal obj = NVal::CreateObject(env);
-        obj.AddProp({
-            NVal::DeclareNapiProperty(BConstants::BUNDLE_NAME.c_str(),
-                NVal::CreateUTF8String(env, bundleName).val_),
-            NVal::DeclareNapiProperty("errCode", NVal::CreateInt32(env, errCode).val_)
-        });
-        if (err) {
-            return {env, err.GetNapiErr(env)};
+    auto cbCompl = [name {name}, errCode {errCode}, errInfo](napi_env env, NError err) -> NVal {
+        NVal bundleName = NVal::CreateUTF8String(env, name);
+        if (!err && errCode == 0) {
+            return bundleName;
         }
-        return obj;
+        ErrParam errorParam = [ errInfo ]() {
+            return errInfo;
+        };
+        NVal res;
+        if (err) {
+            res = NVal {env, err.GetNapiErr(env)};
+        } else {
+            res = NVal {env, NError(errorParam).GetNapiErr(env)};
+        }
+        napi_status status = napi_set_named_property(env, res.val_, FILEIO_TAG_ERR_DATA.c_str(), bundleName.val_);
+        if (status != napi_ok) {
+            HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s", status, name.c_str());
+        }
+        HILOGI("callback function restore onMigrateResult end errCode: %{public}d", std::get<0>(errInfo));
+        return res;
     };
     callbacks->onMigrateResult.ThreadSafeSchedule(cbCompl);
 }
@@ -492,7 +500,9 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
         .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
         .onResultReport = bind(OnResultReport, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBackupServiceDied = bind(OnBackupServiceDied, restoreEntity->callbacks),
-        .onProcess = bind(OnProcess, restoreEntity->callbacks, placeholders::_1, placeholders::_2)}, errMsg, errCode);
+        .onProcess = bind(OnProcess, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
+        .onMigrateResult = bind(OnMigrateResult, restoreEntity->callbacks, placeholders::_1, placeholders::_2)},
+        errMsg, errCode);
     if (!restoreEntity->sessionSheet) {
         std::tuple<uint32_t, std::string> errInfo = (errCode == BError(BError::Codes::SA_SESSION_CONFLICT)) ?
             std::make_tuple(errCode, errMsg) : std::make_tuple(errCode, BError::GetBackupMsgByErrno(errCode));
@@ -1093,7 +1103,6 @@ static bool VerifyMigrateFileParam(napi_env env, NFuncArg &funcArg, BPathInfo &p
     return true;
 }
 
-// GetApkFileHandle 参数验证
 static bool VerifyGetApkFileHandleParam(napi_env env, NFuncArg &funcArg, std::string &path, std::string &fileName)
 {
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
@@ -1102,7 +1111,6 @@ static bool VerifyGetApkFileHandleParam(napi_env env, NFuncArg &funcArg, std::st
         return false;
     }
 
-    // 获取 path 参数
     NVal pathVal(env, funcArg[NARG_POS::FIRST]);
     auto [succPath, pathPtr, ignore1] = pathVal.ToUTF8String();
     if (!succPath) {
@@ -1112,7 +1120,6 @@ static bool VerifyGetApkFileHandleParam(napi_env env, NFuncArg &funcArg, std::st
     }
     path = std::string(pathPtr.get());
 
-    // 获取 fileName 参数
     NVal fileNameVal(env, funcArg[NARG_POS::SECOND]);
     auto [succFileName, fileNamePtr, ignore2] = fileNameVal.ToUTF8String();
     if (!succFileName) {
@@ -1167,28 +1174,30 @@ napi_value SessionRestoreNExporter::MigrateFile(napi_env env, napi_callback_info
 
     auto cbExec = GetMigrateFileCBExec(env, funcArg, pathInfo, bundleName, fileName);
     if (cbExec == nullptr) {
-        HILOGE("GetMigrateFileCBExec fail!");
         return nullptr;
     }
     auto cbCompl = [](napi_env env, NError err) -> NVal {
         return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
     };
-    HILOGI("Called SessionRestore::MigrateFile end.");
+    HILOGI("Called SessionRestore::MigrateFile end, srcPath: %{public}s, destPath: %{public}s, "
+        "bundleName: %{public}s, fileName: %{public}s.",
+        pathInfo.srcPath.c_str(), pathInfo.destPath.c_str(), bundleName.c_str(), fileName.c_str());
 
     NVal thisVar(env, funcArg.GetThisVar());
     return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
 }
 
-static NContextCBExec GetApkFileHandleCBExec(napi_env env, NFuncArg &funcArg, const std::string &path,
-    const std::string &fileName, shared_ptr<UniqueFd> fd)
+static napi_value GetApkFileHandleCBFunc(napi_env env, NFuncArg &funcArg, const std::string &path,
+    const std::string &fileName)
 {
     auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
-    if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
+    if (!(restoreEntity && restoreEntity->sessionSheet)) {
         HILOGE("Failed to get RestoreSession entity.");
         NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
         return nullptr;
     }
-    return [entity {restoreEntity}, path {path}, fileName {fileName}, fd]() -> NError {
+    auto fd = std::make_shared<UniqueFd>(-1);
+    auto cbExec = [entity {restoreEntity}, path {path}, fileName {fileName}, fd]() -> NError {
         if (!(entity && entity->sessionSheet)) {
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
         }
@@ -1198,6 +1207,16 @@ static NContextCBExec GetApkFileHandleCBExec(napi_env env, NFuncArg &funcArg, co
         }
         return NError(ERRNO_NOERR);
     };
+    auto cbCompl = [fd](napi_env env, NError err) -> NVal {
+        if (err) {
+            return NVal {env, err.GetNapiErr(env)};
+        }
+        NVal obj = NVal::CreateObject(env);
+        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
+        return obj;
+    };
+    NVal thisVar(env, funcArg.GetThisVar());
+    return NAsyncWorkPromise(env, thisVar).Schedule(SessionRestoreNExporter::className, cbExec, cbCompl).val_;
 }
 
 napi_value SessionRestoreNExporter::GetApkFileHandle(napi_env env, napi_callback_info cbinfo)
@@ -1221,24 +1240,8 @@ napi_value SessionRestoreNExporter::GetApkFileHandle(napi_env env, napi_callback
         return nullptr;
     }
 
-    auto fd = std::make_shared<UniqueFd>(-1);
-    auto cbExec = GetApkFileHandleCBExec(env, funcArg, path, fileName, fd);
-    if (cbExec == nullptr) {
-        HILOGE("GetApkFileHandleCBExec fail!");
-        return nullptr;
-    }
-    auto cbCompl = [fd](napi_env env, NError err) -> NVal {
-        if (err) {
-            return NVal {env, err.GetNapiErr(env)};
-        }
-        NVal obj = NVal::CreateObject(env);
-        obj.AddProp({NVal::DeclareNapiProperty(BConstants::FD.c_str(), NVal::CreateInt32(env, fd->Release()).val_)});
-        return obj;
-    };
     HILOGI("Called SessionRestore::GetApkFileHandle end.");
-
-    NVal thisVar(env, funcArg.GetThisVar());
-    return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+    return GetApkFileHandleCBFunc(env, funcArg, path, fileName);
 }
 
 bool SessionRestoreNExporter::Export()
@@ -1249,12 +1252,12 @@ bool SessionRestoreNExporter::Export()
         NVal::DeclareNapiFunction("appendBundles", AppendBundles),
         NVal::DeclareNapiFunction("publishFile", PublishFile),
         NVal::DeclareNapiFunction("getFileHandle", GetFileHandle),
-        NVal::DeclareNapiFunction("migrateFile", MigrateFile),
-        NVal::DeclareNapiFunction("getApkFileHandle", GetApkFileHandle),
         NVal::DeclareNapiFunction("release", Release),
         NVal::DeclareNapiFunction("cancel", Cancel),
         NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
         NVal::DeclareNapiFunction("getCompatibilityInfo", GetCompatibilityInfo),
+        NVal::DeclareNapiFunction("migrateFile", MigrateFile),
+        NVal::DeclareNapiFunction("getApkFileHandle", GetApkFileHandle),
     };
 
     auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));
@@ -1325,14 +1328,14 @@ napi_value SessionRestoreNExporter::CreateByEntity(napi_env env, std::unique_ptr
     vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("getLocalCapabilities", GetLocalCapabilities),
         NVal::DeclareNapiFunction("getFileHandle", GetFileHandle),
-        NVal::DeclareNapiFunction("migrateFile", MigrateFile),
-        NVal::DeclareNapiFunction("getApkFileHandle", GetApkFileHandle),
         NVal::DeclareNapiFunction("appendBundles", AppendBundles),
         NVal::DeclareNapiFunction("publishFile", PublishFile),
         NVal::DeclareNapiFunction("release", Release),
         NVal::DeclareNapiFunction("cancel", Cancel),
         NVal::DeclareNapiFunction("cleanBundleTempDir", CleanBundleTempDir),
         NVal::DeclareNapiFunction("getCompatibilityInfo", GetCompatibilityInfo),
+        NVal::DeclareNapiFunction("migrateFile", MigrateFile),
+        NVal::DeclareNapiFunction("getApkFileHandle", GetApkFileHandle),
     };
     auto [defRet, constroctor] = NClass::DefineClass(env, NAPI_CLASS_NAME, ConstructorFromEntity, std::move(props));
     if (!defRet) {

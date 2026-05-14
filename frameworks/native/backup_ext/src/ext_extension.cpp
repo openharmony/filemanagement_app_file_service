@@ -451,6 +451,26 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(
     }
 }
 
+static void GetMigrateFileNames(const string &fileName, int32_t &fdErrCode, vector<string> &fileNames)
+{
+    struct stat st {};
+    int ret = stat(fileName.c_str(), &st);
+    if (ret == 0 && S_ISDIR(st.st_mode)) {
+        auto [err, dirFiles] = BDir::GetDirFiles(fileName);
+        if (err != ERR_OK) {
+            HILOGE("Failed to get dir files, path = %{public}s, err = %{public}d",
+                GetAnonyPath(fileName).c_str(), err);
+            fdErrCode = err;
+            return;
+        }
+        for (const auto &file : dirFiles) {
+            fileNames.emplace_back(file);
+        }
+    } else {
+        fileNames.emplace_back(fileName);
+    }
+}
+
 ErrCode BackupExtExtension::GetIncrementalRpFileHandle(const std::string &fileName, int32_t &fdErrCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -468,21 +488,9 @@ ErrCode BackupExtExtension::GetIncrementalRpFileHandle(const std::string &fileNa
         VerifyCaller();
 
         vector<string> fileNames;
-        struct stat st {};
-        int ret = stat(fileName.c_str(), &st);
-        if (ret == 0 && S_ISDIR(st.st_mode)) {
-            auto [err, dirFiles] = BDir::GetDirFiles(fileName);
-            if (err != ERR_OK) {
-                HILOGE("Failed to get dir files, path = %{public}s, err = %{public}d",
-                    GetAnonyPath(fileName).c_str(), err);
-                fdErrCode = err;
-                return err;
-            }
-            for (const auto &file : dirFiles) {
-                fileNames.emplace_back(file);
-            }
-        } else {
-            fileNames.emplace_back(fileName);
+        GetMigrateFileNames(fileName, fdErrCode, fileNames);
+        if (fdErrCode != ERR_OK) {
+            return fdErrCode;
         }
 
         for (const auto &name : fileNames) {
@@ -502,10 +510,6 @@ ErrCode BackupExtExtension::GetIncrementalRpFileHandle(const std::string &fileNa
             HILOGI("Success to create rp file = %{public}s", rpFileName.c_str());
         }
         return ERR_OK;
-    } catch (const BError &e) {
-        HILOGE("Failed to get incremental rp file handle, err = %{public}d", e.GetCode());
-        fdErrCode = e.GetCode();
-        return e.GetCode();
     } catch (...) {
         HILOGE("Failed to get incremental rp file handle");
         fdErrCode = BError(BError::Codes::EXT_BROKEN_IPC).GetCode();

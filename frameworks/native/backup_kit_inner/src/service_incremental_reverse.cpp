@@ -216,7 +216,7 @@ ErrCode ServiceReverse::IncrementalRestoreOnProcessInfo(const std::string &bundl
 
 ErrCode ServiceReverse::IncrementalRestoreOnMigrateResult(int32_t errCode, const std::string &bundleName)
 {
-    HILOGI("begin incremental report processInfo, bundleName:%{public}s", bundleName.c_str());
+    HILOGI("begin incremental migrate result, bundleName:%{public}s, errCode:%{public}d", bundleName.c_str(), errCode);
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onMigrateResult) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return BError(BError::Codes::OK);

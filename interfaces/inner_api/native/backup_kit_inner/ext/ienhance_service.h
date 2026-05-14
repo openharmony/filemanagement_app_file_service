@@ -77,6 +77,8 @@ public:
         int &reportFdVal, int &errCode) = 0;
     virtual int32_t MoveFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
     virtual int32_t OpenFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
+    virtual int32_t MoveDirectory(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
+    virtual int32_t GetApkFileHandle(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
 };
 }  // namespace OHOS::FileManagement::Backup
 #endif
