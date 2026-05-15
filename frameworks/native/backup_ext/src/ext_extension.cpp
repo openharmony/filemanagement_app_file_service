@@ -1348,7 +1348,7 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
 
 bool BackupExtExtension::NeedAncoRestore() const
 {
-    return bundleName_ == MEDIA_LIBRARY_BUNDLE_NAME || 
+    return bundleName_ == MEDIA_LIBRARY_BUNDLE_NAME ||
            bundleName_ == FILE_MANAGER_BUNDLE_NAME;
 }
 
