@@ -470,7 +470,9 @@ private:
     void CloseFileWithFDSan(int fd);
 
     bool NeedAncoRestore() const;
-    void ExecuteAncoMove();
+    void ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath,
+                          const std::vector<std::string> &ancoTargetPath,
+                          const std::vector<StatInfo> &ancoStats);
 
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;

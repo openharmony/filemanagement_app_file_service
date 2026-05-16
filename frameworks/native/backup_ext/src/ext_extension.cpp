@@ -1339,8 +1339,7 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         }
         RestoreOneBigFile(path, item, appendTargetPath);
     }
-    AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
-    ExecuteAncoMove();
+    ExecuteAncoMove(ancoSourcePath, ancoTargetPath, ancoStats);
     auto end = std::chrono::system_clock::now();
     radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     HILOGI("End Restore Big Files");
@@ -1352,11 +1351,15 @@ bool BackupExtExtension::NeedAncoRestore() const
            bundleName_ == FILE_MANAGER_BUNDLE_NAME;
 }
 
-void BackupExtExtension::ExecuteAncoMove()
+void BackupExtExtension::ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath,
+                                           const std::vector<std::string> &ancoTargetPath,
+                                           const std::vector<StatInfo> &ancoStats)
 {
     if (!NeedAncoRestore()) {
         return;
     }
+    
+    AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
     
     UniqueFd cloneFileInfoFd(-1);
     HILOGI("RestoreBigFiles bundleName_: %{public}s", bundleName_.c_str());
@@ -1364,6 +1367,11 @@ void BackupExtExtension::ExecuteAncoMove()
     
     if (cloneFileInfoFd <= 0) {
         HILOGE("cloneFileInfoFd invalid, fd = %{public}d", cloneFileInfoFd.Get());
+        return;
+    }
+    
+    if (bundleName_ != MEDIA_LIBRARY_BUNDLE_NAME) {
+        HILOGI("Skip db copy for non-media app");
         return;
     }
     
