@@ -469,6 +469,10 @@ private:
     // Helper function to close a file with fdsan ownership tag
     void CloseFileWithFDSan(int fd);
 
+    bool NeedAncoRestore() const;
+    void ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath, const std::vector<std::string> &ancoTargetPath,
+        const std::vector<StatInfo> &ancoStats);
+
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
