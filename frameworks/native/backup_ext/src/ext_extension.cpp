@@ -1351,8 +1351,8 @@ bool BackupExtExtension::NeedAncoRestore() const
            bundleName_ == FILE_MANAGER_BUNDLE_NAME;
 }
 
-void BackupExtExtension::ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath, const std::vector<std::string> &ancoTargetPath,
-    const std::vector<StatInfo> &ancoStats)
+void BackupExtExtension::ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
 {
     if (!NeedAncoRestore()) {
         return;
