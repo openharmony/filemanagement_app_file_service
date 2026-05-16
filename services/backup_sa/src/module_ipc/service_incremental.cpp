@@ -78,8 +78,14 @@ ErrCode Service::Release()
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     IServiceReverseType::Scenario scenario = session_->GetScenario();
-    VerifyCaller(scenario);
+    ErrCode ret = VerifyCaller(scenario);
     AppRadar::Info info("", "", "call release");
+    if (ret != ERR_OK) {
+        AppRadar::GetInstance().RecordBackupFuncRes(info, "Service::Release", session_->GetSessionUserId(),
+            BizStageBackup::BIZ_STAGE_RELEASE, ret);
+        HILOGE("Release::VerifyCaller failed, ret: %{public}d", ret);
+        return ret;
+    }
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
         AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::Release", session_->GetSessionUserId(),
             BizStageRestore::BIZ_STAGE_RELEASE, ERR_OK);
