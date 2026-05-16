@@ -191,4 +191,5 @@ void BackupExtExtension::GetTarIncludes(const string &tarName, unordered_map<str
 {
     BExtExtension::extExtension->GetTarIncludes(tarName, infos);
 }
+
 } // namespace OHOS::FileManagement::Backup

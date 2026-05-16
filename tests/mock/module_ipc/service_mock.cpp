@@ -544,4 +544,14 @@ ErrCode Service::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
     ancoRestoreRes.successCount = 0;
     return BError(BError::Codes::OK);
 }
+
+ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

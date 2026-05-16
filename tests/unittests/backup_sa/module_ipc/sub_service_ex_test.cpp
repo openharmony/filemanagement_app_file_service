@@ -1066,3 +1066,244 @@ HWTEST_F(ServiceTest, SUB_Service_AddAncoTars_0003, testing::ext::TestSize.Level
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_AddAncoTars_0003";
 }
+
+/**
+ * @tc.number: SUB_Service_GetMigrateUidGid_0000
+ * @tc.name: SUB_Service_GetMigrateUidGid_0000
+ * @tc.desc: 测试 GetMigrateUidGid 的ANCO_DATA_PATH分支和GetUidGidForBundleName失败分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetMigrateUidGid_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetMigrateUidGid_0000";
+    try {
+        uid_t uid = 0;
+        gid_t gid = 0;
+        ErrCode ret = service->GetMigrateUidGid(BConstants::MIGRATE_ANCO_DATA_PATH, "bundleName", 100, uid, gid);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(uid, BConstants::SYSTEM_UID_GID);
+        EXPECT_EQ(gid, BConstants::SYSTEM_UID_GID);
+
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _)).WillOnce(Return(false));
+        ret = service->GetMigrateUidGid("normal_path", "bundleName", 100, uid, gid);
+        EXPECT_NE(ret, ERR_OK);
+
+        uid = 0;
+        gid = 0;
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        ret = service->GetMigrateUidGid("normal_path", "bundleName", 100, uid, gid);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(uid, 1001);
+        EXPECT_EQ(gid, 1001);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetMigrateUidGid.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetMigrateUidGid_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_DoEnhanceMove_0000
+ * @tc.name: SUB_Service_DoEnhanceMove_0000
+ * @tc.desc: 测试 DoEnhanceMove enhanceService为空和正常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_DoEnhanceMove_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DoEnhanceMove_0000";
+    try {
+        auto backupService = EnhanceServiceManager().GetInstance().service_;
+        EnhanceServiceManager().GetInstance().service_ = nullptr;
+        int32_t errCode = 0;
+        ErrCode ret = service->DoEnhanceMove("/src", "/dest", 1000, 1000, errCode, false);
+        EXPECT_NE(ret, ERR_OK);
+        EnhanceServiceManager().GetInstance().service_ = backupService;
+
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(ERR_OK));
+        ret = service->DoEnhanceMove("/src", "/dest", 1000, 1000, errCode, false);
+        EXPECT_EQ(ret, ERR_OK);
+
+        EXPECT_CALL(*mockEnhanceService, MoveDirectory(_, _)).WillOnce(Return(ERR_OK));
+        ret = service->DoEnhanceMove("/src", "/dest", 1000, 1000, errCode, true);
+        EXPECT_EQ(ret, ERR_OK);
+
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(1));
+        ret = service->DoEnhanceMove("/src", "/dest", 1000, 1000, errCode, false);
+        EXPECT_NE(ret, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DoEnhanceMove.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DoEnhanceMove_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_DoEnhanceOpen_0000
+ * @tc.name: SUB_Service_DoEnhanceOpen_0000
+ * @tc.desc: 测试 DoEnhanceOpen enhanceService为空和正常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_DoEnhanceOpen_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_DoEnhanceOpen_0000";
+    try {
+        auto backupService = EnhanceServiceManager().GetInstance().service_;
+        EnhanceServiceManager().GetInstance().service_ = nullptr;
+        int fd = -1;
+        ErrCode ret = service->DoEnhanceOpen("/path/file", 1000, 1000, fd);
+        EXPECT_NE(ret, ERR_OK);
+        EnhanceServiceManager().GetInstance().service_ = backupService;
+
+        FileBackupResultMsg resultMsg;
+        ResultParam resParam;
+        resParam.fd = 3;
+        resultMsg.resInfo.push_back(resParam);
+        EXPECT_CALL(*mockEnhanceService, GetApkFileHandle(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(resultMsg), Return(ERR_OK)));
+        ret = service->DoEnhanceOpen("/path/file", 1000, 1000, fd);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(fd, 3);
+
+        EXPECT_CALL(*mockEnhanceService, GetApkFileHandle(_, _)).WillOnce(Return(1));
+        ret = service->DoEnhanceOpen("/path/file", 1000, 1000, fd);
+        EXPECT_NE(ret, ERR_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by DoEnhanceOpen.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_DoEnhanceOpen_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFilePrecheck_0000
+ * @tc.name: SUB_Service_MigrateFilePrecheck_0000
+ * @tc.desc: 测试 MigrateFilePrecheck session为空和VerifyDataClone失败分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFilePrecheck_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFilePrecheck_0000";
+    try {
+        BPathInfo path("/data/src", "/data/dest");
+        ErrCode ret = service->MigrateFilePrecheck("bundleName", path);
+        EXPECT_NE(ret, ERR_OK);
+
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        ret = service->MigrateFilePrecheck("bundleName", path);
+        EXPECT_EQ(ret, ERR_OK);
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFilePrecheck.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFilePrecheck_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0000
+ * @tc.name: SUB_Service_MigrateFile_0000
+ * @tc.desc: 测试 MigrateFile VerifyDataClone失败和正常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0000";
+    try {
+        BPathInfo path("/data/src", "/data/dest");
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_NE(ret, ERR_OK);
+
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(connect));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
+        ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, ERR_OK);
+
+        EXPECT_CALL(*mockEnhanceService, MoveDirectory(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
+        ret = service->MigrateFile(path, "bundleName", "");
+        EXPECT_EQ(ret, ERR_OK);
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_GetApkFileHandle_0000
+ * @tc.name: SUB_Service_GetApkFileHandle_0000
+ * @tc.desc: 测试 GetApkFileHandle VerifyCaller失败和正常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_GetApkFileHandle_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_GetApkFileHandle_0000";
+    try {
+        int fd = -1;
+        ErrCode ret = service->GetApkFileHandle("/path", "fileName", fd);
+        EXPECT_NE(ret, ERR_OK);
+
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        FileBackupResultMsg resultMsg;
+        ResultParam resParam;
+        resParam.fd = 5;
+        resultMsg.resInfo.push_back(resParam);
+        EXPECT_CALL(*mockEnhanceService, GetApkFileHandle(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(resultMsg), Return(ERR_OK)));
+        ret = service->GetApkFileHandle("/path", "fileName", fd);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(fd, 5);
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by GetApkFileHandle.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_GetApkFileHandle_0000";
+}

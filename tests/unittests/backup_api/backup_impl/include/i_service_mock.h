@@ -279,6 +279,16 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+
+    ErrCode MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
+    ErrCode GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd) override
+    {
+        return BError(BError::Codes::OK);
+    }
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_I_SERVICE_MOCK_H

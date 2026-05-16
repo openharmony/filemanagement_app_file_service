@@ -61,6 +61,7 @@ public:
     MOCK_METHOD(ErrCode, IncrementalRestoreOnResultReport, (const std::string &, const std::string &, ErrCode));
     ;
     MOCK_METHOD(ErrCode, IncrementalRestoreOnProcessInfo, (const std::string &, const std::string &));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnMigrateResult, (int32_t, const std::string &));
 
 public:
     ServiceReverseProxyMock() : IRemoteProxy<IServiceReverse>(nullptr) {}

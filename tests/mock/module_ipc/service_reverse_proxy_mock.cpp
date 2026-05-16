@@ -199,4 +199,9 @@ ErrCode ServiceReverseProxy::RestoreOnFileReadyWithoutFd(const std::string &bund
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceReverseProxy::IncrementalRestoreOnMigrateResult(int32_t errCode, const std::string &bundleName)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup
