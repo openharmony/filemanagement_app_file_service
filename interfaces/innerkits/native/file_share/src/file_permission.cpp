@@ -388,16 +388,36 @@ int32_t FilePermission::PersistPermission(const vector<UriPolicyInfo> &uriPolici
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
     }
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, false);
     if (pathPolicies.size() == 0) {
         return EPERM;
     }
+
+    vector<PolicyInfo> validPathPolicies;
+    vector<uint32_t> enotentResultCodes;
+    for (size_t i = 0; i < pathPolicies.size(); i++) {
+        struct stat st;
+        if (lstat(pathPolicies[i].path.c_str(), &st) != 0 && errno == ENOENT) {
+            LOGE("Path does not exist: %{private}s", pathPolicies[i].path.c_str());
+            enotentResultCodes.push_back(ENOENT);
+            PolicyErrorResult result = {pathPolicies[i].path, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
+            errorResults.emplace_back(result);
+        } else {
+            validPathPolicies.push_back(pathPolicies[i]);
+        }
+    }
+
+    if (validPathPolicies.empty()) {
+        LOGE("All paths are invalid (ENOENT)");
+        return EPERM;
+    }
+
     vector<uint32_t> resultCodes;
-    LOGI("PersistPermission pathPolicies size: %{public}zu", pathPolicies.size());
-    int32_t sandboxManagerErrorCode = SandboxManagerKit::PersistPolicy(pathPolicies, resultCodes);
+    LOGI("PersistPermission validPathPolicies size: %{public}zu", validPathPolicies.size());
+    int32_t sandboxManagerErrorCode = SandboxManagerKit::PersistPolicy(validPathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
     if (errorCode == EPERM) {
-        ParseErrorResults(resultCodes, pathPolicies, errorResults);
+        ParseErrorResults(resultCodes, validPathPolicies, errorResults);
     }
 #endif
     return errorCode;
@@ -443,7 +463,7 @@ int32_t FilePermission::RevokePermission(const vector<UriPolicyInfo> &uriPolicie
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
     }
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, false);
     if (pathPolicies.size() == 0) {
         return EPERM;
     }
@@ -467,7 +487,7 @@ int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolic
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
     }
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, false);
     if (pathPolicies.size() == 0) {
         return EPERM;
     }
@@ -476,7 +496,33 @@ int32_t FilePermission::ActivatePermission(const vector<UriPolicyInfo> &uriPolic
     auto &uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
     int32_t sandboxManagerErrorCode = uriPermissionClient.Active(pathPolicies, resultCodes);
     errorCode = ErrorCodeConversion(sandboxManagerErrorCode, errorResults, resultCodes);
-    if (errorCode == EPERM) {
+
+    if (resultCodes.size() < pathPolicies.size()) {
+        size_t oldSize = resultCodes.size();
+        resultCodes.resize(pathPolicies.size(), SANDBOX_MANAGER_OK);
+        LOGI("Expand resultCodes from %{public}zu to %{public}zu", oldSize, resultCodes.size());
+    }
+
+    vector<PolicyInfo> needDeactivate;
+    for (size_t i = 0; i < pathPolicies.size(); i++) {
+        struct stat st;
+        if (lstat(pathPolicies[i].path.c_str(), &st) != 0 && errno == ENOENT) {
+            LOGE("Path does not exist: %{private}s", pathPolicies[i].path.c_str());
+            needDeactivate.push_back(pathPolicies[i]);
+            resultCodes[i] = PolicyErrorCode::INVALID_PATH;
+            errorCode = EPERM;
+        }
+    }
+
+    if (!needDeactivate.empty()) {
+        LOGI("Deactivating %{public}zu paths due to ENOENT", needDeactivate.size());
+        vector<uint32_t> deactiveResultCodes;
+        int32_t deactiveCode = SandboxManagerKit::StopAccessingPolicy(needDeactivate, deactiveResultCodes);
+        if (deactiveCode != 0) {
+            LOGE("Deactivate failed after access check: %{public}d", deactiveCode);
+        }
+    }
+    if (errorCode != 0) {
         ParseErrorResults(resultCodes, pathPolicies, errorResults);
     }
 #endif
@@ -492,7 +538,7 @@ int32_t FilePermission::DeactivatePermission(const vector<UriPolicyInfo> &uriPol
         LOGE("The number of result codes exceeds the maximum");
         return FileManagement::LibN::E_PARAMS;
     }
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults);
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, false);
     if (pathPolicies.size() == 0) {
         return EPERM;
     }
