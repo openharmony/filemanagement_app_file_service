@@ -41,9 +41,19 @@ std::string SmallFileInfo::GetRestorePath()
     return "";
 }
 
+std::string SpecialFileInfo::GetRestorePath()
+{
+    return "";
+}
+
 std::string AncoFileInfo::GetRestorePath()
 {
     return "";
+}
+
+int SpecialFileInfo::GetFd()
+{
+    return std::move(fd_.Get());
 }
 
 std::string AncoCompatibleFileInfo::GetRestorePath()
@@ -126,10 +136,41 @@ void ScanFileSingleton::AddAncoBigFile(
     waitFilesReady_.notify_all();
 }
 
+void ScanFileSingleton::AddSpecialBigFile(
+    const std::string &filePath, const std::string &restorePath, const struct stat &sta, UniqueFd &fd)
+{
+    std::lock_guard<std::mutex> lock(pendingFileMutex_);
+    std::string hashName = StringUtils::GenHashName(filePath);
+    for (size_t i = 0; hashNameSet_.find(hashName) != hashNameSet_.end(); i++) {
+        hashName = StringUtils::GenHashName(filePath + std::to_string(i));
+    }
+    hashNameSet_.emplace(hashName);
+    if (restorePath.empty()) {
+        pendingFileQueue_.push(std::make_shared<SpecialFileInfo>(hashName, filePath, sta, true, std::move(fd)));
+    } else {
+        pendingFileQueue_.push(
+            std::make_shared<AncoCompatibleFileInfo>(hashName, filePath, sta, true, restorePath));
+    }
+    waitFilesReady_.notify_all();
+}
 void ScanFileSingleton::AddAncoTarFile(const std::string &filename, const std::string &filePath, const struct stat &sta)
 {
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
     pendingFileQueue_.push(std::make_shared<AncoFileInfo>(filename, filePath, sta, false));
+    currentTarSize_.fetch_add(sta.st_size);
+    if (currentTarSize_.load() > maxTarSize_.load()) {
+        HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",
+            static_cast<uint32_t>(currentTarSize_.load() / MEGA_BYTE));
+        stopPacket_.store(true);
+    }
+    waitFilesReady_.notify_all();
+}
+
+void ScanFileSingleton::AddSpecialTarFile(
+    const std::string &filename, const std::string &filePath, const struct stat &sta, UniqueFd &fd)
+{
+    std::lock_guard<std::mutex> lock(pendingFileMutex_);
+    pendingFileQueue_.push(std::make_shared<SpecialFileInfo>(filename, filePath, sta, false, std::move(fd)));
     currentTarSize_.fetch_add(sta.st_size);
     if (currentTarSize_.load() > maxTarSize_.load()) {
         HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",
@@ -162,6 +203,17 @@ bool ScanFileSingleton::HasFileReady()
     return !pendingFileQueue_.empty();
 }
 
+void ScanFileSingleton::AddSpecialSmallFile(const std::string& filePath,
+    size_t fileSize, const std::string& restorePath)
+{
+    std::lock_guard<std::mutex> lock(smallFileMutex_);
+    if (restorePath.empty()) {
+        smallFiles_.push_back(std::make_shared<SmallFileInfo>(filePath, fileSize));
+    } else {
+        smallFiles_.push_back(std::make_shared<CompatibleSmallFileInfo>(filePath, fileSize, restorePath));
+    }
+}
+
 void ScanFileSingleton::AddSmallFile(const std::string& filePath, size_t fileSize, const std::string& restorePath)
 {
     std::lock_guard<std::mutex> lock(smallFileMutex_);
@@ -170,6 +222,25 @@ void ScanFileSingleton::AddSmallFile(const std::string& filePath, size_t fileSiz
     } else {
         smallFiles_.push_back(std::make_shared<CompatibleSmallFileInfo>(filePath, fileSize, restorePath));
     }
+}
+
+void ScanFileSingleton::AddAllFile(std::shared_ptr<IFileInfo> &fileInfo)
+{
+    std::lock_guard<std::mutex> lock(allFileMutex_);
+    auto fd = UniqueFd(BConstants::INVALID_FD_NUM);
+    auto info = std::make_shared<SpecialFileInfo>(fileInfo->filename_, fileInfo->filePath_,
+        fileInfo->sta_, fileInfo->isBigFile_, std::move(fd));
+    allFiles_.push_back(info);
+}
+
+std::vector<std::shared_ptr<IFileInfo>> ScanFileSingleton::GetAllFiles()
+{
+    if (!allFiles_.empty()) {
+        auto allInfo = move(allFiles_);
+        allFiles_ = {};
+        return allInfo;
+    }
+    return {};
 }
 
 std::vector<std::shared_ptr<ISmallFileInfo>> ScanFileSingleton::GetAllSmallFiles()
