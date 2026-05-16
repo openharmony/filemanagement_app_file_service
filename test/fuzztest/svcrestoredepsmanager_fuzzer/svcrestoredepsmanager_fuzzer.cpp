@@ -17,88 +17,52 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
-#include "securec.h"
-
+#include <fuzzer/FuzzedDataProvider.h>
 #include "module_ipc/svc_restore_deps_manager.h"
+#include "b_json/b_json_entity_caps.h"
 
 using namespace OHOS::FileManagement::Backup;
 using namespace std;
 
 namespace OHOS {
-constexpr size_t U32_AT_SIZE = 3;
-constexpr int SPLITE_SIZE = 5;
-constexpr size_t REDUNDENT_SIZE = 2;
-constexpr size_t DISTINCT_SIZE = 2;
-void GetInfo(const uint8_t *data, size_t size, vector<BJsonEntityCaps::BundleInfo> &info)
+constexpr int32_t MIN_BUNDLE_COUNT = 0;
+constexpr int32_t MAX_BUNDLE_COUNT = 10;
+constexpr size_t MAX_STRING_LENGTH = 256;
+constexpr int32_t MIN_RESTORE_TYPE = 0;
+constexpr int32_t MAX_RESTORE_TYPE = 1;
+
+vector<BJsonEntityCaps::BundleInfo> GenerateBundleInfos(FuzzedDataProvider &fdp)
 {
-    size_t base = size;
-    if (size >= U32_AT_SIZE) {
-        base = (size + 1) / REDUNDENT_SIZE;
+    vector<BJsonEntityCaps::BundleInfo> infos;
+    int32_t count = fdp.ConsumeIntegralInRange<int32_t>(MIN_BUNDLE_COUNT, MAX_BUNDLE_COUNT);
+    for (int32_t i = 0; i < count; i++) {
+        BJsonEntityCaps::BundleInfo info;
+        info.name = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.versionName = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.extensionName = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.restoreDeps = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.supportScene = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.allToBackup = fdp.ConsumeBool();
+        info.versionCode = fdp.ConsumeIntegral<int64_t>();
+        info.spaceOccupied = fdp.ConsumeIntegral<int64_t>();
+        infos.push_back(info);
     }
-
-    for (size_t i = 0; i < size; i++) {
-        BJsonEntityCaps::BundleInfo bundleInfo;
-        int len = size / SPLITE_SIZE;
-        int pos = 0;
-        bundleInfo.name = string(reinterpret_cast<const char*>(data + pos), len) + to_string(i % base);
-        pos += len;
-        bundleInfo.versionName = string(reinterpret_cast<const char*>(data + pos), len) + to_string(i);
-        pos += len;
-        bundleInfo.extensionName = string(reinterpret_cast<const char*>(data + pos), len) + to_string(i);
-        pos += len;
-
-        if (i % DISTINCT_SIZE == 0) {
-            bundleInfo.restoreDeps = string(reinterpret_cast<const char*>(data + pos), len) + to_string(i);
-        } else {
-            bundleInfo.restoreDeps = string(reinterpret_cast<const char*>(data + pos), len) + "," + to_string(i);
-        }
-
-        pos += len;
-        bundleInfo.supportScene = string(reinterpret_cast<const char*>(data + pos), len) + to_string(i);
-
-        pos += len;
-        if (size >= pos + sizeof(bool)) {
-            bundleInfo.allToBackup = *(reinterpret_cast<const bool*>(data + pos));
-        }
-
-        pos += sizeof(bool);
-        if (size >= pos + sizeof(int64_t)) {
-            bundleInfo.versionCode = *(reinterpret_cast<const int64_t*>(data + pos));
-        }
-
-        pos += sizeof(int64_t);
-        if (size >= pos + sizeof(int64_t)) {
-            bundleInfo.spaceOccupied = *(reinterpret_cast<const int64_t*>(data + pos));
-        }
-        info.push_back(bundleInfo);
-    }
+    return infos;
 }
 
 bool SvcRestoreDepsManagerFuzzTest(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
-        return 0;
-    }
-
-    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
-    if (size >= sizeof(RestoreTypeEnum)) {
-        restoreType = *(reinterpret_cast<const RestoreTypeEnum*>(data));
-    }
-    SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(bundleInfos, restoreType);
-    GetInfo(data, size, bundleInfos);
-
-    BJsonEntityCaps::BundleInfo bundleInfo;
-    bundleInfo.name = string(reinterpret_cast<const char*>(data), size);
-    bundleInfos.push_back(bundleInfo);
+    FuzzedDataProvider fdp(data, size);
+    RestoreTypeEnum restoreType =
+        static_cast<RestoreTypeEnum>(fdp.ConsumeIntegralInRange<int32_t>(MIN_RESTORE_TYPE, MAX_RESTORE_TYPE));
+    vector<BJsonEntityCaps::BundleInfo> bundleInfos = GenerateBundleInfos(fdp);
 
     SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(bundleInfos, restoreType);
     SvcRestoreDepsManager::GetInstance().GetRestoreBundleMap();
 
-    size_t pos = size >> 1;
-    string bundleName(string(reinterpret_cast<const char*>(data), pos));
-    string fileName(string(reinterpret_cast<const char*>(data + pos), size - pos));
+    string bundleName = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    string fileName = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+
     SvcRestoreDepsManager::GetInstance().AddRestoredBundles(bundleName);
     SvcRestoreDepsManager::GetInstance().GetAllBundles();
 
@@ -110,15 +74,13 @@ bool SvcRestoreDepsManagerFuzzTest(const uint8_t *data, size_t size)
     SvcRestoreDepsManager::GetInstance().allBundles_.clear();
     SvcRestoreDepsManager::GetInstance().toRestoreBundleMap_.clear();
     SvcRestoreDepsManager::GetInstance().restoredBundles_.clear();
-
     return true;
 }
+
 } // namespace OHOS
 
-/* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    /* Run your code on data */
     OHOS::SvcRestoreDepsManagerFuzzTest(data, size);
     return 0;
 }

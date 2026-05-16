@@ -17,50 +17,39 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
-#include <climits>
 #include <fuzzer/FuzzedDataProvider.h>
-#include <vector>
-
 #include "message_parcel.h"
-#include "sandbox_helper.h"
 #include "service.h"
-#include "service_proxy.h"
-#include "service_reverse.h"
-#include "service_stub.h"
-#include "securec.h"
-#include "system_ability.h"
 
 using namespace std;
 using namespace OHOS::FileManagement::Backup;
 
 namespace OHOS {
 constexpr int32_t SERVICE_ID = 5203;
+constexpr size_t MAX_STRING_LENGTH = 256;
 
 bool CmdAppIncrementalFileReadyFuzzTest(const uint8_t *data, size_t size)
 {
+    FuzzedDataProvider fdp(data, size);
+    string fileName = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    int32_t fd = fdp.ConsumeIntegral<int32_t>();
+    int32_t manifestFd = fdp.ConsumeIntegral<int32_t>();
+
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    std::string fileName(reinterpret_cast<const char *>(data), size);
     datas.WriteString(fileName);
-    if (size >= sizeof(int)) {
-        int fd = *(reinterpret_cast<const int *>(data));
-        datas.WriteFileDescriptor(UniqueFd(fd));
-    }
-
-    if (size >= sizeof(int) + sizeof(int))  {
-        int manifestId = *(reinterpret_cast<const int *>(data + sizeof(int)));
-        datas.WriteFileDescriptor(UniqueFd(manifestId));
-    }
+    datas.WriteFileDescriptor(UniqueFd(fd));
+    datas.WriteFileDescriptor(UniqueFd(manifestFd));
     datas.RewindRead(0);
+
     MessageParcel reply;
     MessageOption option;
-
-    sptr service(new Service(SERVICE_ID));
+    sptr<Service> service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_INCREMENTAL_FILE_READY);
     service->OnRemoteRequest(code, datas, reply, option);
     return true;
 }
+
 } // namespace OHOS
 
 /* Fuzzer entry point */

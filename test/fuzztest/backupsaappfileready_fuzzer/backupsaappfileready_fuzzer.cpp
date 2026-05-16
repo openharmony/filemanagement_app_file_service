@@ -17,42 +17,34 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
-#include <climits>
-#include <vector>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "message_parcel.h"
 #include "service.h"
-#include "service_proxy.h"
-#include "service_reverse.h"
 #include "service_stub.h"
-#include "securec.h"
-#include "system_ability.h"
 
 using namespace std;
 using namespace OHOS::FileManagement::Backup;
 
 namespace OHOS {
 constexpr int32_t SERVICE_ID = 5203;
+constexpr size_t MAX_STRING_LENGTH = 256;
 
 bool CmdAppFileReadyFuzzTest(const uint8_t *data, size_t size)
 {
+    FuzzedDataProvider fdp(data, size);
+    string fileName = fdp.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    int fd = fdp.ConsumeIntegral<int>();
+
     MessageParcel datas;
     datas.WriteInterfaceToken(ServiceStub::GetDescriptor());
-    std::string fileName(reinterpret_cast<const char *>(data), size);
     datas.WriteString(fileName);
-
-    int fd = -1;
-    if (size >= sizeof(int)) {
-        fd = *(reinterpret_cast<const int *>(data));
-    }
     datas.WriteFileDescriptor(UniqueFd(fd));
-
     datas.RewindRead(0);
+
     MessageParcel reply;
     MessageOption option;
-
-    sptr service(new Service(SERVICE_ID));
+    sptr<Service> service(new Service(SERVICE_ID));
     uint32_t code = static_cast<uint32_t>(IServiceIpcCode::COMMAND_APP_FILE_READY);
     service->OnRemoteRequest(code, datas, reply, option);
     return true;
@@ -62,7 +54,6 @@ bool CmdAppFileReadyFuzzTest(const uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    /* Run your code on data */
     try {
         OHOS::CmdAppFileReadyFuzzTest(data, size);
     } catch (OHOS::FileManagement::Backup::BError &err) {
