@@ -2010,10 +2010,10 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Release_0000, TestSize.L
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
-        EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT).GetCode()));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         ret = service->Release();
-        EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
+        EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));

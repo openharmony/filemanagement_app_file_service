@@ -59,10 +59,18 @@ struct CompatibleFileInfo : public IFileInfo {
     std::string GetRestorePath() override;
     std::string restorePath_ = "";
 };
-
 struct AncoFileInfo : public IFileInfo {
     AncoFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile)
         : IFileInfo(filename, filePath, sta, isBigFile, true) {};
+    std::string GetRestorePath() override;
+};
+
+struct SpecialFileInfo : public IFileInfo {
+    SpecialFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile,
+        UniqueFd fd) : IFileInfo(filename, filePath, sta, isBigFile, true), fd_(std::move(fd)) {};
+    UniqueFd fd_;
+    std::string restorePath_ = "";
+    int GetFd();
     std::string GetRestorePath() override;
 };
 
@@ -99,6 +107,15 @@ class ScanFileSingleton {
 public:
     static ScanFileSingleton &GetInstance();
 
+    std::vector<std::shared_ptr<IFileInfo>> GetAllFiles();
+    void AddSpecialBigFile(const std::string &filePath, const std::string &restorePath,
+        const struct stat &sta, UniqueFd &fd);
+    void AddSpecialTarFile(const std::string &filename, const std::string &filePath,
+        const struct stat &sta, UniqueFd &fd);
+    void AddSpecialSmallFile(const std::string &filePath, size_t fileSize,
+        const std::string &restorePath);
+    void AddAllFile(std::shared_ptr<IFileInfo> &fileInfo);
+
     void AddBigFile(const std::string& filePath, const struct stat& sta, const std::string& restorePath = "");
     void AddTarFile(const std::string& filename, const std::string& filePath, const struct stat& sta);
     void AddAncoBigFile(const std::string &filePath, const std::string &restorePath, const struct stat &sta);
@@ -128,6 +145,7 @@ private:
     std::unordered_set<std::string> hashNameSet_;
     std::mutex smallFileMutex_;
     std::vector<std::shared_ptr<ISmallFileInfo>> smallFiles_;
+    std::vector<std::shared_ptr<IFileInfo>> allFiles_;
     std::mutex mutexLock_;
     std::condition_variable waitFilesReady_;
     std::atomic<bool> isProcessCompleted_ = false;
@@ -137,6 +155,7 @@ private:
     std::atomic<bool> isFirstAddTarFile_ = true;
     std::mutex mutexPacket_;
     std::condition_variable waitPacketFlag_;
+    std::mutex allFileMutex_;
 };
 } // namespace OHOS::FileManagement::ScanFileSingleton
 #endif // OHOS_FILEMGMT_BACKUP_SCAN_FILE_SINGLETON_H

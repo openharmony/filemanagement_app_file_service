@@ -1405,21 +1405,49 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         }
         RestoreOneBigFile(path, item, appendTargetPath);
     }
-    AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
-    UniqueFd cloneFileInfoFd(-1);
-    HILOGI("RestoreBigFiles bundleName_: %{public}s", bundleName_.c_str());
-    ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove(cloneFileInfoFd);
-    if (cloneFileInfoFd > 0 && bundleName_ == MEDIA_LIBRARY_BUNDLE_NAME) {
-        std::string mediaPath = "/storage/media/local/files/.backup/restore/clone_file_info_restore.db";
-        UniqueFd mediaFd(open(mediaPath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
-        if (mediaFd > 0) {
-            HILOGI("copy db start");
-            BFile::SendFile(mediaFd, cloneFileInfoFd);
-        }
-    }
+    ExecuteAncoMove(ancoSourcePath, ancoTargetPath, ancoStats);
     auto end = std::chrono::system_clock::now();
     radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     HILOGI("End Restore Big Files");
+}
+
+bool BackupExtExtension::NeedAncoRestore() const
+{
+    return bundleName_ == MEDIA_LIBRARY_BUNDLE_NAME ||
+           bundleName_ == FILE_MANAGER_BUNDLE_NAME;
+}
+
+void BackupExtExtension::ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath,
+    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
+{
+    if (!NeedAncoRestore()) {
+        return;
+    }
+    
+    AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
+    
+    UniqueFd cloneFileInfoFd(-1);
+    HILOGI("RestoreBigFiles bundleName_: %{public}s", bundleName_.c_str());
+    ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove(cloneFileInfoFd);
+    
+    if (cloneFileInfoFd <= 0) {
+        HILOGE("cloneFileInfoFd invalid, fd = %{public}d", cloneFileInfoFd.Get());
+        return;
+    }
+    
+    if (bundleName_ != MEDIA_LIBRARY_BUNDLE_NAME) {
+        HILOGI("Skip db copy for non-media app");
+        return;
+    }
+    
+    std::string mediaPath = "/storage/media/local/files/.backup/restore/clone_file_info_restore.db";
+    UniqueFd mediaFd(open(mediaPath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
+    if (mediaFd <= 0) {
+        HILOGE("Failed to open mediaPath, fd = %{public}d", mediaFd.Get());
+        return;
+    }
+    HILOGI("copy db start");
+    BFile::SendFile(mediaFd, cloneFileInfoFd);
 }
 
 void BackupExtExtension::FillEndFileInfos(const std::string &path,
