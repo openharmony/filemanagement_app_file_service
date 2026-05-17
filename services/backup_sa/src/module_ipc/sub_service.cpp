@@ -2113,7 +2113,7 @@ ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleNam
             return ret;
         }
 
-        ret = OpenIncrementalRpFile(bundleName, fileName);
+        ret = OpenIncrementalRpFile(bundleName, destFile);
         if (ret != ERR_OK) {
             return ret;
         }
