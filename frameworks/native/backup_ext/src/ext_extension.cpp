@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cinttypes>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <map>
@@ -451,23 +452,36 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(
     }
 }
 
-static void GetMigrateFileNames(const string &fileName, int32_t &fdErrCode, vector<string> &fileNames)
+static string GetMigrateFullPath(const string &bundleName, const string &fileName)
 {
+    string path = GetRestoreTempPath(bundleName);
+    string restoreTag(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    auto pos = fileName.find(restoreTag);
+    string suffix = (pos != string::npos) ? fileName.substr(pos + restoreTag.length()) : fileName;
+    return suffix.empty() ? path : path + suffix;
+}
+
+static void GetMigrateFileNames(const string &bundleName, const string &fileName, int32_t &fdErrCode,
+    vector<string> &fileNames)
+{
+    string fullPath = GetMigrateFullPath(bundleName, fileName);
+
     struct stat st {};
-    int ret = stat(fileName.c_str(), &st);
-    if (ret == 0 && S_ISDIR(st.st_mode)) {
-        auto [err, dirFiles] = BDir::GetDirFiles(fileName);
-        if (err != ERR_OK) {
-            HILOGE("Failed to get dir files, path = %{public}s, err = %{public}d",
-                GetAnonyPath(fileName).c_str(), err);
-            fdErrCode = err;
-            return;
+    if (stat(fullPath.c_str(), &st) != 0 || !S_ISDIR(st.st_mode)) {
+        fileNames.emplace_back(fullPath);
+        return;
+    }
+
+    try {
+        for (const auto &entry : filesystem::recursive_directory_iterator(fullPath)) {
+            if (entry.is_regular_file()) {
+                fileNames.emplace_back(entry.path().string());
+            }
         }
-        for (const auto &file : dirFiles) {
-            fileNames.emplace_back(file);
-        }
-    } else {
-        fileNames.emplace_back(fileName);
+    } catch (const filesystem::filesystem_error &e) {
+        HILOGE("Failed to iterate directory, path = %{public}s, err = %{public}s",
+            GetAnonyPath(fullPath).c_str(), e.what());
+        fdErrCode = BError(BError::Codes::EXT_INVAL_ARG).GetCode();
     }
 }
 
@@ -488,7 +502,7 @@ ErrCode BackupExtExtension::GetIncrementalRpFileHandle(const std::string &fileNa
         VerifyCaller();
 
         vector<string> fileNames;
-        GetMigrateFileNames(fileName, fdErrCode, fileNames);
+        GetMigrateFileNames(bundleName_, fileName, fdErrCode, fileNames);
         if (fdErrCode != ERR_OK) {
             return fdErrCode;
         }
