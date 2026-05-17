@@ -141,6 +141,14 @@ static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/base/.backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/base/.backup";
 static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME = "/storage/Users/currentUser/.backup";
+static inline std::string_view PATH_BACKUP_HOME = ".backup";
+static inline std::string_view PATH_RELETIVE_HOME_EL1 = "data/storage/el1";
+static inline std::string_view PATH_RELETIVE_HOME_EL2 = "data/storage/el2";
+static inline std::string_view PATH_BASE = "base";
+static inline std::string_view PATH_DATABASE = "database";
+static inline std::string_view PATH_DISTRIBUTE = "database";
+static inline std::string_view PATH_INCLUDE = "include";
+static inline std::string_view PATH_EXCLUDE = "exclude";
 static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME_ANCO = "/storage/Users/currentUser/HO_DATA_EXT_MISC/.backup";
 static inline std::string_view PATH_MEDIALDATA_HOME_ANCO = "/storage/media/local/files/Docs/HO_DATA_EXT_MISC";
 static inline std::string_view PATH_MEDIALDATA_BACKUP_HOME = "/storage/media/local/files/.backup";
@@ -199,6 +207,17 @@ static inline std::string GetSaBundleBackupToolDir(int32_t userId)
     str.append("/data/service/el2/");
     str.append(std::to_string(userId));
     str.append("/backup/backup_tool/");
+    return str;
+}
+
+static inline std::string GetBundleBackupDir(int32_t userId, std::string bundleName)
+{
+    std::string str;
+    str.append("/data/app/el2/");
+    str.append(std::to_string(userId));
+    str.append("/base/");
+    str.append(bundleName);
+    str.append("/.backup");
     return str;
 }
 
@@ -294,6 +313,8 @@ constexpr int GC_TASK_TIMEOUT = -16;
 constexpr int GC_MAX_WAIT_TIME_S = 200;
 // 克隆应用bundleName
 static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
+
+const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 
 //FdSan
 const uint64_t FDSAN_EXT_TAG = 0xD004303;

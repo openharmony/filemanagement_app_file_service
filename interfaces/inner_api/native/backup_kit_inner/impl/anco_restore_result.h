@@ -27,7 +27,14 @@ struct AncoRestoreResult : public Parcelable {
     int64_t successCount{0};
     int64_t duplicateCount{0};
     int64_t failedCount{0};
-
+    std::map<std::string, int64_t> endFileInfos;
+    std::map<std::string, std::vector<ErrCode>> errFileInfos;
+    off_t bigFileSize = 0;
+    off_t smallFileSize = 0;
+    off_t tarFileSize = 0;
+    int tarFileNum = 0;
+    int bigFileNum = 0;
+    std::vector<int> errCodes;
     AncoRestoreResult() = default;
     AncoRestoreResult(int64_t successCount_, int64_t duplicateCount_, int64_t failedCount_)
         : successCount(successCount_), duplicateCount(duplicateCount_), failedCount(failedCount_)

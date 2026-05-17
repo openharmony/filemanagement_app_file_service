@@ -26,6 +26,7 @@
 #include "anco_scan_result.h"
 #include "anco_restore_result.h"
 #include "b_error/b_error.h"
+#include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
 static constexpr int32_t MIGRATE_LEN_FILE_PATH = 4096;
@@ -37,11 +38,17 @@ struct FileBackupParam {
     char uid[MIGRATE_ID_LEN] = {0};
     char gid[MIGRATE_ID_LEN] = {0};
     char perm[MIGRATE_PERM_LEN] = {0};
+    struct stat sta;
+    bool isBigFile = false;
     int32_t recurseOpt = 0;
 };
 
 struct ResultParam {
     char filePath[MIGRATE_LEN_FILE_PATH];
+    char fileName[MIGRATE_LEN_FILE_PATH];
+    uint64_t size;
+    struct stat sta;
+    int32_t errCode;
     int32_t fd;
 };
 
@@ -49,6 +56,8 @@ struct FileBackupResultMsg {
     int32_t cmdId;
     int32_t result;
     int32_t errorCode;
+    int64_t totalBigFileSize;
+    int64_t totalSmallFileSize;
     std::vector<ResultParam> resInfo;
 };
 
@@ -77,6 +86,19 @@ public:
         int &reportFdVal, int &errCode) = 0;
     virtual int32_t MoveFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
     virtual int32_t OpenFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
+// default clone
+    virtual ErrCode CreateDefaultTask(const std::string &bundleName, int32_t userId) = 0;
+    virtual ErrCode DefaultAppFileHandle(const std::string &bundleName,
+        const std::string &fileName, UniqueFd &fd, UniqueFd &reportFd) = 0;
+    virtual ErrCode StartDefaultAppUnPack(const std::string &bundleName, AncoRestoreResult &ancoRestoreRes) = 0;
+    virtual void StartDefaultAppClear(const std::string &bundleName) = 0;
+    virtual ErrCode DefaultAppRestoreBigFiles(const std::string &bundleName, bool appendTargetPath,
+        AncoRestoreResult &ancoRestoreRes) = 0;
+    virtual ErrCode GetIndexFile(const std::string &bundleName, const std::string &path,
+        int &size, UniqueFd &fd) = 0;
+    virtual void StartDefaultPacket(const std::string &bundleName) = 0;
+    virtual ErrCode StartDefaultScanAllDirs(const std::string &bundleName, std::set<std::string> &expandIncludes,
+        std::vector<std::string>& excludes, AncoRestoreResult &ancoRestoreRes) = 0;
 };
 }  // namespace OHOS::FileManagement::Backup
 #endif

@@ -840,6 +840,7 @@ private:
     std::shared_ptr<RadarRunningLockStatistic> runningLockStatistic_ = nullptr;
 #endif
 public:
+    bool isIncBackup_ = false;
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;
     std::atomic<uint32_t> successBundlesNum_ {0};
@@ -850,6 +851,9 @@ public:
     std::shared_ptr<GcProgressInfo> gcProgress_ = nullptr;
     std::atomic<bool> isGcTaskDone_ = {false};
     std::mutex getLocalLock_;
+    std::map<std::string, bool> defaultBundleMap_ = {};
+    RestoreTypeEnum restoreType_;
+    int restoreInfoFd_ = BConstants::INVALID_FD_NUM;
 };
 } // namespace OHOS::FileManagement::Backup
 

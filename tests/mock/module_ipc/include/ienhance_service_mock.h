@@ -39,6 +39,18 @@ public:
     MOCK_METHOD(int, OpenAncoFileReadOnly, (const std::string &));
     MOCK_METHOD(bool, RemoveAncoFile, (const std::string &));
     MOCK_METHOD(void, GetIncrementalAncoFileHandle, (const std::string &, const std::string &, int &, int &, int &));
+    MOCK_METHOD(ErrCode, CreateDefaultTask, (const std::string &, int32_t));
+    MOCK_METHOD(ErrCode, DefaultAppFileHandle, (const std::string &,
+        const std::string &, UniqueFd &, UniqueFd &));
+    MOCK_METHOD(ErrCode, StartDefaultAppUnPack, (const std::string &, AncoRestoreResult &));
+    MOCK_METHOD(void, StartDefaultAppClear, (const std::string &));
+    MOCK_METHOD(ErrCode, DefaultAppRestoreBigFiles, (const std::string &, bool,
+        AncoRestoreResult &));
+    MOCK_METHOD(ErrCode, GetIndexFile, (const std::string &, const std::string &,
+        int &, UniqueFd &));
+    MOCK_METHOD(void, StartDefaultPacket, (const std::string &));
+    MOCK_METHOD(ErrCode, StartDefaultScanAllDirs, (const std::string &, std::set<std::string> &,
+        std::vector<std::string>&, AncoRestoreResult &));
     MOCK_METHOD(int32_t, MoveFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
     MOCK_METHOD(int32_t, OpenFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
 };
