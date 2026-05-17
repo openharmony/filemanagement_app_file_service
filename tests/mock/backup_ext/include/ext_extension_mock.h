@@ -65,6 +65,10 @@ public:
     virtual ErrCode CleanBundleTempDir() = 0;
     virtual void AsyncTaskIncreRestoreSpecialVersion() = 0;
     virtual void GetTarIncludes(const std::string &, std::unordered_map<std::string, struct ReportFileInfo> &) = 0;
+    virtual ErrCode GetIncrementalRpFileHandle(const string &fileName, int32_t &fdErrCode) = 0;
+    virtual ErrCode HandleOnRelease(int32_t scenario) = 0;
+    virtual ErrCode HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario, bool isExist,
+        std::string &compatibilityInfo) = 0;
 public:
     BExtExtension() = default;
     virtual ~BExtExtension() = default;
@@ -77,6 +81,7 @@ public:
     MOCK_METHOD(UniqueFd, GetFileHandle, (const string &, int32_t &));
     MOCK_METHOD(ErrCode, GetIncrementalFileHandle, (const string &fileName, int &fd,
         int &reportFd, int32_t &fdErrCode));
+    MOCK_METHOD(ErrCode, GetIncrementalRpFileHandle, (const string &fileName, int32_t &fdErrCode));
     MOCK_METHOD(ErrCode, HandleClear, ());
     MOCK_METHOD(ErrCode, BigFileReady, (TarMap &, sptr<IService>, int));
     MOCK_METHOD(ErrCode, PublishFile, (const std::string &));
@@ -122,6 +127,8 @@ public:
     MOCK_METHOD(void, StartFwkTimer, (bool &));
     MOCK_METHOD(void, GetTarIncludes, (const std::string &,
         (std::unordered_map<std::string, struct ReportFileInfo> &)));
+    MOCK_METHOD(ErrCode, HandleOnRelease, (int32_t));
+    MOCK_METHOD(ErrCode, HandleGetCompatibilityInfo, (const std::string &, int32_t, bool, std::string &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_EXT_EXTENSION_MOCK_H

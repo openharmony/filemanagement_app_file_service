@@ -86,6 +86,10 @@ public:
         int &reportFdVal, int &errCode) = 0;
     virtual int32_t MoveFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
     virtual int32_t OpenFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
+
+    virtual int32_t MoveDirectory(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
+    virtual int32_t GetApkFileHandle(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
+
 // default clone
     virtual ErrCode CreateDefaultTask(const std::string &bundleName, int32_t userId) = 0;
     virtual ErrCode DefaultAppFileHandle(const std::string &bundleName,
@@ -99,6 +103,7 @@ public:
     virtual void StartDefaultPacket(const std::string &bundleName) = 0;
     virtual ErrCode StartDefaultScanAllDirs(const std::string &bundleName, std::set<std::string> &expandIncludes,
         std::vector<std::string>& excludes, AncoRestoreResult &ancoRestoreRes) = 0;
+
 };
 }  // namespace OHOS::FileManagement::Backup
 #endif

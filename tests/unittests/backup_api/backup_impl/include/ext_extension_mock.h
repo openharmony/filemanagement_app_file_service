@@ -116,6 +116,10 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+    ErrCode GetIncrementalRpFileHandle(const std::string &fileName, int32_t &fdErrCode) override
+    {
+        return BError(BError::Codes::OK);
+    }
     std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName)
     {
         return {BError(BError::Codes::OK), UniqueFd(-1), UniqueFd(-1)};
@@ -175,7 +179,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode HandleOnRelease(int32_t scenario)
+    ErrCode HandleOnRelease(int32_t scenario) override
     {
         return BError(BError::Codes::OK);
     };

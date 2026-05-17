@@ -53,6 +53,8 @@ public:
         std::vector<std::string>&, AncoRestoreResult &));
     MOCK_METHOD(int32_t, MoveFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
     MOCK_METHOD(int32_t, OpenFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
+    MOCK_METHOD(int32_t, MoveDirectory, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
+    MOCK_METHOD(int32_t, GetApkFileHandle, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_MOCK_IENHANCE_SERVICE_H

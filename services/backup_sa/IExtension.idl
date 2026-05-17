@@ -33,4 +33,5 @@ interface OHOS.FileManagement.Backup.IExtension{
     [ipccode 16] void HandleOnRelease([in] int scenario);
     [ipccode 17] void HandleGetCompatibilityInfo([in] String extInfo, [in] int scenario, [in] boolean isExist,
                                                  [out] String compatibilityInfo);
+    [ipccode 18] void GetIncrementalRpFileHandle([in] String fileName, [out] int fdErrCode);
 }

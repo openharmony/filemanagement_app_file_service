@@ -734,4 +734,28 @@ std::string BundleMgrAdapter::GetBundleIndexName(const std::string &bundleName)
     }
     return bundleIndexName;
 }
+
+bool BundleMgrAdapter::GetUidGidForBundleName(const std::string &bundleName, int32_t userId, uid_t &uid, gid_t &gid)
+{
+    HILOGI("Begin GetUidGidForBundleName, bundleName:%{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        HILOGE("BundleName is invalid");
+        return false;
+    }
+    auto bms = GetBundleManager();
+    BJsonUtil::BundleDetailInfo bundleDetailInfo = BJsonUtil::ParseBundleNameIndexStr(bundleName);
+    AppExecFwk::BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    ErrCode ret = bms->GetCloneBundleInfo(bundleDetailInfo.bundleName, flags, bundleDetailInfo.bundleIndex,
+        bundleInfo, userId);
+    if (ret != ERR_OK) {
+        HILOGE("bundleName:%{public}s, ret:%{public}d, GetCloneBundleInfo failed", bundleName.c_str(), ret);
+        return false;
+    }
+    uid = bundleInfo.uid;
+    gid = bundleInfo.gid;
+    HILOGI("End GetUidGidForBundleName, bundleName:%{public}s, uid:%{public}d, gid:%{public}d",
+        bundleName.c_str(), uid, gid);
+    return true;
+}
 } // namespace OHOS::FileManagement::Backup

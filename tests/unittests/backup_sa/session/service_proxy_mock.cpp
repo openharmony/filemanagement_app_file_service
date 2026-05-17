@@ -337,4 +337,14 @@ ErrCode ServiceProxy::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
     ancoRestoreRes.successCount = 0;
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceProxy::MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceProxy::GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

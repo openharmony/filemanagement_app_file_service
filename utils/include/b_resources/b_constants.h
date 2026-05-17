@@ -290,6 +290,8 @@ static inline std::string MANIFEST_FD = "manifestFd";
 static inline std::string LAST_INCREMENTAL_TIME = "lastIncrementalTime";
 static inline std::string PARAMETERS = "parameters";
 static inline std::string PRIORITY = "priority";
+static inline std::string SRC_PATH = "srcPath";
+static inline std::string DEST_PATH = "destPath";
 
 // unicast
 const std::string UNICAST_TYPE = "unicast";
@@ -314,7 +316,13 @@ constexpr int GC_MAX_WAIT_TIME_S = 200;
 // 克隆应用bundleName
 static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
 
+// 迁移文件路径标识
+static inline std::string MIGRATE_ANCO_INSTALL_PATH = "app_clone_install";
+static inline std::string MIGRATE_ANCO_DATA_PATH = "anco_hmos_data";
+constexpr int32_t SYSTEM_UID_GID = 1000;
+
 const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
+
 
 //FdSan
 const uint64_t FDSAN_EXT_TAG = 0xD004303;

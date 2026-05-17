@@ -25,6 +25,7 @@
 #include "errors.h"
 #include "svc_death_recipient.h"
 #include "unique_fd.h"
+#include "backup_path_info.h"
 
 namespace OHOS::FileManagement::Backup {
 class BIncrementalRestoreSession {
@@ -38,6 +39,7 @@ public:
         std::function<void(const std::string, const std::string)> onResultReport; // 某个应用恢复流程中自定义错误信息的上报的回调函数
         std::function<void()> onBackupServiceDied;         // 当备份服务意外死亡时执行的回调函数
         std::function<void(const std::string, const std::string)> onProcess; // 上报备份恢复过程中的进度和异常
+        std::function<void(ErrCode, const BundleName)> onMigrateResult; // 迁移文件流程结束
     };
 
 public:
@@ -154,6 +156,25 @@ public:
      * @return ErrCode 规范错误码
      */
     ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo, std::string &compatInfo);
+
+    /**
+     * @brief 迁移文件
+     *
+     * @param pathInfo 路径信息
+     * @param bundleName 应用名称
+     * @param fileName 文件名称
+     * @return ErrCode 规范错误码
+     */
+    ErrCode MigrateFile(const BPathInfo &pathInfo, const std::string &bundleName, const std::string &fileName);
+
+    /**
+     * @brief 获取安装包文件句柄
+     *
+     * @param path 文件路径
+     * @param fileName 文件名称
+     * @return UniqueFd 文件描述符
+     */
+    UniqueFd GetApkFileHandle(const std::string &path, const std::string &fileName);
 
 public:
     ~BIncrementalRestoreSession();

@@ -34,6 +34,11 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const string &fileName,
     return BExtExtension::extExtension->GetIncrementalFileHandle(fileName, fd, reportFd, fdErrCode);
 }
 
+ErrCode BackupExtExtension::GetIncrementalRpFileHandle(const string &fileName, int32_t &fdErrCode)
+{
+    return BExtExtension::extExtension->GetIncrementalRpFileHandle(fileName, fdErrCode);
+}
+
 ErrCode BackupExtExtension::HandleClear()
 {
     return BExtExtension::extExtension->HandleClear();
@@ -186,4 +191,5 @@ void BackupExtExtension::GetTarIncludes(const string &tarName, unordered_map<str
 {
     BExtExtension::extExtension->GetTarIncludes(tarName, infos);
 }
+
 } // namespace OHOS::FileManagement::Backup

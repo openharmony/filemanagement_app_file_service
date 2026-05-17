@@ -248,4 +248,32 @@ ErrCode BIncrementalRestoreSession::GetCompatibilityInfo(const std::string &bund
     }
     return proxy->GetCompatibilityInfo(bundleName, extInfo, compatInfo);
 }
+
+ErrCode BIncrementalRestoreSession::MigrateFile(const BPathInfo &pathInfo, const string &bundleName,
+    const string &fileName)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    HILOGI("MigrateFile, srcPath:%{public}s, destPath:%{public}s, bundleName:%{public}s",
+        GetAnonyPath(pathInfo.srcPath).c_str(), GetAnonyPath(pathInfo.destPath).c_str(), bundleName.c_str());
+    return proxy->MigrateFile(pathInfo, bundleName, fileName);
+}
+
+UniqueFd BIncrementalRestoreSession::GetApkFileHandle(const string &path, const string &fileName)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("Failed to get backup service");
+        return UniqueFd(INVALID_FD);
+    }
+    int fd = INVALID_FD;
+    ErrCode err = proxy->GetApkFileHandle(path, fileName, fd);
+    if (err != ERR_OK) {
+        HILOGE("Failed to get file handle, err:%{public}d", err);
+        return UniqueFd(INVALID_FD);
+    }
+    return UniqueFd(fd);
+}
 } // namespace OHOS::FileManagement::Backup

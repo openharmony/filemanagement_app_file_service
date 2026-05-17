@@ -224,6 +224,11 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+
+    ErrCode IncrementalRestoreOnMigrateResult(int32_t errCode, const std::string &bundleName) override
+    {
+        return BError(BError::Codes::OK);
+    }
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // MOCK_SERVICE_REVERSE_MOCK_H

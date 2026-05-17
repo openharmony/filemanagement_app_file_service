@@ -89,6 +89,7 @@ public:
                                              const std::string &bundleName,
                                              ErrCode errCode) override;
     ErrCode IncrementalRestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override;
+    ErrCode IncrementalRestoreOnMigrateResult(int32_t errCode, const std::string &bundleName) override;
 
 public:
     ServiceReverse() = delete;

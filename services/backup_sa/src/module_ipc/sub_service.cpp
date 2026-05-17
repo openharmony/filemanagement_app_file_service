@@ -1960,4 +1960,249 @@ void Service::SleepForDelayTime(const std::string &bundleName)
         HILOGI("Sleep end, delay time is %{public}d", delayTime);
     }
 }
+
+ErrCode Service::GetMigrateUidGid(const std::string &destPath, const std::string &bundleName, int32_t userId,
+    uid_t &uid, gid_t &gid)
+{
+    if (destPath.find(BConstants::MIGRATE_ANCO_DATA_PATH) != std::string::npos) {
+        uid = BConstants::SYSTEM_UID_GID;
+        gid = BConstants::SYSTEM_UID_GID;
+    } else {
+        if (!BundleMgrAdapter::GetUidGidForBundleName(bundleName, userId, uid, gid)) {
+            HILOGE("GetMigrateUidGid failed: GetUidGidForBundleName failed, bundleName=%{public}s",
+                bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG, "GetUidGidForBundleName failed").GetCode();
+        }
+    }
+    HILOGI("GetMigrateUidGid success: path=%{public}s, bundleName=%{public}s, uid=%{public}d, gid=%{public}d,",
+        destPath.c_str(), bundleName.c_str(), uid, gid);
+    return ERR_OK;
+}
+
+ErrCode Service::DoEnhanceMove(const std::string &srcFile, const std::string &destFile, uid_t uid, gid_t gid,
+    int32_t &errCode, bool isDir)
+{
+    auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
+    if (!enhanceService) {
+        HILOGE("enhance service is not loaded");
+        return BError(BError::Codes::SA_INVAL_ARG, "enhance service is not loaded").GetCode();
+    }
+
+    FileBackupParam param;
+    if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), srcFile.c_str(), srcFile.length()) != EOK ||
+        strncpy_s(param.dstFilePath, sizeof(param.dstFilePath), destFile.c_str(), destFile.length()) != EOK ||
+        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
+        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%d", gid) < 0) {
+        HILOGE("Dassemble param error");
+        return BError(BError::Codes::SA_INVAL_ARG, "assemble param error").GetCode();
+    }
+
+    std::vector<FileBackupParam> fileInfos = {param};
+    FileBackupResultMsg resultMsg;
+    if (memset_s(&resultMsg, sizeof(resultMsg), 0, sizeof(resultMsg)) != EOK) {
+        HILOGE("memset_s resultMsg failed");
+        return BError(BError::Codes::SA_INVAL_ARG, "memset_s resultMsg failed").GetCode();
+    }
+    int32_t moveRet = ERR_OK;
+    if (isDir) {
+        moveRet = enhanceService->MoveDirectory(fileInfos, resultMsg);
+    } else {
+        moveRet = enhanceService->MoveFiles(fileInfos, resultMsg);
+    }
+    errCode = resultMsg.errorCode;
+    if (moveRet != ERR_OK) {
+        HILOGE("move failed, ret=%{public}d, errorCode=%{public}d", moveRet,
+            resultMsg.errorCode);
+        return BError(BError::Codes::SA_INVAL_ARG, "move failed").GetCode();
+    }
+    return ERR_OK;
+}
+
+ErrCode Service::OpenIncrementalRpFile(const std::string &bundleName, const std::string &fileName)
+{
+    if (session_ == nullptr) {
+        HILOGE("OpenIncrementalRpFile failed: session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto backUpConnection = session_->GetExtConnection(bundleName);
+    if (backUpConnection == nullptr) {
+        return ERR_OK;
+    }
+    auto proxy = backUpConnection->GetBackupExtProxy();
+    if (!proxy) {
+        HILOGE("OpenIncrementalRpFile failed: extension backup Proxy is empty, bundleName=%{public}s",
+            bundleName.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    int32_t fdErrCode = ERR_OK;
+    proxy->GetIncrementalRpFileHandle(fileName, fdErrCode);
+    return (fdErrCode == ERR_OK) ? ERR_OK : BError(BError::Codes::SA_INVAL_ARG).GetCode();
+}
+
+static void GetMigrateFilePaths(const BPathInfo &pathInfo, const std::string &fileName,
+    std::string &srcFile, std::string &destFile, bool &isDir)
+{
+    if (fileName.empty()) {
+        srcFile = pathInfo.srcPath;
+        destFile = pathInfo.destPath;
+        isDir = true;
+    } else {
+        srcFile = pathInfo.srcPath + "/" + fileName;
+        destFile = pathInfo.destPath + "/" + fileName;
+        isDir = false;
+    }
+}
+
+ErrCode Service::MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path)
+{
+    if (session_ == nullptr) {
+        HILOGE("MigrateFile error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
+    if (ret != ERR_OK) {
+        HILOGE("verify caller failed, bundleName:%{public}s", bundleName.c_str());
+        return ret;
+    }
+    if (!VerifyDataClone()) {
+        HILOGE("VerifyDataClone failed, bundleName:%{public}s", bundleName.c_str());
+        return BError(BError::Codes::SA_REFUSED_ACT);
+    }
+    if (!BDir::IsFilePathValid(path.srcPath) || !BDir::IsFilePathValid(path.destPath)) {
+        HILOGE("migrate files forbidden, srcPath:%{public}s, destPath:%{public}s",
+            GetAnonyPath(path.srcPath).c_str(), GetAnonyPath(path.destPath).c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    return ERR_OK;
+}
+
+ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+
+    HILOGI("MigrateFile called, srcPath=%{public}s, destPath=%{public}s, bundleName=%{public}s, fileName=%{public}s",
+        path.srcPath.c_str(), path.destPath.c_str(), bundleName.c_str(), GetAnonyPath(fileName).c_str());
+
+    try {
+        ErrCode ret = MigrateFilePrecheck(bundleName, path);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+
+        std::string srcFile;
+        std::string destFile;
+        bool isDir = false;
+        GetMigrateFilePaths(path, fileName, srcFile, destFile, isDir);
+
+        HILOGI("MigrateFile start, srcFile=%{public}s, destFile=%{public}s, "
+            "bundleName=%{public}s, fileName=%{public}s",
+            GetAnonyPath(srcFile).c_str(), GetAnonyPath(destFile).c_str(),
+            bundleName.c_str(), GetAnonyPath(fileName).c_str());
+
+        uid_t uid = UINT32_MAX;
+        gid_t gid = UINT32_MAX;
+        int32_t userId = session_->GetSessionUserId();
+        ret = GetMigrateUidGid(path.destPath, bundleName, userId, uid, gid);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+
+        int32_t moveErrCode = ERR_OK;
+        ret = DoEnhanceMove(srcFile, destFile, uid, gid, moveErrCode, isDir);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+
+        ret = OpenIncrementalRpFile(bundleName, fileName);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        session_->GetServiceReverseProxy()->IncrementalRestoreOnMigrateResult(moveErrCode, bundleName);
+        HILOGI("MigrateFile end, srcFile=%{public}s, destFile=%{public}s, errCode=%{public}d",
+            GetAnonyPath(srcFile).c_str(), GetAnonyPath(destFile).c_str(), moveErrCode);
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        HILOGE("MigrateFile exception, errCode=%{public}d", e.GetCode());
+        return e.GetCode();
+    }
+}
+
+ErrCode Service::DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid, int &fd)
+{
+    auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
+    if (!enhanceService) {
+        HILOGE("enhance service is not loaded");
+        return BError(BError::Codes::SA_INVAL_ARG, "enhance service is not loaded").GetCode();
+    }
+
+    FileBackupParam param;
+    if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), filePath.c_str(), filePath.length()) != EOK ||
+        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
+        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%d", gid) < 0) {
+        HILOGE("assemble param error");
+        return BError(BError::Codes::SA_INVAL_ARG, "assemble param error").GetCode();
+    }
+
+    std::vector<FileBackupParam> fileInfos = {param};
+    FileBackupResultMsg resultMsg;
+    if (memset_s(&resultMsg, sizeof(resultMsg), 0, sizeof(resultMsg)) != EOK) {
+        HILOGE("memset_s resultMsg failed");
+        return BError(BError::Codes::SA_INVAL_ARG, "memset_s resultMsg failed").GetCode();
+    }
+
+    int32_t openRet = enhanceService->GetApkFileHandle(fileInfos, resultMsg);
+    if (openRet != ERR_OK) {
+        HILOGE("OpenFiles failed, ret=%{public}d, errorCode=%{public}d", openRet, resultMsg.errorCode);
+        return BError(BError::Codes::SA_INVAL_ARG, "OpenFiles failed").GetCode();
+    }
+
+    if (!resultMsg.resInfo.empty()) {
+        fd = resultMsg.resInfo[0].fd;
+        HILOGI("DoEnhanceOpen success, fd=%{public}d", fd);
+    } else {
+        HILOGE("resInfo is empty");
+        return BError(BError::Codes::SA_INVAL_ARG, "resInfo is empty").GetCode();
+    }
+
+    return ERR_OK;
+}
+
+ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd)
+{
+    HILOGI("GetApkFileHandle called, path=%{public}s, fileName=%{public}s", GetAnonyPath(path).c_str(),
+        GetAnonyPath(fileName).c_str());
+    ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
+    if (ret != ERR_OK) {
+        HILOGE("verify caller failed, path:%{public}s", GetAnonyPath(path).c_str());
+        return ret;
+    }
+    if (!VerifyDataClone()) {
+        HILOGE("VerifyDataClone failed, path:%{public}s", GetAnonyPath(path).c_str());
+        return BError(BError::Codes::SA_REFUSED_ACT);
+    }
+    std::string filePath = path + "/" + fileName;
+    if (!BDir::IsFilePathValid(filePath)) {
+        HILOGE("files forbidden, filePath:%{public}s", GetAnonyPath(filePath).c_str());
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+
+    static uid_t uid = UINT32_MAX;
+    static gid_t gid = UINT32_MAX;
+    if (uid == UINT32_MAX && gid == UINT32_MAX) {
+        if (session_ == nullptr) {
+            HILOGE("GetApkFileHandle failed: session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        const std::string CLONE_BUNDLE_NAME = "com.huawei.hmos.dataclone";
+        int32_t userId = session_->GetSessionUserId();
+        if (!BundleMgrAdapter::GetUidGidForBundleName(CLONE_BUNDLE_NAME, userId, uid, gid)) {
+            HILOGE("GetApkFileHandle failed: GetUidGidForBundleName failed for clone bundle, bundleName=%{public}s",
+                CLONE_BUNDLE_NAME.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG, "GetUidGidForBundleName failed for clone bundle").GetCode();
+        }
+    }
+
+    return DoEnhanceOpen(filePath, uid, gid, fd);
+}
+
 }

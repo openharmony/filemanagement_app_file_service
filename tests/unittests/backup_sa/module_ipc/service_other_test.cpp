@@ -42,9 +42,10 @@
 #include "ienhance_service_mock.h"
 
 namespace OHOS::FileManagement::Backup {
+static bool g_verifyDataCloneResult = false;
 bool Service::VerifyDataClone()
 {
-    return false;
+    return g_verifyDataCloneResult;
 }
 ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
     const std::vector<BIncrementalData> &bundlesToBackup,

@@ -104,4 +104,9 @@ ErrCode ExtensionProxy::HandleGetCompatibilityInfo(const std::string &extInfo, i
 {
     return 0;
 }
+
+ErrCode ExtensionProxy::GetIncrementalRpFileHandle(const std::string &fileName, int32_t &fdErrCode)
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

@@ -99,4 +99,9 @@ std::string BundleMgrAdapter::GetBundleIndexName(const std::string &bundleName)
 {
     return BBundleMgrAdapter::bms->GetBundleIndexName(bundleName);
 }
+
+bool BundleMgrAdapter::GetUidGidForBundleName(const std::string &bundleName, int32_t userId, uid_t &uid, gid_t &gid)
+{
+    return BBundleMgrAdapter::bms->GetUidGidForBundleName(bundleName, userId, uid, gid);
+}
 } // namespace OHOS::FileManagement::Backup

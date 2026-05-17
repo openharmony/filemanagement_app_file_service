@@ -110,6 +110,8 @@ public:
     virtual ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) = 0;
     virtual ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) = 0;
+    virtual ErrCode MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName) = 0;
+    virtual ErrCode GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd) = 0;
 public:
     virtual bool UpdateToRestoreBundleMap(const string&, const string&) = 0;
 #ifdef POWER_MANAGER_ENABLED
@@ -200,6 +202,8 @@ public:
     MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::vector<std::string> &, const std::vector<std::string> &,
         const std::vector<StatInfo> &));
     MOCK_METHOD(ErrCode, StartAncoMove, (AncoRestoreResult &));
+    MOCK_METHOD(ErrCode, MigrateFile, (const BPathInfo &, const std::string &, const std::string &));
+    MOCK_METHOD(ErrCode, GetApkFileHandle, (const std::string &, const std::string &, int &));
 };
 
 void Service::OnStart() {}
@@ -662,6 +666,16 @@ ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath
 ErrCode Service::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
 {
     return BService::serviceMock->StartAncoMove(ancoRestoreRes);
+}
+
+ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName)
+{
+    return BService::serviceMock->MigrateFile(path, bundleName, fileName);
+}
+
+ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd)
+{
+    return BService::serviceMock->GetApkFileHandle(path, fileName, fd);
 }
 } // namespace OHOS::FileManagement::Backup
 

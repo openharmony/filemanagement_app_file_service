@@ -354,4 +354,49 @@ HWTEST_F(BmsAdapterTest, SUB_bms_adapter_GetBundleInfosForIncremental_test_0000,
     }
     GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_GetBundleInfosForIncremental_test_0000";
 }
+
+/**
+ * @tc.number: SUB_bms_adapter_GetUidGidForBundleName_test_0100
+ * @tc.name: SUB_bms_adapter_GetUidGidForBundleName_test_0100
+ * @tc.desc: 测试 GetUidGidForBundleName 接口
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(BmsAdapterTest, SUB_bms_adapter_GetUidGidForBundleName_test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsAdapterTest-begin SUB_bms_adapter_GetUidGidForBundleName_test_0100";
+    try {
+        uid_t uid = 0;
+        gid_t gid = 0;
+        bool ret = BundleMgrAdapter::GetUidGidForBundleName("", USER_ID, uid, gid);
+        EXPECT_FALSE(ret);
+
+        BJsonUtil::BundleDetailInfo bundleDetailInfo;
+        bundleDetailInfo.bundleName = BUNDLE_NAME;
+        bundleDetailInfo.bundleIndex = 0;
+        EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(bms));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleDetailInfo));
+        EXPECT_CALL(*bms, GetCloneBundleInfo(_, _, _, _, _)).WillOnce(Return(1));
+        ret = BundleMgrAdapter::GetUidGidForBundleName(BUNDLE_NAME, USER_ID, uid, gid);
+        EXPECT_FALSE(ret);
+
+        AppExecFwk::BundleInfo bundleInfo;
+        bundleInfo.uid = 20010001;
+        bundleInfo.gid = 20010001;
+        EXPECT_CALL(*sam, GetSystemAbility(_)).WillOnce(Return(bms));
+        EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleDetailInfo));
+        EXPECT_CALL(*bms, GetCloneBundleInfo(_, _, _, _, _))
+            .WillOnce(DoAll(SetArgReferee<3>(bundleInfo), Return(ERR_OK)));
+        ret = BundleMgrAdapter::GetUidGidForBundleName(BUNDLE_NAME, USER_ID, uid, gid);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(uid, 20010001);
+        EXPECT_EQ(gid, 20010001);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BmsAdapterTest-an exception occurred by GetUidGidForBundleName.";
+    }
+    GTEST_LOG_(INFO) << "BmsAdapterTest-end SUB_bms_adapter_GetUidGidForBundleName_test_0100";
+}
 } // namespace OHOS

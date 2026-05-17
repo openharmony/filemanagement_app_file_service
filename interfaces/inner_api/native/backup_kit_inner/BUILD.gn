@@ -59,6 +59,7 @@ ohos_shared_library("backup_kit_inner") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/stat_info.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/anco_scan_result.cpp",
     "${path_backup}/frameworks/native/backup_kit_inner/src/anco_restore_result.cpp",
+    "${path_backup}/frameworks/native/backup_kit_inner/src/backup_path_info.cpp",
   ]
 
   defines = [

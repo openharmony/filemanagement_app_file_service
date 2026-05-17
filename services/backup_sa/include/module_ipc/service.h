@@ -165,6 +165,8 @@ public:
     ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) override;
     ErrCode StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes) override;
+    ErrCode MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName) override;
+    ErrCode GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd) override;
     // 以下都是非IPC接口
 public:
     void OnStart() override;
@@ -792,6 +794,13 @@ private:
     std::vector<std::string> GetCurUsrDispBundleName();
     int32_t GetCurrentActiveAccountUserId();
     void SleepForDelayTime(const std::string &bundleName);
+    ErrCode GetMigrateUidGid(const std::string &destPath, const std::string &bundleName, int32_t userId,
+        uid_t &uid, gid_t &gid);
+    ErrCode DoEnhanceMove(const std::string &srcFile, const std::string &destFile, uid_t uid, gid_t gid,
+        int32_t &errCode, bool isDir);
+    ErrCode DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid, int &fd);
+    ErrCode OpenIncrementalRpFile(const std::string &bundleName, const std::string &fileName);
+    ErrCode MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
