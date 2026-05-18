@@ -54,39 +54,6 @@ int32_t CloneFileInfoBackupRdbstore::TryGetRdbStore(const std::string &dbPath)
     return NativeRdb::E_OK;
 }
 
-std::vector<std::string> CloneFileInfoBackupRdbstore::QueryAncoMediaFile()
-{
-    HILOGI("QueryAncoMediaFile");
-    NativeRdb::RdbPredicates predicates("anco_file_info");
-    std::string path("path");
-    vector<string> columns = {path};
-    vector<std::string> retPaths;
-    if (rdbStore_ == nullptr) {
-        HILOGE("rdbStore_ nullptr");
-        return retPaths;
-    }
-    auto resultSet = rdbStore_->Query(predicates, columns);
-    if (resultSet == nullptr) {
-        HILOGE("Query resultSet nullptr");
-        return retPaths;
-    }
-    while (resultSet->GoToNextRow() == NativeRdb::E_OK) {
-        int columnIndex = 0;
-        string ancoMediaFilePath;
-        if (resultSet->GetColumnIndex("path", columnIndex) != NativeRdb::E_OK ||
-            resultSet->GetString(columnIndex, ancoMediaFilePath) != NativeRdb::E_OK) {
-            HILOGE("Fail to get path");
-            resultSet->Close();
-            return retPaths;
-        }
-        HILOGI("AddAncoFile ancoMediaFilePath %{public}s", GetAnonyString(ancoMediaFilePath).c_str());
-        retPaths.push_back(ancoMediaFilePath);
-    }
-    resultSet->Close();
-    HILOGI("QueryAncoMediaFile end");
-    return retPaths;
-}
-
 std::vector<std::string> CloneFileInfoBackupRdbstore::QueryFromRdbStore(
     NativeRdb::RdbStore* rdbStore, const std::string& tableName)
 {
