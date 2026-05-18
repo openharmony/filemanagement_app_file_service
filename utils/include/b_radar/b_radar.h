@@ -41,6 +41,7 @@ enum class BizStageBackup : int32_t {
     BIZ_STAGE_RELEASE,
     BIZ_STAGE_ONSTART_DISPOSE,
     BIZ_STAGE_ONSTART_RESIDUAL,
+    BIZ_STAGE_GET_ENHANCE_SERVICE_FAIL,
 };
 
 enum class BizStageRestore : int32_t {
@@ -64,6 +65,7 @@ enum class BizStageRestore : int32_t {
     BIZ_STAGE_RELEASE,
     BIZ_STAGE_ONSTART_DISPOSE,
     BIZ_STAGE_ONSTART_RESIDUAL,
+    BIZ_STAGE_GET_ENHANCE_SERVICE_FAIL,
 };
 
 class AppRadar {
