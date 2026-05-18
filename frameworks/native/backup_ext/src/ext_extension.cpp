@@ -987,10 +987,7 @@ int BackupExtExtension::DoIncrementalRestore()
     std::string tempPath;
     std::tuple<std::vector<std::string>, std::vector<int64_t>, std::vector<std::string>> ancoTarInfo;
     for (const auto &item : fileSet) { // 处理要解压的tar文件
-        auto errCode = ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath);
-        if (errCode != ERR_OK) {
-            err = errCode;
-        }
+        err = ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath);
     }
     if (tempPath == std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO)
         .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) {
