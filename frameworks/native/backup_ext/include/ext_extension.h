@@ -93,16 +93,13 @@ public:
     static ErrCode StartAncoUnPacket(const std::string &tempPath);
     static ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats);
-    static AncoRestoreResult StartAncoMove(UniqueFd& fd);
+    static AncoRestoreResult StartAncoMove(UniqueFd &fd);
 };
-using CompareFilesResult = tuple<map<string, struct ReportFileInfo>,
-    map<string, struct ReportFileInfo>, map<string, struct ReportFileInfo>>;
-
 class BackupExtExtension : public ExtensionStub {
     friend class AncoBackupCallback;
     friend class AncoRestoreCallback;
 public:
-    ErrCode GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int& fd) override;
+    ErrCode GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int &fd) override;
     ErrCode HandleClear() override;
     ErrCode PublishFile(const std::string &fileName) override;
     ErrCode HandleBackup(bool isClearData) override;
@@ -190,9 +187,9 @@ private:
     * @brief process tarfile
     *
     */
-    ErrCode ProcessTarFile(const std::string& item, const std::vector<ExtManageInfo>& extManageInfo,
-                            std::tuple<std::vector<std::string>, std::vector<int64_t>,
-                            std::vector<std::string>> &ancoTarInfo, std::string &tempPath);
+    ErrCode ProcessTarFile(const std::string &item, const std::vector<ExtManageInfo> &extManageInfo,
+                           std::tuple<std::vector<std::string>, std::vector<int64_t>,
+                           std::vector<std::string>> &ancoTarInfo, std::string &tempPath);
 
     /** @brief clear backup restore data */
     void DoClear();
@@ -292,8 +289,8 @@ private:
     void RefreshTimeInfo(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     void IncrementalPacket(const vector<struct ReportFileInfo> &infos, TarMap &tar, sptr<IService> proxy);
     void DoPacket();
-    void DoPacketOnce(const std::vector<std::shared_ptr<ISmallFileInfo>>& packFiles, const string& path,
-        std::function<void(std::string, int)> reportCb, uint64_t& totalTarSpend);
+    void DoPacketOnce(const std::vector<std::shared_ptr<ISmallFileInfo>> &packFiles, const string &path,
+        std::function<void(std::string, int)> reportCb, uint64_t &totalTarSpend);
     void CheckTmpDirFileInfos(bool isSpecialVersion = false);
     std::map<std::string, off_t> GetIdxFileInfos(bool isSpecialVersion = false);
     tuple<bool, vector<string>> CheckRestoreFileInfos();
@@ -461,6 +458,7 @@ private:
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
     void ReportAppStatistic(const std::string &func, ErrCode errCode);
     ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>> &allFiles);
+    // fileInfo cannot be empty
     ErrCode ReportAppFileReady(const std::shared_ptr<IFileInfo> &fileInfo, int &fdNum);
     ErrCode ReportNormalAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
     ErrCode ReportAncoAppFileReady(const string &filename, const string &filePath, bool needDelete = false);

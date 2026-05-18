@@ -32,7 +32,7 @@ int BUserId::GetUserId()
         return BConstants::DEFAULT_USER_ID;
     }
     int osAccountId = osAccounts[0];
-    HILOGI("Current active account userId=%{public}d", osAccountId);
+    HILOGD("Current active account userId=%{public}d", osAccountId);
     return osAccountId;
 }
 } // namespace OHOS::FileManagement::Backup

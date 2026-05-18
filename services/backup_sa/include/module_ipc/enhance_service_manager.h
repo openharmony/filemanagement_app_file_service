@@ -12,40 +12,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef OHOS_FILEMGMT_BACKUP_ENHANCE_SERVICE_MANAGER_H
 #define OHOS_FILEMGMT_BACKUP_ENHANCE_SERVICE_MANAGER_H
- 
+
 #include "ienhance_service.h"
- 
+
 #include <unordered_map>
 #include <shared_mutex>
- 
+
 namespace OHOS::FileManagement::Backup {
- 
+
 class EnhanceServiceManager {
     using CreateFuncType = IEnhanceService *(*)();
-    using DestroyFuncType = void(*)(IEnhanceService *);
+    using DestroyFuncType = void (*)(IEnhanceService *);
+
 public:
-    EnhanceServiceManager(const EnhanceServiceManager&) = delete;
-    EnhanceServiceManager& operator=(const EnhanceServiceManager&) = delete;
-    EnhanceServiceManager(EnhanceServiceManager&&) = delete;
-    EnhanceServiceManager& operator=(EnhanceServiceManager&&) = delete;
- 
+    EnhanceServiceManager(const EnhanceServiceManager &) = delete;
+    EnhanceServiceManager &operator=(const EnhanceServiceManager &) = delete;
+    EnhanceServiceManager(EnhanceServiceManager &&) = delete;
+    EnhanceServiceManager &operator=(EnhanceServiceManager &&) = delete;
+
     static EnhanceServiceManager &GetInstance();
- 
+
     void LoadService();
     void UnloadService();
-    IEnhanceService* GetServiceInstance();
- 
+    IEnhanceService *GetServiceInstance();
+
 private:
     EnhanceServiceManager() = default;
     virtual ~EnhanceServiceManager();
- 
+
     std::shared_mutex mutex_;
-    void* handle_ { nullptr };
-    DestroyFuncType destroyFunc_ { nullptr };
-    IEnhanceService* service_ { nullptr };
+    void *handle_{nullptr};
+    DestroyFuncType destroyFunc_{nullptr};
+    IEnhanceService *service_{nullptr};
 };
 }  // namespace OHOS::FileManagement::Backup
 #endif

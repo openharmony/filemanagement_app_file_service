@@ -37,9 +37,12 @@ public:
 
     static bool IsSubdirectory(const std::string &parent, const std::string &child);
     static bool IsSandboxAncoPath(const std::string &path);
+    // 过滤paths中的anco路径，返回anco路径，paths中的anco路径会被剔除
     static std::set<std::string> FilterAncoPaths(std::set<std::string> &paths);
     static uint32_t CheckOverLongPath(const std::string &path);
     static bool IsAncoFile(const std::string &fileName);
+    static std::string AddTrailingSlash(const std::string& path);
+    static std::string RemoveTrailingSlash(const std::string& path);
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_STRING_UTILS_H

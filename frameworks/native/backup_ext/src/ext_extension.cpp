@@ -836,7 +836,7 @@ void BackupExtExtension::DoPacket()
     }
     uint64_t ancoSmallFileCount;
     AncoBackupHelper::StartAncoPacket(ancoSmallFileCount);
-    appStatistic_->smallFileCount_  += ancoSmallFileCount;
+    appStatistic_->smallFileCount_ += ancoSmallFileCount;
     appStatistic_->tarSpend_ = static_cast<uint32_t>(totalTarUs / MS_TO_US);
     HILOGI("TarSpend: %{public}u ms", appStatistic_->tarSpend_);
 }
@@ -987,7 +987,10 @@ int BackupExtExtension::DoIncrementalRestore()
     std::string tempPath;
     std::tuple<std::vector<std::string>, std::vector<int64_t>, std::vector<std::string>> ancoTarInfo;
     for (const auto &item : fileSet) { // 处理要解压的tar文件
-        err = ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath);
+        auto errCode = ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath);
+        if (errCode != ERR_OK) {
+            err = errCode;
+        }
     }
     if (tempPath == std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO)
         .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) {

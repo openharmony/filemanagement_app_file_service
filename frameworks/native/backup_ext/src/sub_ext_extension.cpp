@@ -183,19 +183,20 @@ void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
     ErrFileInfo errFiles;
     auto idxFileInfos = GetIdxFileInfos(isSpecialVersion);
     struct stat attr;
+    const std::string sandboxRoot = std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME) + BConstants::BACKSLASH;
     for (const auto &it : idxFileInfos) {
-        std::string sandboxRoot = std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME) + BConstants::BACKSLASH;
-        if (it.first.rfind(sandboxRoot, 0) != 0) {
+        auto newPath = BExcepUltils::Canonicalize(it.first);
+        if (newPath.empty() || newPath.rfind(sandboxRoot, 0) != 0) {
             continue;
         }
-        if (it.first.size() >= PATH_MAX || stat(it.first.data(), &attr) == -1) {
-            HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(it.first).c_str(),
+        if (newPath.size() >= PATH_MAX || stat(newPath.data(), &attr) == -1) {
+            HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(newPath).c_str(),
                 errno);
-            errFiles[it.first].emplace_back(errno);
+            errFiles[newPath].emplace_back(errno);
         } else if (it.second != attr.st_size) {
             HILOGE("(Debug) RecFile:%{public}s size err, recSize: %{public}" PRId64 ", idxSize: %{public}" PRId64 "",
-                GetAnonyPath(it.first).c_str(), attr.st_size, it.second);
-            errFiles[it.first] = std::vector<int>();
+                GetAnonyPath(newPath).c_str(), attr.st_size, it.second);
+            errFiles[newPath] = std::vector<int>();
         }
     }
     HILOGE("(Debug) Temp file check result: Total file: %{public}zu, err file: %{public}zu", idxFileInfos.size(),

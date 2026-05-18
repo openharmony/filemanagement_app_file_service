@@ -12,29 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "module_ipc/enhance_service_manager.h"
- 
+
 #include "filemgmt_libhilog.h"
- 
+
 #include <cstddef>
 #include <dlfcn.h>
 #include <memory>
- 
+
 namespace OHOS::FileManagement::Backup {
-constexpr const char* ENHANCE_SERVICE_SO_NAME = "libbackup_ext_interface.z.so";
- 
+constexpr const char *ENHANCE_SERVICE_SO_NAME = "libbackup_ext_interface.z.so";
+
 EnhanceServiceManager::~EnhanceServiceManager()
 {
     UnloadService();
 }
- 
+
 EnhanceServiceManager &EnhanceServiceManager::GetInstance()
 {
     static EnhanceServiceManager gEnhanceServiceManager;
     return gEnhanceServiceManager;
 }
- 
+
 void EnhanceServiceManager::LoadService()
 {
     HILOGI("enter");
@@ -66,13 +66,13 @@ void EnhanceServiceManager::LoadService()
         dlclose(handle);
         return;
     }
- 
+
     handle_ = handle;
     service_ = service;
     destroyFunc_ = destroyFunc;
     HILOGI("success");
 }
- 
+
 void EnhanceServiceManager::UnloadService()
 {
     HILOGI("enter");
@@ -81,7 +81,7 @@ void EnhanceServiceManager::UnloadService()
         destroyFunc_(service_);
         service_ = nullptr;
     }
- 
+
     if (handle_ != nullptr) {
         if (dlclose(handle_) != 0) {
             HILOGE("fail to dlclose %{public}s, errno = %{public}s", ENHANCE_SERVICE_SO_NAME, dlerror());
@@ -89,14 +89,14 @@ void EnhanceServiceManager::UnloadService()
         }
         handle_ = nullptr;
     }
- 
+
     destroyFunc_ = nullptr;
     HILOGI("success");
 }
- 
-IEnhanceService* EnhanceServiceManager::GetServiceInstance()
+
+IEnhanceService *EnhanceServiceManager::GetServiceInstance()
 {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     return service_;
 }
-}
+}  // namespace OHOS::FileManagement::Backup

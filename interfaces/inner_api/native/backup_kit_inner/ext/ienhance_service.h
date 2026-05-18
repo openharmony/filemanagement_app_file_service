@@ -80,8 +80,10 @@ public:
     virtual ErrCode AddAncoMovePaths(const std::string &bundleName, const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) = 0;
     virtual ErrCode StartAncoMove(const std::string &bundleName, int &fd, AncoRestoreResult &ancoRestoreRes) = 0;
+    // fd needs to be released by the caller.
     virtual int OpenAncoFileReadOnly(const std::string &sandboxPath) = 0;
     virtual bool RemoveAncoFile(const std::string &sandboxPath) = 0;
+    // fd needs to be released by the caller.
     virtual void GetIncrementalAncoFileHandle(const std::string &bundleName, const std::string &fileName, int &fdVal,
         int &reportFdVal, int &errCode) = 0;
     virtual int32_t MoveFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;

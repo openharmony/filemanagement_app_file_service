@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include "b_resources/b_constants.h"
 #include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -472,5 +473,61 @@ HWTEST_F(StringUtilsTest, STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_006, testing::ex
     EXPECT_EQ(result, exactMaxPath.length());
 
     GTEST_LOG_(INFO) << "StringUtilsTest-end STRINGUTILS_CHECK_OVER_LONG_PATH_TEST_006";
+}
+
+/**
+* @tc.number: STRINGUTILS_ADD_TRAILING_SLASH_TEST_001
+* @tc.name: AddTrailingSlash_MultipleScenarios
+* @tc.desc: Test multiple scenarios for AddTrailingSlash function
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_ADD_TRAILING_SLASH_TEST_001, testing::ext::TestSize.Level1) {
+    EXPECT_EQ(StringUtils::AddTrailingSlash(""), BConstants::BACKSLASH);
+    EXPECT_EQ(StringUtils::AddTrailingSlash("////"), BConstants::BACKSLASH);
+    EXPECT_EQ(StringUtils::AddTrailingSlash("/a/b/c"), "/a/b/c/");
+    EXPECT_EQ(StringUtils::AddTrailingSlash("/a/b/c/"), "/a/b/c/");
+    EXPECT_EQ(StringUtils::AddTrailingSlash("/a/b/c///"), "/a/b/c/");
+}
+
+/**
+* @tc.number: STRINGUTILS_REMOVE_TRAILING_SLASH_TEST_001
+* @tc.name: RemoveTrailingSlash_MultipleScenarios
+* @tc.desc: Test multiple scenarios for RemoveTrailingSlash function
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_REMOVE_TRAILING_SLASH_TEST_001, testing::ext::TestSize.Level1) {
+    EXPECT_EQ(StringUtils::RemoveTrailingSlash(""), "");
+    EXPECT_EQ(StringUtils::RemoveTrailingSlash("////"), "");
+    EXPECT_EQ(StringUtils::RemoveTrailingSlash("/a/b/c"), "/a/b/c");
+    EXPECT_EQ(StringUtils::RemoveTrailingSlash("/a/b/c/"), "/a/b/c");
+    EXPECT_EQ(StringUtils::RemoveTrailingSlash("/a/b/c///"), "/a/b/c");
+}
+
+/**
+* @tc.number: STRINGUTILS_IS_SUBDIRECTORY_TEST_001
+* @tc.name: IsSubdirectory_MultipleScenarios
+* @tc.desc: Test multiple scenarios for IsSubdirectory function
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_IS_SUBDIRECTORY_TEST_001, testing::ext::TestSize.Level1) {
+    EXPECT_TRUE(StringUtils::IsSubdirectory("/a/b", "/a/b"));
+    EXPECT_TRUE(StringUtils::IsSubdirectory("/a/b", "/a/b/"));
+    EXPECT_TRUE(StringUtils::IsSubdirectory("/a/b", "/a/b////"));
+    EXPECT_TRUE(StringUtils::IsSubdirectory("/a/b/", "/a/b"));
+    EXPECT_TRUE(StringUtils::IsSubdirectory("/a/b/", "/a/b/"));
+    EXPECT_TRUE(StringUtils::IsSubdirectory("/a/b", "/a/b/c"));
+    EXPECT_FALSE(StringUtils::IsSubdirectory("/a/b/c", "/a/b"));
+    EXPECT_TRUE(StringUtils::IsSubdirectory("", "/a/b"));
+    EXPECT_FALSE(StringUtils::IsSubdirectory("/a/b", ""));
+    EXPECT_TRUE(StringUtils::IsSubdirectory("/a/b/", "/a/b/c//"));
 }
 } // namespace OHOS::FileManagement::Backup
