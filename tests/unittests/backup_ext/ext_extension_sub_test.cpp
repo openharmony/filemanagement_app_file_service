@@ -30,6 +30,7 @@
 #include "b_json/b_json_entity_extension_config.h"
 #include "b_resources/b_constants.h"
 #include "clone_file_info_backup_rdbstore.h"
+#include "direct_ex_mock.h"
 #include "ext_backup_mock.h"
 #include "ext_extension_mock.h"
 #include "tar_file.h"
@@ -73,6 +74,7 @@ public:
     static inline shared_ptr<ExtExtensionMock> extExtensionMock = nullptr;
     static inline sptr<ServiceProxyMock> proxy = nullptr;
     static inline sptr<AncoBackupCallback> backupCallback = nullptr;
+    static inline shared_ptr<AppFileService::DirectoryFuncMock> directMock = nullptr;
 };
 
 void ExtExtensionSubTest::SetUpTestCase(void)
@@ -111,6 +113,9 @@ void ExtExtensionSubTest::SetUpTestCase(void)
     ServiceClient::serviceProxy_ = proxy;
  
     backupCallback = sptr<AncoBackupCallback>(new AncoBackupCallback(extExtension));
+
+    directMock = make_shared<AppFileService::DirectoryFuncMock>();
+    AppFileService::DirectoryFunc::directoryFunc_ = directMock;
 };
 
 void ExtExtensionSubTest::TearDownTestCase(void)
@@ -133,6 +138,9 @@ void ExtExtensionSubTest::TearDownTestCase(void)
     extExtensionMock = nullptr;
     ServiceClient::serviceProxy_ = nullptr;
     proxy = nullptr;
+
+    AppFileService::DirectoryFunc::directoryFunc_ = nullptr;
+    directMock = nullptr;
 };
 
 /**
@@ -1350,6 +1358,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0200, testin
         extExtension->extension_ = extension;
         extension->backupScene_ = "";
         extension->ancoFileListClone_ = "1";
+        extension->fileManagerFileListClone_ = "1";
         
         TestManager tm("Ext_Extension_Sub_GetScanDirList_Test_0200");
         string root = tm.GetRootDirCurTest();
@@ -1367,11 +1376,13 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0200, testin
         EXPECT_FALSE(includes.empty());
         
         extension->ancoFileListClone_ = "";
+        extension->fileManagerFileListClone_ = "";
         includes.clear();
         extExtension->GetScanDirList(includes, BConstants::INCLUDES, cachedEntity.Structuralize());
         EXPECT_FALSE(includes.empty());
         
         extension->ancoFileListClone_ = "1";
+        extension->fileManagerFileListClone_ = "1";
         includes.clear();
         extExtension->GetScanDirList(includes, BConstants::EXCLUDES, cachedEntity.Structuralize());
         EXPECT_TRUE(includes.empty());
@@ -1872,6 +1883,82 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_DoClearInner_0003, testing::ext:
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_DoClearInner_0003";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_ClearTempFile_0300
+ * @tc.name: SUB_Ext_Extension_ClearTempFile_0300
+ * @tc.desc: 测试 ClearTempFile bundleName_不为FILE_MANAGER_BUNDLE_NAME时直接返回
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0300";
+    try {
+        extExtension->bundleName_ = BUNDLE_NAME;
+        extExtension->ClearPublicTempFiles();
+        
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by ClearTempFile.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0300";
+}
+ 
+/**
+ * @tc.number: SUB_Ext_Extension_ClearTempFile_0200
+ * @tc.name: SUB_Ext_Extension_ClearTempFile_0200
+ * @tc.desc: 测试 ClearTempFile ForceRemoveDirectoryBMS返回false时的异常处理
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0200, testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0200";
+    try {
+        extExtension->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
+ 
+        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillOnce(Return(false));
+        extExtension->ClearPublicTempFiles();
+        
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by ClearTempFile.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0200";
+}
+ 
+/**
+ * @tc.number: SUB_Ext_Extension_ClearTempFile_0100
+ * @tc.name: SUB_Ext_Extension_ClearTempFile_0100
+ * @tc.desc: 测试 ClearTempFile bundleName_为FILE_MANAGER_BUNDLE_NAME时清理临时文件
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0100";
+    try {
+        extExtension->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
+ 
+        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillOnce(Return(true));
+        extExtension->ClearPublicTempFiles();
+        
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by ClearTempFile.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0100";
 }
 #include "ext_extension_sub_ext_test.cpp"
 } // namespace OHOS::FileManagement::Backup

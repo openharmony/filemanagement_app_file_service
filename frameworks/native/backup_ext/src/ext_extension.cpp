@@ -361,6 +361,7 @@ static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string
         return errno;
     }
     tarName = path + fileName;
+    HILOGI("GetIncrementalFileHandlePath tarName is %{public}s", GetAnonyPath(tarName).c_str());
     return ERR_OK;
 }
 
@@ -1001,6 +1002,17 @@ int BackupExtExtension::DoIncrementalRestore()
             err = errCode;
         }
     }
+    vector<string> publicFileSourcePath;
+    vector<string> publicFileTargetPath;
+    vector<StatInfo> publicFileStats;
+    for (const auto &[srcPath, dstPath, sta] : UntarFile::GetInstance().GetPublicFileInfos()) {
+        StatInfo statInfo;
+        statInfo.sta = sta;
+        publicFileSourcePath.push_back(srcPath);
+        publicFileTargetPath.push_back(dstPath);
+        publicFileStats.push_back(statInfo);
+    }
+    AncoIncrementalRestoreHelper::AddAncoMovePaths(publicFileSourcePath, publicFileTargetPath, publicFileStats);
     auto endTime = std::chrono::system_clock::now();
     radarRestoreInfo_.tarFileSpendTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
@@ -1411,7 +1423,7 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
         // 获取索引文件内容
         string path = GetRestoreTempPath(bundleName_, item.hashName);
-        if (StringUtils::IsSandboxAncoPath(path)) {
+        if (StringUtils::IsPublicFilePath(item.fileName)) {
             ancoSourcePath.push_back(path + item.hashName);
             ancoTargetPath.push_back(item.fileName);
             ancoStats.push_back(item.sta);
@@ -1707,6 +1719,7 @@ void BackupExtExtension::AsyncTaskIncreRestoreSpecialVersion()
 void BackupExtExtension::AsyncTaskRestoreForUpgrade()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    ClearPublicTempFiles();
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");

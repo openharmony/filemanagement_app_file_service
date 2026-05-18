@@ -209,6 +209,7 @@ public:
 public:
     std::string backupScene_;
     std::string ancoFileListClone_;
+    std::string fileManagerFileListClone_;
 
 protected:
     std::string appVersionStr_;

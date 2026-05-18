@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_BACKUP_UNTAR_FILE_H
 #define OHOS_FILEMGMT_BACKUP_BACKUP_UNTAR_FILE_H
 
+#include <sys/stat.h>
 #include <utime.h>
 
 #include "tar_file.h"
@@ -54,6 +55,7 @@ public:
     std::tuple<int, EndFileInfo, ErrFileInfo> IncrementalUnPacket(
         const std::string &tarFile, const std::string &rootPath,
         const std::unordered_map<std::string, struct ReportFileInfo> &includes);
+    const std::vector<std::tuple<std::string, std::string, struct stat>> &GetPublicFileInfos();
 
 private:
     UntarFile() = default;
@@ -231,6 +233,7 @@ private:
     off_t pos_ {0};
     size_t readCnt_ {0};
     std::unordered_map<std::string, struct ReportFileInfo> includes_;
+    std::vector<std::tuple<std::string, std::string, struct stat>> publicFileInfos_;
 };
 } // namespace OHOS::FileManagement::Backup
 

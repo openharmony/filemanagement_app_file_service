@@ -346,4 +346,224 @@ HWTEST_F(CloneFileInfoBackupRdbstoreTest,
     GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-end "
                       << "SUB_Clone_File_Info_Backup_Rdbstore_06_MultiInstance_0100";
 }
+
+/**
+ * @tc.number: SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFileManagerFileNullptr_0100
+ * @tc.name: SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFileManagerFileNullptr_0100
+ * @tc.desc: 测试 QueryFileManagerFile rdbStore_ == nullptr 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ * @tc.note: 创建只读文件导致 rdbStore_ 初始化失败，覆盖 QueryFileManagerFile 中 rdbStore_ == nullptr 分支
+ */
+HWTEST_F(CloneFileInfoBackupRdbstoreTest,
+          SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFileManagerFileNullptr_0100,
+          testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-begin "
+                      << "SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFileManagerFileNullptr_0100";
+    try {
+        TestManager tm("SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFileManagerFileNullptr_0100");
+        string root = tm.GetRootDirCurTest();
+        string readOnlyFile = root + "/readonly_file_manager.db";
+        
+        ofstream file(readOnlyFile);
+        file << "test content";
+        file.close();
+        
+        chmod(readOnlyFile.c_str(), S_IRUSR | S_IRGRP | S_IROTH);
+        
+        auto instance = CloneFileInfoBackupRdbstore::GetInstance(readOnlyFile);
+        EXPECT_NE(instance, nullptr);
+        
+        vector<string> paths = instance->QueryFileManagerFile();
+        EXPECT_TRUE(paths.empty());
+        
+        chmod(readOnlyFile.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-end "
+                      << "SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFileManagerFileNullptr_0100";
+}
+ 
+/**
+ * @tc.number: SUB_Clone_File_Info_Backup_Rdbstore_08_QueryFileManagerFileEmptyPath_0100
+ * @tc.name: SUB_Clone_File_Info_Backup_Rdbstore_08_QueryFileManagerFileEmptyPath_0100
+ * @tc.desc: 测试 QueryFileManagerFile 接口空路径
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ * @tc.note: 空路径导致 rdbStore_ 为 nullptr，QueryFileManagerFile 应返回空 vector
+ */
+HWTEST_F(CloneFileInfoBackupRdbstoreTest,
+          SUB_Clone_File_Info_Backup_Rdbstore_08_QueryFileManagerFileEmptyPath_0100,
+          testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-begin "
+                      << "SUB_Clone_File_Info_Backup_Rdbstore_08_QueryFileManagerFileEmptyPath_0100";
+    try {
+        string dbPath = "";
+        auto instance = CloneFileInfoBackupRdbstore::GetInstance(dbPath);
+        EXPECT_NE(instance, nullptr);
+        
+        vector<string> paths = instance->QueryFileManagerFile();
+        EXPECT_TRUE(paths.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-an exception occurred by QueryFileManagerFile.";
+    }
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-end "
+                      << "SUB_Clone_File_Info_Backup_Rdbstore_08_QueryFileManagerFileEmptyPath_0100";
+}
+ 
+/**
+ * @tc.number: SUB_Clone_File_Info_Backup_Rdbstore_00_FileManagerWithData_0100
+ * @tc.name: SUB_Clone_File_Info_Backup_Rdbstore_00_FileManagerWithData_0100
+ * @tc.desc: 测试 QueryFromRdbStore 接口带数据查询
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(CloneFileInfoBackupRdbstoreTest,
+          SUB_Clone_File_Info_Backup_Rdbstore_00_FileManagerWithData_0100,
+          testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-begin"
+                        << "SUB_Clone_File_Info_Backup_Rdbstore_00_FileManagerWithData_0100";
+    try {
+        TestManager tm("SUB_Clone_File_Info_Backup_Rdbstore_00_FileManagerWithData_0100");
+        string dbPath = tm.GetRootDirCurTest() + "/test_file_manager.db";
+        
+        NativeRdb::RdbStoreConfig config(dbPath);
+        int errCode = 0;
+        CloneFileInfoBackupCallBack callback;
+        auto rdbStore = NativeRdb::RdbHelper::GetRdbStore(config, 1, callback, errCode);
+        ASSERT_NE(rdbStore, nullptr);
+ 
+        string createTableSql = "CREATE TABLE IF NOT EXISTS file_manager_file_info (path TEXT);";
+        rdbStore->ExecuteSql(createTableSql);
+        
+        string insertSql1 = "INSERT INTO file_manager_file_info (path) VALUES ('/data/test/file1.pdf');";
+        string insertSql2 = "INSERT INTO file_manager_file_info (path) VALUES ('/data/test/file2.zip');";
+        rdbStore->ExecuteSql(insertSql1);
+        rdbStore->ExecuteSql(insertSql2);
+        
+        vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(
+            rdbStore.get(), "file_manager_file_info");
+        EXPECT_EQ(paths.size(), 2);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-end"
+                        << "SUB_Clone_File_Info_Backup_Rdbstore_00_FileManagerWithData_0100";
+}
+ 
+/**
+ * @tc.number: SUB_Clone_File_Info_Backup_Rdbstore_11_QueryFileManagerFileInvalidColumn_0100
+ * @tc.name: SUB_Clone_File_Info_Backup_Rdbstore_11_QueryFileManagerFileInvalidColumn_0100
+ * @tc.desc: 测试 QueryFileManagerFile 中 GetColumnIndex 失败分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 2
+ * @tc.require: I6F3GV
+ * @tc.note: 创建缺少 path 列的表，触发 GetColumnIndex 失败分支
+ */
+HWTEST_F(CloneFileInfoBackupRdbstoreTest,
+          SUB_Clone_File_Info_Backup_Rdbstore_11_QueryFileManagerFileInvalidColumn_0100,
+          testing::ext::TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-begin "
+                      << "SUB_Clone_File_Info_Backup_Rdbstore_11_QueryFileManagerFileInvalidColumn_0100";
+    try {
+        TestManager tm("SUB_Clone_File_Info_Backup_Rdbstore_11_QueryFileManagerFileInvalidColumn_0100");
+        string root = tm.GetRootDirCurTest();
+        string dbPath = root + "/test_file_manager_invalid_column.db";
+        
+        NativeRdb::RdbStoreConfig config(dbPath);
+        int errCode = 0;
+        CloneFileInfoBackupCallBack callback;
+        auto rdbStore = NativeRdb::RdbHelper::GetRdbStore(config, 1, callback, errCode);
+        ASSERT_NE(rdbStore, nullptr);
+        
+        string createTableSql = "CREATE TABLE IF NOT EXISTS file_manager_file_info (invalid_column TEXT);";
+        rdbStore->ExecuteSql(createTableSql);
+        
+        string insertSql = "INSERT INTO file_manager_file_info (invalid_column) VALUES ('/data/test/file.txt');";
+        rdbStore->ExecuteSql(insertSql);
+        
+        auto instance = CloneFileInfoBackupRdbstore::GetInstance(dbPath);
+        EXPECT_NE(instance, nullptr);
+        
+        vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(
+            rdbStore.get(), "file_manager_file_info");
+        EXPECT_TRUE(paths.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest exception occurred by QueryFileManagerFileInvalidColumn.";
+    }
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-end "
+                      << "SUB_Clone_File_Info_Backup_Rdbstore_11_QueryFileManagerFileInvalidColumn_0100";
+}
+ 
+/**
+ * @tc.number: SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFromRdbStoreNullptr_0100
+ * @tc.name: SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFromRdbStoreNullptr_0100
+ * @tc.desc: 测试 QueryFromRdbStore rdbStore == nullptr 分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(CloneFileInfoBackupRdbstoreTest,
+          SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFromRdbStoreNullptr_0100,
+          testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-begin "
+                      << "SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFromRdbStoreNullptr_0100";
+    try {
+        vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(nullptr, "file_manager_file_info");
+        EXPECT_TRUE(paths.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-end "
+                      << "SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFromRdbStoreNullptr_0100";
+}
+ 
+/**
+ * @tc.number: SUB_Clone_File_Info_QueryFromRdbStore_TableNotExist_0100
+ * @tc.name: SUB_Clone_File_Info_QueryFromRdbStore_TableNotExist_0100
+ * @tc.desc: 测试 QueryFromRdbStore 表不存在时 resultSet 为空
+ */
+HWTEST_F(CloneFileInfoBackupRdbstoreTest,
+            SUB_Clone_File_Info_QueryFromRdbStore_TableNotExist_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-begin"
+                        << "SUB_Clone_File_Info_QueryFromRdbStore_TableNotExist_0100";
+    try {
+        TestManager tm("SUB_Clone_File_Info_QueryFromRdbStore_TableNotExist_0100");
+        string dbPath = tm.GetRootDirCurTest() + "/test_not_exist.db";
+ 
+        NativeRdb::RdbStoreConfig config(dbPath);
+        int errCode = 0;
+        CloneFileInfoBackupCallBack callback;
+        auto rdbStore = NativeRdb::RdbHelper::GetRdbStore(config, 1, callback, errCode);
+        ASSERT_NE(rdbStore, nullptr);
+        
+        vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(
+            rdbStore.get(), "non_exist_table");
+        EXPECT_TRUE(paths.empty());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-end SUB_Clone_File_Info_QueryFromRdbStore_TableNotExist_0100";
+}
 } // namespace OHOS::FileManagement::Backup

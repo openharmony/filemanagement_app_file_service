@@ -197,7 +197,9 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         for (const auto &item : j) {
             if (item["type"] == "anco_file_list_clone") {
                 ancoFileListClone_ = item["detail"];
-                break;
+            }
+            if (item["type"] == "file_manager_file_list_clone") {
+                fileManagerFileListClone_ = item["detail"];
             }
         }
         HILOGI("backupExtInfo_ is %{public}s, backupScene_ is %{public}s, ancoFileListClone_ is %{public}s",

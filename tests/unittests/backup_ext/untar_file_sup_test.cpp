@@ -426,6 +426,52 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_DealFileTag_0100, testing::ext::TestSi
 }
 
 /**
+ * @tc.number: SUB_Untar_File_DealFileTag_0200
+ * @tc.name: SUB_Untar_File_DealFileTag_0200
+ * @tc.desc: 测试 DealFileTag 接口中 stat 调用的场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(UntarFileSupTest, SUB_Untar_File_DealFileTag_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UntarFileSupTest-begin SUB_Untar_File_DealFileTag_0200";
+    try {
+        char c = '\0';
+        ErrFileInfo errFileInfo;
+        FileStatInfo info;
+        bool isFilter = false;
+        std::string tmpFullPath;
+        UntarFile::GetInstance().includes_.clear();
+        // 测试公共路径下 stat 成功的场景
+        info.fullPath = "/storage/Users/currentUser/test.txt";
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, stat(_, _)).WillOnce(Return(0));
+        EXPECT_EQ(UntarFile::GetInstance().DealFileTag(errFileInfo, info, isFilter, tmpFullPath), true);
+        // 测试公共路径下 stat 失败的场景
+        info.fullPath = "/storage/Users/currentUser/test2.txt";
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, stat(_, _)).WillOnce(Return(-1));
+        EXPECT_EQ(UntarFile::GetInstance().DealFileTag(errFileInfo, info, isFilter, tmpFullPath), true);
+        // 测试非公共路径的场景（不会调用 stat）
+        info.fullPath = "/data/app/test.txt";
+        EXPECT_CALL(*funcMock, realpath(_, _)).WillOnce(Return(&c));
+        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0));
+        EXPECT_EQ(UntarFile::GetInstance().DealFileTag(errFileInfo, info, isFilter, tmpFullPath), true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UntarFileSupTest-an exception occurred by DealFileTag.";
+    }
+    GTEST_LOG_(INFO) << "UntarFileSupTest-end SUB_Untar_File_DealFileTag_0200";
+}
+
+/**
  * @tc.number: SUB_Untar_File_ParseIncrementalFileByTypeFlag_0100
  * @tc.name: SUB_Untar_File_ParseIncrementalFileByTypeFlag_0100
  * @tc.desc: 测试 ParseIncrementalFileByTypeFlag 接口

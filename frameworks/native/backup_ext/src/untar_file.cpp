@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-#include "untar_file.h"
 
 #include "b_anony/b_anony.h"
 #include "b_filesystem/b_dir.h"
+#include "b_utils/string_utils.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
 #include "securec.h"
+#include "untar_file.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -150,6 +151,11 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::IncrementalUnPacket(
     tarFilePtr_ = nullptr;
 
     return {0, fileInfos, errFileInfos};
+}
+
+const std::vector<std::tuple<std::string, std::string, struct stat>> &UntarFile::GetPublicFileInfos()
+{
+    return publicFileInfos_;
 }
 
 off_t UntarFile::HandleTarBuffer(const string &buff, const string &name, FileStatInfo &info)
@@ -423,6 +429,7 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
         isFilter = true;
         return true;
     }
+    const std::string targetFullPath = info.fullPath;
     info.fullPath = GenRealPath(rootPath_, info.fullPath);
     if (!BDir::IsFilePathValid(info.fullPath)) {
         HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
@@ -433,6 +440,12 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
     if (errFileInfo.find(info.fullPath) != errFileInfo.end() && errFileInfo[info.fullPath].size() > 0 &&
         errFileInfo[info.fullPath][0] == ERR_INVALID_TAR) {
         return false;
+    }
+    if (StringUtils::IsPublicFilePath(targetFullPath)) {
+        struct stat sta;
+        if (stat(info.fullPath.c_str(), &sta) == 0) {
+            publicFileInfos_.emplace_back(info.fullPath, targetFullPath, sta);
+        }
     }
     isFilter = false;
     return true;

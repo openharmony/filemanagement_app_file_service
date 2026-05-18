@@ -1911,9 +1911,17 @@ void BackupExtExtension::GetScanDirList(vector<string>& pathInclude, string type
     if (extension_->ancoFileListClone_ == "1" && type == BConstants::INCLUDES) {
         HILOGI("GetScanDirList ancoFileListClone_ is 1");
         vector<std::string> ancoMediaFilePaths =
-        CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryAncoMediaFile();
+            CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryAncoMediaFile();
         pathInclude.insert(pathInclude.end(), std::make_move_iterator(ancoMediaFilePaths.begin()),
             std::make_move_iterator(ancoMediaFilePaths.end()));
+    }
+    if (extension_->fileManagerFileListClone_ == "1" && type == BConstants::INCLUDES) {
+        HILOGI("GetScanDirList fileManagerFileListClone_ is 1");
+        vector<std::string> fileManagerFilePaths =
+            CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryFileManagerFile();
+        fileManagerFilePaths = StringUtils::ConvertMediaSandboxPaths(fileManagerFilePaths);
+        pathInclude.insert(pathInclude.end(), std::make_move_iterator(fileManagerFilePaths.begin()),
+            std::make_move_iterator(fileManagerFilePaths.end()));
     }
 }
 
@@ -1974,6 +1982,19 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
         appStatistic_->hasEl3OrEl4_.store(true);
         HILOGI("backupPath has el3 or el4");
         return;
+    }
+}
+
+void BackupExtExtension::ClearPublicTempFiles()
+{
+    if (bundleName_ != BConstants::BUNDLE_FILE_MANAGER) {
+        return;
+    }
+    std::string tempPath = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)
+        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE).append(BConstants::PATH_PUBLIC_HOME);
+    bool result = ForceRemoveDirectoryBMS(tempPath);
+    if (!result) {
+        HILOGE("Failed to remove filemaneger public temp directory");
     }
 }
 } // namespace OHOS::FileManagement::Backup
