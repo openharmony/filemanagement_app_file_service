@@ -728,7 +728,7 @@ void Service::ExtConnectDied(const string &callName)
         session_->StopFwkTimer(callName);
         session_->StopExtTimer(callName);
         auto backupConnection = session_->GetExtConnection(callName).promote();
-        bool hasConnected = false;
+        bool hasConnected = true;
         ErrCode errCode = BError(BError::Codes::EXT_ABILITY_DIED).GetCode();
         if (backupConnection != nullptr) {
             BError connectErr = backupConnection->GetError();
@@ -742,6 +742,7 @@ void Service::ExtConnectDied(const string &callName)
         bool needCleanData = session_->GetClearDataFlag(callName);
         if (!hasConnected || !needCleanData || SAUtils::IsSABundleName(callName)) {
             HILOGE("Current extension is died, but not need clean data, bundleName:%{public}s", callName.c_str());
+            SendEndAppGalleryNotify(callName);
             ClearAndNoticeClient(callName, errCode, false);
             return;
         }

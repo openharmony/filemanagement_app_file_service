@@ -406,6 +406,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0002, TestSize.Level1)
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+        EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         service->OnBackupExtensionDied("OnBackupExtensionDied3", false);
         EXPECT_FALSE(service->isOccupyingSession_);
     } catch (...) {
@@ -436,6 +437,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0000, TestSize.Level1)
     EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
     EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(false));
     EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false));
+    EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
     EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
         .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
     EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
@@ -472,6 +474,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0001, TestSize.Level1)
     EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false));
     EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
         .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+    EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
     EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
     EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
     service->ExtConnectDied(callName);
@@ -534,6 +537,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0003, TestSize.Level1)
     auto callConnected = [](const string &&bundleName) {};
     auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, callName));
     connectPtr->hasConnected_.store(true);
+    EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false)).WillOnce(Return(false));
     EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
     EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
     EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(true));
