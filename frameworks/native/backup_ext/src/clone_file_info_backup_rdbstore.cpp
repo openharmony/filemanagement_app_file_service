@@ -19,8 +19,6 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-std::mutex CloneFileInfoBackupRdbstore::mutex_;
-
 CloneFileInfoBackupRdbstore* CloneFileInfoBackupRdbstore::GetInstance(const std::string &dbPath)
 {
     static CloneFileInfoBackupRdbstore instance(dbPath);

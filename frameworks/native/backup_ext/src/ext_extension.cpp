@@ -361,7 +361,7 @@ static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string
         return errno;
     }
     tarName = path + fileName;
-    HILOGI("GetIncrementalFileHandlePath tarName is %{public}s", GetAnonyPath(tarName).c_str());
+    HILOGD("GetIncrementalFileHandlePath tarName is %{public}s", GetAnonyPath(tarName).c_str());
     return ERR_OK;
 }
 

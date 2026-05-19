@@ -35,13 +35,13 @@ public:
     static CloneFileInfoBackupRdbstore* GetInstance(const std::string &dbPath);
     std::vector<std::string> QueryAncoMediaFile();
     std::vector<std::string> QueryFileManagerFile();
-    static std::vector<std::string> QueryFromRdbStore(NativeRdb::RdbStore* rdbStore, const std::string& tableName);
+    std::vector<std::string> QueryFromRdbStore(NativeRdb::RdbStore* rdbStore, const std::string& tableName);
 
 private:
     CloneFileInfoBackupRdbstore(const std::string &dbPath);
     int32_t TryGetRdbStore(const std::string &dbPath);
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_ {nullptr};
-    static std::mutex mutex_;
+    std::mutex mutex_;
 };
 
 class CloneFileInfoBackupCallBack : public NativeRdb::RdbOpenCallback {
