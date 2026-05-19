@@ -22,8 +22,8 @@
 namespace OHOS::FileManagement::Backup {
 
 constexpr uint32_t MEGA_BYTE = 1048576; // 1M包含多少字节
-constexpr uint64_t FIVE_GB = 5ULL * 1024 * MEGA_BYTE; // 5GB
-constexpr uint64_t FOUR_GB = 4ULL * 1024 * MEGA_BYTE; // 4GB
+constexpr uint64_t TEN_GB = 10ULL * 1024 * MEGA_BYTE; // 10GB
+constexpr uint64_t NINE_GB = 9ULL * 1024 * MEGA_BYTE; // 9GB
 constexpr uint64_t ONE_HUNDRED_FIFTY_MB = 150ULL * MEGA_BYTE; // 150MB
 
 std::string FileInfo::GetRestorePath()
@@ -66,21 +66,26 @@ std::string CompatibleSmallFileInfo::GetRestorePath()
     return restorePath_;
 }
 
-ScanFileSingleton& ScanFileSingleton::GetInstance()
+uint64_t ScanFileSingleton::GetMaxTarSize()
 {
-    static ScanFileSingleton instance;
     static std::once_flag initFlag;
     std::call_once(initFlag, [&]() {
         uint64_t freeSize = StorageManagerHelper::GetInstance().GetFreeSize();
         if (freeSize == 0) {
             HILOGE("get freeSize fail!");
         }
-        if (freeSize < FIVE_GB) {
-            instance.maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
+        if (freeSize < TEN_GB) { // 查询freeSize失败场景也按此分支处理
+            maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
         } else {
-            instance.maxTarSize_.store(freeSize - FOUR_GB);
+            maxTarSize_.store(freeSize - NINE_GB);
         }
     });
+    return maxTarSize_.load();
+}
+
+ScanFileSingleton& ScanFileSingleton::GetInstance()
+{
+    static ScanFileSingleton instance;
     return instance;
 }
 
@@ -109,7 +114,7 @@ void ScanFileSingleton::AddTarFile(const std::string& filename, const std::strin
     }
     pendingFileQueue_.push(std::make_shared<FileInfo>(filename, filePath, sta, false));
     currentTarSize_.fetch_add(sta.st_size);
-    if (currentTarSize_.load() > maxTarSize_.load()) {
+    if (currentTarSize_.load() > GetMaxTarSize()) {
         HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",
             static_cast<uint32_t>(currentTarSize_.load() / MEGA_BYTE));
         stopPacket_.store(true);
@@ -158,7 +163,7 @@ void ScanFileSingleton::AddAncoTarFile(const std::string &filename, const std::s
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
     pendingFileQueue_.push(std::make_shared<AncoFileInfo>(filename, filePath, sta, false));
     currentTarSize_.fetch_add(sta.st_size);
-    if (currentTarSize_.load() > maxTarSize_.load()) {
+    if (currentTarSize_.load() > GetMaxTarSize()) {
         HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",
             static_cast<uint32_t>(currentTarSize_.load() / MEGA_BYTE));
         stopPacket_.store(true);
@@ -188,7 +193,7 @@ std::shared_ptr<IFileInfo> ScanFileSingleton::GetFileInfo()
         pendingFileQueue_.pop();
         if (fileInfo != nullptr && !fileInfo->isBigFile_) {
             currentTarSize_.fetch_sub(fileInfo->sta_.st_size);
-            if (currentTarSize_.load() < maxTarSize_.load()) {
+            if (currentTarSize_.load() < GetMaxTarSize()) {
                 StartPacket();
             }
         }

@@ -139,6 +139,7 @@ private:
     // 私有构造函数，防止外部实例化
     ScanFileSingleton() {}
     ~ScanFileSingleton() {};
+    uint64_t GetMaxTarSize();
 
     std::mutex pendingFileMutex_;
     std::queue<std::shared_ptr<IFileInfo>> pendingFileQueue_;
