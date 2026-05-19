@@ -85,14 +85,14 @@ std::vector<std::string> CloneFileInfoBackupRdbstore::QueryFromRdbStore(
             return retPaths;
         }
         HILOGI("Query path %{public}s", GetAnonyString(filePath).c_str());
+        if (!BDir::IsFilePathValid(filePath)) {
+            HILOGE("Query path is invalid: %{public}s", GetAnonyPath(filePath).data());
+            continue;
+        }
         retPaths.push_back(filePath);
     }
     resultSet->Close();
     HILOGI("QueryFromRdbStore end, count: %{public}zu", retPaths.size());
-    if (!BDir::IsFilePathValid(filePath)) {
-        HILOGE("Query path is invalid: %{public}s", GetAnonyPath(filePath).data());
-        continue;
-    }
     return retPaths;
 }
 
