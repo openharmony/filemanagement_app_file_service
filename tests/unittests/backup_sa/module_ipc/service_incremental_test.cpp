@@ -2745,11 +2745,13 @@ class EnhanceServiceManagerTest : public ::testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase() {}
-    void SetUp() {
+    void SetUp()
+    {
         dlFuncMock = std::make_shared<DlfcnMock>();
         DlfcnMock::dlFunc_ = dlFuncMock;
     }
-    void TearDown() {
+    void TearDown()
+    {
         dlFuncMock = nullptr;
         DlfcnMock::dlFunc_ = nullptr;
     }
