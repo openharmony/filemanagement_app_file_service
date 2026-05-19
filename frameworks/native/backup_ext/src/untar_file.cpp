@@ -153,7 +153,7 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::IncrementalUnPacket(
     return {0, fileInfos, errFileInfos};
 }
 
-const std::vector<std::tuple<std::string, std::string, struct stat>> &UntarFile::GetPublicFileInfos()
+std::vector<std::tuple<std::string, std::string, struct stat>> UntarFile::GetPublicFileInfos()
 {
     return publicFileInfos_;
 }

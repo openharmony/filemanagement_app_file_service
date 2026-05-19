@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
+#include "b_filesystem/b_dir.h"
 #include "clone_file_info_backup_rdbstore.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+
+std::mutex CloneFileInfoBackupRdbstore::mutex_;
 
 CloneFileInfoBackupRdbstore* CloneFileInfoBackupRdbstore::GetInstance(const std::string &dbPath)
 {
@@ -58,6 +61,7 @@ std::vector<std::string> CloneFileInfoBackupRdbstore::QueryFromRdbStore(
     NativeRdb::RdbStore* rdbStore, const std::string& tableName)
 {
     HILOGI("QueryFromRdbStore tableName: %{public}s", tableName.c_str());
+    std::unique_lock<std::mutex> lock(mutex_);
     std::vector<std::string> retPaths;
     if (rdbStore == nullptr) {
         HILOGE("rdbStore nullptr");
@@ -85,6 +89,10 @@ std::vector<std::string> CloneFileInfoBackupRdbstore::QueryFromRdbStore(
     }
     resultSet->Close();
     HILOGI("QueryFromRdbStore end, count: %{public}zu", retPaths.size());
+    if (!BDir::IsFilePathValid(filePath)) {
+        HILOGE("Query path is invalid: %{public}s", GetAnonyPath(filePath).data());
+        continue;
+    }
     return retPaths;
 }
 

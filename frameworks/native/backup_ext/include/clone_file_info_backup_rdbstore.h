@@ -41,7 +41,7 @@ private:
     CloneFileInfoBackupRdbstore(const std::string &dbPath);
     int32_t TryGetRdbStore(const std::string &dbPath);
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_ {nullptr};
-    std::mutex mutex_;
+    static std::mutex mutex_;
 };
 
 class CloneFileInfoBackupCallBack : public NativeRdb::RdbOpenCallback {

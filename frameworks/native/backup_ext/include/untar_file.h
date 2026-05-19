@@ -55,7 +55,7 @@ public:
     std::tuple<int, EndFileInfo, ErrFileInfo> IncrementalUnPacket(
         const std::string &tarFile, const std::string &rootPath,
         const std::unordered_map<std::string, struct ReportFileInfo> &includes);
-    const std::vector<std::tuple<std::string, std::string, struct stat>> &GetPublicFileInfos();
+    std::vector<std::tuple<std::string, std::string, struct stat>> GetPublicFileInfos();
 
 private:
     UntarFile() = default;
