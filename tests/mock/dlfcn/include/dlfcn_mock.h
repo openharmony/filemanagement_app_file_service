@@ -26,6 +26,8 @@ public:
 
     virtual void *dlopen(const char *file, int mode) = 0;
     virtual void *dlsym(void *handle, const char *symbol) = 0;
+    virtual char *dlerror(void) = 0;
+    virtual int dlclose(void *handle) = 0;
 
 public:
     static inline std::shared_ptr<Dlfcn> dlFunc_ = nullptr;
@@ -33,8 +35,10 @@ public:
 
 class DlfcnMock : public Dlfcn {
 public:
-    MOCK_METHOD(void *, dlopen, (const char *file, int mode), (override));
-    MOCK_METHOD(void *, dlsym, (void *handle, const char *symbol), (override));
+    MOCK_METHOD2(dlopen, void *(const char *file, int mode));
+    MOCK_METHOD2(dlsym, void *(void *handle, const char *symbol));
+    MOCK_METHOD0(dlerror, char *(void));
+    MOCK_METHOD1(dlclose, int(void *handle));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_DLFCN_MOCK_H

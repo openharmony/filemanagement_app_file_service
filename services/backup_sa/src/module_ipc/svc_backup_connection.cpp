@@ -88,7 +88,7 @@ void SvcBackupConnection::GenErrorByStatus(int errCode, bool hasConnected)
         uint32_t failSpend = connectSpend_.GetSpan();
         string errMsg = "{\"failSpend\": " + to_string(failSpend) + ",\"isCleanCalled\":"
             + to_string(isCleanCalled_) + "}";
-        if (failSpend >= CONNECT_EXTENSION_TIMEOUT * SECOND_TO_MS) {
+        if (failSpend >= TimeUtils::GetAmsTimeout() * SECOND_TO_MS) {
             error_ = BError(errCode, BError::Codes::SA_BOOT_EXT_TIMEOUT, errMsg);
         } else {
             error_ = BError(errCode, BError::Codes::EXT_ABILITY_DIED, errMsg);
@@ -123,13 +123,13 @@ void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName 
 
 ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId, bool isCleanCalled)
 {
-    HILOGI("Called begin timeout = %{public}d", CONNECT_EXTENSION_TIMEOUT);
+    int32_t amsTimeout = TimeUtils::GetAmsTimeout();
+    HILOGI("Called begin timeout = %{public}d", amsTimeout);
     isCleanCalled_.store(isCleanCalled);
     isConnectCalled_.store(true);
     std::unique_lock<std::mutex> lock(mutex_);
     connectSpend_.Start();
-    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId,
-        CONNECT_EXTENSION_TIMEOUT);
+    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, this, userId, amsTimeout);
     HILOGI("Called end, ret=%{public}d, userId=%{public}d.", ret, userId);
     return ret;
 }

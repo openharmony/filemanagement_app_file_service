@@ -167,6 +167,9 @@ void Service::SetCurrentBackupSessProperties(const vector<string> &,
 
 std::shared_ptr<ExtensionMutexInfo> Service::GetExtensionMutex(const BundleName &bundleName)
 {
+    if (bundleName == "ExtConnectDied_0004") {
+        return nullptr;
+    }
     return make_shared<ExtensionMutexInfo>(bundleName);
 }
 

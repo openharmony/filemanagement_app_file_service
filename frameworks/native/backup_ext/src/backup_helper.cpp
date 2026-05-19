@@ -53,7 +53,7 @@ ErrCode AncoBackupCallback::OnTarFileReadyCallback(
     if (StringUtils::CheckOverLongPath(filePath) >= BConstants::MAX_PATH_LEN) {
         return ErrCode(BError::Codes::EXT_INVAL_ARG);
     }
-    extensionPtr->appStatistic_->tarFileSize_ += TarFile::GetInstance().GetTarFileSize();
+    extensionPtr->appStatistic_->tarFileSize_ += statInfo.sta.st_size;
     extensionPtr->appStatistic_->tarFileCount_++;
     ScanFileSingleton::GetInstance().AddAncoTarFile(fileName, filePath, statInfo.sta);
     return ErrCode(BError::Codes::OK);

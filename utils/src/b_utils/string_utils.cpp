@@ -104,13 +104,9 @@ std::string StringUtils::GenHashName(const std::string &str)
 
 bool StringUtils::IsSubdirectory(const std::string &parent, const std::string &child)
 {
-    if (child.length() < parent.length()) {
-        return false;
-    }
-    if (child.length() > parent.length() && child.substr(parent.length(), 1) != BConstants::BACKSLASH) {
-        return false;
-    }
-    return child.substr(0, parent.length()) == parent;
+    auto newParent = AddTrailingSlash(parent);
+    auto newChild = AddTrailingSlash(child);
+    return newChild.size() >= newParent.size() && newChild.substr(0, newParent.size()) == newParent;
 }
 
 bool StringUtils::IsPathPrefix(const std::string &path, const std::string &prefix)
@@ -209,5 +205,29 @@ bool StringUtils::IsAncoFile(const std::string &fileName)
     } else {
         return fileName.find(BConstants::ANCO_TAG) != std::string::npos;
     }
+}
+
+std::string StringUtils::AddTrailingSlash(const std::string &path)
+{
+    if (path.empty()) {
+        return BConstants::BACKSLASH;
+    }
+    std::string result = path;
+    while (!result.empty() && result.back() == BConstants::FILE_SEPARATOR_CHAR) {
+        result.pop_back();
+    }
+    return result + BConstants::FILE_SEPARATOR_CHAR;
+}
+
+std::string StringUtils::RemoveTrailingSlash(const std::string &path)
+{
+    if (path.empty()) {
+        return "";
+    }
+    std::string result = path;
+    while (!result.empty() && result.back() == BConstants::FILE_SEPARATOR_CHAR) {
+        result.pop_back();
+    }
+    return result;
 }
 } // namespace OHOS::FileManagement::Backup

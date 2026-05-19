@@ -29,3 +29,19 @@ void *dlsym(void *handle, const char *symbol)
     }
     return Dlfcn::dlFunc_->dlsym(handle, symbol);
 }
+
+int dlclose(void *handle)
+{
+    if (Dlfcn::dlFunc_ == nullptr) {
+        return -1;
+    }
+    return Dlfcn::dlFunc_->dlclose(handle);
+}
+
+char *dlerror(void)
+{
+    if (Dlfcn::dlFunc_ == nullptr) {
+        return const_cast<char *>("");
+    }
+    return Dlfcn::dlFunc_->dlerror();
+}

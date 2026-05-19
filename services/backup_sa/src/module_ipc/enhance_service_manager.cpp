@@ -12,29 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "module_ipc/enhance_service_manager.h"
- 
+
+#include "b_radar/b_radar.h"
 #include "filemgmt_libhilog.h"
- 
+
 #include <cstddef>
 #include <dlfcn.h>
 #include <memory>
- 
+#include <sstream>
+
 namespace OHOS::FileManagement::Backup {
-constexpr const char* ENHANCE_SERVICE_SO_NAME = "libbackup_ext_interface.z.so";
- 
+constexpr const char *ENHANCE_SERVICE_SO_NAME = "libbackup_ext_interface.z.so";
+
 EnhanceServiceManager::~EnhanceServiceManager()
 {
     UnloadService();
 }
- 
+
 EnhanceServiceManager &EnhanceServiceManager::GetInstance()
 {
     static EnhanceServiceManager gEnhanceServiceManager;
     return gEnhanceServiceManager;
 }
- 
+
 void EnhanceServiceManager::LoadService()
 {
     HILOGI("enter");
@@ -43,36 +45,50 @@ void EnhanceServiceManager::LoadService()
         HILOGI("service ptr is not null");
         return;
     }
-    void *handle = dlopen(ENHANCE_SERVICE_SO_NAME, RTLD_LAZY);
-    if (handle == nullptr) {
-        HILOGE("fail to dlopen %{public}s, errno = %{public}s", ENHANCE_SERVICE_SO_NAME, dlerror());
+    std::stringstream errInfo;
+    do {
+        void *handle = dlopen(ENHANCE_SERVICE_SO_NAME, RTLD_LAZY);
+        if (handle == nullptr) {
+            errInfo << "fail to dlopen, err = " << dlerror();
+            HILOGE("%{public}s", errInfo.str().c_str());
+            break;
+        }
+        CreateFuncType createFunc = (CreateFuncType)dlsym(handle, "Create");
+        if (createFunc == nullptr) {
+            errInfo << "fail to dlsym Create, err = " << dlerror();
+            HILOGE("%{public}s", errInfo.str().c_str());
+            dlclose(handle);
+            break;
+        }
+        DestroyFuncType destroyFunc = (DestroyFuncType)dlsym(handle, "Destroy");
+        if (destroyFunc == nullptr) {
+            errInfo << "fail to dlsym Destroy, err = " << dlerror();
+            HILOGE("%{public}s", errInfo.str().c_str());
+            dlclose(handle);
+            break;
+        }
+        auto service = createFunc();
+        if (service == nullptr) {
+            errInfo << "fail to create service";
+            HILOGE("%{public}s", errInfo.str().c_str());
+            dlclose(handle);
+            break;
+        }
+
+        handle_ = handle;
+        service_ = service;
+        destroyFunc_ = destroyFunc;
+        HILOGI("success");
         return;
-    }
-    CreateFuncType createFunc = (CreateFuncType)dlsym(handle, "Create");
-    if (createFunc == nullptr) {
-        HILOGE("fail to dlsym, errno %{public}s", dlerror());
-        dlclose(handle);
-        return;
-    }
-    DestroyFuncType destroyFunc = (DestroyFuncType)dlsym(handle, "Destroy");
-    if (destroyFunc == nullptr) {
-        HILOGE("fail to dlsym, errno %{public}s", dlerror());
-        dlclose(handle);
-        return;
-    }
-    auto service = createFunc();
-    if (service == nullptr) {
-        HILOGE("fail to create service");
-        dlclose(handle);
-        return;
-    }
- 
-    handle_ = handle;
-    service_ = service;
-    destroyFunc_ = destroyFunc;
-    HILOGI("success");
+    } while (0);
+
+    AppRadar::Info info("", "", errInfo.str());
+    AppRadar::GetInstance().RecordDefaultFuncRes(info,
+        "EnhanceServiceManager::LoadService", AppRadar::GetInstance().GetUserId(),
+        BizStageBackup::BIZ_STAGE_GET_ENHANCE_SERVICE_FAIL,
+        BError(BError::Codes::SA_ENHANCE_SERVICE_UNAVAILABLE).GetCode());
 }
- 
+
 void EnhanceServiceManager::UnloadService()
 {
     HILOGI("enter");
@@ -81,7 +97,7 @@ void EnhanceServiceManager::UnloadService()
         destroyFunc_(service_);
         service_ = nullptr;
     }
- 
+
     if (handle_ != nullptr) {
         if (dlclose(handle_) != 0) {
             HILOGE("fail to dlclose %{public}s, errno = %{public}s", ENHANCE_SERVICE_SO_NAME, dlerror());
@@ -89,14 +105,14 @@ void EnhanceServiceManager::UnloadService()
         }
         handle_ = nullptr;
     }
- 
+
     destroyFunc_ = nullptr;
     HILOGI("success");
 }
- 
-IEnhanceService* EnhanceServiceManager::GetServiceInstance()
+
+IEnhanceService *EnhanceServiceManager::GetServiceInstance()
 {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     return service_;
 }
-}
+}  // namespace OHOS::FileManagement::Backup

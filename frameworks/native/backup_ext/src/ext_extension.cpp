@@ -837,7 +837,7 @@ void BackupExtExtension::DoPacket()
     }
     uint64_t ancoSmallFileCount;
     AncoBackupHelper::StartAncoPacket(ancoSmallFileCount);
-    appStatistic_->smallFileCount_  += ancoSmallFileCount;
+    appStatistic_->smallFileCount_ += ancoSmallFileCount;
     appStatistic_->tarSpend_ = static_cast<uint32_t>(totalTarUs / MS_TO_US);
     HILOGI("TarSpend: %{public}u ms", appStatistic_->tarSpend_);
 }
