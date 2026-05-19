@@ -83,9 +83,10 @@ void EnhanceServiceManager::LoadService()
     } while (0);
 
     AppRadar::Info info("", "", errInfo.str());
-    AppRadar::GetInstance().RecordDefaultFuncRes(
-        info, "EnhanceServiceManager::LoadService", AppRadar::GetInstance().GetUserId(),
-        BizStageBackup::BIZ_STAGE_GET_ENHANCE_SERVICE_FAIL, BError(BError::Codes::OK).GetCode());
+    AppRadar::GetInstance().RecordDefaultFuncRes(info,
+        "EnhanceServiceManager::LoadService", AppRadar::GetInstance().GetUserId(),
+        BizStageBackup::BIZ_STAGE_GET_ENHANCE_SERVICE_FAIL,
+        BError(BError::Codes::SA_ENHANCE_SERVICE_UNAVAILABLE).GetCode());
 }
 
 void EnhanceServiceManager::UnloadService()

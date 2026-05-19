@@ -2740,4 +2740,70 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_HandleCurGroupIncBackupI
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(bundleName));
     service->HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
 }
+
+class EnhanceServiceManagerTest : public ::testing::Test {
+public:
+    static void SetUpTestCase(void) {}
+    static void TearDownTestCase() {}
+    void SetUp() {
+        dlFuncMock = std::make_shared<DlfcnMock>();
+        DlfcnMock::dlFunc_ = dlFuncMock;
+    }
+    void TearDown() {
+        dlFuncMock = nullptr;
+        DlfcnMock::dlFunc_ = nullptr;
+    }
+
+    static inline shared_ptr<DlfcnMock> dlFuncMock = nullptr;
+};
+
+/**
+ * @tc.number: EnhanceServiceManager_LoadService_0100
+ * @tc.name: EnhanceServiceManager_LoadService_0100
+ * @tc.desc: 测试 LoadService 函数
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(EnhanceServiceManagerTest, EnhanceServiceManager_LoadService_0100, TestSize.Level1)
+{
+    IEnhanceService *service = reinterpret_cast<IEnhanceService *>(0x1234);
+    IEnhanceService *(*createFunc1)() = []() -> IEnhanceService* { return nullptr; };
+    IEnhanceService *(*createFunc2)() = []() -> IEnhanceService* { return reinterpret_cast<IEnhanceService*>(0x5678); };
+    void (*destoryFunc)(IEnhanceService*) = [](IEnhanceService*) {};
+
+    EXPECT_CALL(*dlFuncMock, dlclose(_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*dlFuncMock, dlerror()).WillRepeatedly(Return(const_cast<char *>("")));
+
+    EnhanceServiceManager::GetInstance().service_ = service;
+    EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
+
+    EnhanceServiceManager::GetInstance().service_ = nullptr;
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(nullptr));
+    EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
+
+    EnhanceServiceManager::GetInstance().service_ = nullptr;
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(service));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(nullptr));
+    EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
+
+    EnhanceServiceManager::GetInstance().service_ = nullptr;
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(service));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillOnce(Return(reinterpret_cast<void*>(createFunc2)));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillOnce(Return(nullptr));
+    EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
+
+    EnhanceServiceManager::GetInstance().service_ = nullptr;
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(service));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillOnce(Return(reinterpret_cast<void*>(createFunc2)));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillOnce(Return(reinterpret_cast<void*>(destoryFunc)));
+    EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
+
+    EnhanceServiceManager::GetInstance().service_ = nullptr;
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(service));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillOnce(Return(reinterpret_cast<void*>(createFunc1)));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillOnce(Return(reinterpret_cast<void*>(destoryFunc)));
+    EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
+}
 }
