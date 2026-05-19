@@ -1899,6 +1899,8 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0300, testing::ext
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0300";
     try {
         extExtension->bundleName_ = BUNDLE_NAME;
+
+        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).Times(0);
         extExtension->ClearPublicTempFiles();
         
         EXPECT_TRUE(true);

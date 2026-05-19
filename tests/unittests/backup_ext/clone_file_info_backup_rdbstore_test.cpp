@@ -449,13 +449,13 @@ HWTEST_F(CloneFileInfoBackupRdbstoreTest,
         rdbStore->ExecuteSql(createTableSql);
         
         string insertSql1 = "INSERT INTO file_manager_file_info (path) VALUES ('/data/test/file1.pdf');";
-        string insertSql2 = "INSERT INTO file_manager_file_info (path) VALUES ('/data/test/file2.zip');";
+        string insertSql2 = "INSERT INTO file_manager_file_info (path) VALUES ('../../data/test/file2.zip');";
         rdbStore->ExecuteSql(insertSql1);
         rdbStore->ExecuteSql(insertSql2);
         
         vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(
             rdbStore.get(), "file_manager_file_info");
-        EXPECT_EQ(paths.size(), 2);
+        EXPECT_EQ(paths.size(), 1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-an exception occurred.";
