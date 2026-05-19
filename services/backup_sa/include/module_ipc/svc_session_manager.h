@@ -143,7 +143,7 @@ public:
      * @param bundleName 调用者名称
      * @return ErrCode 调用者不是会话所有者
      */
-    ErrCode VerifyBundleName(std::string &bundleName, bool isStrict = true);
+    ErrCode VerifyBundleName(const std::string &bundleName, bool isStrict = true);
 
     /**
      * @brief 获取IServiceReverse

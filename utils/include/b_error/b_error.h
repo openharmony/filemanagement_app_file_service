@@ -79,6 +79,7 @@ public:
         SA_SESSION_RUNNINGLOCK_CREATE_FAIL = 0x3009,
         SA_SESSION_RUNNINGLOCK_LOCK_FAIL = 0x3010,
         SA_SESSION_RUNNINGLOCK_UNLOCK_FAIL = 0x3011,
+        SA_ENHANCE_SERVICE_UNAVAILABLE = 0x3012,
 
         // 0x4000~0x4999 backup_SDK错误
         SDK_INVAL_ARG = 0x4000,
@@ -309,6 +310,7 @@ private:
         {Codes::SA_EXT_ERR_SAMGR, "SA Extension get samgr failed"},
         {Codes::SA_EXT_RELOAD_FAIL, "SA Extension reload failed"},
         {Codes::SA_SESSION_CONFLICT, "Session Conflict"},
+        {Codes::SA_ENHANCE_SERVICE_UNAVAILABLE, "SA failed to load enhance service"},
     };
 
     static inline const std::map<int, int> errCodeTable_ {
@@ -345,6 +347,7 @@ private:
         {static_cast<int>(Codes::SA_EXT_ERR_SAMGR), BackupErrorCode::E_IPCSS},
         {static_cast<int>(Codes::SA_EXT_RELOAD_FAIL), BackupErrorCode::E_BEF},
         {static_cast<int>(Codes::SA_SESSION_CONFLICT), BackupErrorCode::E_CONFLICT},
+        {static_cast<int>(Codes::SA_ENHANCE_SERVICE_UNAVAILABLE), BackupErrorCode::E_IO},
         {BackupErrorCode::E_IPCSS, BackupErrorCode::E_IPCSS},
         {BackupErrorCode::E_INVAL, BackupErrorCode::E_INVAL},
         {BackupErrorCode::E_NOTEXIST, BackupErrorCode::E_NOTEXIST},

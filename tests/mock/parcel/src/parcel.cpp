@@ -173,7 +173,7 @@ bool Parcel::WriteInt64(int64_t value)
     return isSuccess;
 }
 
-bool Parcel::WriteString(const string & value)
+bool Parcel::WriteString(const string &value)
 {
     bool isSuccess = g_mockWriteString;
     if (!easyMode_ && seqCurId < g_mockSpecialSeq.size()) {

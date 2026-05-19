@@ -26,9 +26,10 @@
 #include "b_json/b_json_service_disposal_config.h"
 #include "b_radar/radar_total_statistic.h"
 #include "b_radar/radar_app_statistic.h"
-#include "iservice_reverse.h"
 #include "b_radar/radar_runninglock_statistic.h"
+#include "ienhance_service.h"
 #include "iremote_stub.h"
+#include "iservice_reverse.h"
 #include "module_sched/sched_scheduler.h"
 #ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
@@ -801,6 +802,8 @@ private:
     ErrCode DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid, int &fd);
     ErrCode OpenIncrementalRpFile(const std::string &bundleName, const std::string &fileName);
     ErrCode MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path);
+    ErrCode ExecuteEnhanceServiceOperationWithAuth(
+        std::function<ErrCode(IEnhanceService *, const std::string &)> func);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

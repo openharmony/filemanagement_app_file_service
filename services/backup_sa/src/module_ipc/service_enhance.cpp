@@ -24,259 +24,162 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
-ErrCode Service::CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback)
+ErrCode Service::ExecuteEnhanceServiceOperationWithAuth(
+    std::function<ErrCode(IEnhanceService *, const std::string &)> func)
 {
     try {
         string callerName;
         ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
         if (ret != ERR_OK) {
-            HILOGE("CreateAncoBackupTask error, Get bundle name failed, ret:%{public}d", ret);
+            HILOGE("get bundle name failed, ret:%{public}d", ret);
             return ret;
         }
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
-            HILOGW("CreateAncoBackupTask, enhance service is not loaded");
+            HILOGE("enhance service is unavailable");
             return BError(BError::Codes::OK);
         }
-        return enhanceService->CreateAncoBackupTask(callerName, callback);
+        return func(enhanceService, callerName);
     } catch (const BError &e) {
         return e.GetCode();
     } catch (...) {
-        HILOGE("CreateAncoBackupTask, Unexpected exception");
-        return EPERM;
+        HILOGE("unexpected exception");
+        return EINVAL;
     }
+}
+
+ErrCode Service::CreateAncoBackupTask(const sptr<IAncoBackupCallback> &callback)
+{
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
+        return enhanceService->CreateAncoBackupTask(callerName, callback);
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("CreateAncoBackupTask error, ret:%{public}d", ret);
+    }
+    return ret;
 }
 
 ErrCode Service::DestroyAncoBackupTask()
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("DestroyAncoBackupTask error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("DestroyAncoBackupTask, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->DestroyAncoBackupTask(callerName);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("DestroyAncoBackupTask, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("DestroyAncoBackupTask error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::FilterAndSaveBackupPaths(
     std::set<std::string> &includes, std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes)
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("FilterAndSaveBackupPaths error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("FilterAndSaveBackupPaths, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->FilterAndSaveBackupPaths(callerName, includes, compatIncludes, excludes);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("FilterAndSaveBackupPaths, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("FilterAndSaveBackupPaths error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::StartAncoScanAllDirs(AncoScanResult &scanResult)
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("StartAncoScanAllDirs error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("StartAncoScanAllDirs, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->StartAncoScanAllDirs(callerName, scanResult);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("StartAncoScanAllDirs, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("StartAncoScanAllDirs error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::StartAncoPacket(uint64_t &smallFileCount)
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("StartAncoPacket error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("StartAncoPacket, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->StartAncoPacket(callerName, smallFileCount);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("StartAncoPacket, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("StartAncoPacket error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::CreateAncoRestoreTask(const sptr<IAncoRestoreCallback> &callback)
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("CreateAncoRestoreTask error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("CreateAncoRestoreTask, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->CreateAncoRestoreTask(callerName, callback);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("CreateAncoRestoreTask, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("CreateAncoRestoreTask error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::DestroyAncoRestoreTask()
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("DestroyAncoRestoreTask error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("DestroyAncoRestoreTask, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->DestroyAncoRestoreTask(callerName);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("DestroyAncoRestoreTask, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("DestroyAncoRestoreTask error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::AddAncoTars(const std::vector<string> &tarFiles, const std::vector<int64_t> &tarFileSizes,
     const std::vector<string> &tarFileNames)
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("AddAncoTars error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("AddAncoTars, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->AddAncoTars(callerName, tarFiles, tarFileSizes, tarFileNames);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("AddAncoTars, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("AddAncoTars error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::StartAncoUnPacket(const std::string &rootPath)
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("StartAncoUnPacket error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("StartAncoUnPacket, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->StartAncoUnPacket(callerName, rootPath);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("StartAncoUnPacket, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("StartAncoUnPacket error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
     const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("AddAncoMovePaths error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("AddAncoMovePaths, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->AddAncoMovePaths(callerName, ancoSourcePath, ancoTargetPath, ancoStats);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("AddAncoMovePaths, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("AddAncoMovePaths error, ret:%{public}d", ret);
     }
+    return ret;
 }
 
 ErrCode Service::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
 {
-    try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName, false);
-        if (ret != ERR_OK) {
-            HILOGE("StartAncoMove error, Get bundle name failed, ret:%{public}d", ret);
-            return ret;
-        }
-        auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
-        if (!enhanceService) {
-            HILOGW("StartAncoMove, enhance service is not loaded");
-            return BError(BError::Codes::OK);
-        }
+    auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
         return enhanceService->StartAncoMove(callerName, fd, ancoRestoreRes);
-    } catch (const BError &e) {
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("StartAncoMove, Unexpected exception");
-        return EPERM;
+    };
+    auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
+    if (ret != ERR_OK) {
+        HILOGE("StartAncoMove error, ret:%{public}d", ret);
     }
+    return ret;
 }
 }  // namespace OHOS::FileManagement::Backup

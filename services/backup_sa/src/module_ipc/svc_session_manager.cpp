@@ -146,7 +146,7 @@ ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, b
     return BError(BError::Codes::OK);
 }
 
-ErrCode SvcSessionManager::VerifyBundleName(string &bundleName, bool isStrict)
+ErrCode SvcSessionManager::VerifyBundleName(const string &bundleName, bool isStrict)
 {
     if (isStrict) {
         shared_lock<shared_mutex> lock(lock_);

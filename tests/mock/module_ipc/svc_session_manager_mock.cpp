@@ -56,7 +56,7 @@ ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &remoteInAction, b
     return BError(BError::Codes::OK);
 }
 
-ErrCode SvcSessionManager::VerifyBundleName(string &bundleName, bool isStrict)
+ErrCode SvcSessionManager::VerifyBundleName(const string &bundleName, bool isStrict)
 {
     GTEST_LOG_(INFO) << "VerifyBundleName " << bundleName << " " << isStrict;
     return BError(BError::Codes::OK);
