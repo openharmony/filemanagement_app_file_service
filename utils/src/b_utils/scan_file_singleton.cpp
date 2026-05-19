@@ -23,7 +23,7 @@ namespace OHOS::FileManagement::Backup {
 
 constexpr uint32_t MEGA_BYTE = 1048576; // 1M包含多少字节
 constexpr uint64_t TEN_GB = 10ULL * 1024 * MEGA_BYTE; // 10GB
-constexpr uint64_t EIGHT_GB = 8ULL * 1024 * MEGA_BYTE; // 8GB
+constexpr uint64_t NINE_GB = 9ULL * 1024 * MEGA_BYTE; // 9GB
 constexpr uint64_t ONE_HUNDRED_FIFTY_MB = 150ULL * MEGA_BYTE; // 150MB
 
 std::string FileInfo::GetRestorePath()
@@ -77,7 +77,7 @@ uint64_t ScanFileSingleton::GetMaxTarSize()
         if (freeSize < TEN_GB) { // 查询freeSize失败场景也按此分支处理
             maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
         } else {
-            maxTarSize_.store(freeSize - EIGHT_GB);
+            maxTarSize_.store(freeSize - NINE_GB);
         }
     });
     return maxTarSize_.load();
@@ -177,7 +177,7 @@ void ScanFileSingleton::AddSpecialTarFile(
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
     pendingFileQueue_.push(std::make_shared<SpecialFileInfo>(filename, filePath, sta, false, std::move(fd)));
     currentTarSize_.fetch_add(sta.st_size);
-    if (currentTarSize_.load() > GetMaxTarSize()) {
+    if (currentTarSize_.load() > maxTarSize_.load()) {
         HILOGW("meet max tar size, stop scan. tarSize=%{public}uM",
             static_cast<uint32_t>(currentTarSize_.load() / MEGA_BYTE));
         stopPacket_.store(true);
