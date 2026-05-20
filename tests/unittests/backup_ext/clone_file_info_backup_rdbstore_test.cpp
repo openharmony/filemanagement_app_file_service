@@ -452,8 +452,11 @@ HWTEST_F(CloneFileInfoBackupRdbstoreTest,
         string insertSql2 = "INSERT INTO file_manager_file_info (path) VALUES ('../../data/test/file2.zip');";
         rdbStore->ExecuteSql(insertSql1);
         rdbStore->ExecuteSql(insertSql2);
+
+        auto instance = CloneFileInfoBackupRdbstore::GetInstance(dbPath);
+        EXPECT_NE(instance, nullptr);
         
-        vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(
+        vector<string> paths = instance->QueryFromRdbStore(
             rdbStore.get(), "file_manager_file_info");
         EXPECT_EQ(paths.size(), 1);
     } catch (...) {
@@ -500,7 +503,7 @@ HWTEST_F(CloneFileInfoBackupRdbstoreTest,
         auto instance = CloneFileInfoBackupRdbstore::GetInstance(dbPath);
         EXPECT_NE(instance, nullptr);
         
-        vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(
+        vector<string> paths = instance->QueryFromRdbStore(
             rdbStore.get(), "file_manager_file_info");
         EXPECT_TRUE(paths.empty());
     } catch (...) {
@@ -527,7 +530,11 @@ HWTEST_F(CloneFileInfoBackupRdbstoreTest,
     GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-begin "
                       << "SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFromRdbStoreNullptr_0100";
     try {
-        vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(nullptr, "file_manager_file_info");
+        string dbPath = "";
+        auto instance = CloneFileInfoBackupRdbstore::GetInstance(dbPath);
+        EXPECT_NE(instance, nullptr);
+
+        vector<string> paths = instance->QueryFromRdbStore(nullptr, "file_manager_file_info");
         EXPECT_TRUE(paths.empty());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -557,7 +564,10 @@ HWTEST_F(CloneFileInfoBackupRdbstoreTest,
         auto rdbStore = NativeRdb::RdbHelper::GetRdbStore(config, 1, callback, errCode);
         ASSERT_NE(rdbStore, nullptr);
         
-        vector<string> paths = CloneFileInfoBackupRdbstore::QueryFromRdbStore(
+        auto instance = CloneFileInfoBackupRdbstore::GetInstance(dbPath);
+        EXPECT_NE(instance, nullptr);
+
+        vector<string> paths = instance->QueryFromRdbStore(
             rdbStore.get(), "non_exist_table");
         EXPECT_TRUE(paths.empty());
     } catch (...) {
