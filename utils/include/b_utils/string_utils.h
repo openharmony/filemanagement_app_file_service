@@ -36,7 +36,13 @@ public:
     static std::string GenHashName(const std::string &str);
 
     static bool IsSubdirectory(const std::string &parent, const std::string &child);
+    static bool IsPathPrefix(const std::string &path, const std::string &prefix);
     static bool IsSandboxAncoPath(const std::string &path);
+    
+    static bool IsPublicFilePath(const std::string &path);
+    static std::string ConvertMediaSandboxToPublic(const std::string &path);
+    static std::vector<std::string> ConvertMediaSandboxPaths(const std::vector<std::string> &paths);
+
     // 过滤paths中的anco路径，返回anco路径，paths中的anco路径会被剔除
     static std::set<std::string> FilterAncoPaths(std::set<std::string> &paths);
     static uint32_t CheckOverLongPath(const std::string &path);

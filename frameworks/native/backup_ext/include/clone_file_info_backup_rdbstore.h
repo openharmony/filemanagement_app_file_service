@@ -34,6 +34,8 @@ public:
     ~CloneFileInfoBackupRdbstore() = default;
     static CloneFileInfoBackupRdbstore* GetInstance(const std::string &dbPath);
     std::vector<std::string> QueryAncoMediaFile();
+    std::vector<std::string> QueryFileManagerFile();
+    std::vector<std::string> QueryFromRdbStore(NativeRdb::RdbStore* rdbStore, const std::string& tableName);
 
 private:
     CloneFileInfoBackupRdbstore(const std::string &dbPath);

@@ -442,6 +442,7 @@ private:
     void ScanAllDirsTask(const string &config);
     void AsyncDoBackup();
     void DoBackupTask();
+    void ClearPublicTempFiles();
 
     void HandleExtDisconnect(bool isAppResultReport, ErrCode errCode);
     bool HandleGetExtOnRelease();

@@ -243,6 +243,60 @@ HWTEST_F(StringUtilsTest, IS_SANBOX_ANCO_PATH_TEST_001, testing::ext::TestSize.L
 }
 
 /**
+* @tc.number: IS_PATH_PREFIX_TEST_001
+* @tc.name: IS_PATH_PREFIX_TEST_001
+* @tc.desc: Test function of IsPathPrefix
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, IS_PATH_PREFIX_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin IS_PATH_PREFIX_TEST_001";
+    // 传入path为空
+    EXPECT_FALSE(StringUtils::IsPathPrefix("", "/path/"));
+    // 传入prefix为空
+    EXPECT_FALSE(StringUtils::IsPathPrefix("/path/", ""));
+    // 传入字符串不以/开头
+    EXPECT_TRUE(StringUtils::IsPathPrefix("storage/Users/currentUser/", "/storage/Users/currentUser/"));
+    // path传入字符串不以/结尾
+    EXPECT_TRUE(StringUtils::IsPathPrefix("/storage/Users/currentUser", "/storage/Users/currentUser/"));
+    // 传入字符串都不以/结尾
+    EXPECT_TRUE(StringUtils::IsPathPrefix("/storage/Users/currentUser", "/storage/Users/currentUser"));
+    // 长度小于前缀
+    EXPECT_FALSE(StringUtils::IsPathPrefix("/storage/Users/", "/storage/Users/currentUser"));
+    // 前缀内容匹配
+    EXPECT_TRUE(StringUtils::IsPathPrefix("/storage/Users/currentUser/test/", "/storage/Users/currentUser"));
+    GTEST_LOG_(INFO) << "StringUtilsTest-end IS_PATH_PREFIX_TEST_001";
+}
+ 
+/**
+* @tc.number: CONVERT_MEDIA_SANDBOX_TEST_001
+* @tc.name: CONVERT_MEDIA_SANDBOX_TEST_001
+* @tc.desc: Test function of ConvertMediaSandboxToPublic
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, CONVERT_MEDIA_SANDBOX_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin CONVERT_MEDIA_SANDBOX_TEST_001";
+    // 传入path为空
+    EXPECT_EQ(StringUtils::ConvertMediaSandboxToPublic(""), "");
+    // 传入path不为媒体沙箱
+    EXPECT_EQ(StringUtils::ConvertMediaSandboxToPublic("/storage/Users/currentUser"), "/storage/Users/currentUser");
+    // 传入path为媒体沙箱
+    EXPECT_EQ(StringUtils::ConvertMediaSandboxToPublic("/storage/media/local/files/Docs/test.txt"),
+        "/storage/Users/currentUser/test.txt");
+    // 传入path为媒体沙箱
+    EXPECT_EQ(StringUtils::ConvertMediaSandboxToPublic("/storage/media/local/files/Docs/test/test.txt"),
+        "/storage/Users/currentUser/test/test.txt");
+    GTEST_LOG_(INFO) << "StringUtilsTest-end CONVERT_MEDIA_SANDBOX_TEST_001";
+}
+
+/**
 * @tc.number: FILTER_ANCO_PATHS_TEST_001
 * @tc.name: FILTER_ANCO_PATHS_TEST_001
 * @tc.desc: Test function of FilterAncoPaths with mixed paths

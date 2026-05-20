@@ -109,11 +109,53 @@ bool StringUtils::IsSubdirectory(const std::string &parent, const std::string &c
     return newChild.size() >= newParent.size() && newChild.substr(0, newParent.size()) == newParent;
 }
 
+bool StringUtils::IsPathPrefix(const std::string &path, const std::string &prefix)
+{
+    if (path.empty() || prefix.empty()) {
+        return false;
+    }
+    std::string modifiedPath = path;
+    if (path.front() != '/') {
+        modifiedPath = "/" + modifiedPath;
+    }
+    if (prefix.back() == '/' && modifiedPath.back() != '/') {
+        modifiedPath = modifiedPath + '/';
+    }
+    if (modifiedPath.length() < prefix.length()) {
+        return false;
+    }
+    return modifiedPath.compare(0, prefix.length(), prefix) == 0;
+}
+
+std::string StringUtils::ConvertMediaSandboxToPublic(const std::string &path)
+{
+    const auto mediaPublicSandboxPath = BConstants::PATH_MEDIALDATA_FILEMANAGER_PUBLIC_HOME;
+    if (IsPathPrefix(path, std::string(mediaPublicSandboxPath))) {
+        return BConstants::PATH_PUBLIC_HOME + path.substr(mediaPublicSandboxPath.size());
+    }
+    return path;
+}
+ 
+std::vector<std::string> StringUtils::ConvertMediaSandboxPaths(const std::vector<std::string> &paths)
+{
+    std::vector<std::string> publicPaths;
+    for (const auto &path : paths) {
+        publicPaths.push_back(ConvertMediaSandboxToPublic(path));
+    }
+    return publicPaths;
+}
+
 bool StringUtils::IsSandboxAncoPath(const std::string &path)
 {
     const auto sbAncoPath = BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR;
     return IsSubdirectory(sbAncoPath, path) ||
         IsSubdirectory(std::string(BConstants::PATH_MEDIALDATA_HOME_ANCO), path);
+}
+
+bool StringUtils::IsPublicFilePath(const std::string &path)
+{
+    const auto publicFilePath = BConstants::PATH_PUBLIC_HOME;
+    return IsPathPrefix(path, publicFilePath);
 }
 
 std::set<std::string> StringUtils::FilterAncoPaths(std::set<std::string> &paths)
