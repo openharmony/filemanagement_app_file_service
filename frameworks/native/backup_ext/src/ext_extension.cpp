@@ -458,7 +458,7 @@ static string GetMigrateFullPath(const string &bundleName, const string &fileNam
     string path = GetRestoreTempPath(bundleName);
     string restoreTag(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     auto pos = fileName.find(restoreTag);
-    string suffix = (pos != string::npos) ? fileName.substr(pos + restoreTag.length()) : fileName;
+    string suffix = (pos != string::npos) ? fileName.substr(pos + restoreTag.length()) : "";
     return suffix.empty() ? path : path + suffix;
 }
 

@@ -1989,7 +1989,7 @@ ErrCode Service::DoEnhanceMove(const std::string &srcFile, const std::string &de
         return BError(BError::Codes::SA_INVAL_ARG, "enhance service is not loaded").GetCode();
     }
 
-    FileBackupParam param;
+    FileBackupParam param = {};
     if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), srcFile.c_str(), srcFile.length()) != EOK ||
         strncpy_s(param.dstFilePath, sizeof(param.dstFilePath), destFile.c_str(), destFile.length()) != EOK ||
         snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
@@ -1999,11 +1999,7 @@ ErrCode Service::DoEnhanceMove(const std::string &srcFile, const std::string &de
     }
 
     std::vector<FileBackupParam> fileInfos = {param};
-    FileBackupResultMsg resultMsg;
-    if (memset_s(&resultMsg, sizeof(resultMsg), 0, sizeof(resultMsg)) != EOK) {
-        HILOGE("memset_s resultMsg failed");
-        return BError(BError::Codes::SA_INVAL_ARG, "memset_s resultMsg failed").GetCode();
-    }
+    FileBackupResultMsg resultMsg = {};
     int32_t moveRet = ERR_OK;
     if (isDir) {
         moveRet = enhanceService->MoveDirectory(fileInfos, resultMsg);
@@ -2136,7 +2132,7 @@ ErrCode Service::DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid
         return BError(BError::Codes::SA_INVAL_ARG, "enhance service is not loaded").GetCode();
     }
 
-    FileBackupParam param;
+    FileBackupParam param = {};
     if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), filePath.c_str(), filePath.length()) != EOK ||
         snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
         snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%d", gid) < 0) {
@@ -2145,11 +2141,7 @@ ErrCode Service::DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid
     }
 
     std::vector<FileBackupParam> fileInfos = {param};
-    FileBackupResultMsg resultMsg;
-    if (memset_s(&resultMsg, sizeof(resultMsg), 0, sizeof(resultMsg)) != EOK) {
-        HILOGE("memset_s resultMsg failed");
-        return BError(BError::Codes::SA_INVAL_ARG, "memset_s resultMsg failed").GetCode();
-    }
+    FileBackupResultMsg resultMsg = {};
 
     int32_t openRet = enhanceService->GetApkFileHandle(fileInfos, resultMsg);
     if (openRet != ERR_OK) {
