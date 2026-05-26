@@ -733,12 +733,6 @@ napi_value GrantDecUriPermission(napi_env env, FileManagement::LibN::NFuncArg &f
 
 napi_value GrantSharedDirectoryPermission(napi_env env, napi_callback_info info)
 {
-    if (!IsSystemApp()) {
-        LOGE("FileShare::GrantSharedDirectoryPermission is not System App!");
-        NError(E_PERMISSION_SYS).ThrowErr(env);
-        return nullptr;
-    }
-
     LOGI("GrantSharedDirectoryPermission called via NAPI");
 
     NFuncArg funcArg(env, info);
@@ -765,12 +759,6 @@ napi_value GrantSharedDirectoryPermission(napi_env env, napi_callback_info info)
 
 napi_value RevokeSharedDirectoryPermission(napi_env env, napi_callback_info info)
 {
-    if (!IsSystemApp()) {
-        LOGE("FileShare::RevokeSharedDirectoryPermission is not System App!");
-        NError(E_PERMISSION_SYS).ThrowErr(env);
-        return nullptr;
-    }
-
     LOGI("RevokeSharedDirectoryPermission called via NAPI");
 
     NFuncArg funcArg(env, info);
@@ -797,12 +785,6 @@ napi_value RevokeSharedDirectoryPermission(napi_env env, napi_callback_info info
 
 napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info)
 {
-    if (!IsSystemApp()) {
-        LOGE("FileShare::GetSharedDirectoryInfo is not System App!");
-        NError(E_PERMISSION_SYS).ThrowErr(env);
-        return nullptr;
-    }
-
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(0)) {
         LOGE("GetSharedDirectoryInfo Number of arguments unmatched");
