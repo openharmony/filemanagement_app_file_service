@@ -16,147 +16,17 @@
 #ifndef OHOS_FILEMGMT_BACKUP_SCAN_FILE_SINGLETON_H
 #define OHOS_FILEMGMT_BACKUP_SCAN_FILE_SINGLETON_H
 
-#include <atomic>
-#include <map>
-#include <memory>
-#include <mutex>
-#include <queue>
-#include <shared_mutex>
-#include <string>
-#include <sys/stat.h>
-#include <unique_fd.h>
-#include <unordered_set>
-#include <utility>
-#include <vector>
+#include "b_utils/scan_result_manager.h"
 
-#include "b_radar/radar_app_statistic.h"
- 
 namespace OHOS::FileManagement::Backup {
-class IFileInfo {
-public:
-    virtual ~IFileInfo() {};
-    virtual std::string GetRestorePath() = 0;
-    IFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile,
-        bool isAncoFile)
-        : filename_(filename), filePath_(filePath), sta_(sta), isBigFile_(isBigFile), isAncoFile_(isAncoFile) {};
-    std::string filename_ = "";
-    std::string filePath_ = "";
-    struct stat sta_;
-    bool isBigFile_ = false;
-    bool isAncoFile_ = false;
-};
 
-struct FileInfo : public IFileInfo {
-    FileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile)
-        : IFileInfo(filename, filePath, sta, isBigFile, false) {};
-    std::string GetRestorePath() override;
-};
-
-struct CompatibleFileInfo : public IFileInfo {
-    CompatibleFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile,
-        const std::string& restorePath) : IFileInfo(filename, filePath, sta, isBigFile, false),
-        restorePath_(restorePath) {};
-    std::string GetRestorePath() override;
-    std::string restorePath_ = "";
-};
-struct AncoFileInfo : public IFileInfo {
-    AncoFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile)
-        : IFileInfo(filename, filePath, sta, isBigFile, true) {};
-    std::string GetRestorePath() override;
-};
-
-struct SpecialFileInfo : public IFileInfo {
-    SpecialFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta, bool isBigFile,
-        UniqueFd fd) : IFileInfo(filename, filePath, sta, isBigFile, true), fd_(std::move(fd)) {};
-    UniqueFd fd_;
-    std::string restorePath_ = "";
-    int GetFd();
-    std::string GetRestorePath() override;
-};
-
-struct AncoCompatibleFileInfo : public IFileInfo {
-    AncoCompatibleFileInfo(const std::string& filename, const std::string& filePath, const struct stat& sta,
-    bool isBigFile, const std::string& restorePath) : IFileInfo(filename, filePath, sta, isBigFile, true),
-        restorePath_(restorePath) {};
-    std::string GetRestorePath() override;
-    std::string restorePath_ = "";
-};
-
-class ISmallFileInfo {
-public:
-    virtual ~ISmallFileInfo() {};
-    ISmallFileInfo(const std::string& filePath, size_t fileSize) : filePath_(filePath), fileSize_(fileSize) {};
-    virtual std::string GetRestorePath() = 0;
-    std::string filePath_ = "";
-    size_t fileSize_ = 0;
-};
-
-struct SmallFileInfo : public ISmallFileInfo {
-    std::string GetRestorePath() override;
-    SmallFileInfo(const std::string& filePath, size_t fileSize) : ISmallFileInfo(filePath, fileSize) {};
-};
-
-struct CompatibleSmallFileInfo : public ISmallFileInfo {
-    std::string GetRestorePath() override;
-    CompatibleSmallFileInfo(const std::string& filePath, size_t fileSize, const std::string& restorePath)
-        : ISmallFileInfo(filePath, fileSize), restorePath_(restorePath) {};
-    std::string restorePath_ = "";
-};
-
-class ScanFileSingleton {
+class ScanFileSingleton : public ScanResultManager {
 public:
     static ScanFileSingleton &GetInstance();
 
-    std::vector<std::shared_ptr<IFileInfo>> GetAllFiles();
-    void AddSpecialBigFile(const std::string &filePath, const std::string &restorePath,
-        const struct stat &sta, UniqueFd &fd);
-    void AddSpecialTarFile(const std::string &filename, const std::string &filePath,
-        const struct stat &sta, UniqueFd &fd);
-    void AddSpecialSmallFile(const std::string &filePath, size_t fileSize,
-        const std::string &restorePath);
-    void AddAllFile(std::shared_ptr<IFileInfo> &fileInfo);
-
-    void AddBigFile(const std::string& filePath, const struct stat& sta, const std::string& restorePath = "");
-    void AddTarFile(const std::string& filename, const std::string& filePath, const struct stat& sta);
-    void AddAncoBigFile(const std::string &filePath, const std::string &restorePath, const struct stat &sta);
-    void AddAncoTarFile(const std::string &filename, const std::string &filePath, const struct stat &sta);
-    std::shared_ptr<IFileInfo> GetFileInfo();
-    bool HasFileReady();
-
-    void AddSmallFile(const std::string& filePath, size_t fileSize, const std::string& restorePath = "");
-    std::vector<std::shared_ptr<ISmallFileInfo>> GetAllSmallFiles();
-
-    bool IsProcessCompleted();
-
-    void SetCompletedFlag(bool value);
-
-    // 条件等待，等待文件被添加或者扫描完成
-    void WaitForFiles();
-
-    void StartPacket();
-    void WaitForPacketFlag();
 private:
-    // 私有构造函数，防止外部实例化
-    ScanFileSingleton() {}
-    ~ScanFileSingleton() {};
-    uint64_t GetMaxTarSize();
-
-    std::mutex pendingFileMutex_;
-    std::queue<std::shared_ptr<IFileInfo>> pendingFileQueue_;
-    std::unordered_set<std::string> hashNameSet_;
-    std::mutex smallFileMutex_;
-    std::vector<std::shared_ptr<ISmallFileInfo>> smallFiles_;
-    std::vector<std::shared_ptr<IFileInfo>> allFiles_;
-    std::mutex mutexLock_;
-    std::condition_variable waitFilesReady_;
-    std::atomic<bool> isProcessCompleted_ = false;
-    std::atomic<uint64_t> currentTarSize_ = 0;
-    std::atomic<uint64_t> maxTarSize_ = 0;
-    std::atomic<bool> stopPacket_ = false;
-    std::atomic<bool> isFirstAddTarFile_ = true;
-    std::mutex mutexPacket_;
-    std::condition_variable waitPacketFlag_;
-    std::mutex allFileMutex_;
+    ScanFileSingleton() = default;
+    ~ScanFileSingleton() = default;
 };
-} // namespace OHOS::FileManagement::ScanFileSingleton
+} // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SCAN_FILE_SINGLETON_H

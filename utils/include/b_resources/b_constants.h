@@ -83,6 +83,8 @@ constexpr char FILE_SEPARATOR_CHAR = '/';
 // 分片打包常量
 const uint64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
 const uint32_t MAX_FILE_COUNT = 6000; // 单个tar包最多包含6000个文件
+const uint64_t DEFAULT_APP_SLICE_SIZE = 50 * 1024 * 1024; // default打包大小为50M
+const uint32_t MAX_DEFAULT_APP_FILE_COUNT = 400; // 单个default tar包最多包含400个文件
 const int FILE_AND_MANIFEST_FD_COUNT = 2; // 每组文件和简报数量统计
 
 constexpr int DEFAULT_VFS_CACHE_PRESSURE = 100; // 默认内存回收参数

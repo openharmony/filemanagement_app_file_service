@@ -14,11 +14,10 @@
  */
 
 #include "module_external/bms_adapter.h"
-#include "module_service_manager/service_manager.h"
 #include "module_notify/notify_work_service.h"
 #include "module_strategy/service_strategy.h"
 #include "hitrace_meter.h"
-
+#include "module_ipc/service.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_ipc/svc_restore_deps_manager.h"
 
@@ -153,6 +152,15 @@ std::vector<std::string> Service::GetSupportBundleNamesRestore(const vector<Bund
     return supportNames;
 }
 
+void Service::CallStartDefaultBundleTask(const std::string &bundleName, IServiceReverseType::Scenario &scenario)
+{
+    if (scenario == IServiceReverseType::Scenario::BACKUP) {
+        StartBundleTaskBackup(bundleName);
+    } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
+        StartBundleTaskRestore(bundleName);
+    }
+}
+
 void Service::StartBundleTaskRestore(const std::string &bundleName)
 {
     auto scenario = IServiceReverseType::Scenario::RESTORE;
@@ -186,8 +194,9 @@ ErrCode Service::SendDefaultIncrementalFileHandle(const std::string &bundleName,
         }
         return BError(BError::Codes::EXT_INVAL_ARG);
     }
-    if (MigrateModuleInit(wptr<Service>(this), bundleName, GetUserIdDefault())) {
-        auto ret = migrate_->GetIncrementalFileHandle(fileName, fd, reportFd, errCode);
+    auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
+    if (instance != nullptr) {
+        auto ret = instance->GetIncrementalFileHandle(fileName, fd, reportFd, errCode);
         if (ret != ERR_OK) {
             HILOGE("Failed to get file handle, err = %{public}d", errCode);
             return BError(BError::Codes::EXT_INVAL_ARG);
@@ -219,8 +228,9 @@ ErrCode Service::PublishDefaultIncrementalFile(const BFileInfo &fileInfo)
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     session_->SetPublishFlag(fileInfo.owner);
-    if (MigrateModuleInit(wptr<Service>(this), fileInfo.owner, GetUserIdDefault())) {
-        ret = migrate_->PublishIncrementalFile(fileInfo.fileName);
+    auto instance = GetMigrateInstance(wptr<Service>(this), fileInfo.owner, GetUserIdDefault());
+    if (instance != nullptr) {
+        ret = instance->PublishIncrementalFile(fileInfo.fileName);
     }
     if (ret != ERR_OK) {
         HILOGE("Failed to publish file for backup extension, bundleName:%{public}s", fileInfo.owner.c_str());
