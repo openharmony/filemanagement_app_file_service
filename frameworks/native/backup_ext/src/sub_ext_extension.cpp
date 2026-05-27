@@ -1992,10 +1992,8 @@ void BackupExtExtension::ClearPublicTempFiles()
         return;
     }
     std::string tempPath = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)
-        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE).append(BConstants::PATH_PUBLIC_HOME);
+        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE).append(BConstants::PATH_PUBLIC_HOME_NO_SLASH);
     bool result = ForceRemoveDirectoryBMS(tempPath);
-    if (!result) {
-        HILOGE("Failed to remove filemaneger public temp directory");
-    }
+    BDir::ClearDirectory(tempPath);
 }
 } // namespace OHOS::FileManagement::Backup

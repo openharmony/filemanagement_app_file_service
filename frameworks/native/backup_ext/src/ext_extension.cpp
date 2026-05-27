@@ -1719,7 +1719,6 @@ void BackupExtExtension::AsyncTaskIncreRestoreSpecialVersion()
 void BackupExtExtension::AsyncTaskRestoreForUpgrade()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    ClearPublicTempFiles();
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
@@ -1775,6 +1774,7 @@ void BackupExtExtension::ExtClear()
 
 void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
 {
+    ClearPublicTempFiles();
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
