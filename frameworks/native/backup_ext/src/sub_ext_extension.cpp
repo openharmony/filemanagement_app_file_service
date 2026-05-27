@@ -1993,7 +1993,6 @@ void BackupExtExtension::ClearPublicTempFiles()
     }
     std::string tempPath = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)
         .append(BConstants::SA_BUNDLE_BACKUP_RESTORE).append(BConstants::PATH_PUBLIC_HOME_NO_SLASH);
-    bool result = ForceRemoveDirectoryBMS(tempPath);
     BDir::ClearDirectory(tempPath);
 }
 } // namespace OHOS::FileManagement::Backup
