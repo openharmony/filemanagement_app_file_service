@@ -31,6 +31,7 @@
 #include "iremote_stub.h"
 #include "iservice_reverse.h"
 #include "module_sched/sched_scheduler.h"
+#include "module_migrate_manager/migrate_manager.h"
 #ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
 #include "running_lock.h"
@@ -41,6 +42,7 @@
 #include "thread_pool.h"
 
 namespace OHOS::FileManagement::Backup {
+using namespace std;
 using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
 typedef int (*CallDeviceTaskRequest)(int, unsigned int, unsigned int, CallbackFunc);
 
@@ -93,9 +95,28 @@ public:
     ErrCode GetLocalCapabilitiesForBundleInfos(int& fd) override;
     ErrCode PublishFile(const BFileInfo &fileInfo) override;
     ErrCode AppFileReady(const std::string &fileName, int fd, int32_t errCode) override;
+    ErrCode DefaultAppFileReady(const std::string &fileName,
+        const std::string &filePath, int fd, int32_t errCode);
+    ErrCode DefaultAppFileReady(const std::string &fileName,
+        const std::string &filePath, UniqueFd fd, int32_t errCode);
     ErrCode AppFileReadyWithoutFd(const std::string &fileName, int32_t errCode) override;
+    ErrCode DefaultAppFileReadyWithoutFd(const std::string &fileName, const std::string &filePath, int32_t errCode);
+    ErrCode AppFileReadyWithoutFd(const std::string &fileName, const std::string &filePath,
+        UniqueFd fd, int32_t errCode);
+    std::vector<std::string> CallGetSupportBundleNames(const vector<BundleName> &bundleNames,
+        vector<BJsonEntityCaps::BundleInfo> &bundleInfos, BizScene &scene, UniqueFd fd);
+    ErrCode CallSetSessProperties(const vector<BundleName> &bundleNames,
+        vector<BJsonEntityCaps::BundleInfo> &bundleInfos, BizScene &scene);
+    ErrCode CallSetSessPropertiesWithDetail(
+        const vector<BundleName> &bundleNames,
+        vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+        std::map<std::string, bool> &isClearDataFlags,
+        BizScene &scene);
+    
     ErrCode AppAncoFileReady(const std::string &fileName, const std::string &filePath, bool needDelete) override;
     ErrCode AppDone(ErrCode errCode) override;
+    ErrCode AppDone(ErrCode errCode, const std::string &bundleName);
     ErrCode ServiceResultReport(const std::string& restoreRetInfo,
         BackupRestoreScenario sennario, ErrCode errCode) override;
     ErrCode GetFileHandle(const std::string &bundleName, const std::string &fileName) override;
@@ -124,6 +145,7 @@ public:
     ErrCode AppendBundlesIncrementalBackupSessionWithBundleInfos(const std::vector<BIncrementalData>& bundlesToBackup,
                                                                  const std::vector<std::string>& bundleInfos) override;
     ErrCode PublishIncrementalFile(const BFileInfo &fileInfo) override;
+    ErrCode PublishDefaultIncrementalFile(const BFileInfo &fileInfo);
     ErrCode PublishSAIncrementalFile(const BFileInfo& fileInfo, int fd) override;
     ErrCode PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd);
     ErrCode AppIncrementalFileReady(const std::string& fileName, int fd, int manifestFd,
@@ -385,6 +407,90 @@ public:
     void RemoveExtOnRelease(const BundleName &bundleName);
     void ClearAndNoticeClient(const std::string &bundleName, ErrCode errCode, bool checkRestoreEnd = true);
     void DoNoticeClientFinish(const std::string &bundleName, ErrCode errCode, bool isRestoreEnd);
+// default clone
+    ErrCode SendDefaultIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
+    void SetDefaultBundleName(const std::vector<std::string> &bundleNames, bool result);
+    void CallStartDefaultBundleTask(const std::string &bundleName, IServiceReverseType::Scenario &scenario);
+    void StartBundleTaskBackup(const std::string &bundleName);
+    void StartBundleTaskRestore(const std::string &bundleName);
+    std::vector<std::string> GetSupportBundleNamesBackup(const vector<BundleName> &bundleNames,
+        std::vector<BJsonEntityCaps::BundleInfo> &backupInfos);
+    std::vector<std::string> GetSupportBundleNamesRestore(const vector<BundleName> &bundleNames,
+        std::vector<BJsonEntityCaps::BundleInfo> &restoreInfos, UniqueFd fd);
+    ErrCode SetSessPropertiesBackup(const vector<BundleName> &bundleNames,
+        vector<BJsonEntityCaps::BundleInfo> &bundleInfos);
+    ErrCode SetSessPropertiesRestore(const vector<BundleName> &bundleNames,
+        vector<BJsonEntityCaps::BundleInfo> &bundleInfos);
+    ErrCode SetSessPropertiesWithDetailBackup(
+        const vector<BundleName> &bundleNames,
+        vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+        std::map<std::string, bool> &isClearDataFlags);
+    ErrCode SetSessPropertiesWithDetailRestore(
+        const vector<BundleName> &bundleNames,
+        vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
+        std::map<std::string, bool> &isClearDataFlags);
+    sptr<MigrateManager> GetMigrateInstance(wptr<Service> servicePtr,
+        const std::string &bundleName, int32_t userId);
+    bool GetDefaultBundleResult(const vector<string> &bundleNames);
+    bool GetDefaultBundleResult(const string &bundleName);
+    void SetDefaultApps(const vector<string> &bundleNames,
+        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> detailMap);
+    ErrCode InitSession(const sptr<IServiceReverse> &remote, IServiceReverseType::Scenario &scenario,
+        BizScene &scene);
+    ErrCode InitSessionWithErrMsg(const sptr<IServiceReverse>& remote, IServiceReverseType::Scenario &scenario,
+        BizScene &scene, int32_t &errCodeForMsg, std::string& errMsg);
+    ErrCode AppendBundlesSession(const std::vector<BundleName> &bundleNames, BizScene &scene,
+        UniqueFd fd = UniqueFd(BConstants::INVALID_FD_NUM));
+    ErrCode AppendBundlesSessionWithDetail(const std::vector<BundleName> &bundleNames,
+        const std::vector<std::string> &detailInfos,
+        BizScene &scene,
+        UniqueFd fd = UniqueFd(BConstants::INVALID_FD_NUM));
+public:
+    /**
+     * @brief 验证调用者并返回名称
+     *
+     * @return ErrCode
+     */
+    ErrCode VerifyCallerAndGetCallerName(std::string &bundleName, bool isStrict = true);
+
+    /**
+     * @brief 清除Session Sched相关资源
+     *
+     * @param bundleName 应用名称
+     */
+    void ClearSessionAndSchedInfo(const std::string &bundleName);
+
+    /**
+     * @brief 整个备份恢复流程结束
+     *
+     * @param errCode 错误码
+     */
+    void OnAllBundlesFinished(ErrCode errCode);
+
+    /**
+     * @brief 执行通知调用方
+     *
+     * @param errCode 错误码
+     * @param callerName 业务调用方
+     *
+     */
+    void NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerName);
+
+    /**
+     * @brief 执行通知调用方
+     *
+     * @param errCode 错误码
+     * @param callerName 业务调用方
+     *
+     */
+    void NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName);
+
+    void ReleaseOnException();
+    void SetBroadCastInfoMap(const std::string &bundleName,
+        const std::map<std::string, std::string> &broadCastInfoMap, int userId);
+    void BroadCastRestore(const std::string &bundleName, const std::string &broadCastType);
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
@@ -435,27 +541,6 @@ private:
      * @param scenario Scenario状态
      */
     ErrCode VerifyCaller(IServiceReverseType::Scenario scenario);
-
-    /**
-     * @brief 验证调用者并返回名称
-     *
-     * @return ErrCode
-     */
-    ErrCode VerifyCallerAndGetCallerName(std::string &bundleName, bool isStrict = true);
-
-    /**
-     * @brief 清除Session Sched相关资源
-     *
-     * @param bundleName 应用名称
-     */
-    void ClearSessionAndSchedInfo(const std::string &bundleName);
-
-    /**
-     * @brief 整个备份恢复流程结束
-     *
-     * @param errCode 错误码
-     */
-    void OnAllBundlesFinished(ErrCode errCode);
 
     /**
      * @brief 执行调度器
@@ -580,24 +665,6 @@ private:
     */
     ErrCode IncrementalBackupSA(std::string bundleName);
 
-    /**
-     * @brief 执行通知调用方
-     *
-     * @param errCode 错误码
-     * @param callerName 业务调用方
-     *
-     */
-    void NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerName);
-
-    /**
-     * @brief 执行通知调用方
-     *
-     * @param errCode 错误码
-     * @param callerName 业务调用方
-     *
-     */
-    void NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string &callerName);
-
     void SetWant(AAFwk::Want &want, const BundleName &bundleName, const BConstants::ExtensionAction &action);
 
     /**
@@ -636,8 +703,6 @@ private:
 
     void ReportOnExtConnectFailed(const IServiceReverseType::Scenario scenario,
         const std::string &bundleName, const ErrCode ret);
-
-    void ReleaseOnException();
 
     vector<BIncrementalData> MakeDetailList(const vector<BundleName> &bundleNames);
 
@@ -692,7 +757,7 @@ private:
     void GetOldDeviceBackupVersion();
 
     std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
-        bool isIncBackup, const vector<std::string> &srcBundleNames);
+        bool isIncBackup, const vector<std::string> &srcBundleNames, bool isDefaultApp = false);
 
     void RefreshBundleDataSize(const vector<BJsonEntityCaps::BundleInfo> &newBundleInfos,
         std::string bundleName, wptr<Service> ptr);
@@ -710,6 +775,8 @@ private:
     void SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId);
 
     ErrCode VerifySendRateParam();
+    ErrCode UpdateDefaultAppSendRate(const std::string &bundleName, int32_t sendRate, bool &result);
+    ErrCode UpdateNormalAppSendRate(const std::string &bundleName, int32_t sendRate, bool &result);
 
     ErrCode HandleCurBundleFileReady(const std::string &bundleName, const std::string &fileName, bool isIncBackup);
 
@@ -771,10 +838,6 @@ private:
     void SetBundleParam(const BJsonEntityCaps::BundleInfo &restoreInfo, std::string &bundleNameIndexInfo,
         RestoreTypeEnum &restoreType);
     void ClearRecord();
-    void SetBroadCastInfoMap(const std::string &bundleName,
-                             const std::map<std::string, std::string> &broadCastInfoMap,
-                             int userId);
-    void BroadCastRestore(const std::string &bundleName, const std::string &broadCastType);
     void BroadCastSingle(const std::string &bundleName, const std::string &broadCastType);
 
     void TotalStatStart(BizScene bizScene, std::string caller, uint64_t startTime, Mode mode = Mode::FULL);
@@ -802,6 +865,7 @@ private:
     ErrCode DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid, int &fd);
     ErrCode OpenIncrementalRpFile(const std::string &bundleName, const std::string &fileName);
     ErrCode MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path);
+    void NotifyMigrateResult(int32_t errCode, const std::string &bundleName);
     ErrCode ExecuteEnhanceServiceOperationWithAuth(
         std::function<ErrCode(IEnhanceService *, const std::string &)> func);
 private:
@@ -815,7 +879,6 @@ private:
     std::atomic<bool> isOccupyingSession_ {false};
     std::atomic<int> isCreatingIncreaseFile_ {0};
 
-    sptr<SvcSessionManager> session_;
     sptr<SchedScheduler> sched_;
     std::shared_ptr<BJsonDisposalConfig> disposal_;
     std::shared_ptr<BJsonClearDataConfig> clearRecorder_;
@@ -843,7 +906,6 @@ private:
     std::shared_ptr<RadarTotalStatistic> totalStatistic_ = nullptr;
     std::shared_mutex statMapMutex_;
     std::map<std::string, std::shared_ptr<RadarAppStatistic>> saStatisticMap_;
-    std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
     std::map<std::string, BundleBroadCastInfo> bundleBroadCastInfoMap_;
     std::shared_mutex extOnReleaseLock_;
 #ifdef POWER_MANAGER_ENABLED
@@ -852,7 +914,6 @@ private:
     std::shared_ptr<RadarRunningLockStatistic> runningLockStatistic_ = nullptr;
 #endif
 public:
-    bool isIncBackup_ = false;
     std::map<BundleName, std::shared_ptr<ExtensionMutexInfo>> backupExtMutexMap_;
     std::map<BundleName, BundleTaskInfo> failedBundles_;
     std::atomic<uint32_t> successBundlesNum_ {0};
@@ -863,9 +924,15 @@ public:
     std::shared_ptr<GcProgressInfo> gcProgress_ = nullptr;
     std::atomic<bool> isGcTaskDone_ = {false};
     std::mutex getLocalLock_;
+
+    bool isIncBackup_ = false;
+    sptr<SvcSessionManager> session_;
+    std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
     std::map<std::string, bool> defaultBundleMap_ = {};
+    std::map<std::string, sptr<MigrateManager>> migrateMap_ = {};
+    std::mutex migrateInstanceLock_;
     RestoreTypeEnum restoreType_;
-    int restoreInfoFd_ = BConstants::INVALID_FD_NUM;
+    std::string oldBackupVersion_ = "";
 };
 } // namespace OHOS::FileManagement::Backup
 

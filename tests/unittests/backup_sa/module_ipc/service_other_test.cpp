@@ -63,6 +63,11 @@ ErrCode Service::AppIncrementalFileReady(const std::string &fileName, int fd,
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::AppIncrementalFileReadyWithoutFd(const std::string &fileName, int32_t appIncrementalFileReadyErrCode)
 {
     return BError(BError::Codes::OK);
@@ -1250,14 +1255,14 @@ HWTEST_F(ServiceTest, SUB_Service_PublishFile_0100, TestSize.Level1)
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
         auto ret = service->PublishFile(fileInfo);
         EXPECT_NE(ret, BError(BError::Codes::OK));
 
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
         ret = service->PublishFile(fileInfo);

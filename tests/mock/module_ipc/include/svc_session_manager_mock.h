@@ -30,6 +30,7 @@ public:
     virtual std::string GetSessionCallerName() = 0;
     virtual std::string GetSessionActiveTime() = 0;
     virtual bool OnBundleFileReady(const std::string&, const std::string&) = 0;
+    virtual bool SetTimeoutValue(const std::string &, uint32_t) = 0;
     virtual UniqueFd OnBundleExtManageInfo(const std::string&, UniqueFd) = 0;
     virtual wptr<SvcBackupConnection> GetExtConnection(const BundleName&) = 0;
     virtual std::weak_ptr<SABackupConnection> GetSAExtConnection(const BundleName&) = 0;
@@ -88,6 +89,7 @@ public:
     MOCK_METHOD(std::string, GetSessionCallerName, ());
     MOCK_METHOD(std::string, GetSessionActiveTime, ());
     MOCK_METHOD(bool, OnBundleFileReady, (const std::string&, const std::string&));
+    MOCK_METHOD(bool, SetTimeoutValue, (const std::string &, uint32_t));
     MOCK_METHOD(UniqueFd, OnBundleExtManageInfo, (const std::string&, UniqueFd));
     MOCK_METHOD((wptr<SvcBackupConnection>), GetExtConnection, (const BundleName&));
     MOCK_METHOD((std::weak_ptr<SABackupConnection>), GetSAExtConnection, (const BundleName&));

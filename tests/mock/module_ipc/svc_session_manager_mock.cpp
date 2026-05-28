@@ -86,6 +86,11 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
     return false;
 }
 
+bool SvcSessionManager::SetTimeoutValue(const std::string &bundleName, uint32_t resTimeoutMs)
+{
+    return false;
+}
+
 UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, UniqueFd fd)
 {
     GTEST_LOG_(INFO) << "OnBundleExtManageInfo";

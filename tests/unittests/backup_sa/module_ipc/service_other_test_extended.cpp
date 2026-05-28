@@ -37,6 +37,11 @@ ErrCode Service::AppendBundlesIncrementalBackupSessionWithBundleInfos(
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
+{
+    return BError(BError::Codes::OK);
+}
+
 ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, int fd)
 {
     return BError(BError::Codes::OK);

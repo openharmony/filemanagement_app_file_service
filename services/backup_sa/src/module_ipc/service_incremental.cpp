@@ -550,6 +550,9 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
 ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (GetDefaultBundleResult(fileInfo.owner)) {
+        return PublishDefaultIncrementalFile(fileInfo);
+    }
     ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
     if (ret != ERR_OK) {
         HILOGE("Publish incremental file failed, bundleName:%{public}s", fileInfo.owner.c_str());
@@ -788,7 +791,12 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
         if (action == BConstants::ServiceSchedAction::RUNNING) {
             HILOGI("Restore getIncrementalFileHandle begin, bundleName:%{public}s, fileName:%{public}s",
                 bundleName.c_str(), GetAnonyPath(fileName).c_str());
-            auto err = SendIncrementalFileHandle(bundleName, fileName);
+            ErrCode err = ERR_OK;
+            if (GetDefaultBundleResult(bundleName)) {
+                err = SendDefaultIncrementalFileHandle(bundleName, fileName);
+            } else {
+                err = SendIncrementalFileHandle(bundleName, fileName);
+            }
             if (err != ERR_OK) {
                 HILOGE("SendIncrementalFileHandle failed, bundle:%{public}s", bundleName.c_str());
                 return err;
@@ -1036,6 +1044,15 @@ bool Service::CancelSessionClean(sptr<SvcSessionManager> session, std::string bu
     if (session == nullptr) {
         HILOGE("Session is nullptr");
         return false;
+    }
+    if (GetDefaultBundleResult(bundleName)) {
+        session->StopFwkTimer(bundleName);
+        session->StopExtTimer(bundleName);
+        auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
+        if (instance != nullptr) {
+            instance->DoClear();
+        }
+        return true;
     }
     auto connectionWptr = session->GetExtConnection(bundleName);
     if (connectionWptr == nullptr) {

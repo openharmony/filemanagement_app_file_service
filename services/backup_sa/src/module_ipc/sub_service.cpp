@@ -460,6 +460,13 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
     HILOGI("begin %{public}s", bundleName.data());
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     BConstants::ExtensionAction action;
+    if (GetDefaultBundleResult(bundleName)) {
+        HILOGI("enter DefaultAPP clone, bundleName:%{public}s", bundleName.c_str());
+        // 移除拉起超时定时器，进入下一阶段状态机
+        sched_->RemoveExtConn(bundleName);
+        ExtConnectDone(bundleName);
+        return BError(BError::Codes::OK);
+    }
     if (scenario == IServiceReverseType::Scenario::BACKUP || scenario == IServiceReverseType::Scenario::CLEAN) {
         action = BConstants::ExtensionAction::BACKUP;
     } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
@@ -527,7 +534,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
 }
 
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,
-    bool isIncBackup, const std::vector<std::string> &srcBundleNames)
+    bool isIncBackup, const std::vector<std::string> &srcBundleNames, bool isDefaultApp)
 {
     HILOGI("Begin");
     std::vector<std::string> supportBackupNames;
@@ -535,7 +542,7 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
         HILOGI("Current backupInfo bundleName:%{public}s, index:%{public}d, extName:%{public}s", info.name.c_str(),
             info.appIndex, info.extensionName.c_str());
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
-        if (!info.allToBackup) {
+        if (!info.allToBackup && !isDefaultApp) {
             if (isIncBackup) {
                 session_->GetServiceReverseProxy()->IncrementalBackupOnBundleStarted(
                     BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), bundleNameIndexInfo);
@@ -987,109 +994,6 @@ std::string Service::GetCallerName()
             break;
     }
     return callerName;
-}
-
-ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remote,
-                                              int32_t &errCodeForMsg, std::string &errMsg)
-{
-    errCodeForMsg = InitRestoreSession(remote, errMsg);
-    HILOGI("Start InitRestoreSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
-           errCodeForMsg,
-           errMsg.c_str());
-    return ERR_OK;
-}
-
-ErrCode Service::InitRestoreSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    Duration totalSpend;
-    totalSpend.Start();
-    ErrCode ret = VerifyCaller();
-    if (ret != ERR_OK) {
-        HILOGE("Init restore session failed, verify caller failed");
-        return ret;
-    }
-    ret = session_->Active({
-        .clientToken = IPCSkeleton::GetCallingTokenID(),
-        .scenario = IServiceReverseType::Scenario::RESTORE,
-        .clientProxy = remote,
-        .userId = GetUserIdDefault(),
-        .callerName = GetCallerName(),
-        .activeTime = TimeUtils::GetCurrentTime(),
-    });
-    if (ret == ERR_OK) {
-        TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
-        ClearFailedBundles();
-        successBundlesNum_ = 0;
-        CreateRunningLock();
-        ClearBundleRadarReport();
-        ClearFileReadyRadarReport();
-        return ret;
-    }
-    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
-        errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
-                                                    session_->GetSessionCallerName(),
-                                                    session_->GetSessionActiveTime(),
-                                                    session_->GetScenarioStr());
-        HILOGE("Active restore session error, Already have a session");
-        return ret;
-    }
-    HILOGE("Active restore session error");
-    StopAll(nullptr, true);
-    return ret;
-}
-
-ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote,
-                                             int32_t &errCodeForMsg, std::string &errMsg)
-{
-    errCodeForMsg = InitBackupSession(remote, errMsg);
-    HILOGI("Start InitBackupSessionWithErrMsg, errCode:%{public}d, Msg :%{public}s",
-           errCodeForMsg,
-           errMsg.c_str());
-    return ERR_OK;
-}
-
-ErrCode Service::InitBackupSession(const sptr<IServiceReverse>& remote, std::string &errMsg)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    Duration totalSpend;
-    totalSpend.Start();
-    ErrCode ret = VerifyCaller();
-    if (ret != ERR_OK) {
-        HILOGE("Init full backup session fail, verify caller failed");
-        return ret;
-    }
-    int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
-    HILOGI("InitBackupSession oldSize %{public}d", oldSize);
-    session_->SetMemParaCurSize(oldSize);
-    ret = session_->Active({
-        .clientToken = IPCSkeleton::GetCallingTokenID(),
-        .scenario = IServiceReverseType::Scenario::BACKUP,
-        .clientProxy = remote,
-        .userId = GetUserIdDefault(),
-        .callerName = GetCallerName(),
-        .activeTime = TimeUtils::GetCurrentTime(),
-    });
-    if (ret == ERR_OK) {
-        TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_);
-        ClearFailedBundles();
-        successBundlesNum_ = 0;
-        CreateRunningLock();
-        ClearBundleRadarReport();
-        ClearFileReadyRadarReport();
-        return ret;
-    }
-    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
-        errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
-                                                    session_->GetSessionCallerName(),
-                                                    session_->GetSessionActiveTime(),
-                                                    session_->GetScenarioStr());
-        HILOGE("Active backup session error, Already have a session");
-        return ret;
-    }
-    HILOGE("Active backup session error");
-    StopAll(nullptr, true);
-    return ret;
 }
 
 ErrCode Service::GetLocalCapabilitiesForBundleInfos(int &fd)

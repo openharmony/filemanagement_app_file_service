@@ -54,6 +54,11 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
     return BackupSvcSessionManager::session->OnBundleFileReady(bundleName, fileName);
 }
 
+bool SvcSessionManager::SetTimeoutValue(const std::string &bundleName, uint32_t resTimeoutMs)
+{
+    return false;
+}
+
 UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, UniqueFd fd)
 {
     return BackupSvcSessionManager::session->OnBundleExtManageInfo(bundleName, move(fd));

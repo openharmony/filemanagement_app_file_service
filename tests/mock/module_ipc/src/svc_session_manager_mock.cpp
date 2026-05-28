@@ -36,6 +36,11 @@ ErrCode SvcSessionManager::Deactive(const wptr<IRemoteObject> &, bool)
     return BError(BError::Codes::OK);
 }
 
+bool SvcSessionManager::SetTimeoutValue(const std::string &bundleName, uint32_t resTimeoutMs)
+{
+    return false;
+}
+
 ErrCode SvcSessionManager::VerifyBundleName(const string &bundleName, bool isStrict)
 {
     return BError(BError::Codes::OK);

@@ -79,7 +79,7 @@ public:
     virtual bool IsReportBundleExecFail(const std::string&) = 0;
     virtual bool IsReportFileReadyFail(const std::string&) = 0;
     virtual std::vector<std::string> GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool,
-        const vector<string>&) = 0;
+        const vector<string>&, bool) = 0;
     virtual ErrCode HandleCurBundleFileReady(const std::string&, const std::string&, bool) = 0;
     virtual ErrCode HandleCurAppDone(ErrCode, const std::string&, bool) = 0;
     virtual UniqueFd GetLocalCapabilitiesForBundleInfos() = 0;
@@ -167,7 +167,7 @@ public:
     MOCK_METHOD(bool, IsReportBundleExecFail, (const std::string&));
     MOCK_METHOD(bool, IsReportFileReadyFail, (const std::string&));
     MOCK_METHOD(std::vector<std::string>, GetSupportBackupBundleNames, ((vector<BJsonEntityCaps::BundleInfo>&), bool,
-        (const vector<string>&)));
+        (const vector<string>&), bool));
     MOCK_METHOD(ErrCode, HandleCurBundleFileReady, (const std::string&, const std::string&, bool));
     MOCK_METHOD(ErrCode, HandleCurAppDone, (ErrCode, const std::string&, bool));
     MOCK_METHOD(UniqueFd, GetLocalCapabilitiesForBundleInfos, ());
@@ -492,10 +492,18 @@ void Service::ClearFailedBundles() {}
 void Service::StartRunningTimer(const std::string&) {}
 
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
-    bool isIncBackup, const vector<std::string> &srcBundleNames)
+    bool isIncBackup, const vector<std::string> &srcBundleNames, bool isDefaultApp)
 {
-    return BService::serviceMock->GetSupportBackupBundleNames(bundleInfos, isIncBackup, srcBundleNames);
+    return BService::serviceMock->GetSupportBackupBundleNames(bundleInfos, isIncBackup, srcBundleNames, isDefaultApp);
 }
+
+bool Service::GetDefaultBundleResult(const string &bundleName) { return false; }
+bool Service::GetDefaultBundleResult(const vector<string> &bundleNames) { return false; }
+ErrCode Service::PublishDefaultIncrementalFile(const BFileInfo &fileInfo) { return ERR_OK; }
+ErrCode Service::SendDefaultIncrementalFileHandle(const std::string &bundleName,
+    const std::string &fileName) { return ERR_OK; }
+sptr<MigrateManager> Service::GetMigrateInstance(wptr<Service> servicePtr,
+    const std::string &bundleName, int32_t userId) { return nullptr; }
 
 ErrCode Service::HandleCurBundleFileReady(const std::string &bundleName, const std::string &fileName, bool isIncBackup)
 {
@@ -1171,7 +1179,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillOnce(Return(bundleInfos));
-        EXPECT_CALL(*srvMock, GetSupportBackupBundleNames(_, _, _)).WillOnce(Return(supportBackupNames));
+        EXPECT_CALL(*srvMock, GetSupportBackupBundleNames(_, _, _, _)).WillOnce(Return(supportBackupNames));
         EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1216,7 +1224,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillRepeatedly(Return(bundleNameDetailMap));
         EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillOnce(Return(bundleInfos));
-        EXPECT_CALL(*srvMock, GetSupportBackupBundleNames(_, _, _)).WillOnce(Return(supportBackupNames));
+        EXPECT_CALL(*srvMock, GetSupportBackupBundleNames(_, _, _, _)).WillOnce(Return(supportBackupNames));
         ret = service->AppendBundlesIncrementalBackupSession({}, {});
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
     } catch (...) {

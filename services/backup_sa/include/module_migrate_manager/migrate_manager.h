@@ -36,9 +36,7 @@
 #include "b_radar/radar_app_statistic.h"
 #include "thread_pool.h"
 #include "ipc_skeleton.h"
-#include "tokenid_kit.h"
 
-#include "module_ipc/service.h"
 #include "module_ipc/enhance_service_manager.h"
 
 
@@ -50,15 +48,13 @@ enum BackupType {
     FULL_BACKUP = 0,
     FULL_RESTORE = 1,
     INCREMENTAL_RESTORE = 2,
-}
+};
 class Service;
 class MigrateManager : public RefBase {
 public:
     explicit MigrateManager(wptr<Service> servicePtr, const std::string &bundleName, int32_t userId)
     {
-        if (servicePtr == nullptr) {
-            servicePtr_ = servicePtr;
-        }
+        servicePtr_ = servicePtr;
         bundleName_ = bundleName;
         userId_ = userId;
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
@@ -72,14 +68,16 @@ public:
     }
     void DoClear();
     void DoClearInner();
-    void AppDone(ErrCode errCode);
+    void AppDone(ErrCode errCode, const std::string &bundleName);
     void ReportAppStatistic(const std::string &func, ErrCode errCode);
-    ErrCode VerifyCallerAndGetCallerName(std::string &bundleName);
+    ErrCode VerifyCallerAndGetCallerName(const std::string &bundleName);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
     void HandleExtOnRelease(bool isAppResultReport, ErrCode errCode);
     ErrCode HandleExtOnDisconnect(BackupType scenario, bool isAppResultReport, ErrCode errCode);
     void HandleCurBundleEndWork(std::string bundleName, const BackupType scenario);
     ErrCode GetExtOnRelease(bool &isExtOnRelease);
+    std::shared_ptr<ScanResultManager> GetScanInstance(const string &bundleName);
+    void SetDefaultAppTimer(int64_t &appSize, const string &bundleName);
 // 备份逻辑
     void WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
     ErrCode UpdateFdSendRate(const std::string &bundleName, int32_t sendRate);
@@ -91,9 +89,9 @@ public:
     int64_t GetScanTotalSize();
     void AsyncDoBackup(const std::string &bundleName);
     void DoBackupTask(const std::string &bundleName);
-    ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>>& allFiles, const std::string &bundleName);
-    ErrCode ReportAppFileReady(const string& filename, const string& filePath, bool needDelete = false);
-    ErrCode ReportAppFileReady(const string &filename, const string &filePath, int fdval, bool needDelete = false);
+    ErrCode IndexFileReady(const std::string &bundleName);
+    ErrCode ReportAppFileReady(const string &bundleName, const string& filename,
+        const string& filePath, bool needDelete = false);
     void DoPacket(const std::string &bundleName);
     ErrCode ScanAllDirs(int64_t &totalSize, const std::string &bundleName);
 // 恢复逻辑
@@ -106,11 +104,6 @@ public:
     ErrCode GetIncrementalFileHandle(const std::string &fileName, UniqueFd &fd, UniqueFd &reportFd, int32_t &fdErrCode);
     tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const string &fileName);
     ErrCode HandleRestore(bool isClearData);
-    void GetFileHandleWithUniqueFds(const string &bundleName, std::set<std::string> &fileNameVec);
-    UniqueFd GetFileHandle(const string &fileName, int32_t &errCode);
-    ErrCode GetFileHandleWithUniqueFd(const std::string &fileName,
-                                      int32_t &getFileHandleErrCode,
-                                      int &fd);
     tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForNormalVersion(const std::string &fileName);
     ErrCode CreateDefaultTask(const std::string &bundleName);
     void CloseFileWithFDSan(int fd);
@@ -126,6 +119,7 @@ private:
 
     bool isClearData_ {true};
     bool isDebug_ {true};
+    int32_t userId_ = 0;
     AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
     std::chrono::time_point<std::chrono::system_clock> g_onStart;
     std::string bundleName_;
