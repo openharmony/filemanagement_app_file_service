@@ -66,7 +66,7 @@ static bool IsEmptyDirectory(const string &path)
 }
 
 static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& smallFileSize,
-    const std::vector<std::string> &excludes)
+    const std::vector<std::string> &excludes, std::shared_ptr<ScanResultManager> instance = nullptr)
 {
     if (info.restorePath_.empty() && BDir::IsDirsMatch(excludes, info.backupPath_)) {
         return;
@@ -79,6 +79,16 @@ static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& 
         HILOGE("stat file fail, errno=%{public}d", errno);
         return;
     }
+    if (instance != nullptr) {
+        if (sta.st_size <= info.sizeBoundary_) {
+            instance->AddSmallFile(info.backupPath_, sta.st_size, info.restorePath_);
+            smallFileSize += sta.st_size;
+        } else {
+            instance->AddBigFile(info.backupPath_, sta, info.restorePath_);
+            bigFileSize += sta.st_size;
+        }
+        return;
+    }
     if (sta.st_size <= info.sizeBoundary_) {
         ScanFileSingleton::GetInstance().AddSmallFile(info.backupPath_, sta.st_size, info.restorePath_);
         smallFileSize += sta.st_size;
@@ -89,14 +99,14 @@ static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& 
 }
 
 static tuple<ErrCode, int64_t, int64_t> ProcessSingleFile(const vector<string> &excludes, const string &backupPath,
-    const string& restorePath, off_t sizeBoundary = -1)
+    const string& restorePath, off_t sizeBoundary = -1, std::shared_ptr<ScanResultManager> instance = nullptr)
 {
     if (backupPath == "/") {
         return {ERR_OK, 0, 0};
     }
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
-    ProcessFile({backupPath, restorePath, sizeBoundary}, bigFileSize, smallFileSize, excludes);
+    ProcessFile({backupPath, restorePath, sizeBoundary}, bigFileSize, smallFileSize, excludes, instance);
     return {ERR_OK, bigFileSize, smallFileSize};
 }
 
@@ -247,6 +257,93 @@ std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::stri
         }
     }
     return {errCode, bigFileSize, smallFileSize};
+}
+
+std::tuple<ErrCode, int64_t, int64_t> BDir::DefaultScanAllDirs(const std::set<std::string> &includes,
+    const std::vector<std::string> &excludes, std::shared_ptr<ScanResultManager> &instance)
+{
+    HILOGI("scan all dirs include:%{public}zu, excludes:%{public}zu",
+        includes.size(), excludes.size());
+    ErrCode errCode = ERR_OK;
+    int64_t bigFileSize = 0;
+    int64_t smallFileSize = 0;
+    if (!includes.empty()) {
+        DefaultAppScanner scanner;
+        tie(errCode, bigFileSize, smallFileSize) = scanner.DefaultScanAllDirs(includes, excludes, instance);
+    }
+    if (errCode != ERR_OK) {
+        HILOGE("scan normal dirs fail, err=%{public}d", errCode);
+    }
+    return {errCode, bigFileSize, smallFileSize};
+}
+
+tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::DefaultScanAllDirs(const std::set<std::string> &includes,
+    const std::vector<std::string> &excludes, std::shared_ptr<ScanResultManager> &instance)
+{
+    int64_t totalBigFileSize = 0;
+    int64_t totalSmallFileSize = 0;
+    int64_t start = TimeUtils::GetTimeMS();
+    ErrCode finalErrCode = ERR_OK;
+    for (const auto &item : includes) {
+        auto [errCode, bigFileSize, smallFileSize] = ScanDir(item, excludes, instance, BConstants::BIG_FILE_BOUNDARY);
+        if (errCode == 0) {
+            HILOGI("big files: %{public}" PRId64 "; small files: %{public}" PRId64 "", bigFileSize, smallFileSize);
+            totalBigFileSize += bigFileSize ;
+            totalSmallFileSize += smallFileSize;
+        } else {
+            HILOGE("scan dir fail, err=%{public}d, path=%{public}s", errCode, GetAnonyPath(item).c_str());
+            finalErrCode = static_cast<int>(BError::Codes::EXT_SCAN_DIR_FAIL);
+        }
+    }
+    int64_t spendMilli = TimeUtils::GetSpendMS(start);
+    HILOGI("scan spend: %{public}" PRId64 ", bigfile: %{public}" PRId64 ", smallFile: %{public}" PRId64 "",
+        spendMilli, totalBigFileSize, totalSmallFileSize);
+    return {finalErrCode, totalBigFileSize, totalSmallFileSize};
+}
+
+tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backupPath, const vector<string> &excludes,
+    std::shared_ptr<ScanResultManager> &instance, off_t size)
+{
+    HILOGD("scan dir, path: %{public}s", GetAnonyPath(backupPath).c_str());
+    if (!filesystem::is_directory(backupPath)) {
+        HILOGE("Invalid directory path: %{private}s", backupPath.c_str());
+        return ProcessSingleFile(excludes, backupPath, "", size, instance);
+    }
+    int64_t bigFileSize = 0;
+    int64_t smallFileSize = 0;
+    stack<string> dirStack;
+    dirStack.push(backupPath);
+    while (!dirStack.empty()) {
+        auto currentPath = dirStack.top();
+        dirStack.pop();
+        if (BDir::IsDirsMatch(excludes, currentPath)) {
+            continue;
+        }
+        if (IsEmptyDirectory(currentPath)) {
+            instance->AddSmallFile(StringUtils::PathAddDelimiter(currentPath), 0);
+            continue;
+        }
+        unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(currentPath.c_str()), closedir};
+        if (dir == nullptr) {
+            HILOGE("openDir fail, path:%{public}s, errno:%{public}d", GetAnonyPath(currentPath).c_str(), errno);
+            continue;
+        }
+        struct dirent *ptr = nullptr;
+        while (!!(ptr = readdir(dir.get()))) {
+            if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+                continue;
+            }
+            std::string filePath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
+            if (ptr->d_type == DT_REG) {
+                ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes, instance);
+            } else if (ptr->d_type == DT_DIR) {
+                dirStack.push(filePath);
+            } else {
+                HILOGE("Not support file type");
+            }
+        }
+    }
+    return {ERR_OK, bigFileSize, smallFileSize};
 }
 
 void BDir::PreDealExcludes(std::vector<std::string> &excludes)

@@ -195,12 +195,14 @@ ErrCode Service::SendDefaultIncrementalFileHandle(const std::string &bundleName,
         return BError(BError::Codes::EXT_INVAL_ARG);
     }
     auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
-    if (instance != nullptr) {
-        auto ret = instance->GetIncrementalFileHandle(fileName, fd, reportFd, errCode);
-        if (ret != ERR_OK) {
-            HILOGE("Failed to get file handle, err = %{public}d", errCode);
-            return BError(BError::Codes::EXT_INVAL_ARG);
-        }
+    if (instance == nullptr) {
+        HILOGE("Failed to GetMigrateInstance");
+        return BError(BError::Codes::EXT_INVAL_ARG);
+    }
+    auto ret = instance->GetIncrementalFileHandle(fileName, fd, reportFd, errCode);
+    if (ret != ERR_OK) {
+        HILOGE("Failed to get file handle, err = %{public}d", errCode);
+        return BError(BError::Codes::EXT_INVAL_ARG);
     }
     auto err = AppIncrementalFileReady(bundleName, fileName, move(fd), move(reportFd), errCode);
     if (err != ERR_OK) {
@@ -229,9 +231,11 @@ ErrCode Service::PublishDefaultIncrementalFile(const BFileInfo &fileInfo)
     }
     session_->SetPublishFlag(fileInfo.owner);
     auto instance = GetMigrateInstance(wptr<Service>(this), fileInfo.owner, GetUserIdDefault());
-    if (instance != nullptr) {
-        ret = instance->PublishIncrementalFile(fileInfo.fileName);
+    if (instance == nullptr) {
+        HILOGE("Failed to GetMigrateInstance");
+        return BError(BError::Codes::EXT_INVAL_ARG);
     }
+    ret = instance->PublishIncrementalFile(fileInfo.fileName);
     if (ret != ERR_OK) {
         HILOGE("Failed to publish file for backup extension, bundleName:%{public}s", fileInfo.owner.c_str());
         return ret;

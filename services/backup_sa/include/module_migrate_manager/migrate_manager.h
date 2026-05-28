@@ -51,7 +51,7 @@ enum BackupType {
     FULL_RESTORE = 1,
     INCREMENTAL_RESTORE = 2,
 }
-
+class Service;
 class MigrateManager : public RefBase {
 public:
     explicit MigrateManager(wptr<Service> servicePtr, const std::string &bundleName, int32_t userId)
@@ -81,19 +81,21 @@ public:
     void HandleCurBundleEndWork(std::string bundleName, const BackupType scenario);
     ErrCode GetExtOnRelease(bool &isExtOnRelease);
 // 备份逻辑
-    ErrCode HandleBackup(bool isClearData);
-    void AsyncTaskBackup();
-    void ScanAllDirsTask();
+    void WaitToSendFd(std::chrono::system_clock::time_point &startTime, int &fdSendNum);
+    ErrCode UpdateFdSendRate(const std::string &bundleName, int32_t sendRate);
+    ErrCode HandleBackup(bool isClearData, const std::string &bundleName);
+    void AsyncTaskBackup(const std::string &bundleName);
+    void ScanAllDirsTask(const std::string &bundleName);
     void UpdateOnStartTime();
     void SetScanTotalSize(int64_t totalSize);
     int64_t GetScanTotalSize();
-    void AsyncDoBackup();
-    void DoBackupTask();
-    ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>>& allFiles);
+    void AsyncDoBackup(const std::string &bundleName);
+    void DoBackupTask(const std::string &bundleName);
+    ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>>& allFiles, const std::string &bundleName);
     ErrCode ReportAppFileReady(const string& filename, const string& filePath, bool needDelete = false);
     ErrCode ReportAppFileReady(const string &filename, const string &filePath, int fdval, bool needDelete = false);
-    void DoPacket();
-    ErrCode ScanAllDirs(int64_t &totalSize);
+    void DoPacket(const std::string &bundleName);
+    ErrCode ScanAllDirs(int64_t &totalSize, const std::string &bundleName);
 // 恢复逻辑
     ErrCode PublishIncrementalFile(const string &fileName);
     void AsyncTaskIncrementalRestore();
@@ -101,7 +103,7 @@ public:
     int DoIncrementalRestore();
     void RestoreBigFiles(bool appendTargetPath);
     void AppIncrementalDone(ErrCode errCode);
-    ErrCode GetIncrementalFileHandle(const std::string &fileName, int &fd, int &reportFd, int32_t &fdErrCode);
+    ErrCode GetIncrementalFileHandle(const std::string &fileName, UniqueFd &fd, UniqueFd &reportFd, int32_t &fdErrCode);
     tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const string &fileName);
     ErrCode HandleRestore(bool isClearData);
     void GetFileHandleWithUniqueFds(const string &bundleName, std::set<std::string> &fileNameVec);
@@ -110,13 +112,13 @@ public:
                                       int32_t &getFileHandleErrCode,
                                       int &fd);
     tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForNormalVersion(const std::string &fileName);
-    void UpdateFileStat(std::string filePath, uint64_t fileSize);
-    ErrCode CreateDefaultBackupTask(const sptr<MigrateBackupCallback> &callback);
+    ErrCode CreateDefaultTask(const std::string &bundleName);
     void CloseFileWithFDSan(int fd);
     ErrCode DealIncrementalDone(ErrCode errCode);
     ErrCode HandleCurAppDone(ErrCode errCode, const std::string &bundleName, bool isIncBackup);
 public:
     std::shared_ptr<RadarAppStatistic> appStatistic_ = nullptr;
+    std::map<std::string, std::shared_ptr<ScanResultManager>> instanceMap_;
 private:
     wptr<Service> servicePtr_;
     OHOS::ThreadPool threadPool_;
@@ -127,12 +129,18 @@ private:
     AppRadar::DoRestoreInfo radarRestoreInfo_ { 0 };
     std::chrono::time_point<std::chrono::system_clock> g_onStart;
     std::string bundleName_;
+    int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
 // lock
     std::mutex onStartTimeLock_;
     std::mutex scanSizeLock_;
     std::mutex updateFileStatLock_;
     std::mutex onReleaseLock_;
     std::mutex bundleEndLock_;
+    std::mutex updateSendRateLock_;
+    std::condition_variable startSendFdRateCon_;
+    std::condition_variable waitSendFdCon_;
+    std::mutex startSendMutex_;
+    std::mutex scanInstanceLock_;
 // 统计数据
     int64_t scanTotalSize_ = 0;
     set<std::string> fileNames_ = {};

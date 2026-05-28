@@ -94,7 +94,7 @@ public:
     static void CreatBackupEnv(const std::vector<BIncrementalData> &bundleNameList, int32_t userId);
 
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForAppendBundles(
-        const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
+        const std::vector<BIncrementalData> &incrementalDataList, int32_t userId, bool isDefaultApp = false);
 
     /**
      * @brief Get the bundle index name used for bundle dir
