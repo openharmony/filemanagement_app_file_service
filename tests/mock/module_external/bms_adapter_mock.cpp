@@ -119,7 +119,7 @@ int64_t BundleMgrAdapter::GetBundleDataSize(const std::string &bundleName, int32
 void BundleMgrAdapter::CreatBackupEnv(const std::vector<BIncrementalData> &bundleNameList, int32_t userId) {}
 
 vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppendBundles(
-    const vector<BIncrementalData> &incrementalDataList, int32_t userId)
+    const vector<BIncrementalData> &incrementalDataList, int32_t userId, bool isDefaultApp)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     bundleInfos.emplace_back(

@@ -31,6 +31,7 @@
 
 #include "b_json/b_report_entity.h"
 #include "b_radar/radar_app_statistic.h"
+#include "b_utils/scan_result_manager.h"
 #include "errors.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -68,8 +69,9 @@ class DefaultAppScanner {
 public:
     std::tuple<ErrCode, int64_t, int64_t> DefaultScanAllDirs(const std::set<std::string> &includes,
         const std::vector<std::string> &excludes, std::shared_ptr<ScanResultManager> &instance);
-    tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backupPath,
-        const vector<string> &excludes,
+    std::tuple<ErrCode, int64_t, int64_t> ScanDir(
+        const std::string &backupPath,
+        const std::vector<std::string> &excludes,
         std::shared_ptr<ScanResultManager> &instance,
         off_t size = -1);
 };

@@ -170,6 +170,10 @@ std::shared_ptr<ScanResultManager> MigrateManager::GetScanInstance(const string 
     auto it = instanceMap_.find(bundleName);
     if (it == instanceMap_.end()) {
         auto newInstance = std::make_shared<ScanResultManager>();
+        if (newInstance == nullptr) {
+            HILOGE("Failed to create ScanResultManager instance");
+            return nullptr;
+        }
         instanceMap_[bundleName] = newInstance;
         return newInstance;
     }
@@ -222,6 +226,10 @@ ErrCode MigrateManager::UpdateFdSendRate(const std::string &bundleName, int32_t 
         std::lock_guard<std::mutex> lock(updateSendRateLock_);
         HILOGI("Update SendRate, bundleName:%{public}s, sendRate:%{public}d", bundleName.c_str(), sendRate);
         sendRate_ = sendRate;
+        if (appStatistic_ == nullptr) {
+            HILOGW("appStatistic_ is null");
+            return ERR_OK;
+        }
         if (sendRate > 0) {
             appStatistic_->UpdateSendRateZeroSpend();
             startSendFdRateCon_.notify_one();
@@ -462,12 +470,15 @@ void MigrateManager::SetDefaultAppTimer(int64_t &appSize)
     const int64_t processRate = 3 * 1024 * 1024; /* 3M/s */
     const int64_t multiple = 3;
     const int64_t invertMillisecond = 1000;
-
+    if (servicePtr_ == nullptr || servicePtr_->session_ == nullptr) {
+        HILOGE("servicePtr or session is null");
+        return;
+    }
     auto timeout = defaultTimeout + (appSize / processRate) * multiple;
     timeout = timeout < minTimeout ? minTimeout : timeout;
-    resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX);
+    uint32_t resTimeoutMs = (uint32_t)(timeout * invertMillisecond % UINT_MAX);
     servicePtr_->session_->SetTimeoutValue(bundleName, resTimeoutMs);
-    auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
+    auto timeoutCallback = servicePtr_->TimeOutCallback(servicePtr_, bundleName);
     servicePtr_->session_->StartExtTimer(bundleName, timeoutCallback);
 }
 }

@@ -41,7 +41,7 @@ public:
     virtual int64_t GetBundleDataSize(const std::string&, int32_t) = 0;
     virtual void CreatBackupEnv(const std::vector<BIncrementalData>&, int32_t) = 0;
     virtual std::vector<BJsonEntityCaps::BundleInfo>
-        GetBundleInfosForAppendBundles(const std::vector<BIncrementalData>&, int32_t) = 0;
+        GetBundleInfosForAppendBundles(const std::vector<BIncrementalData>&, int32_t, bool) = 0;
     virtual std::string GetBundleIndexName(const std::string &bundleName);
     virtual bool GetUidGidForBundleName(const std::string &bundleName, int32_t userId, uid_t &uid, gid_t &gid) = 0;
 public:
@@ -72,7 +72,7 @@ public:
     MOCK_METHOD(int64_t, GetBundleDataSize, (const std::string&, int32_t));
     MOCK_METHOD(void, CreatBackupEnv, (const std::vector<BIncrementalData>&, int32_t));
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForAppendBundles,
-        ((const std::vector<BIncrementalData>&), int32_t));
+        ((const std::vector<BIncrementalData>&), int32_t, bool));
     MOCK_METHOD(std::string, GetBundleIndexName, (const std::string&));
     MOCK_METHOD(bool, GetUidGidForBundleName, (const std::string&, int32_t, uid_t&, gid_t&));
 };
