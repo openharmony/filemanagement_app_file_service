@@ -165,6 +165,7 @@ static inline std::string CONTEXT_ELS[] = {"el1", "el2"};
 static inline std::string BACKUP_DIR_END = "/base/.backup/";
 static inline std::string BUNDLE_BASE_DIR = "/data/storage/el2/base";
 static inline std::string PATH_PUBLIC_HOME = "/storage/Users/currentUser/";
+static inline std::string PATH_PUBLIC_HOME_NO_SLASH = "storage/Users/currentUser/";
 static inline std::string PATH_APP_DATA = "appdata";
 static inline std::string BACKSLASH = "/";
 static inline std::string FUSE_ANCO_DIR = "HO_DATA_EXT_MISC";
