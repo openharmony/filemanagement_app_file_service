@@ -26,6 +26,7 @@
 #include "anco_scan_result.h"
 #include "anco_restore_result.h"
 #include "b_error/b_error.h"
+#include "b_utils/scan_result_manager.h"
 #include "unique_fd.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -56,8 +57,6 @@ struct FileBackupResultMsg {
     int32_t cmdId;
     int32_t result;
     int32_t errorCode;
-    int64_t totalBigFileSize;
-    int64_t totalSmallFileSize;
     std::vector<ResultParam> resInfo;
 };
 
@@ -96,16 +95,15 @@ public:
     virtual ErrCode CreateDefaultTask(const std::string &bundleName, int32_t userId) = 0;
     virtual ErrCode DefaultAppFileHandle(const std::string &bundleName,
         const std::string &fileName, UniqueFd &fd, UniqueFd &reportFd) = 0;
-    virtual ErrCode StartDefaultAppUnPack(const std::string &bundleName, AncoRestoreResult &ancoRestoreRes) = 0;
+    virtual ErrCode StartDefaultAppUnPack(const std::string &bundleName) = 0;
     virtual void StartDefaultAppClear(const std::string &bundleName) = 0;
-    virtual ErrCode DefaultAppRestoreBigFiles(const std::string &bundleName, bool appendTargetPath,
-        AncoRestoreResult &ancoRestoreRes) = 0;
+    virtual ErrCode DefaultAppRestoreBigFiles(const std::string &bundleName, bool appendTargetPath) = 0;
+    virtual ErrCode DefaultOpenFile(const std::string &bundleName, const std::string &path, UniqueFd &fd) = 0;
     virtual ErrCode GetIndexFile(const std::string &bundleName, const std::string &path,
-        int &size, UniqueFd &fd) = 0;
-    virtual void StartDefaultPacket(const std::string &bundleName) = 0;
-    virtual ErrCode StartDefaultScanAllDirs(const std::string &bundleName, std::set<std::string> &expandIncludes,
-        std::vector<std::string>& excludes, AncoRestoreResult &ancoRestoreRes) = 0;
-
+        std::shared_ptr<ScanResultManager> &instance) = 0;
+    virtual void StartDefaultPacket(const std::string &bundleName, std::shared_ptr<ScanResultManager> &instance) = 0;
+    virtual ErrCode MakeDir(const std::string &bundleName) = 0;
+    virtual ErrCode DestroyDefaultTask(const std::string &bundleName) = 0;
 };
 }  // namespace OHOS::FileManagement::Backup
 #endif

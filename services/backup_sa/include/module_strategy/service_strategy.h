@@ -45,8 +45,8 @@ struct StrategyContext {
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> *bundleNameDetailMap = nullptr;
     std::map<std::string, bool> *isClearDataFlags = nullptr;
     
-    sptr<SvcSessionManager> session = nullptr;
-    Service *service = nullptr;
+    wptr<SvcSessionManager> session = nullptr;
+    wptr<Service> service = nullptr;
 };
 
 // --- 1. 策略模式：抽象策略类 ---

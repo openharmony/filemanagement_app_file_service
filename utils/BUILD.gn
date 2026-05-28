@@ -88,6 +88,7 @@ ohos_shared_library("backup_utils") {
     "src/b_utils/b_time.cpp",
     "src/b_utils/string_utils.cpp",
     "src/b_utils/scan_file_singleton.cpp",
+    "src/b_utils/scan_result_manager.cpp",
     "src/b_utils/storage_manager_helper.cpp",
   ]
 

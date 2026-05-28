@@ -54,22 +54,32 @@ StrategyRegistrar &GetRegistrar()
 // DefaultPropertyStrategy: UserId + ExtensionName + ReadyLaunch
 void DefaultPropertyStrategy::Execute(StrategyContext &context)
 {
-    context.session->SetBundleUserId(context.bundleNameIndexInfo, context.userId);
-    context.session->SetBackupExtName(context.bundleNameIndexInfo, context.bundleInfo.extensionName);
-    context.session->SetIsReadyLaunch(context.bundleNameIndexInfo);
+    auto ptr = context.session.promote();
+    if (ptr == nullptr) {
+        HILOGE("session pointer is null");
+        return;
+    }
+    ptr->SetBundleUserId(context.bundleNameIndexInfo, context.userId);
+    ptr->SetBackupExtName(context.bundleNameIndexInfo, context.bundleInfo.extensionName);
+    ptr->SetIsReadyLaunch(context.bundleNameIndexInfo);
 }
 
 // DataSizePropertyStrategy: 区分增量/全量/恢复
 void DataSizePropertyStrategy::Execute(StrategyContext &context)
 {
+    auto ptr = context.session.promote();
+    if (ptr == nullptr) {
+        HILOGE("session pointer is null");
+        return;
+    }
     if (context.restoreType != RestoreTypeEnum::RESTORE_DATA_WAIT_SEND) {
         if (context.isIncBackup) {
-            context.session->SetBundleDataSize(context.bundleNameIndexInfo, context.bundleInfo.increSpaceOccupied);
+            ptr->SetBundleDataSize(context.bundleNameIndexInfo, context.bundleInfo.increSpaceOccupied);
         } else {
-            context.session->SetBundleDataSize(context.bundleNameIndexInfo, context.bundleInfo.spaceOccupied);
+            ptr->SetBundleDataSize(context.bundleNameIndexInfo, context.bundleInfo.spaceOccupied);
         }
     } else {
-        context.session->SetBundleDataSize(context.bundleNameIndexInfo, context.bundleInfo.spaceOccupied);
+        ptr->SetBundleDataSize(context.bundleNameIndexInfo, context.bundleInfo.spaceOccupied);
     }
 }
 
@@ -79,18 +89,28 @@ void ClearDataFlagPropertyStrategy::Execute(StrategyContext &context)
     if (context.isClearDataFlags == nullptr) {
         return;
     }
+    auto ptr = context.session.promote();
+    if (ptr == nullptr) {
+        HILOGE("session pointer is null");
+        return;
+    }
     auto iter = context.isClearDataFlags->find(context.bundleNameIndexInfo);
     if (iter != context.isClearDataFlags->end()) {
-        context.session->SetClearDataFlag(context.bundleNameIndexInfo, iter->second);
+        ptr->SetClearDataFlag(context.bundleNameIndexInfo, iter->second);
     }
 }
 
 // RestoreBasePropertyStrategy: RestoreType + VersionCode + VersionName
 void RestoreBasePropertyStrategy::Execute(StrategyContext &context)
 {
-    context.session->SetBundleRestoreType(context.bundleNameIndexInfo, context.restoreType);
-    context.session->SetBundleVersionCode(context.bundleNameIndexInfo, context.bundleInfo.versionCode);
-    context.session->SetBundleVersionName(context.bundleNameIndexInfo, context.bundleInfo.versionName);
+    auto ptr = context.session.promote();
+    if (ptr == nullptr) {
+        HILOGE("session pointer is null");
+        return;
+    }
+    ptr->SetBundleRestoreType(context.bundleNameIndexInfo, context.restoreType);
+    ptr->SetBundleVersionCode(context.bundleNameIndexInfo, context.bundleInfo.versionCode);
+    ptr->SetBundleVersionName(context.bundleNameIndexInfo, context.bundleInfo.versionName);
 }
 
 // BackupExtraPropertyStrategy: BackupScene + Unicast
@@ -100,15 +120,20 @@ void BackupExtraPropertyStrategy::Execute(StrategyContext &context)
         return;
     }
     std::string backupScene;
+    auto ptr = context.session.promote();
+    if (ptr == nullptr) {
+        HILOGE("session pointer is null");
+        return;
+    }
     if (BJsonUtil::FindBackupSceneByName(*context.bundleNameDetailMap, context.bundleNameIndexInfo, backupScene)) {
-        context.session->SetBackupScene(context.bundleNameIndexInfo, backupScene);
+        ptr->SetBackupScene(context.bundleNameIndexInfo, backupScene);
     }
     BJsonUtil::BundleDetailInfo uniCastInfo;
     if (BJsonUtil::FindBundleInfoByName(*context.bundleNameDetailMap,
         context.bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
         HILOGI("current bundle:%{public}s, unicast info:%{public}s, unicast info size:%{public}zu",
             context.bundleNameIndexInfo.c_str(), GetAnonyString(uniCastInfo.detail).c_str(), uniCastInfo.detail.size());
-        context.session->SetBackupExtInfo(context.bundleNameIndexInfo, uniCastInfo.detail);
+        ptr->SetBackupExtInfo(context.bundleNameIndexInfo, uniCastInfo.detail);
     }
 }
 
@@ -120,11 +145,17 @@ void RestoreExtraPropertyStrategy::Execute(StrategyContext &context)
     }
     BJsonUtil::BundleDetailInfo broadCastInfo;
     std::map<std::string, std::string> broadCastInfoMap;
+    auto ptr = context.session.promote();
+    auto serviceptr = context.service.promote();
+    if (ptr == nullptr || serviceptr == nullptr) {
+        HILOGE("session or service pointer is null");
+        return;
+    }
     if (BJsonUtil::FindBroadCastInfoByName(*context.bundleNameDetailMap, context.bundleNameIndexInfo,
         BROADCAST_TYPE, broadCastInfoMap)) {
-        context.service->SetBroadCastInfoMap(context.bundleNameIndexInfo,
-            broadCastInfoMap, context.session->GetSessionUserId());
-        context.service->BroadCastRestore(context.bundleNameIndexInfo, BConstants::BROADCAST_RESTORE_START);
+        serviceptr->SetBroadCastInfoMap(context.bundleNameIndexInfo,
+            broadCastInfoMap, ptr->GetSessionUserId());
+        serviceptr->BroadCastRestore(context.bundleNameIndexInfo, BConstants::BROADCAST_RESTORE_START);
     } else if (BJsonUtil::FindBundleInfoByName(*context.bundleNameDetailMap, context.bundleNameIndexInfo,
         BROADCAST_TYPE, broadCastInfo)) {
         bool notifyRet = DelayedSingleton<NotifyWorkService>::GetInstance()->NotifyBundleDetail(
@@ -135,7 +166,7 @@ void RestoreExtraPropertyStrategy::Execute(StrategyContext &context)
     if (BJsonUtil::FindBundleInfoByName(*context.bundleNameDetailMap,
         context.bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
         HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
-        context.session->SetBackupExtInfo(context.bundleNameIndexInfo, uniCastInfo.detail);
+        ptr->SetBackupExtInfo(context.bundleNameIndexInfo, uniCastInfo.detail);
     }
 }
 
