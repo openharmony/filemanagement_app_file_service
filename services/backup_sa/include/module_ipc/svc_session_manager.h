@@ -557,6 +557,8 @@ public:
      */
     uint32_t GetTimeoutValue(const std::string &bundleName);
 
+    bool SetTimeoutValue(const std::string &bundleName, uint32_t resTimeoutMs);
+
     /**
      * @brief Set the old device backup version object
      *

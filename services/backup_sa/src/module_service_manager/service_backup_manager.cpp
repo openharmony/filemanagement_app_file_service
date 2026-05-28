@@ -259,9 +259,11 @@ void Service::StartBundleTaskBackup(const std::string &bundleName)
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     auto ret = ERR_OK;
     auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
-    if (instance != nullptr) {
-        ret = instance->HandleBackup(session_->GetClearDataFlag(bundleName), bundleName);
+    if (instance == nullptr) {
+        HILOGE("Failed to GetMigrateInstance");
+        return;
     }
+    ret = instance->HandleBackup(session_->GetClearDataFlag(bundleName), bundleName);
     session_->GetServiceReverseProxy()->BackupOnBundleStarted(ret, bundleName);
     BundleBeginRadarReport(bundleName, ret, scenario);
     if (ret) {

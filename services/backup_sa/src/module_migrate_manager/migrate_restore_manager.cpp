@@ -39,10 +39,6 @@
 
 namespace OHOS::FileManagement::Backup {
 
-const string INDEX_FILE_RESTORE = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
-                                  append(BConstants::SA_BUNDLE_BACKUP_RESTORE).
-                                  append(BConstants::EXT_BACKUP_MANAGE);
-
 static void RecordDoRestoreRes(const std::string &bundleName, const std::string &func,
     AppRadar::DoRestoreInfo &restoreInfo)
 {
@@ -67,7 +63,7 @@ ErrCode MigrateManager::HandleRestore(bool isClearData)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         isClearData_ = isClearData;
-        curScenario_ = BackupRestoreScenario::FULL_RESTORE;
+        curScenario_ = BackupType::FULL_RESTORE;
         return ERR_OK;
     } catch (...) {
         HILOGE("Failed to handle restore");
@@ -140,7 +136,7 @@ ErrCode MigrateManager::PublishIncrementalFile(const string &fileName)
         if (BackupPara::GetBackupDebugState()) {
             isDebug_ = true;
         }
-        curScenario_ = BackupRestoreScenario::INCREMENTAL_RESTORE;
+        curScenario_ = BackupType::INCREMENTAL_RESTORE;
         HILOGI("Create task for Incremental Restore");
         AsyncTaskIncrementalRestore();
         HILOGI("End publish incremental file");
@@ -194,7 +190,7 @@ int MigrateManager::DealIncreRestoreBigAndTarFile()
 {
     auto startTime = std::chrono::system_clock::now();
     // 解压
-    int ret = CreateDefaultTask();
+    int ret = CreateDefaultTask(bundleName_);
     ret = DoIncrementalRestore();
     if (ret != ERR_OK) {
         HILOGE("Do incremental restore err");
@@ -214,20 +210,13 @@ int MigrateManager::DealIncreRestoreBigAndTarFile()
 int MigrateManager::DoIncrementalRestore()
 {
     HILOGI("Do incremental restore");
-    string scanResult;
-    ErrCode ret = servicePtr_->VerifyCallerAndGetCallerName(bundleName_);
-    if (ret != ERR_OK) {
-        HILOGE("error, Get bundle name failed, ret:%{public}d", ret);
-        return ret;
-    }
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
         HILOGW("enhance service is not loaded");
         return BError(BError::Codes::OK);
     }
-    AncoRestoreResult infos;
     auto startTime = std::chrono::system_clock::now();
-    ret = enhanceService->StartDefaultAppUnPack(bundleName_, infos);
+    ret = enhanceService->StartDefaultAppUnPack(bundleName_);
 
     ErrCode err = ERR_OK;
     auto endTime = std::chrono::system_clock::now();
@@ -242,18 +231,12 @@ void MigrateManager::RestoreBigFiles(bool appendTargetPath)
     // 获取索引文件内容
 
     auto start = std::chrono::system_clock::now();
-    ErrCode ret = servicePtr_->VerifyCallerAndGetCallerName(bundleName_);
-    if (ret != ERR_OK) {
-        HILOGE("error, Get bundle name failed, ret:%{public}d", ret);
-        return;
-    }
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
         HILOGW("enhance service is not loaded");
         return;
     }
-    AncoRestoreResult ancoRestoreRes;
-    ret = enhanceService->DefaultAppRestoreBigFiles(bundleName_, appendTargetPath, ancoRestoreRes);
+    ret = enhanceService->DefaultAppRestoreBigFiles(bundleName_, appendTargetPath);
     auto end = std::chrono::system_clock::now();
     radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     HILOGI("End Restore Big Files");
@@ -372,12 +355,13 @@ void MigrateManager::DoClearInner()
             return;
         }
         enhanceService->StartDefaultAppClear(bundleName_);
+        enhanceService->DestroyDefaultTask(bundleName_);
     } catch (...) {
         HILOGE("Failed to clear");
     }
 }
 
-void MigrateManager::AppDone(ErrCode errCode)
+void MigrateManager::AppDone(ErrCode errCode, const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("AppDone Begin.");
@@ -387,7 +371,7 @@ void MigrateManager::AppDone(ErrCode errCode)
         DoClear();
         return;
     }
-    auto ret = servicePtr_->AppDone(errCode);
+    auto ret = servicePtr_->AppDone(errCode, bundleName);
     if (ret != ERR_OK) {
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
@@ -403,8 +387,7 @@ void MigrateManager::AppDone(ErrCode errCode)
 
 void MigrateManager::ReportAppStatistic(const std::string &func, ErrCode errCode)
 {
-    if (curScenario_ == BackupRestoreScenario::FULL_BACKUP ||
-        curScenario_ == BackupRestoreScenario::INCREMENTAL_BACKUP) {
+    if (curScenario_ == BackupType::FULL_BACKUP) {
         appStatistic_->ReportBackup(func, RadarError(MODULE_BACKUP, errCode).GenCode());
     } else {
         appStatistic_->untarSpend_ = static_cast<uint32_t>(radarRestoreInfo_.tarFileSpendTime);
@@ -488,12 +471,12 @@ void MigrateManager::HandleExtDisconnect(BackupType scenario, bool isAppResultRe
     }
 }
 
-void MigrateManager::HandleCurBundleEndWork(std::string bundleName, const BackupType sennario)
+void MigrateManager::HandleCurBundleEndWork(std::string bundleName, const BackupType scenario)
 {
     HILOGI("Begin");
     try {
-        if (sennario != BackupType::FULL_RESTORE &&
-            sennario != BackupType::INCREMENTAL_RESTORE) {
+        if (scenario != BackupType::FULL_RESTORE &&
+            scenario != BackupType::INCREMENTAL_RESTORE) {
             return;
         }
         if (servicePtr_->session_->OnBundleFileReady(bundleName)) {
@@ -524,24 +507,5 @@ ErrCode MigrateManager::HandleCurAppDone(ErrCode errCode, const std::string &bun
         servicePtr_->NotifyCallerCurAppDone(errCode, bundleName);
     }
     return BError(BError::Codes::OK);
-}
-
-void MigrateManager::UpdateFileStat(std::string filePath, uint64_t fileSize)
-{
-    std::lock_guard<std::mutex> lock(updateFileStatLock_);
-    appStatistic_->UpdateFileDist(ExtractFileExt(filePath), fileSize);
-    uint32_t dirDepth = 0;
-    const char* pstr = filePath.c_str();
-    char pre = '-';
-    uint32_t pathLen = filePath.size();
-    for (uint32_t i = 0; i < pathLen; i++) {
-        if (pstr[i] == '/' && pre != '/') {
-            dirDepth++;
-        }
-        pre = pstr[i];
-    }
-    if (dirDepth > appStatistic_->dirDepth_) {
-        appStatistic_->dirDepth_ = dirDepth;
-    }
 }
 }

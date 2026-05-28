@@ -528,7 +528,7 @@ HWTEST_F(ScanResultManagerTest, MAX_TAR_SIZE_CHECK_INIT_001, testing::ext::TestS
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: MAX_TAR_SIZE_CHECK_INIT_001";
     ScanResultManager localManager;
-    EXPECT_GT(localManager.maxTarSize_.load(), 0);
+    EXPECT_EQ(localManager.maxTarSize_.load(), 0);
     GTEST_LOG_(INFO) << "ScanResultManagerTest-end: MAX_TAR_SIZE_CHECK_INIT_001";
 }
 

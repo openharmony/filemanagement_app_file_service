@@ -231,6 +231,12 @@ void ScanResultManager::WaitForFiles()
     waitFilesReady_.wait(lock, [this] {return HasFileReady() || IsProcessCompleted(); });
 }
 
+void ScanResultManager::WaitForCompleted()
+{
+    std::unique_lock<std::mutex> lock(mutexLock_);
+    waitFilesReady_.wait(lock, [this] {return IsProcessCompleted(); });
+}
+
 void ScanResultManager::StartPacket()
 {
     stopPacket_.store(false);

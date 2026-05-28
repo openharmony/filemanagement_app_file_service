@@ -127,6 +127,7 @@ public:
     void SetCompletedFlag(bool value);
 
     void WaitForFiles();
+    void WaitForCompleted();
 
     void StartPacket();
     void WaitForPacketFlag();

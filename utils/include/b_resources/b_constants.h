@@ -174,6 +174,8 @@ constexpr int FIRST = 0;
 constexpr int SECOND = 1;
 constexpr int THIRD = 2;
 
+// backup process name
+static inline std::string BACKUP_SA_NAME = "backup_sa";
 // 文管bundleName
 static inline std::string BUNDLE_FILE_MANAGER = ".filemanager";
 // 文管bundleNameSize

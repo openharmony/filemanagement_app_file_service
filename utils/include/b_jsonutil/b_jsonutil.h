@@ -32,6 +32,7 @@ public:
         int bundleIndex;
         int32_t userId;
         bool isBroadcastOnly;
+        bool isDefaultBackupAndRestore;
     }BundleDetailInfo;
 
     typedef struct BundleDataSize {

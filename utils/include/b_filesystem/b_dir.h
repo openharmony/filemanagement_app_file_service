@@ -64,6 +64,16 @@ public:
         const std::vector<std::string> &excludes, off_t size = -1);
 };
 
+class DefaultAppScanner {
+public:
+    std::tuple<ErrCode, int64_t, int64_t> DefaultScanAllDirs(const std::set<std::string> &includes,
+        const std::vector<std::string> &excludes, std::shared_ptr<ScanResultManager> &instance);
+    tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backupPath,
+        const vector<string> &excludes,
+        std::shared_ptr<ScanResultManager> &instance,
+        off_t size = -1);
+};
+
 class BDir {
 public:
 
@@ -153,6 +163,11 @@ public:
      * @brief 清空当前目录
      */
     static void ClearDirectory(const std::string &path);
+
+    static std::tuple<ErrCode, int64_t, int64_t> DefaultScanAllDirs(
+        const std::set<std::string> &includes,
+        const std::vector<std::string> &excludes,
+        std::shared_ptr<ScanResultManager> &instance);
 };
 } // namespace OHOS::FileManagement::Backup
 

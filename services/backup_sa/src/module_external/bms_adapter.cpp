@@ -690,7 +690,7 @@ void BundleMgrAdapter::CreatBackupEnv(const std::vector<BIncrementalData> &bundl
 }
 
 std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppendBundles(
-    const std::vector<BIncrementalData> &incrementalDataList, int32_t userId)
+    const std::vector<BIncrementalData> &incrementalDataList, int32_t userId, bool isDefaultApp)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     auto bms = GetBundleManager();
@@ -704,7 +704,7 @@ std::vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForAppe
             continue;
         }
         struct BJsonEntityCaps::BundleBackupConfigPara backupPara;
-        if (!GetBackupExtConfig(bundleExtInfo.extensionInfos_, backupPara)) {
+        if (!GetBackupExtConfig(bundleExtInfo.extensionInfos_, backupPara) && !isDefaultApp) {
             HILOGE("No backup extension ability found, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
