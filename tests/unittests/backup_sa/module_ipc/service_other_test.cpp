@@ -219,8 +219,8 @@ class ServiceTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase();
-    void SetUp() {};
-    void TearDown() {};
+    void SetUp() override;
+    void TearDown() override;
 
     static inline sptr<Service> service = nullptr;
     static inline shared_ptr<BackupParaMock> param = nullptr;
@@ -332,6 +332,22 @@ void ServiceTest::TearDownTestCase()
     EnhanceServiceManager::GetInstance().service_ = nullptr;
     delete mockEnhanceService;
     mockEnhanceService = nullptr;
+}
+
+void ServiceTest::SetUp()
+{
+    service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+}
+
+void ServiceTest::TearDown()
+{
+    service->session_ = nullptr;
+    if (skeleton) {
+        testing::Mock::VerifyAndClearExpectations(skeleton.get());
+    }
+    if (token) {
+        testing::Mock::VerifyAndClearExpectations(token.get());
+    }
 }
 
 #include "sub_service_test.cpp"

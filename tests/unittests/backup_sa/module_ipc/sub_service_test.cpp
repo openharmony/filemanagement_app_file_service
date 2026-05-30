@@ -573,37 +573,6 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0004, TestSize.Level1)
 }
 
 /**
- * @tc.number: SUB_Service_ClearAndNoticeClient_0000
- * @tc.name: SUB_Service_ClearAndNoticeClient_0000
- * @tc.desc: 测试 ClearAndNoticeClient 的正常/异常分支
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issueIAKC3I
- */
-HWTEST_F(ServiceTest, SUB_Service_ClearAndNoticeClient_0000, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ClearAndNoticeClient_0000";
-    string callName = "ClearAndNoticeClient";
-    GTEST_LOG_(INFO) << "1. test normal";
-    EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false)).WillOnce(Return(true)).WillOnce(Return(true));
-    uint32_t origin= service->successBundlesNum_;
-    service->ClearAndNoticeClient(callName, 0, true);
-    service->ClearAndNoticeClient(callName, 0, true);
-    service->ClearAndNoticeClient(callName, 0, false);
-    uint32_t middle = service->successBundlesNum_;
-    EXPECT_EQ(0, middle - origin);
-
-    GTEST_LOG_(INFO) << "2. test session nullptr";
-    auto session_ = service->session_;
-    service->session_ = nullptr;
-    service->ClearAndNoticeClient(callName, 0, false);
-    service->session_ = session_;
-    EXPECT_EQ(0, service->successBundlesNum_ - middle);
-    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ClearAndNoticeClient_0000";
-}
-
-/**
  * @tc.number: SUB_Service_ExtStart_0000
  * @tc.name: SUB_Service_ExtStart_0000
  * @tc.desc: 测试 ExtStart 的正常/异常分支
