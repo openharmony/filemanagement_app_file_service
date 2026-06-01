@@ -17,7 +17,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "module_migrate_manager/migrate_manager.h"
+#include "module_ipc/service.h"
 #include "service_client.h"
 
 #include "b_anony/b_anony.h"
@@ -36,6 +36,7 @@
 #include "b_utils/string_utils.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
+#include "tokenid_kit.h"
 
 namespace OHOS::FileManagement::Backup {
 
@@ -112,9 +113,12 @@ tuple<ErrCode, UniqueFd, UniqueFd> MigrateManager::GetIncreFileHandleForNormalVe
     UniqueFd fd (BConstants::INVALID_FD_NUM);
     UniqueFd reportFd(BConstants::INVALID_FD_NUM);
 
-    string scanResult;
     ErrCode ret = ERR_OK;
-
+    ret = CreateDefaultTask(bundleName_);
+    if (ret != 0) {
+        HILOGE("CreateDefaultTask fail err:%{public}d", ret);
+        return {ret, UniqueFd(INVALID_FD), UniqueFd(INVALID_FD)};
+    }
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
         HILOGW("enhance service is not loaded");
@@ -216,9 +220,9 @@ int MigrateManager::DoIncrementalRestore()
         return BError(BError::Codes::OK);
     }
     auto startTime = std::chrono::system_clock::now();
-    ret = enhanceService->StartDefaultAppUnPack(bundleName_);
-
     ErrCode err = ERR_OK;
+    err = enhanceService->StartDefaultAppUnPack(bundleName_);
+
     auto endTime = std::chrono::system_clock::now();
     radarRestoreInfo_.tarFileSpendTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
@@ -236,7 +240,7 @@ void MigrateManager::RestoreBigFiles(bool appendTargetPath)
         HILOGW("enhance service is not loaded");
         return;
     }
-    ret = enhanceService->DefaultAppRestoreBigFiles(bundleName_, appendTargetPath);
+    enhanceService->DefaultAppRestoreBigFiles(bundleName_, appendTargetPath);
     auto end = std::chrono::system_clock::now();
     radarRestoreInfo_.bigFileSpendTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     HILOGI("End Restore Big Files");
@@ -273,8 +277,7 @@ ErrCode MigrateManager::DealIncrementalDone(ErrCode errCode)
             HILOGE("AppIncrementalDone error, session is null");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        HILOGI("Service AppIncrementalDone start bundlename is %{public}s, errCode is :%{public}d",
-            bundleName);
+        HILOGI("Service AppIncrementalDone start bundlename is %{public}s", bundleName_.c_str());
         if (servicePtr_->session_->OnBundleFileReady(bundleName_) || errCode != BError(BError::Codes::OK)) {
             servicePtr_->SetExtOnRelease(bundleName_, true);
             return BError(BError::Codes::OK);
@@ -290,39 +293,6 @@ ErrCode MigrateManager::DealIncrementalDone(ErrCode errCode)
         servicePtr_->ReleaseOnException();
         HILOGI("Unexpected exception");
         return EPERM;
-    }
-}
-
-void MigrateManager::GetFileHandleWithUniqueFds(const string &bundleName, std::set<std::string> &fileNameVec)
-{
-    for (const auto &fileName : fileNameVec) {
-        auto err = servicePtr_->SendIncrementalFileHandle(bundleName, fileName);
-        if (err != ERR_OK) {
-            HILOGE("SendIncrementalFileHandle failed code: %{public}d", err);
-        }
-    }
-}
-
-ErrCode MigrateManager::GetFileHandleWithUniqueFd(const std::string &fileName,
-    int32_t &getFileHandleErrCode, int &fd)
-{
-    UniqueFd fileHandleFd(GetFileHandle(fileName, getFileHandleErrCode));
-    fd = dup(fileHandleFd.Get());
-    return ERR_OK;
-}
-
-UniqueFd MigrateManager::GetFileHandle(const string &fileName, int32_t &errCode)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        UniqueFd tarFd(-1);
-
-        return tarFd;
-    } catch (...) {
-        HILOGE("Failed to get file handle");
-        DoClear();
-        errCode = -1;
-        return UniqueFd(-1);
     }
 }
 
@@ -376,7 +346,7 @@ void MigrateManager::AppDone(ErrCode errCode, const string &bundleName)
         HILOGE("Failed to notify the app done. err = %{public}d", ret);
     }
     bool isExtOnRelease = false;
-    ret = GetExtOnRelease(isExtOnRelease)
+    ret = GetExtOnRelease(isExtOnRelease);
     if (ret != ERR_OK) {
         HILOGE("Failed to GetExtOnRelease err = %{public}d", ret);
     }
@@ -403,7 +373,7 @@ void MigrateManager::ReportAppStatistic(const std::string &func, ErrCode errCode
 
 ErrCode MigrateManager::GetExtOnRelease(bool &isExtOnRelease)
 {
-    std::shared_lock<std::shared_mutex> lock(onReleaseLock_);
+    std::lock_guard<std::mutex> lock(onReleaseLock_);
     auto ret = ERR_OK;
     auto it = servicePtr_->backupExtOnReleaseMap_.find(bundleName_);
     if (it == servicePtr_->backupExtOnReleaseMap_.end()) {
@@ -420,14 +390,13 @@ ErrCode MigrateManager::GetExtOnRelease(bool &isExtOnRelease)
 void MigrateManager::HandleExtOnRelease(bool isAppResultReport, ErrCode errCode)
 {
     HILOGI("HandleExtOnRelease begin");
-    int32_t scenario = static_cast<int32_t>(BConstants::ExtensionScenario::RESTORE);
-    auto ret = HandleExtDisconnect(curScenario_, isAppResultReport, errCode);
+    auto ret = HandleExtOnDisconnect(curScenario_, isAppResultReport, errCode);
     if (ret != ERR_OK) {
         HILOGI("failed to HandleExtOnRelease, err = %{public}d", ret);
     }
 }
 
-void MigrateManager::HandleExtDisconnect(BackupType scenario, bool isAppResultReport, ErrCode errCode)
+ErrCode MigrateManager::HandleExtOnDisconnect(BackupType scenario, bool isAppResultReport, ErrCode errCode)
 {
     try {
         HILOGI("Begin, scenario:%{public}d, isAppResultReport:%{public}d, errCode:%{public}d", scenario,
@@ -483,7 +452,7 @@ void MigrateManager::HandleCurBundleEndWork(std::string bundleName, const Backup
             std::lock_guard<std::mutex> lock(bundleEndLock_);
             servicePtr_->session_->StopFwkTimer(bundleName);
             servicePtr_->session_->StopExtTimer(bundleName);
-            ClearSessionAndSchedInfo(bundleName);
+            servicePtr_->ClearSessionAndSchedInfo(bundleName);
         }
         servicePtr_->RemoveExtensionMutex(bundleName);
     } catch (...) {

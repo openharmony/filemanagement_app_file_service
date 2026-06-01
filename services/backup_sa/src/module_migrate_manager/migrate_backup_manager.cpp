@@ -39,6 +39,7 @@
 #include "b_utils/string_utils.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
+#include "tokenid_kit.h"
 
 namespace OHOS::FileManagement::Backup {
 
@@ -51,26 +52,26 @@ static bool ReplaceBundleName(string &srcPath, const string &bundleName)
     bundleBase.append(bundleName);
 
     std::string bundleDataBase = BConstants::PATH_DATABASE.data();
-    bundleBase.append(BConstants::BACKSLASH);
-    bundleBase.append(bundleName);
+    bundleDataBase.append(BConstants::BACKSLASH);
+    bundleDataBase.append(bundleName);
 
     std::string bundleDistributeBase = BConstants::PATH_DISTRIBUTE.data();
-    bundleBase.append(BConstants::BACKSLASH);
-    bundleBase.append(bundleName);
+    bundleDistributeBase.append(BConstants::BACKSLASH);
+    bundleDistributeBase.append(bundleName);
 
     auto pos = srcPath.find(BConstants::PATH_BASE);
     if (pos != string::npos) {
-        srcPath.replace(pos, BConstants::PATH_BASE.lenth(), bundleBase);
+        srcPath.replace(pos, BConstants::PATH_BASE.length(), bundleBase);
         return true;
     }
     pos = srcPath.find(BConstants::PATH_DATABASE);
     if (pos != string::npos) {
-        srcPath.replace(pos, BConstants::PATH_DATABASE.lenth(), bundleBase);
+        srcPath.replace(pos, BConstants::PATH_DATABASE.length(), bundleDataBase);
         return true;
     }
     pos = srcPath.find(BConstants::PATH_DISTRIBUTE);
     if (pos != string::npos) {
-        srcPath.replace(pos, BConstants::PATH_DISTRIBUTE.lenth(), bundleBase);
+        srcPath.replace(pos, BConstants::PATH_DISTRIBUTE.length(), bundleDistributeBase);
         return true;
     }
     return false;
@@ -80,10 +81,10 @@ static vector<string> GetDefaultIncludePath(int userId, const string &bundleName
 {
     vector<string> include = {};
     vector<string> defaultInclude = {BConstants::PATHES_TO_BACKUP.begin(), BConstants::PATHES_TO_BACKUP.end()};
-    std::string strEl2 = "/data/app/el2";
-    strEl2.append(std::to_string(userId));
-    std::string strEl1 = "/data/app/el1";
+    std::string strEl1 = BConstants::PATH_ABSOLUTE_HOME_EL1.data();
     strEl1.append(std::to_string(userId));
+    std::string strEl2 = BConstants::PATH_ABSOLUTE_HOME_EL2.data();
+    strEl2.append(std::to_string(userId));
     for (auto inc : defaultInclude) {
         auto pos = inc.find(BConstants::PATH_RELETIVE_HOME_EL1);
         if (pos != string::npos) {
@@ -93,7 +94,7 @@ static vector<string> GetDefaultIncludePath(int userId, const string &bundleName
                 include.push_back(inc);
             }
         }
-        auto pos = inc.find(BConstants::PATH_RELETIVE_HOME_EL2);
+        pos = inc.find(BConstants::PATH_RELETIVE_HOME_EL2);
         if (pos != string::npos) {
             inc.replace(pos, BConstants::PATH_RELETIVE_HOME_EL2.length(), strEl2);
             HILOGD("inc %{public}s", inc.c_str());
@@ -109,7 +110,7 @@ ErrCode MigrateManager::HandleBackup(bool isClearData, const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     isClearData_ = isClearData;
-    curScenario_ = BackupRestoreScenario::FULL_BACKUP;
+    curScenario_ = BackupType::FULL_BACKUP;
     AsyncTaskBackup(bundleName);
     return BError(BError::Codes::OK);
 }
@@ -117,13 +118,13 @@ ErrCode MigrateManager::HandleBackup(bool isClearData, const string &bundleName)
 void MigrateManager::AsyncTaskBackup(const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto task = [obj {wptr<MigrateManager>(this)}]() {
+    auto task = [obj {wptr<MigrateManager>(this)}, bundleName]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
             ptr->CreateDefaultTask(bundleName);
-            ptr->ScanAllDirsTask();
-            ptr->DoPacket(); // 关注点：大文件的传输如果速度较慢，会导致tar包挤压，手机空间会有所增加
+            ptr->ScanAllDirsTask(bundleName);
+            ptr->DoPacket(bundleName); // 关注点：大文件的传输如果速度较慢，会导致tar包挤压，手机空间会有所增加
             ptr->GetScanInstance(bundleName)->SetCompletedFlag(true);
         } catch (const BError &e) {
             HILOGE("extension: AsyncTaskBackup error, err code:%{public}d", e.GetCode());
@@ -153,11 +154,11 @@ void MigrateManager::AsyncDoBackup(const string &bundleName)
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         ptr->CreateDefaultTask(bundleName);
         ptr->DoBackupTask(bundleName);
-        ptr->DoClear(bundleName);
+        ptr->DoClear();
     };
-    doBackupPool_.AddTask([dobackupTask = std::move(dobackupTask)]() {
+    doBackupPool_.AddTask([dobackupTask = std::move(dobackupTask), bundleName]() {
         try {
-            dobackupTask();
+            dobackupTask(bundleName);
         } catch (...) {
             HILOGE("Failed to add task to thread pool");
         }
@@ -247,7 +248,6 @@ void MigrateManager::DoBackupTask(const std::string &bundleName)
 {
     int ret = ERR_OK;
     int fdNum = 0;
-    std::vector<std::shared_ptr<IFileInfo>> allFiles;
     while (!GetScanInstance(bundleName)->IsProcessCompleted() || GetScanInstance(bundleName)->HasFileReady()) {
         GetScanInstance(bundleName)->WaitForCompleted();
         std::shared_ptr<IFileInfo> fileInfo = GetScanInstance(bundleName)->GetFileInfo();
@@ -271,18 +271,18 @@ void MigrateManager::DoBackupTask(const std::string &bundleName)
             ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
         }
     }
-    int indexRet = IndexFileReady(allFiles, bundleName);
+    int indexRet = IndexFileReady(bundleName);
     if (indexRet != ERR_OK) {
         HILOGE("report app file ready fail, err=%{public}d", indexRet);
         ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
     }
     GetScanInstance(bundleName)->SetCompletedFlag(false);
-    AppDone(ret);
+    AppDone(ret, bundleName);
     HILOGI("backup app done ret=%{public}d", ret);
 }
 
 ErrCode MigrateManager::ReportAppFileReady(const std::string &bundleName,
-    const string &filename, const string &filePath, bool needDelete)
+    const string &fileName, const string &filePath, bool needDelete)
 {
     int32_t errCode = ERR_OK;
     UniqueFd fd(INVALID_FD);
@@ -298,19 +298,19 @@ ErrCode MigrateManager::ReportAppFileReady(const std::string &bundleName,
     }
     errCode = enhanceService->DefaultOpenFile(bundleName, newPath, fd);
     if (errCode != 0) {
-        HILOGW("GetFileHandle fail err:%{public}d", errCode);
+        HILOGE("GetFileHandle fail err:%{public}d", errCode);
     }
     int reportRs =
-        fd.Get() < 0 ? servicePtr_->AppFileReadyWithoutFd(filename, newPath, errCode) :
-        servicePtr_->AppFileReady(filename, newPath, move(fd), errCode);
+        fd.Get() < 0 ? servicePtr_->DefaultAppFileReadyWithoutFd(fileName, newPath, errCode) :
+        servicePtr_->DefaultAppFileReady(fileName, newPath, move(fd), errCode);
     if (SUCCEEDED(reportRs)) {
-        HILOGD("Report app file ready success, filename: %{public}s", filename.c_str());
+        HILOGD("Report app file ready success, fileName: %{public}s", fileName.c_str());
         if (needDelete) {
             auto ret = RemoveFile(newPath);
             HILOGD("RemoveFile result:%{public}d, newPath:%{public}s", ret, newPath.c_str());
         }
     } else {
-        HILOGW("Report app file ready failed, ret: %{public}d, filename: %{public}s", reportRs, filename.c_str());
+        HILOGW("Report app file ready failed, ret: %{public}d, fileName: %{public}s", reportRs, fileName.c_str());
     }
     return reportRs;
 }
@@ -327,7 +327,12 @@ ErrCode MigrateManager::IndexFileReady(const std::string &bundleName)
     }
     string managePath = BConstants::GetBundleBackupDir(userId_, bundleName).append(
         BConstants::SA_BUNDLE_BACKUP_BACKUP).append(BConstants::EXT_BACKUP_MANAGE);
-    auto err = enhanceService->GetIndexFile(bundleName, managePath, size, fd);
+    auto instance = GetScanInstance(bundleName);
+    if (instance == nullptr) {
+        HILOGE("GetScanInstance failed");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto err = enhanceService->GetIndexFile(bundleName, managePath, instance);
     appStatistic_->manageJsonSize_ = BFile::GetFileSize(managePath, err);
     if (err != 0) {
         HILOGE("get index size fail err:%{public}d", err);
@@ -338,10 +343,10 @@ ErrCode MigrateManager::IndexFileReady(const std::string &bundleName)
 void MigrateManager::DoPacket(const string &bundleName)
 {
     string callerName;
-    ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
+    ErrCode ret = VerifyCallerAndGetCallerName(callerName);
     if (ret != ERR_OK) {
         HILOGE("error, Get bundle name failed, ret:%{public}d", ret);
-        return ret;
+        return;
     }
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
@@ -349,8 +354,12 @@ void MigrateManager::DoPacket(const string &bundleName)
         return;
     }
     auto instance = GetScanInstance(bundleName);
+    if (instance == nullptr) {
+        HILOGE("GetScanInstance failed");
+        return;
+    }
     enhanceService->StartDefaultPacket(bundleName, instance);
-    HILOGI("TarSpend: %{public}u ms", appStatistic_->tarSpend_);
+    HILOGI("TarSpend Finished");
 }
 
 void MigrateManager::ScanAllDirsTask(const string &bundleName)
@@ -370,7 +379,8 @@ ErrCode MigrateManager::ScanAllDirs(int64_t &totalSize, const string &bundleName
     vector<string> excludes = {};
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
 
-    ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
+    string callerName;
+    ErrCode ret = VerifyCallerAndGetCallerName(callerName);
     if (ret != ERR_OK) {
         HILOGE("error, Get bundle name failed, ret:%{public}d", ret);
         return ret;
@@ -381,9 +391,12 @@ ErrCode MigrateManager::ScanAllDirs(int64_t &totalSize, const string &bundleName
         return BError(BError::Codes::OK);
     }
     ret = enhanceService->MakeDir(bundleName);
-    auto instance = GetScanInstance(bundleName);
-    enhanceService->StartDefaultPacket(bundleName, instance);
 
+    auto instance = GetScanInstance(bundleName);
+    if (instance == nullptr) {
+        HILOGE("GetScanInstance failed");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     auto [errCode, bigFileSize, smallFileSize] = BDir::DefaultScanAllDirs(expandIncludes, excludes, instance);
 
     appStatistic_->scanFileSpend_.End();
@@ -392,7 +405,7 @@ ErrCode MigrateManager::ScanAllDirs(int64_t &totalSize, const string &bundleName
     appStatistic_->smallFileSize_ = static_cast<uint64_t>(smallFileSize);
     totalSize = bigFileSize + smallFileSize;
     // start timeout
-    SetDefaultAppTimer(totalSize);
+    SetDefaultAppTimer(totalSize, bundleName);
     HILOGI("Scan end, size=%{public}" PRId64 ", spend=%{public}u", totalSize, appStatistic_->scanFileSpend_.GetSpan());
     return ret;
 }
@@ -422,7 +435,7 @@ void MigrateManager::CloseFileWithFDSan(int fd)
     }
 }
 
-ErrCode MigrateManager::VerifyCallerAndGetCallerName(std::string &bundleName)
+ErrCode MigrateManager::VerifyCallerAndGetCallerName(const std::string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
@@ -463,7 +476,7 @@ void MigrateManager::UpdateFileStat(std::string filePath, uint64_t fileSize)
     }
 }
 
-void MigrateManager::SetDefaultAppTimer(int64_t &appSize)
+void MigrateManager::SetDefaultAppTimer(int64_t &appSize, const string &bundleName)
 {
     const int64_t minTimeout = 900;      /* 900 second */
     const int64_t defaultTimeout = 30;           /* 30 second */

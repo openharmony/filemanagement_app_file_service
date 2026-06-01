@@ -419,7 +419,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0002, TestSize.Level1)
 /**
  * @tc.number: SUB_Service_ExtConnectDied_0000
  * @tc.name: SUB_Service_ExtConnectDied_0000
- * @tc.desc: 测试 ExtConnectDied backupConnection为null且hasConnected为false场景
+ * @tc.desc: 测试 ExtConnectDied backupConnection为null且needCleanData为false场景
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -428,13 +428,12 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0002, TestSize.Level1)
 HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0000, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ExtConnectDied_0000";
-    GTEST_LOG_(INFO) << "1. backupConnection is null and hasConnected is false";
+    GTEST_LOG_(INFO) << "1. backupConnection is null and needCleanData is false";
     string callName = "extConnectDie_0000";
     service->isOccupyingSession_ = false;
     EXPECT_CALL(*session, StopFwkTimer(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*session, StopExtTimer(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
     EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(false));
     EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false));
     EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
@@ -442,6 +441,8 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0000, TestSize.Level1)
         .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
     EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
     EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
+    EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+    EXPECT_CALL(*srProxy, RestoreOnResultReport(_, _, _)).WillOnce(Return(0));
     service->ExtConnectDied(callName);
     EXPECT_EQ(service->sched_->bundleTimeVec_.size(), 0);
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtConnectDied_0000";
@@ -538,7 +539,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0003, TestSize.Level1)
     auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, callName));
     connectPtr->hasConnected_.store(true);
     EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false)).WillOnce(Return(false))
-        .WillOnce(Return(false)).WillOnce(Return(false));
+        .WillOnce(Return(false)).WillOnce(Return(false)).WillOnce(Return(false));
     EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
     EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
     EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(true));

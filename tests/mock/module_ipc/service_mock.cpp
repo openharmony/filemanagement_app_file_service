@@ -392,8 +392,8 @@ void Service::CreateDirIfNotExist(const std::string &path)
 {
 }
 
-std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo>&, bool,
-    const vector<string>&)
+std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,
+    bool isIncBackup, const std::vector<std::string> &srcBundleNames, bool isDefaultApp)
 {
     return {};
 }

@@ -281,6 +281,11 @@ ohos_shared_library("backup_sa") {
     "src/module_notify/notify_work_service.cpp",
     "src/module_sched/sched_scheduler.cpp",
     "src/module_external/storage_manager_service.cpp",
+    "src/module_service_manager/service_backup_manager.cpp",
+    "src/module_service_manager/service_restore_manager.cpp",
+    "src/module_migrate_manager/migrate_backup_manager.cpp",
+    "src/module_migrate_manager/migrate_restore_manager.cpp",
+    "src/module_strategy/service_strategy.cpp"
   ]
 
   defines = [

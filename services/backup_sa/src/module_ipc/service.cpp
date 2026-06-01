@@ -480,83 +480,6 @@ ErrCode Service::VerifyCaller(IServiceReverseType::Scenario scenario)
     return VerifyCaller();
 }
 
-ErrCode Service::InitRestoreSession(const sptr<IServiceReverse> &remote)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    Duration totalSpend;
-    totalSpend.Start();
-    ErrCode ret = VerifyCaller();
-    if (ret != ERR_OK) {
-        HILOGE("Init restore session failed, verify caller failed");
-        return ret;
-    }
-    ret = session_->Active({
-        .clientToken = IPCSkeleton::GetCallingTokenID(),
-        .scenario = IServiceReverseType::Scenario::RESTORE,
-        .clientProxy = remote,
-        .userId = GetUserIdDefault(),
-        .callerName = GetCallerName(),
-        .activeTime = TimeUtils::GetCurrentTime(),
-    });
-    if (ret == ERR_OK) {
-        HILOGE("Success to init a new restore session");
-        TotalStatStart(BizScene::RESTORE, GetCallerName(), totalSpend.startMilli_);
-        ClearFailedBundles();
-        successBundlesNum_ = 0;
-        CreateRunningLock();
-        ClearBundleRadarReport();
-        ClearFileReadyRadarReport();
-        return ret;
-    }
-    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
-        HILOGE("Active restore session error, Already have a session");
-        return ret;
-    }
-    HILOGE("Active restore session error");
-    StopAll(nullptr, true);
-    return ret;
-}
-
-ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    Duration totalSpend;
-    totalSpend.Start();
-    ErrCode ret = VerifyCaller();
-    if (ret != ERR_OK) {
-        HILOGE("Init full backup session fail, verify caller failed");
-        return ret;
-    }
-    int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
-    HILOGI("InitBackupSession oldSize %{public}d", oldSize);
-    session_->SetMemParaCurSize(oldSize);
-    ret = session_->Active({
-        .clientToken = IPCSkeleton::GetCallingTokenID(),
-        .scenario = IServiceReverseType::Scenario::BACKUP,
-        .clientProxy = remote,
-        .userId = GetUserIdDefault(),
-        .callerName = GetCallerName(),
-        .activeTime = TimeUtils::GetCurrentTime(),
-    });
-    if (ret == ERR_OK) {
-        HILOGE("Success to init a new backup session");
-        TotalStatStart(BizScene::BACKUP, GetCallerName(), totalSpend.startMilli_);
-        ClearFailedBundles();
-        successBundlesNum_ = 0;
-        CreateRunningLock();
-        ClearBundleRadarReport();
-        ClearFileReadyRadarReport();
-        return ret;
-    }
-    if (ret == BError(BError::Codes::SA_SESSION_CONFLICT)) {
-        HILOGE("Active backup session error, Already have a session");
-        return ret;
-    }
-    HILOGE("Active backup session error");
-    StopAll(nullptr, true);
-    return ret;
-}
-
 ErrCode Service::Start()
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
@@ -664,17 +587,6 @@ void Service::HandleExceptionOnAppendBundles(sptr<SvcSessionManager> session,
     }
 }
 
-ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd, const std::vector<std::string> &bundleNames,
-                                                         const std::vector<std::string> &detailInfos,
-                                                         int32_t restoreType, int32_t userId)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
-    UniqueFd fdUnique(fd);
-    RestoreTypeEnum restoreTypeEnum = static_cast<RestoreTypeEnum>(restoreType);
-    return AppendBundlesRestoreSession(std::move(fdUnique), bundleNames, detailInfos, restoreTypeEnum, userId);
-}
-
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
                                              const vector<BundleName> &bundleNames,
                                              const std::vector<std::string> &bundleInfos,
@@ -770,15 +682,6 @@ void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> 
         session_->SetIsReadyLaunch(bundleNameIndexInfo);
     }
     HILOGI("End");
-}
-ErrCode Service::AppendBundlesRestoreSessionData(int fd, const std::vector<std::string> &bundleNames,
-                                                 int32_t restoreType, int32_t userId)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
-    UniqueFd fdUnique(fd);
-    RestoreTypeEnum restoreTypeEnum = static_cast<RestoreTypeEnum>(restoreType);
-    return AppendBundlesRestoreSession(std::move(fdUnique), bundleNames, restoreTypeEnum, userId);
 }
 
 ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
@@ -881,88 +784,6 @@ void Service::SetCurrentSessProperties(
         }
     }
     HILOGI("End");
-}
-
-ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        if (session_ == nullptr || isOccupyingSession_.load()) {
-            HILOGE("AppendBundles backup session error, session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
-        ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::BACKUP);
-        if (ret != ERR_OK) {
-            HILOGE("AppendBundles backup session error, verify caller failed, ret:%{public}d", ret);
-            HandleExceptionOnAppendBundles(session_, bundleNames, {});
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-            return ret;
-        }
-        auto bundleDetails = MakeDetailList(bundleNames);
-        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundleDetails,
-            session_->GetSessionUserId());
-        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
-        AppendBundles(supportBackupNames);
-        SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, false);
-        OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return BError(BError::Codes::OK);
-    } catch (const BError &e) {
-        HILOGE("Failed, errCode = %{public}d", e.GetCode());
-        HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return e.GetCode();
-    } catch (...) {
-        HILOGE("Unexpected exception");
-        HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return EPERM;
-    }
-}
-
-ErrCode Service::AppendBundlesDetailsBackupSession(const vector<BundleName> &bundleNames,
-                                                   const vector<std::string> &bundleInfos)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        if (session_ == nullptr || isOccupyingSession_.load()) {
-            HILOGE("AppendBundles backup session with infos error, session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
-        ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::BACKUP);
-        if (ret != ERR_OK) {
-            HILOGE("AppendBundles backup session with infos error, verify caller failed, ret:%{public}d", ret);
-            HandleExceptionOnAppendBundles(session_, bundleNames, {});
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-            return ret;
-        }
-        std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
-        std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
-            session_->GetSessionUserId(), isClearDataFlags);
-        auto bundleDetails = MakeDetailList(bundleNames);
-        auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundleDetails,
-            session_->GetSessionUserId());
-        std::vector<std::string> supportBackupNames = GetSupportBackupBundleNames(backupInfos, false, bundleNames);
-        AppendBundles(supportBackupNames);
-        HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
-        OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return BError(BError::Codes::OK);
-    } catch (const BError &e) {
-        HILOGE("Failed, errCode = %{public}d", e.GetCode());
-        HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return e.GetCode();
-    } catch(...) {
-        HILOGE("Unexpected exception");
-        HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return EPERM;
-    }
 }
 
 void Service::HandleCurGroupBackupInfos(
@@ -1115,7 +936,13 @@ void Service::ExtStart(const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        HILOGE("begin ExtStart, bundle name:%{public}s", bundleName.data());
+        HILOGI("begin ExtStart, bundle name:%{public}s", bundleName.data());
+        if (GetDefaultBundleResult(bundleName)) {
+            HILOGI("begin DefaultExtStart, bundle name:%{public}s", bundleName.data());
+            IServiceReverseType::Scenario scenario = session_->GetScenario();
+            CallStartDefaultBundleTask(bundleName, scenario);
+            return;
+        }
         if (SAUtils::IsSABundleName(bundleName)) {
             if (session_->GetIsIncrementalBackup()) {
                 IncrementalBackupSA(bundleName);
@@ -1254,6 +1081,9 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
 
 void Service::StartRunningTimer(const std::string &bundleName)
 {
+    if (GetDefaultBundleResult(bundleName)) {
+        return;
+    }
     auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
     auto scenario = session_->GetScenario();
     if (scenario == IServiceReverseType::Scenario::BACKUP) {
@@ -1748,14 +1578,24 @@ ErrCode Service::UpdateTimer(const BundleName &bundleName, uint32_t timeout, boo
     }
 }
 
-ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
+ErrCode Service::UpdateDefaultAppSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
 {
-    if (session_ == nullptr || isOccupyingSession_.load()) {
-        HILOGE("Update Send Rate error, session is empty.");
-        result = false;
-        return BError(BError::Codes::SA_INVAL_ARG);
+    auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
+    ErrCode ret = ERR_OK;
+    if (instance != nullptr) {
+        ret = instance->UpdateFdSendRate(bundleName, sendRate);
+        if (ret != NO_ERROR) {
+            HILOGE("Extension do updateSendRate failed, ret:%{public}d", ret);
+            result = false;
+            ret = BError(BError::Codes::EXT_BROKEN_IPC);
+        }
     }
-    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+    return ret;
+}
+
+ErrCode Service::UpdateNormalAppSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
+{
     ErrCode ret = VerifySendRateParam();
     if (ret != ERR_OK) {
         HILOGE("Verify sendRate param failed, bundleName:%{public}s", bundleName.c_str());
@@ -1798,6 +1638,20 @@ ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate,
     session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     RemoveExtensionMutex(bundleName);
     return ret;
+}
+
+ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
+{
+    if (session_ == nullptr || isOccupyingSession_.load()) {
+        HILOGE("Update Send Rate error, session is empty.");
+        result = false;
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    if (GetDefaultBundleResult(bundleName)) {
+        return UpdateDefaultAppSendRate(bundleName, sendRate, result);
+    }
+    return UpdateNormalAppSendRate(bundleName, sendRate, result);
 }
 
 AAFwk::Want Service::CreateConnectWant(const BundleName &bundleName)

@@ -28,27 +28,6 @@ namespace OHOS::FileManagement::Backup {
 namespace {
 const std::string BROADCAST_TYPE = "broadcast";
 const std::string UNICAST_TYPE = "unicast";
-const std::string START_TYPE = "start";
-
-class StrategyRegistrar {
-public:
-    StrategyRegistrar()
-    {
-        auto &executor = PropertyStrategyExecutor::GetInstance();
-        executor.AddStrategy("DefaultPropertyStrategy", std::make_unique<DefaultPropertyStrategy>());
-        executor.AddStrategy("DataSizePropertyStrategy", std::make_unique<DataSizePropertyStrategy>());
-        executor.AddStrategy("ClearDataFlagPropertyStrategy", std::make_unique<ClearDataFlagPropertyStrategy>());
-        executor.AddStrategy("RestoreBasePropertyStrategy", std::make_unique<RestoreBasePropertyStrategy>());
-        executor.AddStrategy("BackupExtraPropertyStrategy", std::make_unique<BackupExtraPropertyStrategy>());
-        executor.AddStrategy("RestoreExtraPropertyStrategy", std::make_unique<RestoreExtraPropertyStrategy>());
-    }
-};
-
-StrategyRegistrar &GetRegistrar()
-{
-    static StrategyRegistrar registrar;
-    return registrar;
-}
 }
 
 // DefaultPropertyStrategy: UserId + ExtensionName + ReadyLaunch
@@ -165,7 +144,8 @@ void RestoreExtraPropertyStrategy::Execute(StrategyContext &context)
     BJsonUtil::BundleDetailInfo uniCastInfo;
     if (BJsonUtil::FindBundleInfoByName(*context.bundleNameDetailMap,
         context.bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
-        HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
+        HILOGI("current bundle:%{public}s, unicast info:%{public}s",
+            context.bundleNameIndexInfo.c_str(), GetAnonyString(uniCastInfo.detail).c_str());
         ptr->SetBackupExtInfo(context.bundleNameIndexInfo, uniCastInfo.detail);
     }
 }

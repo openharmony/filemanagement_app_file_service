@@ -28,7 +28,7 @@
 
 namespace OHOS::FileManagement::Backup {
 
-static bool SpecialVersion(const string &versionName)
+static bool SpecialDefaultVersion(const string &versionName)
 {
     string versionNameFlag = versionName.substr(0, versionName.find_first_of(BConstants::VERSION_NAME_SEPARATOR_CHAR));
     auto iter = find_if(BConstants::DEFAULT_VERSION_NAMES_VEC.begin(), BConstants::DEFAULT_VERSION_NAMES_VEC.end(),
@@ -61,7 +61,7 @@ ErrCode Service::SetSessPropertiesRestore(const std::vector<std::string> &restor
         HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
             restoreInfo.extensionName.c_str());
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
-        if ((!restoreInfo.allToBackup && !Service::SpecialVersion(restoreInfo.versionName)) ||
+        if ((!restoreInfo.allToBackup && !SpecialDefaultVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
             AppStatReportErr(restoreInfo.name, "SetCurrentSessProperties",
                 RadarError(MODULE_BMS, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE)));
@@ -78,8 +78,8 @@ ErrCode Service::SetSessPropertiesRestore(const std::vector<std::string> &restor
         context.bundleInfo = restoreInfo;
         context.userId = session_->GetSessionUserId();
         context.restoreType = restoreType_;
-        context.session = session_;
-        context.service = this;
+        context.session = wptr<SvcSessionManager>(session_);
+        context.service = wptr<Service>(this);
         PropertyStrategyExecutor::GetInstance().ExecuteStrategies(context, strategies);
     }
     return BError(BError::Codes::OK);
@@ -91,13 +91,9 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
     std::map<std::string, bool> &isClearDataFlags)
 {
     session_->SetOldBackupVersion(oldBackupVersion_);
-    
     std::vector<std::string> strategies = {
-        "RestoreBasePropertyStrategy",
-        "DefaultPropertyStrategy",
-        "DataSizePropertyStrategy",
-        "ClearDataFlagPropertyStrategy",
-        "RestoreExtraPropertyStrategy"
+        "RestoreBasePropertyStrategy", "DefaultPropertyStrategy", "DataSizePropertyStrategy",
+        "ClearDataFlagPropertyStrategy", "RestoreExtraPropertyStrategy"
     };
     for (const auto &restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(), [&restoreInfo](const auto &bundleName) {
@@ -112,8 +108,9 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
         HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
             restoreInfo.extensionName.c_str());
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
-        if ((!restoreInfo.allToBackup && !Service::SpecialVersion(restoreInfo.versionName)) ||
-            (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) {
+        if (((!restoreInfo.allToBackup && !SpecialDefaultVersion(restoreInfo.versionName)) ||
+            (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) &&
+            !GetDefaultBundleResult(restoreInfo.name)) {
             AppStatReportErr(restoreInfo.name, "SetCurrentSessProperties",
                 RadarError(MODULE_BMS, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE)));
             OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, bundleNameIndexInfo);
@@ -129,8 +126,8 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
         context.bundleInfo = restoreInfo;
         context.userId = session_->GetSessionUserId();
         context.restoreType = restoreType_;
-        context.session = session_;
-        context.service = this;
+        context.session = wptr<SvcSessionManager>(session_);
+        context.service = wptr<Service>(this);
         context.bundleNameDetailMap = &bundleNameDetailMap;
         context.isClearDataFlags = &isClearDataFlags;
         PropertyStrategyExecutor::GetInstance().ExecuteStrategies(context, strategies);
@@ -139,9 +136,8 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
 }
 
 std::vector<std::string> Service::GetSupportBundleNamesRestore(const vector<BundleName> &bundleNames,
-    std::vector<BJsonEntityCaps::BundleInfo> &restoreInfos)
+    std::vector<BJsonEntityCaps::BundleInfo> &restoreInfos, UniqueFd fd)
 {
-    UniqueFd fd(restoreInfoFd_);
     restoreInfos = GetRestoreBundleNames(move(fd), session_, bundleNames, oldBackupVersion_);
     auto supportNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType_);
     HandleExceptionOnAppendBundles(session_, bundleNames, supportNames);
@@ -164,7 +160,7 @@ void Service::CallStartDefaultBundleTask(const std::string &bundleName, IService
 void Service::StartBundleTaskRestore(const std::string &bundleName)
 {
     auto scenario = IServiceReverseType::Scenario::RESTORE;
-    HILOGI("Begin handle current bundle full backup or full restore, bundleName:%{public}s", bundleName.c_str());
+    HILOGI("Begin handle current bundle restore, bundleName:%{public}s", bundleName.c_str());
     auto ret = ERR_OK;
     if (!BackupPara().GetBackupOverrideIncrementalRestore() &&
         !session_->ValidRestoreDataType(RestoreTypeEnum::RESTORE_DATA_WAIT_SEND)) {
@@ -184,8 +180,8 @@ void Service::StartBundleTaskRestore(const std::string &bundleName)
 
 ErrCode Service::SendDefaultIncrementalFileHandle(const std::string &bundleName, const std::string &fileName)
 {
-    UniqueFd fdVal = BConstants::INVALID_FD_NUM;
-    UniqueFd reportFdVal = BConstants::INVALID_FD_NUM;
+    UniqueFd fd = UniqueFd(BConstants::INVALID_FD_NUM);
+    UniqueFd reportFd = UniqueFd(BConstants::INVALID_FD_NUM);
     int errCode = BConstants::INVALID_FD_NUM;
     if (!BDir::IsFilePathValid(fileName)) {
         auto ret = AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG));
@@ -222,7 +218,7 @@ ErrCode Service::PublishDefaultIncrementalFile(const BFileInfo &fileInfo)
     }
     HILOGI("Start Default publish, bundleName:%{public}s", fileInfo.owner.c_str());
     if (!fileInfo.fileName.empty()) {
-        HILOGE("Forbit to use PublishIncrementalFile with fileName for App");
+        HILOGE("Forbid to use PublishIncrementalFile with fileName for App");
         return EPERM;
     }
     if (session_ == nullptr) {

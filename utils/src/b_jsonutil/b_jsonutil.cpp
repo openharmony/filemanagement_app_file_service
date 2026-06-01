@@ -230,6 +230,11 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
         HILOGI("bundleName:%{public}s clear data flag:%{public}d", bundleDetailInfo.bundleName.c_str(),
             bundleSettingInfo.isClearData);
     }
+    cJSON *isDefaultBackupAndRestore = cJSON_GetObjectItem(root, "isDefaultBackupAndRestore");
+    if (isDefaultBackupAndRestore != nullptr && cJSON_IsBool(isDefaultBackupAndRestore)) {
+        bundleDetailInfo.isDefaultBackupAndRestore = (isDefaultBackupAndRestore->type == cJSON_True) ? true : false;
+        HILOGI("Parse isDefaultBackupAndRestore success %{public}d", bundleDetailInfo.isDefaultBackupAndRestore);
+    }
     cJSON *delayTime = cJSON_GetObjectItem(root, "delayTime");
     if (delayTime != nullptr && cJSON_IsNumber(delayTime)) {
         bundleSettingInfo.delayTime = delayTime->valueint;

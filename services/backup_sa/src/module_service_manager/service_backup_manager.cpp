@@ -16,9 +16,9 @@
 #include "module_ipc/service.h"
 #include "module_ipc/svc_backup_connection.h"
 #include "module_external/bms_adapter.h"
+#include "module_external/sms_adapter.h"
 #include "module_strategy/service_strategy.h"
 #include "hitrace_meter.h"
-
 
 namespace OHOS::FileManagement::Backup {
 
@@ -65,7 +65,7 @@ ErrCode Service::CallSetSessProperties(const vector<BundleName> &bundleNames,
     if (scene == BizScene::BACKUP) {
         result = SetSessPropertiesBackup(bundleNames, bundleInfos);
     } else if (scene == BizScene::RESTORE) {
-        result = SetSessPropertiesRestore(bundleNames, bundleInfos, move(fd));
+        result = SetSessPropertiesRestore(bundleNames, bundleInfos);
     }
     return result;
 }
@@ -86,36 +86,44 @@ ErrCode Service::CallSetSessPropertiesWithDetail(
     return result;
 }
 
-ErrCode Service::AppendbundlesBackupSession(const vector<string> bundleNames)
+ErrCode Service::AppendBundlesBackupSession(const vector<BundleName> &bundleNames)
 {
-    auto bizeScene = BizScene::BACKUP;
+    if (session_ == nullptr || isOccupyingSession_.load()) {
+        HILOGE("AppendBundles restore session with infos error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto bizScene = BizScene::BACKUP;
     ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::BACKUP);
     if (ret != ERR_OK) {
         HILOGE("AppendBundles BACKUP session with infos error, verify caller failed, ret:%{public}d", ret);
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         return ret;
     }
-    return AppendbundlesSession(bundleNames, bizeScene);
+    return AppendBundlesSession(bundleNames, bizScene);
 }
 
-ErrCode Service::AppendbundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
+ErrCode Service::AppendBundlesDetailsBackupSession(const std::vector<BundleName> &bundleNames,
     const std::vector<std::string> &bundleInfos)
 {
-    auto bizeScene = BizScene::BACKUP;
+    if (session_ == nullptr || isOccupyingSession_.load()) {
+        HILOGE("AppendBundles restore session with infos error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    auto bizScene = BizScene::BACKUP;
     ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::BACKUP);
     if (ret != ERR_OK) {
         HILOGE("AppendBundles BACKUP session with infos error, verify caller failed, ret:%{public}d", ret);
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
         return ret;
     }
-    return AppendBundlesSessionWithDetail(bundleNames, bundleInfos, bizeScene);
+    return AppendBundlesSessionWithDetail(bundleNames, bundleInfos, bizScene);
 }
 
 ErrCode Service::SetSessPropertiesBackup(const std::vector<std::string> &bundleNames,
     vector<BJsonEntityCaps::BundleInfo> &backupBundleInfos)
 {
     if (session_ == nullptr) {
-        HILOGE("Set currrent session properties error, session is empty");
+        HILOGE("Set current session properties error, session is empty");
         return BError(BError::Codes::OK);
     }
     int32_t userId = session_->GetSessionUserId();
@@ -141,8 +149,8 @@ ErrCode Service::SetSessPropertiesBackup(const std::vector<std::string> &bundleN
         context.bundleInfo = it->second;
         context.userId = userId;
         context.isIncBackup = isIncBackup_;
-        context.session = session_;
-        context.service = this;
+        context.session = wptr<SvcSessionManager>(session_);
+        context.service = wptr<Service>(this);
 
         PropertyStrategyExecutor::GetInstance().ExecuteStrategies(context, strategies);
     }
@@ -155,7 +163,7 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
     std::map<std::string, bool> &isClearDataFlags)
 {
     if (session_ == nullptr) {
-        HILOGE("Set currrent session properties error, session is empty");
+        HILOGE("Set current session properties error, session is empty");
         return BError(BError::Codes::OK);
     }
     int32_t userId = session_->GetSessionUserId();
@@ -172,7 +180,8 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
         "BackupExtraPropertyStrategy"
     };
 
-    for (const auto &bundleName : bundleNames) {
+    for (const auto &item : bundleNames) {
+        string bundleName = item;
         if (BundleMgrAdapter::IsUser0BundleName(bundleName, userId)) {
             HILOGE("bundleName:%{public}s is zero user bundle", bundleName.c_str());
             SendUserIdToApp(bundleName, userId);
@@ -191,8 +200,8 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
         context.bundleInfo = it->second;
         context.userId = userId;
         context.isIncBackup = isIncBackup_;
-        context.session = session_;
-        context.service = this;
+        context.session = wptr<SvcSessionManager>(session_);
+        context.service = wptr<Service>(this);
         context.bundleNameDetailMap = &bundleNameDetailMap;
         context.isClearDataFlags = &isClearDataFlags;
 
@@ -230,7 +239,7 @@ void Service::SetDefaultApps(const vector<string> &bundleNames,
 
 void Service::SetDefaultBundleName(const vector<string> &bundleNames, bool result)
 {
-    for (auto bundleName : bundleNames) {
+    for (const auto &bundleName : bundleNames) {
         defaultBundleMap_[bundleName] = result;
         HILOGI("bundleName:%{public}s, result:%{public}d", bundleName.c_str(), result);
     }
@@ -238,7 +247,7 @@ void Service::SetDefaultBundleName(const vector<string> &bundleNames, bool resul
 
 bool Service::GetDefaultBundleResult(const vector<string> &bundleNames)
 {
-    for (auto bundleName : bundleNames) {
+    for (const auto &bundleName : bundleNames) {
         return GetDefaultBundleResult(bundleName);
     }
     return false;
@@ -257,7 +266,7 @@ void Service::StartBundleTaskBackup(const std::string &bundleName)
 {
     HILOGI("Begin handle current bundle full backup or full restore, bundleName:%{public}s", bundleName.c_str());
     IServiceReverseType::Scenario scenario = session_->GetScenario();
-    auto ret = ERR_OK;
+    ErrCode ret = ERR_OK;
     auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
     if (instance == nullptr) {
         HILOGE("Failed to GetMigrateInstance");
@@ -282,7 +291,7 @@ ErrCode Service::DefaultAppFileReady(const std::string &fileName, const std::str
 }
 
 ErrCode Service::DefaultAppFileReadyWithoutFd(const std::string &fileName, const std::string &filePath,
-    UniqueFd fd, int32_t errCode)
+    int32_t errCode)
 {
     return DefaultAppFileReady(fileName, filePath, UniqueFd(INVALID_FD), errCode);
 }
@@ -366,7 +375,7 @@ ErrCode Service::InitSession(const sptr<IServiceReverse>& remote,
 ErrCode Service::InitSessionWithErrMsg(const sptr<IServiceReverse>& remote, IServiceReverseType::Scenario &scenario,
     BizScene &scene, int32_t &errCodeForMsg, std::string& errMsg)
 {
-    errCodeForMsg = InitSession(remote, scenario, bizScene);
+    errCodeForMsg = InitSession(remote, scenario, scene);
     if (errCodeForMsg == BError(BError::Codes::SA_SESSION_CONFLICT)) {
         errMsg = BJsonUtil::BuildInitSessionErrInfo(session_->GetSessionUserId(),
                                                     session_->GetSessionCallerName(),
@@ -382,15 +391,11 @@ ErrCode Service::AppendBundlesSession(const std::vector<BundleName> &bundleNames
     UniqueFd fd)
 {
     try {
-        if (session_ == nullptr || isOccupyingSession_.load()) {
-            HILOGE("AppendBundles restore session with infos error, session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         std::vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         vector<string> supportBundleNames = CallGetSupportBundleNames(bundleNames, bundleInfos, scene, move(fd));
         AppendBundles(supportBundleNames);
-        CallSetSessProperties(supportBundleNames, bundleInfos, move(fd));
+        CallSetSessProperties(supportBundleNames, bundleInfos, scene);
         OnStartSched();
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
@@ -422,6 +427,16 @@ ErrCode Service::InitRestoreSessionWithErrMsg(const sptr<IServiceReverse> &remot
     return InitSessionWithErrMsg(remote, scenario, bizScene, errCodeForMsg, errMsg);
 }
 
+ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
+{
+    auto scenario = IServiceReverseType::Scenario::BACKUP;
+    auto bizScene = BizScene::BACKUP;
+    int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
+    HILOGI("InitBackupSession oldSize %{public}d", oldSize);
+    session_->SetMemParaCurSize(oldSize);
+    return InitSession(remote, scenario, bizScene);
+}
+
 ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote,
     int32_t &errCodeForMsg, std::string &errMsg)
 {
@@ -433,11 +448,31 @@ ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote
     return InitSessionWithErrMsg(remote, scenario, bizScene, errCodeForMsg, errMsg);
 }
 
+ErrCode Service::AppendBundlesRestoreSessionData(int fd, const std::vector<std::string> &bundleNames,
+                                                 int32_t restoreType, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (session_ == nullptr || isOccupyingSession_.load()) {
+        HILOGE("AppendBundles restore session with infos error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
+    UniqueFd fdUnique(fd);
+    RestoreTypeEnum restoreTypeEnum = static_cast<RestoreTypeEnum>(restoreType);
+    SetUserIdAndRestoreType(restoreTypeEnum, userId);
+    auto bizScene = BizScene::RESTORE;
+    return AppendBundlesSession(bundleNames, bizScene, std::move(fdUnique));
+}
+
 ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd, const std::vector<std::string> &bundleNames,
                                                          const std::vector<std::string> &detailInfos,
                                                          int32_t restoreType, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (session_ == nullptr || isOccupyingSession_.load()) {
+        HILOGE("AppendBundles restore session with infos error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
     UniqueFd fdUnique(fd);
     RestoreTypeEnum restoreTypeEnum = static_cast<RestoreTypeEnum>(restoreType);
@@ -447,20 +482,16 @@ ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd, const std::vect
 }
 
 ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &bundleNames,
-    const std::vector<std::string> &bundleInfos,
+    const std::vector<std::string> &detailInfos,
     BizScene &scene,
     UniqueFd fd)
 {
     try {
-        if (session_ == nullptr || isOccupyingSession_.load()) {
-            HILOGE("AppendBundles restore session with infos error, session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
         session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
-            BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly,
+            BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, bundleNamesOnly,
             session_->GetSessionUserId(), isClearDataFlags);
         std::vector<BundleName> newBundleNames = HandleBroadcastOnlyBundles(bundleNameDetailMap, bundleNames);
         if (newBundleNames.empty()) {
@@ -468,6 +499,7 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
             return BError(BError::Codes::OK);
         }
         SetDefaultApps(newBundleNames, bundleNameDetailMap);
+        std::vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         vector<string> supportBundleNames = CallGetSupportBundleNames(newBundleNames, bundleInfos, scene, move(fd));
         AppendBundles(supportBundleNames);
         CallSetSessPropertiesWithDetail(supportBundleNames, bundleInfos,
