@@ -1975,8 +1975,8 @@ ErrCode Service::GetMigrateUidGid(const std::string &destPath, const std::string
             return BError(BError::Codes::SA_INVAL_ARG, "GetUidGidForBundleName failed").GetCode();
         }
     }
-    HILOGI("GetMigrateUidGid success: path=%{public}s, bundleName=%{public}s, uid=%{public}d, gid=%{public}d,",
-        destPath.c_str(), bundleName.c_str(), uid, gid);
+    HILOGI("GetMigrateUidGid success: bundleName=%{public}s, uid=%{public}d, gid=%{public}d,",
+        bundleName.c_str(), uid, gid);
     return ERR_OK;
 }
 
@@ -2078,7 +2078,8 @@ ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleNam
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
 
     HILOGI("MigrateFile called, srcPath=%{public}s, destPath=%{public}s, bundleName=%{public}s, fileName=%{public}s",
-        path.srcPath.c_str(), path.destPath.c_str(), bundleName.c_str(), GetAnonyPath(fileName).c_str());
+        GetAnonyPath(path.srcPath).c_str(), GetAnonyPath(path.destPath).c_str(), bundleName.c_str(),
+        GetAnonyPath(fileName).c_str());
 
     try {
         ErrCode ret = MigrateFilePrecheck(bundleName, path);
@@ -2091,36 +2092,43 @@ ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleNam
         bool isDir = false;
         GetMigrateFilePaths(path, fileName, srcFile, destFile, isDir);
 
-        HILOGI("MigrateFile start, srcFile=%{public}s, destFile=%{public}s, "
-            "bundleName=%{public}s, fileName=%{public}s",
-            GetAnonyPath(srcFile).c_str(), GetAnonyPath(destFile).c_str(),
-            bundleName.c_str(), GetAnonyPath(fileName).c_str());
-
         uid_t uid = UINT32_MAX;
         gid_t gid = UINT32_MAX;
         int32_t userId = session_->GetSessionUserId();
         ret = GetMigrateUidGid(path.destPath, bundleName, userId, uid, gid);
         if (ret != ERR_OK) {
+            NotifyMigrateResult(ret, bundleName);
             return ret;
         }
 
         int32_t moveErrCode = ERR_OK;
         ret = DoEnhanceMove(srcFile, destFile, uid, gid, moveErrCode, isDir);
         if (ret != ERR_OK) {
+            NotifyMigrateResult(ret, bundleName);
             return ret;
         }
 
         ret = OpenIncrementalRpFile(bundleName, destFile);
         if (ret != ERR_OK) {
+            NotifyMigrateResult(ret, bundleName);
             return ret;
         }
-        session_->GetServiceReverseProxy()->IncrementalRestoreOnMigrateResult(moveErrCode, bundleName);
+        NotifyMigrateResult(moveErrCode, bundleName);
         HILOGI("MigrateFile end, srcFile=%{public}s, destFile=%{public}s, errCode=%{public}d",
             GetAnonyPath(srcFile).c_str(), GetAnonyPath(destFile).c_str(), moveErrCode);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("MigrateFile exception, errCode=%{public}d", e.GetCode());
+        NotifyMigrateResult(e.GetCode(), bundleName);
         return e.GetCode();
+    }
+}
+
+void Service::NotifyMigrateResult(int32_t errCode, const std::string &bundleName)
+{
+    auto proxy = session_ ? session_->GetServiceReverseProxy() : nullptr;
+    if (proxy) {
+        proxy->IncrementalRestoreOnMigrateResult(errCode, bundleName);
     }
 }
 
@@ -2179,20 +2187,18 @@ ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fi
         return BError(BError::Codes::SA_INVAL_ARG);
     }
 
-    static uid_t uid = UINT32_MAX;
-    static gid_t gid = UINT32_MAX;
-    if (uid == UINT32_MAX && gid == UINT32_MAX) {
-        if (session_ == nullptr) {
-            HILOGE("GetApkFileHandle failed: session is empty");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        const std::string CLONE_BUNDLE_NAME = "com.huawei.hmos.dataclone";
-        int32_t userId = session_->GetSessionUserId();
-        if (!BundleMgrAdapter::GetUidGidForBundleName(CLONE_BUNDLE_NAME, userId, uid, gid)) {
-            HILOGE("GetApkFileHandle failed: GetUidGidForBundleName failed for clone bundle, bundleName=%{public}s",
-                CLONE_BUNDLE_NAME.c_str());
-            return BError(BError::Codes::SA_INVAL_ARG, "GetUidGidForBundleName failed for clone bundle").GetCode();
-        }
+    if (session_ == nullptr) {
+        HILOGE("GetApkFileHandle failed: session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    const std::string CLONE_BUNDLE_NAME = "com.huawei.hmos.dataclone";
+    int32_t userId = session_->GetSessionUserId();
+    uid_t uid = UINT32_MAX;
+    gid_t gid = UINT32_MAX;
+    if (!BundleMgrAdapter::GetUidGidForBundleName(CLONE_BUNDLE_NAME, userId, uid, gid)) {
+        HILOGE("GetApkFileHandle failed: GetUidGidForBundleName failed for clone bundle, bundleName=%{public}s",
+            CLONE_BUNDLE_NAME.c_str());
+        return BError(BError::Codes::SA_INVAL_ARG, "GetUidGidForBundleName failed for clone bundle").GetCode();
     }
 
     return DoEnhanceOpen(filePath, uid, gid, fd);

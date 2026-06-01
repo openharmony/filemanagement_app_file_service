@@ -1203,7 +1203,11 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFilePrecheck_0000, testing::ext::TestSi
 
         g_verifyDataCloneResult = true;
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
-        EXPECT_CALL(*session, GetServiceReverseProxy()).WillOnce(Return(srProxy));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
         ret = service->MigrateFilePrecheck("bundleName", path);
         EXPECT_EQ(ret, ERR_OK);
         service->session_ = nullptr;
@@ -1236,20 +1240,26 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0000, testing::ext::TestSize.Level
 
         g_verifyDataCloneResult = true;
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
         EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
         EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(connect));
         EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
             .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
         EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(ERR_OK));
-        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(0, _)).WillOnce(Return(ERR_OK));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
         ret = service->MigrateFile(path, "bundleName", "fileName");
         EXPECT_EQ(ret, ERR_OK);
 
         EXPECT_CALL(*mockEnhanceService, MoveDirectory(_, _)).WillOnce(Return(ERR_OK));
-        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(0, _))
+            .Times(testing::AtLeast(1)).WillRepeatedly(Return(ERR_OK));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
         ret = service->MigrateFile(path, "bundleName", "");
@@ -1263,6 +1273,553 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0000, testing::ext::TestSize.Level
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile.";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0000";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0001
+ * @tc.name: SUB_Service_MigrateFile_0001
+ * @tc.desc: 测试 MigrateFile 路径非法分支，返回 SA_INVAL_ARG
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0001";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/../src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0001.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0001";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0002
+ * @tc.name: SUB_Service_MigrateFile_0002
+ * @tc.desc: 测试 MigrateFile GetUidGidForBundleName 失败分支，返回 SA_INVAL_ARG
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0002";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _)).WillOnce(Return(false));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(BError(BError::Codes::SA_INVAL_ARG).GetCode(), _))
+            .WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0002.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0002";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0003
+ * @tc.name: SUB_Service_MigrateFile_0003
+ * @tc.desc: 测试 MigrateFile enhance service 不可用分支，返回 SA_INVAL_ARG
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0003";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(BError(BError::Codes::SA_INVAL_ARG).GetCode(), _))
+            .WillOnce(Return(ERR_OK));
+        auto backupService = EnhanceServiceManager::GetInstance().service_;
+        EnhanceServiceManager::GetInstance().service_ = nullptr;
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        EnhanceServiceManager::GetInstance().service_ = backupService;
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0003.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0003";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0004
+ * @tc.name: SUB_Service_MigrateFile_0004
+ * @tc.desc: 测试 MigrateFile MoveFiles 失败分支，返回 SA_INVAL_ARG
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0004";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(BError(BError::Codes::SA_INVAL_ARG).GetCode(), _))
+            .WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0004.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0004";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0005
+ * @tc.name: SUB_Service_MigrateFile_0005
+ * @tc.desc: 测试 MigrateFile OpenIncrementalRpFile proxy为空分支，返回 SA_INVAL_ARG
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0005";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(BError(BError::Codes::SA_INVAL_ARG).GetCode(), _))
+            .WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0005.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0005";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0006
+ * @tc.name: SUB_Service_MigrateFile_0006
+ * @tc.desc: 测试 MigrateFile VerifyCaller 权限不足分支，返回 SA_REFUSED_ACT (13900001)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0006";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_DENIED));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0006.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0006";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0007
+ * @tc.name: SUB_Service_MigrateFile_0007
+ * @tc.desc: 测试 MigrateFile MoveFiles 返回 EIO 错误，覆盖 I/O error (13900005)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0007, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0007";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        FileBackupResultMsg resultMsg;
+        resultMsg.errorCode = EIO;
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(resultMsg), Return(ERR_OK)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(EIO, _)).WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, ERR_OK);
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0007.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0007";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0008
+ * @tc.name: SUB_Service_MigrateFile_0008
+ * @tc.desc: 测试 MigrateFile MoveFiles 返回 ENOMEM 错误，覆盖 Out of memory (13900011)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0008, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0008";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        FileBackupResultMsg resultMsg;
+        resultMsg.errorCode = ENOMEM;
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(resultMsg), Return(ERR_OK)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(ENOMEM, _)).WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, ERR_OK);
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0008.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0008";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0009
+ * @tc.name: SUB_Service_MigrateFile_0009
+ * @tc.desc: 测试 MigrateFile MoveFiles 返回 ENOSPC 错误，覆盖 No space left (13900025)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0009, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0009";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        FileBackupResultMsg resultMsg;
+        resultMsg.errorCode = ENOSPC;
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(resultMsg), Return(ERR_OK)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(ENOSPC, _)).WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, ERR_OK);
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0009.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0009";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0010
+ * @tc.name: SUB_Service_MigrateFile_0010
+ * @tc.desc: 测试 MigrateFile MoveDirectory 失败分支，返回 SA_INVAL_ARG
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0010, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0010";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        EXPECT_CALL(*mockEnhanceService, MoveDirectory(_, _))
+            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(BError(BError::Codes::SA_INVAL_ARG).GetCode(), _))
+            .WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0010.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0010";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0011
+ * @tc.name: SUB_Service_MigrateFile_0011
+ * @tc.desc: 测试 MigrateFile GetIncrementalRpFileHandle 返回错误分支，返回 SA_INVAL_ARG
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0011, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0011";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(EIO), Return(ERR_OK)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(BError(BError::Codes::SA_INVAL_ARG).GetCode(), _))
+            .WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0011.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0011";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0012
+ * @tc.name: SUB_Service_MigrateFile_0012
+ * @tc.desc: 测试 MigrateFile MoveFiles 返回 EPERM 错误，覆盖 Operation not permitted (13900001)，
+ *           onMigrateResult 回调传递非零 moveErrCode
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0012, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0012";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        FileBackupResultMsg resultMsg;
+        resultMsg.errorCode = EPERM;
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(resultMsg), Return(ERR_OK)));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
+        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
+        EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(EPERM, _)).WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, ERR_OK);
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0012.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0012";
+}
+
+/**
+ * @tc.number: SUB_Service_MigrateFile_0013
+ * @tc.name: SUB_Service_MigrateFile_0013
+ * @tc.desc: 测试 MigrateFile OpenIncrementalRpFile 中 backUpConnection 为空分支，返回 ERR_OK
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: NA
+ */
+HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0013, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFile_0013";
+    try {
+        g_verifyDataCloneResult = true;
+        service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        BPathInfo path("/data/src", "/data/dest");
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
+        EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))
+            .WillRepeatedly(DoAll(SetArgReferee<2>(1001), SetArgReferee<3>(1001), Return(true)));
+        EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
+        EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(0, _)).WillOnce(Return(ERR_OK));
+        ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
+        EXPECT_EQ(ret, ERR_OK);
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+    } catch (...) {
+        service->session_ = nullptr;
+        g_verifyDataCloneResult = false;
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by MigrateFile_0013.";
+    }
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_MigrateFile_0013";
 }
 
 /**
@@ -1284,6 +1841,11 @@ HWTEST_F(ServiceTest, SUB_Service_GetApkFileHandle_0000, testing::ext::TestSize.
 
         g_verifyDataCloneResult = true;
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
+        EXPECT_CALL(*skeleton, GetCallingTokenID()).WillRepeatedly(Return(0));
+        EXPECT_CALL(*token, GetTokenType(_))
+            .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
+        EXPECT_CALL(*token, VerifyAccessToken(_, _))
+            .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
         EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(100));
         EXPECT_CALL(*bms, GetUidGidForBundleName(_, _, _, _))

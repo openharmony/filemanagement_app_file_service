@@ -802,6 +802,7 @@ private:
     ErrCode DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid, int &fd);
     ErrCode OpenIncrementalRpFile(const std::string &bundleName, const std::string &fileName);
     ErrCode MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path);
+    void NotifyMigrateResult(int32_t errCode, const std::string &bundleName);
     ErrCode ExecuteEnhanceServiceOperationWithAuth(
         std::function<ErrCode(IEnhanceService *, const std::string &)> func);
 private:

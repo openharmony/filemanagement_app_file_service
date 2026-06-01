@@ -522,7 +522,6 @@ ErrCode BackupExtExtension::GetIncrementalRpFileHandle(const std::string &fileNa
                 fdErrCode = errno;
                 return BError::GetCodeByErrno(errno);
             }
-            HILOGI("Success to create rp file = %{public}s", rpFileName.c_str());
         }
         return ERR_OK;
     } catch (...) {
