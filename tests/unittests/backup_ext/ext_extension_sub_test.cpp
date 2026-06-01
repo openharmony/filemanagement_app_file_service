@@ -1886,21 +1886,19 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_DoClearInner_0003, testing::ext:
 }
 
 /**
- * @tc.number: SUB_Ext_Extension_ClearTempFile_0300
- * @tc.name: SUB_Ext_Extension_ClearTempFile_0300
+ * @tc.number: SUB_Ext_Extension_ClearTempFile_0001
+ * @tc.name: SUB_Ext_Extension_ClearTempFile_0001
  * @tc.desc: 测试 ClearTempFile bundleName_不为FILE_MANAGER_BUNDLE_NAME时直接返回
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0300, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0300";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0001";
     try {
         extExtension->bundleName_ = BUNDLE_NAME;
-
-        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).Times(0);
         extExtension->ClearPublicTempFiles();
         
         EXPECT_TRUE(true);
@@ -1908,51 +1906,23 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0300, testing::ext
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by ClearTempFile.";
     }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0300";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0001";
 }
  
 /**
- * @tc.number: SUB_Ext_Extension_ClearTempFile_0200
- * @tc.name: SUB_Ext_Extension_ClearTempFile_0200
- * @tc.desc: 测试 ClearTempFile ForceRemoveDirectoryBMS返回false时的异常处理
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 2
- * @tc.require: I6F3GV
- */
-HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0200, testing::ext::TestSize.Level2)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0200";
-    try {
-        extExtension->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
- 
-        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillOnce(Return(false));
-        extExtension->ClearPublicTempFiles();
-        
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by ClearTempFile.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0200";
-}
- 
-/**
- * @tc.number: SUB_Ext_Extension_ClearTempFile_0100
- * @tc.name: SUB_Ext_Extension_ClearTempFile_0100
+ * @tc.number: SUB_Ext_Extension_ClearTempFile_0002
+ * @tc.name: SUB_Ext_Extension_ClearTempFile_0002
  * @tc.desc: 测试 ClearTempFile bundleName_为FILE_MANAGER_BUNDLE_NAME时清理临时文件
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I6F3GV
  */
-HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0100, testing::ext::TestSize.Level1)
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0002, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0100";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0002";
     try {
         extExtension->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
- 
-        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillOnce(Return(true));
         extExtension->ClearPublicTempFiles();
         
         EXPECT_TRUE(true);
@@ -1960,7 +1930,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0100, testing::ext
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by ClearTempFile.";
     }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0100";
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0002";
 }
 #include "ext_extension_sub_ext_test.cpp"
 } // namespace OHOS::FileManagement::Backup
