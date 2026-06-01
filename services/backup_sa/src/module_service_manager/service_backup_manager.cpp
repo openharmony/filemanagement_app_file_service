@@ -487,16 +487,19 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
     UniqueFd fd)
 {
     try {
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, bool> isClearDataFlags;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, bundleNamesOnly,
             session_->GetSessionUserId(), isClearDataFlags);
-        std::vector<BundleName> newBundleNames = HandleBroadcastOnlyBundles(bundleNameDetailMap, bundleNames);
-        if (newBundleNames.empty()) {
-            HILOGE("newBundleNames is empty.");
-            return BError(BError::Codes::OK);
+        std::vector<BundleName> newBundleNames = bundleNames;
+        if (scene == BizScene::RESTORE) {
+            newBundleNames = HandleBroadcastOnlyBundles(bundleNameDetailMap, bundleNames);
+            if (newBundleNames.empty()) {
+                HILOGE("newBundleNames is empty.");
+                return BError(BError::Codes::OK);
+            }
         }
         SetDefaultApps(newBundleNames, bundleNameDetailMap);
         std::vector<BJsonEntityCaps::BundleInfo> bundleInfos;
@@ -505,17 +508,14 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
         CallSetSessPropertiesWithDetail(supportBundleNames, bundleInfos,
             bundleNameDetailMap, isClearDataFlags, scene);
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
