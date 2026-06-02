@@ -25,7 +25,7 @@ namespace OHOS::FileManagement::Backup {
 static std::string GetKeyInMap(const std::map<std::string, bool> &map, const std::string& fileName)
 {
     for (const auto& pair : map) {
-        if (fileName.find(pair.first) != string::npos) {
+        if (pair.second == true && fileName.find(pair.first) != string::npos) {
             return pair.first;
         }
     }
