@@ -39,6 +39,7 @@ config("public_idl_config") {
   include_dirs = [
     ".",
     "${target_gen_dir}/",
+    "include/module_ipc",
   ]
 }
 
@@ -118,6 +119,7 @@ ohos_source_set("backup_extension_stub_idl") {
     ".",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${target_gen_dir}/",
+    "include/module_ipc",
   ]
   cflags_cc = [
     "-fdata-sections",
@@ -156,6 +158,7 @@ ohos_source_set("backup_reverse_stub_idl") {
     ".",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${target_gen_dir}/",
+    "include/module_ipc",
   ]
   cflags_cc = [
     "-fdata-sections",
@@ -194,6 +197,7 @@ ohos_source_set("backup_service_proxy_idl") {
     ".",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${target_gen_dir}/",
+     "include/module_ipc",
   ]
   cflags_cc = [
     "-fdata-sections",
@@ -238,6 +242,7 @@ ohos_source_set("backup_sa_ipc_stub") {
     ".",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
     "${target_gen_dir}/",
+    "include/module_ipc",
   ]
 
   part_name = "app_file_service"

@@ -88,13 +88,17 @@ ErrCode Service::SetSessPropertiesRestore(const std::vector<std::string> &restor
 ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::string> &restoreBundleNames,
     vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags)
+    std::map<std::string, BJsonUtil::BundleSettingInfo>& bundleSettingInfos)
 {
     session_->SetOldBackupVersion(oldBackupVersion_);
     std::vector<std::string> strategies = {
         "RestoreBasePropertyStrategy", "DefaultPropertyStrategy", "DataSizePropertyStrategy",
         "ClearDataFlagPropertyStrategy", "RestoreExtraPropertyStrategy"
     };
+    std::map<std::string, bool> isClearDataFlags = {};
+    for (const auto [bundle, info] : bundleSettingInfos) {
+        isClearDataFlags[bundle] = info.isClearData;
+    }
     for (const auto &restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(), [&restoreInfo](const auto &bundleName) {
             std::string bundleNameIndex = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
@@ -119,6 +123,12 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
         }
         if (BundleMgrAdapter::IsUser0BundleName(bundleNameIndexInfo, session_->GetSessionUserId())) {
             SendUserIdToApp(bundleNameIndexInfo, session_->GetSessionUserId());
+        }
+        auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
+        if (iterSet != bundleSettingInfos.end()) {
+            session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
+            session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
         StrategyContext context;
         context.bundleName = bundleNameIndexInfo;

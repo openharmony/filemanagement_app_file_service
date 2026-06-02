@@ -35,6 +35,7 @@
 #include "b_json/b_report_entity.h"
 #include "b_radar/b_radar.h"
 #include "b_radar/radar_app_statistic.h"
+#include "backup_file.h"
 #include "ext_backup_js.h"
 #include "extension_stub.h"
 #include "service_common.h"
@@ -44,6 +45,7 @@
 #include "timer.h"
 #include "unique_fd.h"
 #include "untar_file.h"
+#include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {
 class BackupExtExtension;
@@ -99,6 +101,8 @@ class BackupExtExtension : public ExtensionStub {
     friend class AncoBackupCallback;
     friend class AncoRestoreCallback;
 public:
+    int32_t CallbackEnter([[maybe_unused]] uint32_t code) override;
+    int32_t CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result) override;
     ErrCode GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int &fd) override;
     ErrCode HandleClear() override;
     ErrCode PublishFile(const std::string &fileName) override;
@@ -121,12 +125,15 @@ public:
     ErrCode HandleOnRelease(int32_t scenario) override;
     ErrCode HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario, bool isExist,
         string &compatibilityInfo) override;
-
+    ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+                                      std::vector<int> &fdList,
+                                      std::vector<int32_t> &errCodes) override;
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
         const std::string &bundleName) : extension_(extension)
     {
         if (extension_ != nullptr) {
+            isSupportWithoutTar_ = extension_->GetSupportWithoutTar();
             extension_->SetBackupExtExtension(this);
         }
         bundleName_ = bundleName;
@@ -407,6 +414,7 @@ private:
     std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
         BackupRestoreScenario scenario);
     std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForNormalVersion(const std::string &fileName);
+    std::tuple<ErrCode, UniqueFd> GetIncreFileHandleForUntarNormalVersion(const std::string &fileName);
     void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath);
     int DealIncreRestoreBigAndTarFile();
     ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo, const vector<struct ReportFileInfo> &srcFiles,
@@ -418,6 +426,7 @@ private:
         BackupRestoreScenario scenario);
     UniqueFd GetFileHandle(const std::string &fileName, int32_t &errCode);
     std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncrementalFileHandle(const std::string &fileName);
+    std::tuple<ErrCode, UniqueFd> GetIncrementalFileHandlesInner(const std::string &fileName);
     ErrCode HandleIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     std::tuple<UniqueFd, UniqueFd> GetIncrementalBackupFileHandle();
     bool IfCloudSpecialRestore(std::string tarName);
@@ -443,6 +452,7 @@ private:
     void AsyncDoBackup();
     void DoBackupTask();
     void ClearPublicTempFiles();
+    void DoBackupTaskCore(bool supportWithoutTar, std::vector<std::shared_ptr<IFileInfo>> &allFiles, int &ret);
 
     void HandleExtDisconnect(bool isAppResultReport, ErrCode errCode);
     bool HandleGetExtOnRelease();
@@ -454,6 +464,11 @@ private:
     set<string> DivideIncludesByCompatInfo(vector<string> &pathInclude,
         const BJsonEntityExtensionConfig &usrConfig);
     void PathHasEl3OrEl4(const set<string> &includes, const vector<string> &excludes);
+    ErrCode ProcessReadysInfo(std::vector<std::shared_ptr<IFileInfo>> &allFiles,
+                              std::vector<std::string> &fileNames,
+                              std::vector<int> &normalfds,
+                              std::vector<std::string> &abnormalfileNames,
+                              std::vector<int> &errCodes);
 private:
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
@@ -463,6 +478,7 @@ private:
     ErrCode ReportAppFileReady(const std::shared_ptr<IFileInfo> &fileInfo, int &fdNum);
     ErrCode ReportNormalAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
     ErrCode ReportAncoAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
+    ErrCode ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles);
 
     // Helper function to open a file with O_RDONLY and set fdsan ownership tag
     int OpenFileWithFDSan(const std::string &path);
@@ -472,7 +488,7 @@ private:
     bool NeedAncoRestore() const;
     void ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath, const std::vector<std::string> &ancoTargetPath,
         const std::vector<StatInfo> &ancoStats);
-
+    std::string FileInfoToString(std::shared_ptr<IFileInfo> fileInfo);
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
@@ -485,6 +501,8 @@ private:
     std::string bundleName_;
     int32_t sendRate_ = BConstants::DEFAULT_FD_SEND_RATE;
     bool isClearData_ {true};
+    bool isSupportWithoutTar_ {false};
+    int32_t batchSize_ {500};
     bool isDebug_ {true};
     std::map<std::string, off_t> endFileInfos_;
     std::map<std::string, std::vector<ErrCode>> errFileInfos_;
@@ -530,6 +548,12 @@ private:
     std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并发
     std::mutex updateFileStatLock_;
     AncoRestoreResult ancoRestoreRes_;
+    std::vector<UniqueFd> fdList_;
+public:
+    void SetSupportWithoutTar(bool isSupportWithoutTar);
+    bool GetSupportWithoutTar() const;
+    void SetBatchSize(int32_t batchSize);
+    int32_t GetBatchSize() const;
     std::string cloneFileInfoDbPath_;
     std::string dbPath_;
 };

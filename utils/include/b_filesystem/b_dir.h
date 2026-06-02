@@ -48,7 +48,7 @@ class IDirScanner {
 public:
     virtual ~IDirScanner() {};
     std::tuple<ErrCode, int64_t, int64_t> ScanAllDirs(const std::set<std::string> &includes,
-        const std::vector<std::string> &excludes);
+        const std::vector<std::string> &excludes, bool enableBatch = false);
     virtual std::tuple<ErrCode, int64_t, int64_t> ScanDir(const std::string &path,
         const std::vector<std::string> &excludes, off_t size = -1) = 0;
 };
@@ -87,7 +87,9 @@ public:
      * @return 错误码、大文件总大小、小文件总大小
      */
     static std::tuple<ErrCode, int64_t, int64_t> ScanAllDirs(const std::set<std::string> &includes,
-        const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes);
+                                                             const std::set<std::string> &compatIncludes,
+                                                             const std::vector<std::string> &excludes,
+                                                             bool enableBatch = false);
     /**
      * @brief 读取指定目录下所有文件(非递归)
      *

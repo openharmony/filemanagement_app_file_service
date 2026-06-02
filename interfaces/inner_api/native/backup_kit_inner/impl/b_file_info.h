@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_B_FILE_INFO_H
 
 #include "backup_file_info.h"
+#include "backup_file.h"
 
 namespace OHOS::FileManagement::Backup {}; // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_B_FILE_INFO_H

@@ -56,6 +56,8 @@ public:
     virtual ErrCode GetBackupCompatibilityInfo(std::function<void(ErrCode, const std::string)>, std::string) = 0;
     virtual ErrCode GetRestoreCompatibilityInfo(std::function<void(ErrCode, const std::string)>, std::string) = 0;
     virtual void SetBackupExtExtension(const wptr<BackupExtExtension> &) = 0;
+    virtual bool GetSupportWithoutTar() const = 0;
+    virtual int32_t GetBatchSize() const = 0;
 public:
     virtual std::unique_ptr<NativeReference> LoadSystemModuleByEngine(napi_env, const std::string&, const napi_value*,
         size_t) = 0;
@@ -105,6 +107,8 @@ public:
     MOCK_METHOD(ErrCode, GetBackupCompatibilityInfo, (std::function<void(ErrCode, const std::string)>, std::string));
     MOCK_METHOD(ErrCode, GetRestoreCompatibilityInfo, (std::function<void(ErrCode, const std::string)>, std::string));
     MOCK_METHOD(void, SetBackupExtExtension, (const wptr<BackupExtExtension> &));
+    MOCK_METHOD(bool, GetSupportWithoutTar, (), (const));
+    MOCK_METHOD(int32_t, GetBatchSize, (), (const));
 public:
     MOCK_METHOD((std::unique_ptr<NativeReference>), LoadSystemModuleByEngine, (napi_env, const std::string&,
         const napi_value*, size_t));

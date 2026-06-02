@@ -87,6 +87,54 @@ static void OnFileReadySheet(weak_ptr<GeneralCallbacks> pCallbacks, const BFileI
     callbacks->onFileReady.ThreadSafeSchedule(cbCompl);
 }
 
+static void OnFileReadyBatch(weak_ptr<GeneralCallbacks> pCallbacks, const std::vector<BackupFile>& files)
+{
+    auto callbacks = pCallbacks.lock();
+    if (!callbacks || !bool(callbacks->onFileReadyBatch)) {
+        HILOGI("callback function onFileReadyBatch is undefined");
+        return;
+    }
+    auto cbCompl = [files](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        for (size_t i = 0; i < files.size(); i++) {
+            if (files[i].errCode != 0) {
+                ErrCode errCode = BError::GetCodeByErrno(files[i].errCode);
+                std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, "system errno: " + to_string(files[i].errCode));
+                ErrParam errorParam = [ errInfo ]() {
+                    return errInfo;
+                };
+                NVal obj = NVal {env, NError(errorParam).GetNapiErr(env)};
+                napi_status status = napi_set_named_property(env, obj.val_, FILEIO_TAG_ERR_DATA.c_str(),
+                    NVal::CreateUTF8String(env, files[i].bundleName).val_);
+                if (status != napi_ok) {
+                    HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s",
+                        status, files[i].bundleName.c_str());
+                }
+                return {obj};
+            }
+        }
+        napi_value jsArray;
+        napi_create_array(env, &jsArray);
+        for (size_t i = 0; i < files.size(); i++) {
+            const auto& file = files[i];
+            napi_value jsFile = NVal::CreateObject(env).val_;
+            napi_set_named_property(env, jsFile, BConstants::BUNDLE_NAME.c_str(),
+                NVal::CreateUTF8String(env, file.bundleName).val_);
+            napi_set_named_property(env, jsFile, BConstants::URI.c_str(),
+                NVal::CreateUTF8String(env, file.uri).val_);
+            napi_set_named_property(env, jsFile, BConstants::FD.c_str(),
+                NVal::CreateInt32(env, file.fd).val_);
+            napi_set_named_property(env, jsFile, BConstants::MANIFEST_FD.c_str(),
+                NVal::CreateInt32(env, file.manifestFd).val_);
+            napi_set_element(env, jsArray, i, jsFile);
+        }
+        return {env, jsArray};
+    };
+    callbacks->onFileReadyBatch.ThreadSafeSchedule(cbCompl);
+}
+
 static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const BundleName name)
 {
     HILOGI("Callback onBundleBegin, bundleName=%{public}s, errCode=%{public}d", name.c_str(), err);
@@ -398,6 +446,27 @@ static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> ParseF
     return { true, move(bundleName), move(fileName) };
 }
 
+static std::tuple<bool, std::unique_ptr<char[]>, vector<string>> ParseFileMetas(napi_env env,
+    const NVal &fileMeta)
+{
+    vector<string> fileNames = {};
+    bool succ = false;
+    std::unique_ptr<char[]> bundleName = nullptr;
+    tie(succ, bundleName, ignore) = fileMeta.GetProp(BConstants::BUNDLE_NAME).ToUTF8String();
+    if (!succ) {
+        HILOGE("First argument is not have property bundle name.");
+        return { false, nullptr, fileNames};
+    }
+ 
+    tie(succ, fileNames, ignore) = fileMeta.GetProp(BConstants::URIS).ToStringArray();
+    if (!succ) {
+        HILOGE("First argument is not have property file name.");
+        return { false, nullptr, fileNames};
+    }
+ 
+    return { true, move(bundleName), fileNames};
+}
+
 static bool VerifyPublishFileParam(NFuncArg &funcArg, std::string &bundleName, std::string &fileName, napi_env env)
 {
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
@@ -495,6 +564,7 @@ napi_value SessionRestoreNExporter::Constructor(napi_env env, napi_callback_info
     restoreEntity->sessionSheet = BIncrementalRestoreSession::Init(BIncrementalRestoreSession::Callbacks {
         .onFileReady = bind(OnFileReadySheet, restoreEntity->callbacks, placeholders::_1, placeholders::_2,
             placeholders::_3, placeholders::_4),
+        .onFileReadyBatch = bind(OnFileReadyBatch, restoreEntity->callbacks, placeholders::_1),
         .onBundleStarted = bind(onBundleBegin, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(onBundleEnd, restoreEntity->callbacks, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(onAllBundlesEnd, restoreEntity->callbacks, placeholders::_1),
@@ -710,6 +780,32 @@ napi_value SessionRestoreNExporter::PublishFile(napi_env env, napi_callback_info
     }
 }
 
+static NContextCBExec GetFileHandlesCBExec(napi_env env, NFuncArg &funcArg, std::unique_ptr<char[]> bundleName,
+    std::vector<std::string> fileNames)
+{
+    auto restoreEntity = NClass::GetEntityOf<RestoreEntity>(env, funcArg.GetThisVar());
+    if (!(restoreEntity && (restoreEntity->sessionWhole || restoreEntity->sessionSheet))) {
+        HILOGE("Failed to get RestoreSession entity.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Failed to get RestoreSession entity.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+    return [entity {restoreEntity}, bundleName {std::string(bundleName.get())},
+        fileNames]() -> NError {
+        if (!(entity && (entity->sessionWhole || entity->sessionSheet))) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "restore session is nullptr").GetCode());
+        }
+        std::string bundle = bundleName;
+        if (fileNames.empty()) {
+            return NError(BError(BError::Codes::SDK_INVAL_ARG, "file name is empty").GetCode());
+        }
+        if (entity->sessionWhole) {
+            return NError(entity->sessionWhole->GetFileHandle(bundle, fileNames[0])); // 改了麻烦,暂时不管
+        }
+        return NError(entity->sessionSheet->GetFileHandles(bundle, fileNames));
+    };
+}
+ 
+
 static NContextCBExec GetFileHandleCBExec(napi_env env, NFuncArg &funcArg, std::unique_ptr<char[]> bundleName,
     std::unique_ptr<char[]> fileName)
 {
@@ -783,6 +879,60 @@ napi_value SessionRestoreNExporter::GetFileHandle(napi_env env, napi_callback_in
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);
         const std::string taskName = "SessionRestore.GetFileHandle";
+        return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(className, cbExec, cbCompl).val_;
+    }
+}
+
+napi_value SessionRestoreNExporter::GetFileHandles(napi_env env, napi_callback_info cbinfo)
+{
+    HILOGD("called SessionRestore::GetFileHandles begin");
+    if (!SAUtils::CheckBackupPermission()) {
+        HILOGE("Has not permission!");
+        NError(E_PERMISSION).ThrowErr(env);
+        return nullptr;
+    }
+    if (!SAUtils::IsSystemApp()) {
+        HILOGE("System App check fail!");
+        NError(E_PERMISSION_SYS).ThrowErr(env);
+        return nullptr;
+    }
+    NFuncArg funcArg(env, cbinfo);
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        HILOGE("Number of arguments unmatched.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "Number of arguments unmatched.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+ 
+    NVal fileMeta(env, funcArg[NARG_POS::FIRST]);
+    if (!fileMeta.TypeIs(napi_object)) {
+        HILOGE("First arguments is not an object.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "First arguments is not an object.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+ 
+    auto [succ, bundleName, fileNames] = ParseFileMetas(env, fileMeta);
+    if (!succ) {
+        HILOGE("ParseFileMetas failed.");
+        NError(BError(BError::Codes::SDK_INVAL_ARG, "ParseFileMetas failed.").GetCode()).ThrowErr(env);
+        return nullptr;
+    }
+ 
+    auto cbExec = GetFileHandlesCBExec(env, funcArg, move(bundleName), fileNames);
+    if (cbExec == nullptr) {
+        HILOGE("GetFileHandlesCBExec fail!");
+        return nullptr;
+    }
+    auto cbCompl = [](napi_env env, NError err) -> NVal {
+        return err ? NVal {env, err.GetNapiErr(env)} : NVal::CreateUndefined(env);
+    };
+    HILOGD("Called SessionRestore::GetFileHandlesCBExec end.");
+ 
+    NVal thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == NARG_CNT::ONE) {
+        return NAsyncWorkPromise(env, thisVar).Schedule(className, cbExec, cbCompl).val_;
+    } else {
+        NVal cb(env, funcArg[NARG_POS::SECOND]);
+        const std::string taskName = "SessionRestore.GetFileHandles";
         return NAsyncWorkCallback(env, thisVar, cb, taskName).Schedule(className, cbExec, cbCompl).val_;
     }
 }
@@ -1258,6 +1408,7 @@ bool SessionRestoreNExporter::Export()
         NVal::DeclareNapiFunction("getCompatibilityInfo", GetCompatibilityInfo),
         NVal::DeclareNapiFunction("migrateFile", MigrateFile),
         NVal::DeclareNapiFunction("getApkFileHandle", GetApkFileHandle),
+        NVal::DeclareNapiFunction("getFileHandles", GetFileHandles),
     };
 
     auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));
@@ -1336,6 +1487,7 @@ napi_value SessionRestoreNExporter::CreateByEntity(napi_env env, std::unique_ptr
         NVal::DeclareNapiFunction("getCompatibilityInfo", GetCompatibilityInfo),
         NVal::DeclareNapiFunction("migrateFile", MigrateFile),
         NVal::DeclareNapiFunction("getApkFileHandle", GetApkFileHandle),
+        NVal::DeclareNapiFunction("getFileHandles", GetFileHandles),
     };
     auto [defRet, constroctor] = NClass::DefineClass(env, NAPI_CLASS_NAME, ConstructorFromEntity, std::move(props));
     if (!defRet) {

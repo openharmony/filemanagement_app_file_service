@@ -347,4 +347,20 @@ ErrCode ServiceProxy::GetApkFileHandle(const std::string &path, const std::strin
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceProxy::AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
+    const std::vector<int> &errCodes)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames, const std::vector<int> &errCodes)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceProxy::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

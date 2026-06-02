@@ -159,6 +159,11 @@ ErrCode Service::IncrementalBackupSA(std::string bundleName)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+{
+    return BError(BError::Codes::OK);
+}
+
 void Service::NotifyCallerCurAppIncrementDone(ErrCode, const std::string&) {}
 
 void Service::SendUserIdToApp(string&, int32_t) {}
@@ -981,17 +986,17 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, TestSize.Level1
     try {
         ASSERT_TRUE(service != nullptr);
         BJsonEntityCaps::BundleInfo info;
-        map<string, bool> isClearDataFlags;
+        map<string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         string bundleNameIndexInfo;
 
         service->session_ = nullptr;
-        service->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
+        service->SetCurrentSessProperties(info, bundleSettingInfos, bundleNameIndexInfo);
         service->session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(service)));
-        service->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
+        service->SetCurrentSessProperties(info, bundleSettingInfos, bundleNameIndexInfo);
 
         info = BJsonEntityCaps::BundleInfo {BUNDLE_NAME, 0, {}, {}, 0, 0, true, false, false, BUNDLE_NAME};
-        isClearDataFlags = {{BUNDLE_NAME, true}};
-        service->SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
+        bundleSettingInfos = {{BUNDLE_NAME, {true, 0, false, 500}}};
+        service->SetCurrentSessProperties(info, bundleSettingInfos, bundleNameIndexInfo);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by SetCurrentSessProperties.";
@@ -1017,18 +1022,18 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0200, TestSize.Level1
             {.name = "bundleName", .appIndex = 0, .allToBackup = false, .versionName = ""} };
         vector<string> restoreBundleNames;
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
-        map<string, bool> isClearDataFlags;
+        map<string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
         std::string backupVersion;
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
 
         restoreBundleNames.emplace_back("bundleName");
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
         EXPECT_TRUE(true);
 
         restoreBundleInfos[0].allToBackup = true;
@@ -1037,7 +1042,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0200, TestSize.Level1
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
         EXPECT_TRUE(true);
 
         restoreBundleInfos[0].allToBackup = false;
@@ -1047,7 +1052,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0200, TestSize.Level1
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1074,7 +1079,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0300, TestSize.Level1
             {.name = "bundleName", .appIndex = 0, .allToBackup = true, .extensionName = ""} };
         vector<string> restoreBundleNames { "bundleName" };
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
-        map<string, bool> isClearDataFlags;
+        map<string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         RestoreTypeEnum restoreType = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
         std::string backupVersion;
 
@@ -1085,7 +1090,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0300, TestSize.Level1
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
         EXPECT_TRUE(true);
 
         restoreBundleInfos[0].extensionName = "extensionName";
@@ -1093,27 +1098,27 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0300, TestSize.Level1
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(false));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
 
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(true)).WillOnce(Return(false));
         EXPECT_CALL(*notify, NotifyBundleDetail(_, _)).WillOnce(Return(true));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
 
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"))
             .WillOnce(Return("bundleName"));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false)).WillOnce(Return(true));
         service->SetCurrentSessProperties(restoreBundleInfos, restoreBundleNames, bundleNameDetailMap,
-            isClearDataFlags, restoreType, backupVersion);
+            bundleSettingInfos, restoreType, backupVersion);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

@@ -245,6 +245,21 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
         HILOGI("Parse backupScene success");
         bundleDetailInfo.backupScene = backupScene->valuestring;
     }
+    cJSON *isSupportWithoutTar = cJSON_GetObjectItem(root, "isSupportWithoutTar");
+    if (isSupportWithoutTar != nullptr && cJSON_IsBool(isSupportWithoutTar)) {
+        bundleSettingInfo.isSupportWithoutTar = cJSON_IsTrue(isSupportWithoutTar);
+        HILOGI("Parse isSupportWithoutTar success, isSupportWithoutTar is %{public}d",
+               bundleSettingInfo.isSupportWithoutTar);
+    }
+    cJSON *batchSize = cJSON_GetObjectItem(root, "batchSize");
+    if (batchSize != nullptr && cJSON_IsNumber(batchSize)) {
+        bundleSettingInfo.batchSize = batchSize->valueint;
+        if (bundleSettingInfo.batchSize <= 0) {
+            HILOGW("batchSize is invalid");
+            bundleSettingInfo.batchSize = 500;
+        }
+        HILOGI("Parse batchSize success, batchSize is %{public}d", bundleSettingInfo.batchSize);
+    }
     cJSON *infos = cJSON_GetObjectItem(root, "infos");
     if (infos == nullptr || !cJSON_IsArray(infos) || cJSON_GetArraySize(infos) == 0) {
         HILOGE("Parse json error, infos is not array");
@@ -671,5 +686,27 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
     }
     HILOGD("End BuildBundleInfos");
     return bundleNameDetailMap;
+}
+
+std::string BJsonUtil::GetPath(const std::string &fileName)
+{
+    cJSON* json = cJSON_Parse(fileName.c_str());
+    if (json == nullptr) {
+        const char* errorPtr = cJSON_GetErrorPtr();
+        if (errorPtr != nullptr) {
+            HILOGE("JSON parse error:%{public}s", fileName.c_str());
+        }
+        return "";
+    }
+    
+    cJSON* pathItem = cJSON_GetObjectItem(json, "path");
+    std::string path;
+    
+    if (pathItem != nullptr && cJSON_IsString(pathItem) && pathItem->valuestring != nullptr) {
+        path = pathItem->valuestring;
+    }
+    
+    cJSON_Delete(json);
+    return path;
 }
 }

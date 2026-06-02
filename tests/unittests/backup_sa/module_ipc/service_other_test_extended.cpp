@@ -144,6 +144,11 @@ ErrCode Service::IncrementalBackupSA(std::string bundleName)
     return BError(BError::Codes::OK);
 }
 
+ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+{
+    return BError(BError::Codes::OK);
+}
+
 void Service::NotifyCallerCurAppIncrementDone(ErrCode, const std::string&) {}
 
 void Service::SendUserIdToApp(string&, int32_t) {}

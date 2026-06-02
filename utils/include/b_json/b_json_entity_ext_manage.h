@@ -44,6 +44,10 @@ public:
 
     void SetExtManage(const std::vector<std::shared_ptr<IFileInfo>>& allFiles) const;
 
+    void SetExtManage(const map<string, tuple<string, struct stat, bool>> &info, bool isSupportWithoutTar) const;
+ 
+    void SetExtManage(const std::vector<std::shared_ptr<IFileInfo>>& allFiles, bool isSupportWithoutTar) const;
+
     /**
      * @brief 设置索引文件(克隆)
      *

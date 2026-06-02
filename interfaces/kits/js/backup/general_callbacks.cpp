@@ -26,6 +26,7 @@ void GeneralCallbacks::RemoveCallbackRef()
 {
     HILOGI("Called RemoveCallbackRef");
     onFileReady.CleanRef();
+    onFileReadyBatch.CleanRef();
     onBundleBegin.CleanRef();
     onBundleEnd.CleanRef();
     onAllBundlesEnd.CleanRef();

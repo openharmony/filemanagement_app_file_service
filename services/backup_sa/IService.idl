@@ -102,4 +102,7 @@ interface OHOS.FileManagement.Backup.IService{
         [in] String[] tarFileNames);
     [ipccode 59] void MigrateFile([in] BPathInfo path, [in] String bundleName, [in] String fileName);
     [ipccode 60] void GetApkFileHandle([in] String path, [in] String fileName, [out] FileDescriptor fd);
+    [ipccode 61, ipcincapacity 131071] void GetIncrementalFileHandles([in] String bundleName, [in] String[] fileNames);
+    [ipccode 62, ipcincapacity 131071] void AppFileReadysWithoutFd([in] String[] fileNames, [in] int[] errCodes);
+    [ipccode 63, ipcincapacity 131071] void AppFileReadys([in] String[] fileNames, [in] FileDescriptor[] fds, [in] int[] errCodes);
  }

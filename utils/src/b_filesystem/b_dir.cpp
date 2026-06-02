@@ -205,14 +205,15 @@ tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &pat
 }
 
 tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::string> &includes,
-    const std::vector<std::string> &excludes)
+    const std::vector<std::string> &excludes, bool enableBatch)
 {
     int64_t totalBigFileSize = 0;
     int64_t totalSmallFileSize = 0;
     int64_t start = TimeUtils::GetTimeMS();
     ErrCode finalErrCode = ERR_OK;
     for (const auto &item : includes) {
-        auto [errCode, bigFileSize, smallFileSize] = ScanDir(item, excludes, BConstants::BIG_FILE_BOUNDARY);
+        auto [errCode, bigFileSize, smallFileSize] = ScanDir(
+            item, excludes, enableBatch ? BConstants::BIG_FILE_BOUNDARY_WITHOUT_TAR : BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
             HILOGI("big files: %{public}" PRId64 "; small files: %{public}" PRId64 "", bigFileSize, smallFileSize);
             totalBigFileSize += bigFileSize ;
@@ -229,7 +230,7 @@ tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::st
 }
 
 std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::string> &includes,
-    const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes)
+    const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes, bool enableBatch)
 {
     HILOGI("scan all dirs include:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
         includes.size(), compatIncludes.size(), excludes.size());
@@ -238,7 +239,7 @@ std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::stri
     int64_t smallFileSize = 0;
     if (!includes.empty()) {
         DirScanner scanner;
-        tie(errCode, bigFileSize, smallFileSize) = scanner.ScanAllDirs(includes, excludes);
+        tie(errCode, bigFileSize, smallFileSize) = scanner.ScanAllDirs(includes, excludes, enableBatch);
     }
     if (errCode != ERR_OK) {
         HILOGE("scan normal dirs fail, err=%{public}d", errCode);

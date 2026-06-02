@@ -32,6 +32,7 @@ class BIncrementalRestoreSession {
 public:
     struct Callbacks {
         std::function<void(const BFileInfo &, UniqueFd, UniqueFd, ErrCode)> onFileReady; // 当备份服务有文件待发送时执行的回调
+        std::function<void(const std::vector<BackupFile>&)> onFileReadyBatch;  // 批量文件回调
         std::function<void(ErrCode, const BundleName)> onBundleStarted; // 当启动某个应用的恢复流程结束时执行的回调函数
         std::function<void(ErrCode, const BundleName)>
             onBundleFinished; // 当某个应用的恢复流程结束或意外中止时执行的回调函数
@@ -156,6 +157,14 @@ public:
      * @return ErrCode 规范错误码
      */
     ErrCode GetCompatibilityInfo(const std::string &bundleName, const std::string &extInfo, std::string &compatInfo);
+
+    /**
+     * @brief 请求恢复流程所需的真实文件集合
+     *
+     * @param bundleName 应用名称
+     * @param fileNames   文件名称集合
+     */
+    ErrCode GetFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames);
 
     /**
      * @brief 迁移文件

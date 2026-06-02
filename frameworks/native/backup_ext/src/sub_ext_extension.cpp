@@ -100,6 +100,10 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     SetClearDataFlag(isClearData);
+    bool isSupportWithoutTar = extension_ ? extension_->GetSupportWithoutTar() : false;
+    SetSupportWithoutTar(isSupportWithoutTar);
+    int32_t batchSize = extension_ ? extension_->GetBatchSize() : 0;
+    SetBatchSize(batchSize);
     if (!IfAllowToBackupRestore()) {
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
@@ -155,6 +159,29 @@ void BackupExtExtension::SetClearDataFlag(bool isClearData)
         DoClear();
     }
 }
+
+void BackupExtExtension::SetSupportWithoutTar(bool isSupportWithoutTar)
+{
+    isSupportWithoutTar_ = isSupportWithoutTar;
+    HILOGI("set support without tar:%{public}d", isSupportWithoutTar);
+}
+ 
+bool BackupExtExtension::GetSupportWithoutTar() const
+{
+    return isSupportWithoutTar_;
+}
+ 
+void BackupExtExtension::SetBatchSize(int32_t batchSize)
+{
+    batchSize_ = batchSize;
+    HILOGI("set batchSize:%{public}d", batchSize);
+}
+ 
+int32_t BackupExtExtension::GetBatchSize() const
+{
+    return batchSize_;
+}
+ 
 
 string BackupExtExtension::GetBundlePath()
 {
@@ -1625,37 +1652,78 @@ void BackupExtExtension::AsyncDoBackup()
     });
 }
 
-void BackupExtExtension::DoBackupTask()
+void BackupExtExtension::DoBackupTaskCore(bool supportWithoutTar,
+                                          std::vector<std::shared_ptr<IFileInfo>> &allFiles,
+                                          int &ret)
 {
-    int ret = ERR_OK;
     int fdNum = 0;
     auto startTime = std::chrono::system_clock::now();
-    std::vector<std::shared_ptr<IFileInfo>> allFiles;
-    while (!ScanFileSingleton::GetInstance().IsProcessCompleted() || ScanFileSingleton::GetInstance().HasFileReady()) {
+    std::vector<std::shared_ptr<IFileInfo>> tmpFiles;
+    while (!ScanFileSingleton::GetInstance().IsProcessCompleted() ||
+           ScanFileSingleton::GetInstance().HasFileReady()) {
         ScanFileSingleton::GetInstance().WaitForFiles();
         std::shared_ptr<IFileInfo> fileInfo = ScanFileSingleton::GetInstance().GetFileInfo();
         if (fileInfo == nullptr) {
             HILOGE("Get null file info!!");
             continue;
         }
-        WaitToSendFd(startTime, fdNum);
-        allFiles.push_back(fileInfo);
-        ErrCode subRet = ReportAppFileReady(fileInfo, fdNum);
-        if (subRet == ERR_NO_PERMISSION) {
-            allFiles.pop_back();
-            subRet = ERR_OK;
+        bool isWithoutTarFile = supportWithoutTar && !fileInfo->isAncoFile_;
+        if (isWithoutTarFile) {
+            fileInfo->filename_ = fileInfo->filePath_;
         }
-        if (subRet != ERR_OK) { // 后续错误码上报DFX
-            HILOGE("report file ready fail,filename=%{public}s, err=%{public}d", fileInfo->filename_.c_str(), subRet);
-            ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+        WaitToSendFd(startTime, fdNum);
+        if (isWithoutTarFile) {
+            tmpFiles.push_back(fileInfo);
+            if (tmpFiles.size() == GetBatchSize()) {
+                ErrCode subRet = ReportAppFileReadys(tmpFiles);
+                allFiles.insert(allFiles.end(), tmpFiles.begin(), tmpFiles.end());
+                tmpFiles.clear();
+                if (subRet != ERR_OK) {
+                    HILOGE("report files ready fail, err=%{public}d", subRet);
+                    ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+                }
+            }
+            fdNum++;
+        } else {
+            ErrCode subRet = ReportAppFileReady(fileInfo, fdNum);
+            if (subRet != ERR_NO_PERMISSION) {
+                allFiles.push_back(fileInfo);
+            } else {
+                subRet = ERR_OK;
+            }
+            if (subRet != ERR_OK) { // 后续错误码上报DFX
+                HILOGE("report file ready fail,filename=%{public}s, err=%{public}d", fileInfo->filename_.c_str(), subRet);
+                ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+            }
         }
         RefreshTimeInfo(startTime, fdNum);
     }
+
+    if (supportWithoutTar && !tmpFiles.empty()) {
+        HILOGE("DoBackupTask tmpFiles size %{public}lu", tmpFiles.size());
+        ErrCode subRet = ReportAppFileReadys(tmpFiles);
+        allFiles.insert(allFiles.end(), tmpFiles.begin(), tmpFiles.end());
+        tmpFiles.clear();
+        if (subRet != ERR_OK) {
+            HILOGE("report files ready fail, err=%{public}d", subRet);
+            ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+        }
+    }
+}
+
+void BackupExtExtension::DoBackupTask()
+{
+    bool supportWithoutTar = GetSupportWithoutTar();
+    std::vector<std::shared_ptr<IFileInfo>> allFiles;
+    HILOGD("supportWithoutTar is, %{public}d", supportWithoutTar);
+    int ret = ERR_OK;
+    DoBackupTaskCore(supportWithoutTar, allFiles, ret);
     int indexRet = IndexFileReady(allFiles); // 无需WaitToSendFd，sendRate=0时克隆实际还可以继续接收数据
     if (indexRet != ERR_OK) {
         HILOGE("report app file ready fail, err=%{public}d", indexRet);
         ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
     }
+
     DoBackupEnd();
     ScanFileSingleton::GetInstance().SetCompletedFlag(false);
     AppDone(ret);
@@ -1994,5 +2062,23 @@ void BackupExtExtension::ClearPublicTempFiles()
     std::string tempPath = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)
         .append(BConstants::SA_BUNDLE_BACKUP_RESTORE).append(BConstants::PATH_PUBLIC_HOME_NO_SLASH);
     BDir::ClearDirectory(tempPath);
+}
+
+std::string BackupExtExtension::FileInfoToString(std::shared_ptr<IFileInfo> fileInfo)
+{
+    Json::Value value;
+    if (fileInfo->isAncoFile_) {
+        value["path"] = fileInfo->filename_;
+    } else {
+        value["path"] = fileInfo->filePath_;
+    }
+ 
+    value["st_mode"] = static_cast<uint64_t>(fileInfo->sta_.st_mode);
+    value["st_atim"]["tv_sec"] = static_cast<int64_t>(fileInfo->sta_.st_atim.tv_sec);
+    value["st_atim"]["tv_nsec"] = static_cast<int64_t>(fileInfo->sta_.st_atim.tv_nsec);
+    value["st_mtim"]["tv_sec"] = static_cast<int64_t>(fileInfo->sta_.st_mtim.tv_sec);
+    value["st_mtim"]["tv_nsec"] = static_cast<int64_t>(fileInfo->sta_.st_mtim.tv_nsec);
+    Json::FastWriter writer;
+    return writer.write(value);
 }
 } // namespace OHOS::FileManagement::Backup

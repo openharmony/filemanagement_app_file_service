@@ -204,4 +204,40 @@ ErrCode ServiceReverseProxy::IncrementalRestoreOnMigrateResult(int32_t errCode, 
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadys(const std::string &bundleName,
+                                       const std::vector<std::string> &fileNames,
+                                       const std::vector<int> &fdList,
+                                       const std::vector<int> &manifestfdList,
+                                       int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadysWithoutFd(const std::string &bundleName,
+                                                const std::vector<std::string> &fileListWithoutfd,
+                                                int32_t errCode)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceReverseProxy::SetBatchSize(uint32_t size)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceReverseProxy::BackupOnFileReadysWithoutFd(const std::string &bundleName,
+                                    const std::vector<std::string> &fileNames,
+                                    const std::vector<int> &errCodes)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceReverseProxy::BackupOnFileReadys(const std::string &bundleName,
+                           const std::vector<std::string> &fileNames,
+                           const std::vector<int> &fds,
+                           const std::vector<int> &errCodes)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

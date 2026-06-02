@@ -554,4 +554,21 @@ ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fi
 {
     return BError(BError::Codes::OK);
 }
+
+ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
+    const std::vector<int> &errCodes)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
+    const std::vector<int> &errCodes)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+{
+    return BError(BError::Codes::OK);
+}
 } // namespace OHOS::FileManagement::Backup

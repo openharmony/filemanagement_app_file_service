@@ -153,6 +153,7 @@
                             "impl/b_incremental_backup_session.h",
                             "impl/b_incremental_data.h",
                             "impl/b_incremental_restore_session.h",
+                            "impl/backup_file.h",
                             "impl/b_session_restore.h",
                             "impl/b_session_restore_async.h",
                             "impl/b_file_info.h",

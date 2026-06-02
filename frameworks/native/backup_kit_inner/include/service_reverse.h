@@ -16,6 +16,8 @@
 #ifndef OHOS_FILEMGMT_BACKUP_SERVICE_REVERSE_H
 #define OHOS_FILEMGMT_BACKUP_SERVICE_REVERSE_H
 
+#include <vector>
+
 #include "b_session_backup.h"
 #include "b_session_restore.h"
 #include "b_incremental_backup_session.h"
@@ -91,6 +93,30 @@ public:
     ErrCode IncrementalRestoreOnProcessInfo(const std::string &bundleName, const std::string &processInfo) override;
     ErrCode IncrementalRestoreOnMigrateResult(int32_t errCode, const std::string &bundleName) override;
 
+    ErrCode IncrementalRestoreOnFileReadys(const std::string &bundleName,
+                                           const std::vector<std::string> &fileNames,
+                                           const std::vector<int> &fdList,
+                                           const std::vector<int> &manifestfdList,
+                                           const std::vector<int32_t> &errCodes) override;
+    ErrCode IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
+                                           const std::vector<std::string> &fileNames,
+                                           const std::vector<int> &fdList,
+                                           const std::vector<int32_t> &errCodes) override;
+ 
+    ErrCode IncrementalRestoreOnFileReadysWithoutFd(const std::string &bundleName,
+                                                    const std::vector<std::string> &fileListWithoutfd,
+                                                    const std::vector<int32_t> &errCodes) override;
+ 
+    ErrCode SetBatchSize(uint32_t size) override;
+ 
+    ErrCode BackupOnFileReadysWithoutFd(const std::string &bundleName,
+                                        const std::vector<std::string> &fileNames,
+                                        const std::vector<int> &errCodes) override;
+    ErrCode BackupOnFileReadys(const std::string &bundleName,
+                               const std::vector<std::string> &fileNames,
+                               const std::vector<int> &fds,
+                               const std::vector<int> &errCodes) override;
+
 public:
     ServiceReverse() = delete;
     explicit ServiceReverse(BSessionRestore::Callbacks callbacks);
@@ -99,12 +125,30 @@ public:
     explicit ServiceReverse(BIncrementalRestoreSession::Callbacks callbacks);
     ~ServiceReverse() override = default;
 
-private:
+private:    
+    void FlushPendingFiles();
+    void FlushPendingIncrementalFiles();
+    void AddFileToBatch(const std::string &bundleName,
+                        const std::vector<std::string> &fileNames,
+                        const std::vector<int> &fds,
+                        const std::vector<int> &manifestFds,
+                        const std::vector<int32_t> &errCodes);
+    void AddIncrementalFileToBatch(const std::string &bundleName,
+                                   const std::vector<std::string> &fileNames,
+                                   const std::vector<int> &fds,
+                                   const std::vector<int> &manifestFds,
+                                   const std::vector<int32_t> &errCodes);
+
     Scenario scenario_ {Scenario::UNDEFINED};
     BSessionBackup::Callbacks callbacksBackup_;
     BSessionRestore::Callbacks callbacksRestore_;
     BIncrementalBackupSession::Callbacks callbacksIncrementalBackup_;
     BIncrementalRestoreSession::Callbacks callbacksIncrementalRestore_;
+    std::vector<BackupFile> pendingFiles_;
+    std::vector<BackupFile> pendingIncrementalFiles_;
+    uint32_t batchSize_ = 2000;
+    std::mutex addBatchLock_;
+    std::mutex addIncrementalBatchLock_;
 };
 } // namespace OHOS::FileManagement::Backup
 

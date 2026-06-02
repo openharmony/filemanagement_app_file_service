@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <mutex>
 #include "backup_file_info.h"
+#include "b_file_info.h"
 #include "backup_incremental_data.h"
 #include "iservice.h"
 #include "system_ability_load_callback_stub.h"

@@ -348,4 +348,18 @@ int32_t SvcSessionManager::GetDelayTime(const std::string &bundleName)
 {
     return BSvcSessionManager::sessionManager->GetDelayTime(bundleName);
 }
+
+void SvcSessionManager::SetSupportWithoutTar(const std::string &bundleName, bool isSupportWithoutTar) {}
+ 	 
+bool SvcSessionManager::GetSupportWithoutTar(const std::string &bundleName)
+{
+    return BSvcSessionManager::sessionManager->GetSupportWithoutTar(bundleName);
+}
+ 
+void SvcSessionManager::SetBatchSize(const std::string &bundleName, int32_t batchSize) {}
+ 	 
+int32_t SvcSessionManager::GetBatchSize(const std::string &bundleName)
+{
+    return BSvcSessionManager::sessionManager->GetBatchSize(bundleName);
+}
 } // namespace OHOS::FileManagement::Backup

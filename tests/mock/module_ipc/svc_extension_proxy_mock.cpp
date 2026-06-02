@@ -109,4 +109,10 @@ ErrCode ExtensionProxy::GetIncrementalRpFileHandle(const std::string &fileName, 
 {
     return 0;
 }
+
+ErrCode ExtensionProxy::GetIncrementalFileHandles(const std::vector<std::string> &fileNames, std::vector<int> &fdList,
+    std::vector<int> &manifestfdList)
+{
+    return 0;
+}
 } // namespace OHOS::FileManagement::Backup

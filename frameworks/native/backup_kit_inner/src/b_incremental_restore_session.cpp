@@ -21,6 +21,7 @@
 #include "filemgmt_libhilog.h"
 #include "service_client.h"
 #include "service_reverse.h"
+#include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -137,6 +138,17 @@ ErrCode BIncrementalRestoreSession::GetFileHandle(const string &bundleName, cons
     HILOGI("Begin getFileHandle, bundle:%{public}s, fileName:%{public}s", bundleName.c_str(),
         GetAnonyPath(fileName).c_str());
     return proxy->GetIncrementalFileHandle(bundleName, fileName);
+}
+
+ErrCode BIncrementalRestoreSession::GetFileHandles(const string &bundleName, const vector<std::string> &fileNames)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
+    }
+    HILOGI("Begin getFileHandles, bundle:%{public}s, fileNameSize:%{public}lu", bundleName.c_str(),
+        fileNames.size());
+    return proxy->GetIncrementalFileHandles(bundleName, fileNames);
 }
 
 ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)

@@ -159,6 +159,22 @@ void BackupExtExtension::ReportAppStatistic(const std::string &func, ErrCode err
     BExtExtension::extExtension->ReportAppStatistic(func, errCode);
 }
 
+int32_t BackupExtExtension::CallbackEnter(uint32_t code)
+{
+    return BExtExtension::extExtension->CallbackEnter(code);
+}
+ 
+int32_t BackupExtExtension::CallbackExit(uint32_t code, int32_t result)
+{
+    return BExtExtension::extExtension->CallbackExit(code, result);
+}
+ 
+ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+    std::vector<int> &fdList, std::vector<int> &manifestfdList)
+{
+    return BExtExtension::extExtension->GetIncrementalFileHandles(fileNames, fdList, manifestfdList);
+}
+
 void BackupExtExtension::UpdateOnStartTime()
 {
     BExtExtension::extExtension->UpdateOnStartTime();

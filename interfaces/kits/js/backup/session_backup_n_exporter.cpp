@@ -79,6 +79,53 @@ static void OnFileReady(weak_ptr<GeneralCallbacks> pCallbacks, const BFileInfo &
     callbacks->onFileReady.ThreadSafeSchedule(cbCompl);
 }
 
+static void OnFileReadyBatch(weak_ptr<GeneralCallbacks> pCallbacks, const std::vector<BackupFile>& files)
+{
+    auto callbacks = pCallbacks.lock();
+    if (!callbacks || !bool(callbacks->onFileReadyBatch)) {
+        HILOGI("callback function onFileReadyBatch is undefined");
+        return;
+    }
+    auto cbCompl = [files](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        for (size_t i = 0; i < files.size(); i++) {
+            if (files[i].errCode != 0) {
+                ErrCode errCode = BError::GetCodeByErrno(files[i].errCode);
+                std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, "system errno: " + to_string(files[i].errCode));
+                ErrParam errorParam = [ errInfo ]() {
+                    return errInfo;
+                };
+                NVal obj = NVal {env, NError(errorParam).GetNapiErr(env)};
+                napi_status status = napi_set_named_property(env, obj.val_, FILEIO_TAG_ERR_DATA.c_str(),
+                    NVal::CreateUTF8String(env, files[i].bundleName).val_);
+                if (status != napi_ok) {
+                    HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s",
+                        status, files[i].bundleName.c_str());
+                }
+                return {obj};
+            }
+        }
+        napi_value jsArray;
+        napi_create_array(env, &jsArray);
+        for (size_t i = 0; i < files.size(); i++) {
+            const auto& file = files[i];
+            napi_value jsFile = NVal::CreateObject(env).val_;
+            napi_set_named_property(env, jsFile, BConstants::BUNDLE_NAME.c_str(),
+                NVal::CreateUTF8String(env, file.bundleName).val_);
+            napi_set_named_property(env, jsFile, BConstants::URI.c_str(),
+                NVal::CreateUTF8String(env, file.uri).val_);
+            napi_set_named_property(env, jsFile, BConstants::FD.c_str(),
+                NVal::CreateInt32(env, file.fd).val_);
+            napi_set_element(env, jsArray, i, jsFile);
+        }
+        HILOGI("callback function backup OnFileReadyBatch end, fileSize: %{public}lu", files.size());
+        return {env, jsArray};
+    };
+    callbacks->onFileReadyBatch.ThreadSafeSchedule(cbCompl);
+}
+
 static void onBundleBegin(weak_ptr<GeneralCallbacks> pCallbacks, ErrCode err, const BundleName name)
 {
     HILOGI("Callback onBundleBegin, bundleName=%{public}s, errCode=%{public}d", name.c_str(), err);
@@ -361,6 +408,7 @@ napi_value SessionBackupNExporter::Constructor(napi_env env, napi_callback_info 
     std::string errMsg;
     backupEntity->session = BSessionBackup::Init(BSessionBackup::Callbacks {
         .onFileReady = bind(OnFileReady, backupEntity->callbacks, placeholders::_1, placeholders::_2, placeholders::_3),
+        .onFileReadyBatch = bind(OnFileReadyBatch, backupEntity->callbacks, placeholders::_1),
         .onBundleStarted = bind(onBundleBegin, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onBundleFinished = bind(onBundleEnd, backupEntity->callbacks, placeholders::_1, placeholders::_2),
         .onAllBundlesFinished = bind(onAllBundlesEnd, backupEntity->callbacks, placeholders::_1),

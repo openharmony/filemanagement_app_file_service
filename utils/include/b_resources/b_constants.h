@@ -33,6 +33,8 @@ static inline const char *EXTENSION_BACKUP_EXT_INFO_PARA = "backupExtInfo";
 static inline const char *EXTENSION_APP_CLONE_INDEX_PARA = "ohos.extra.param.key.appCloneIndex";
 static inline const char *EXTENSION_OLD_BACKUP_VERSION_PARA = "oldBackupVersion";
 static inline const char *EXTENSION_BACKUP_SCENE_PARA = "backupScene";
+static inline const char *EXTENSION_SUPPORT_WITHOUT_TAR_PARA = "supportWithoutTar";
+static inline const char *EXTENSION_BATCH_SIZE_PARA = "batchSize";
 
 enum class ExtensionAction {
     INVALID = 0,
@@ -67,6 +69,7 @@ constexpr int DECIMAL_BASE = 10; // 十进制基数
 
 constexpr off_t BIG_FILE_BOUNDARY = 2 * 1024 * 1024; // 大文件边界
 constexpr unsigned long BIG_FILE_NAME_SIZE = 16;     // 大文件名长度(hash处理)
+constexpr off_t BIG_FILE_BOUNDARY_WITHOUT_TAR = -1; // 免tar不设置大文件边界
 
 constexpr int PATHES_TO_BACKUP_SIZE = 13;     // 应用默认备份的目录个数
 constexpr uint32_t BACKUP_PARA_VALUE_MAX = 5; // 读取backup.para字段值的最大长度
@@ -92,7 +95,7 @@ constexpr int BACKUP_VFS_CACHE_PRESSURE = 10000; // 备份过程修改参数
 
 constexpr int32_t INVALID_FD_NUM = -1;
 
-constexpr int MAX_FD_SEND_RATE = 800; // 允许应用申请的最大FD数量
+constexpr int MAX_FD_SEND_RATE = 10000; // 允许应用申请的最大FD数量
 constexpr int MIN_FD_SEND_RATE = 0; // 允许应用申请的最小FD数量
 constexpr int DEFAULT_FD_SEND_RATE = 60; // 框架默认的FD数量
 constexpr int32_t PARAM_STARING_MAX_MEMORY = 2 * 1024 * 1024;
@@ -139,6 +142,7 @@ static const bool BACKUP_DEBUG_OVERRIDE_INCREMENTAL_DEFAULT_VALUE = true;
 static inline std::string_view SA_BUNDLE_BACKUP_BACKUP = "/backup/";
 static inline std::string_view SA_BUNDLE_BACKUP_RESTORE = "/restore/";
 static inline std::string_view SA_BUNDLE_BACKUP_TMP_DIR = "/tmp/";
+static inline std::string_view SA_BUNDLE_BACKUP_RESTORE_TAR = "/restore";
 static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/base/.backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/base/.backup";
@@ -295,6 +299,7 @@ static inline std::array<std::string_view, PATHES_TO_BACKUP_SIZE> PATHES_TO_BACK
 // napi 层代码引用到的常量，对应js接口声明(@ohos.file.backup.d.ts)中的属性字段
 static inline std::string BUNDLE_NAME = "bundleName";
 static inline std::string URI = "uri";
+static inline std::string URIS = "uris";
 static inline std::string FD = "fd";
 static inline std::string MANIFEST_FD = "manifestFd";
 static inline std::string LAST_INCREMENTAL_TIME = "lastIncrementalTime";
