@@ -261,7 +261,8 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
             return true;
         }
     }
-    HILOGD("End, bundleName name is:%{private}s", bundleName.c_str());
+    HILOGD("End, bundleName name is:%{private}s, fileNameInfo size:%{public}zu",
+        bundleName.c_str(), it->second.fileNameInfo.size());
     return false;
 }
 
@@ -284,7 +285,7 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
         HILOGD("fileName %{public}s", GetAnonyPath(fileName).data());
         OnBundleFileReady(bundleName, fileName);
     }
-
+    HILOGD("info size = %{public}zu", info.size());
     unique_lock<shared_mutex> lock(lock_);
     auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
     if (!findBundleSuc) {
