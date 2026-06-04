@@ -366,6 +366,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0001, TestSize.Level1)
         EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
+
         auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
         auto callConnected = [](const string &&bundleName) {};
         auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, "OnBackupExtensionDied2"));
