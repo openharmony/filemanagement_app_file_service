@@ -1241,7 +1241,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesDetailsBackupSession_0200, TestSi
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
         EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillOnce(Return(infos));
         EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
         auto ret = service->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
