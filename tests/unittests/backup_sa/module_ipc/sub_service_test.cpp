@@ -362,8 +362,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0001, TestSize.Level1)
     auto totalStatistic_ = service->totalStatistic_;
     try {
         GTEST_LOG_(INFO) << "2.isClean and connection not nullptr";
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
@@ -432,7 +431,6 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0000, TestSize.Level1)
     EXPECT_CALL(*session, StopFwkTimer(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*session, StopExtTimer(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false));
     EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(false));
     EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false));
     EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
@@ -501,7 +499,7 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0002, TestSize.Level1)
     connectPtr->hasConnected_.store(true);
     EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true)).WillOnce(Return(true));
     EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
-    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(false)).WillOnce(Return(false));
+    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillRepeatedly(Return(false));
     EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false)).WillOnce(Return(false));
     EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
