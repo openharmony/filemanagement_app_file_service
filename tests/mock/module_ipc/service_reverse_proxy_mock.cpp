@@ -207,13 +207,19 @@ ErrCode ServiceReverseProxy::IncrementalRestoreOnMigrateResult(int32_t errCode, 
 
 ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadys(const std::string &bundleName,
     const std::vector<std::string> &fileNames, const std::vector<int> &fdList, const std::vector<int> &manifestfdList,
-    int32_t errCode)
+    const std::vector<int32_t> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
- 
-ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadysWithoutFd(
-    const std::string &bundleName, const std::vector<std::string> &fileListWithoutfd, int32_t errCode)
+
+ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
+    const std::vector<std::string> &fileNames, const std::vector<int> &fdList, const std::vector<int32_t> &errCodes)
+{
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadysWithoutFd(const std::string &bundleName,
+    const std::vector<std::string> &fileListWithoutfd, const std::vector<int32_t> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
