@@ -32,9 +32,9 @@ namespace {
 const int32_t DEFAULT_MODE = 0100660; // 0660
 }
 
-static bool CheckBigFile(struct stat sta)
+static bool CheckBigFile(struct stat sta, bool isSupportWithoutTar = false)
 {
-    if (sta.st_size > BConstants::BIG_FILE_BOUNDARY) {
+    if (isSupportWithoutTar || sta.st_size > BConstants::BIG_FILE_BOUNDARY) {
         return true;
     }
     return false;
@@ -196,7 +196,7 @@ void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct s
         auto [path, sta, isBeforeTar] = item->second;
         value["information"]["path"] = path;
         value["isUserTar"] = isBeforeTar && CheckUserTar(path, sta);
-        value["isBigFile"] = !CheckOwnPackTar(path) && CheckBigFile(sta);
+        value["isBigFile"] = !CheckOwnPackTar(path) && CheckBigFile(sta, isSupportWithoutTar);
         if (isSupportWithoutTar) {
             value["information"]["stat"]["st_size"] = static_cast<int64_t>(sta.st_size);
             value["information"]["stat"]["st_mode"] = static_cast<int32_t>(sta.st_mode);
