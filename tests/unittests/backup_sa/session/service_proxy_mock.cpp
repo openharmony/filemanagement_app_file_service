@@ -354,12 +354,14 @@ ErrCode ServiceProxy::AppFileReadys(const std::vector<std::string> &fileNames, c
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames, const std::vector<int> &errCodes)
+ErrCode ServiceProxy::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
+    const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+ErrCode ServiceProxy::GetIncrementalFileHandles(
+    const std::string &bundleName, const std::vector<std::string> &fileNames)
 {
     return BError(BError::Codes::OK);
 }

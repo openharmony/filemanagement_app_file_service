@@ -125,7 +125,7 @@ public:
     explicit ServiceReverse(BIncrementalRestoreSession::Callbacks callbacks);
     ~ServiceReverse() override = default;
 
-private:    
+private:
     void FlushPendingFiles();
     void FlushPendingIncrementalFiles();
     void AddFileToBatch(const std::string &bundleName,

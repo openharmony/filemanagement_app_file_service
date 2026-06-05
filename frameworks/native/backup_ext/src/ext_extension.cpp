@@ -210,7 +210,7 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
         return UniqueFd(BConstants::INVALID_FD_NUM);
     }
     return fd;
-} 
+}
 
 int32_t BackupExtExtension::CallbackEnter([[maybe_unused]] uint32_t code)
 {
@@ -499,18 +499,19 @@ ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::str
         }
         VerifyCaller();
         for (auto fileName : fileNames) {
-            if (!BDir::IsFilePathValid(fileName)) {
-                auto proxy = ServiceClient::GetInstance();
-                if (proxy == nullptr) {
-                    throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
-                }
-                HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
-                auto ret = proxy->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG));
-                if (ret != ERR_OK) {
-                    HILOGE("Failed to notify app incre done. err = %{public}d", ret);
-                }
-                return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+            if (BDir::IsFilePathValid(fileName)) {
+                continue;
             }
+            auto proxy = ServiceClient::GetInstance();
+            if (proxy == nullptr) {
+                throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
+            }
+            HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
+            auto ret = proxy->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG));
+            if (ret != ERR_OK) {
+                HILOGE("Failed to notify app incre done. err = %{public}d", ret);
+            }
+            return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
         }
         HILOGI("GetIncrementalFileHandles GetIncrementalFileHandle start");
         for (const auto& fileName : fileNames) {
@@ -818,6 +819,7 @@ ErrCode BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileI
 ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles)
 {
     HILOGD("ReportAppFileReadys enter filenameSize: %{public}lu", allFiles.size());
+    int32_t errCode = ERR_OK;
     vector<string> fileNames = {};
     vector<int> normalfds = {};
     vector<string> abnormalfileNames = {};
@@ -847,7 +849,7 @@ ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFil
         CloseFileWithFDSan(fdval);
     }
     if (SUCCEEDED(reportRs) && SUCCEEDED(reportRsWithoutFd)) {
-        HILOGI("Report app file ready success, filenameSize: %{public}lu", allFiles.size()); 
+        HILOGI("Report app file ready success, filenameSize: %{public}lu", allFiles.size());
     } else {
         HILOGW(
             "Report app file ready failed, reportRsWithoutFd: %{public}d, reportRs %{public}d, allfileSize: "
@@ -1748,6 +1750,17 @@ void BackupExtExtension::HandleSpecialVersionRestore()
     }
 }
 
+static void ExtractTarFiles(BackupExtExtension *ptr, const std::set<std::string> &fileSet,
+    const std::vector<ExtManageInfo> &extManageInfo, int &ret)
+{
+    for (const auto &item : fileSet) {  // 处理要解压的tar文件
+        off_t tarFileSize = 0;
+        if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
+            ret = ptr->DoRestore(item, tarFileSize);
+        }
+    }
+}
+
 void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
     const std::vector<ExtManageInfo> extManageInfo)
 {
@@ -1764,12 +1777,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
                 return;
             }
             // 解压
-            for (const auto &item : fileSet) { // 处理要解压的tar文件
-                off_t tarFileSize = 0;
-                if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
-                    ret = ptr->DoRestore(item, tarFileSize);
-                }
-            }
+            ExtractTarFiles(ptr.get(), fileSet, extManageInfo, ret);
             if (!enableBatch) {
                 // 恢复用户tar包以及大文件
                 // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景

@@ -37,48 +37,16 @@
 #include "power_mgr_client.h"
 #include "running_lock.h"
 #endif
+#include "service_inner.h"
 #include "service_stub.h"
 #include "svc_session_manager.h"
 #include "system_ability.h"
 #include "thread_pool.h"
+#include "string_raw_data.h"
 #include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
-typedef int (*CallDeviceTaskRequest)(int, unsigned int, unsigned int, CallbackFunc);
-
-struct ExtensionMutexInfo {
-    std::string bundleName;
-    std::mutex callbackMutex;
-    ExtensionMutexInfo(std::string bundleName_) : bundleName(bundleName_) {};
-};
-
-struct BundleTaskInfo {
-    std::string reportTime;
-    ErrCode errCode;
-};
-
-struct BundleBroadCastInfo {
-    std::map<std::string, std::string> broadCastInfoMap = {};
-    int userId = 0;
-};
-
-struct GcProgressInfo {
-    std::atomic<int> status;
-    std::atomic<int> errcode;
-    std::atomic<unsigned int> percent;
-    std::atomic<unsigned int> gap;
-};
-
-struct GcProgressInfoUpdate {
-    int status;
-    int errcode;
-    unsigned int percent;
-    unsigned int gap;
-};
-
-const int INVALID_FD = -1;
 
 class Service : public SystemAbility, public ServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(Service);

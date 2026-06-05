@@ -85,6 +85,19 @@ ErrCode Service::SetSessPropertiesRestore(const std::vector<std::string> &restor
     return BError(BError::Codes::OK);
 }
 
+static bool ValidateRestoreBundle(
+    const std::string &bundleNameIndexInfo, const std::vector<std::string> &restoreBundleNames)
+{
+    auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(), [&bundleNameIndexInfo](const auto &name) {
+        return name == bundleNameIndexInfo;
+    });
+    if (it == restoreBundleNames.end()) {
+        HILOGE("Can not find current bundle, bundleName:%{public}s", bundleNameIndexInfo.c_str());
+        return false;
+    }
+    return true;
+}
+
 ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::string> &restoreBundleNames,
     vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
@@ -100,18 +113,12 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
         isClearDataFlags[bundle] = info.isClearData;
     }
     for (const auto &restoreInfo : restoreBundleInfos) {
-        auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(), [&restoreInfo](const auto &bundleName) {
-            std::string bundleNameIndex = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
-            return bundleName == bundleNameIndex;
-        });
-        if (it == restoreBundleNames.end()) {
-            HILOGE("Can not find current bundle, bundleName:%{public}s, appIndex:%{public}d", restoreInfo.name.c_str(),
-                restoreInfo.appIndex);
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
+        if (!ValidateRestoreBundle(bundleNameIndexInfo, restoreBundleNames)) {
             continue;
         }
         HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
             restoreInfo.extensionName.c_str());
-        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
         if (((!restoreInfo.allToBackup && !SpecialDefaultVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) &&
             !GetDefaultBundleResult(restoreInfo.name)) {

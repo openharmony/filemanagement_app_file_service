@@ -99,21 +99,23 @@ static void OnFileReadyBatch(weak_ptr<GeneralCallbacks> pCallbacks, const std::v
             return {env, err.GetNapiErr(env)};
         }
         for (size_t i = 0; i < files.size(); i++) {
-            if (files[i].errCode != 0) {
-                ErrCode errCode = BError::GetCodeByErrno(files[i].errCode);
-                std::tuple<uint32_t, std::string> errInfo = std::make_tuple(errCode, "system errno: " + to_string(files[i].errCode));
-                ErrParam errorParam = [ errInfo ]() {
-                    return errInfo;
-                };
-                NVal obj = NVal {env, NError(errorParam).GetNapiErr(env)};
-                napi_status status = napi_set_named_property(env, obj.val_, FILEIO_TAG_ERR_DATA.c_str(),
-                    NVal::CreateUTF8String(env, files[i].bundleName).val_);
-                if (status != napi_ok) {
-                    HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s",
-                        status, files[i].bundleName.c_str());
-                }
-                return {obj};
+            if (files[i].errCode == 0) {
+                continue;
             }
+            ErrCode errCode = BError::GetCodeByErrno(files[i].errCode);
+            std::tuple<uint32_t, std::string> errInfo =
+                std::make_tuple(errCode, "system errno: " + to_string(files[i].errCode));
+            ErrParam errorParam = [ errInfo ]() {
+                return errInfo;
+            };
+            NVal obj = NVal {env, NError(errorParam).GetNapiErr(env)};
+            napi_status status = napi_set_named_property(env, obj.val_, FILEIO_TAG_ERR_DATA.c_str(),
+                NVal::CreateUTF8String(env, files[i].bundleName).val_);
+            if (status != napi_ok) {
+                HILOGE("Failed to set data property, status %{public}d, bundleName %{public}s",
+                    status, files[i].bundleName.c_str());
+            }
+            return {obj};
         }
         napi_value jsArray;
         napi_create_array(env, &jsArray);
@@ -1471,7 +1473,6 @@ napi_value SessionRestoreNExporter::ConstructorFromEntity(napi_env env, napi_cal
 
 napi_value SessionRestoreNExporter::CreateByEntity(napi_env env, std::unique_ptr<RestoreEntity> entity)
 {
-    HILOGD("CreateByEntity begin");
     if (entity == nullptr) {
         HILOGE("entity is null");
         return nullptr;

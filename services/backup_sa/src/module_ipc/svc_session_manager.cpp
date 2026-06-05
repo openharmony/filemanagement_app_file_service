@@ -256,7 +256,7 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
         }
         HILOGD(
             "Condition met: receExtManageJson=%{public}s, fileNameInfo_empty=%{public}s, receExtAppDone=%{public}s",
-            it->second.receExtManageJson ? "true" : "false", 
+            it->second.receExtManageJson ? "true" : "false",
             it->second.fileNameInfo.empty() ? "true" : "false",
             it->second.receExtAppDone ? "true" : "false");
         if (it->second.receExtManageJson && it->second.fileNameInfo.empty() && it->second.receExtAppDone) {

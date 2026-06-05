@@ -206,45 +206,31 @@ ErrCode ServiceReverseProxy::IncrementalRestoreOnMigrateResult(int32_t errCode, 
 }
 
 ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadys(const std::string &bundleName,
-                                       const std::vector<std::string> &fileNames,
-                                       const std::vector<int> &fdList,
-                                       const std::vector<int> &manifestfdList,
-                                       const std::vector<int32_t> &errCodes)
+    const std::vector<std::string> &fileNames, const std::vector<int> &fdList, const std::vector<int> &manifestfdList,
+    int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
-
-ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
-                                       const std::vector<std::string> &fileNames,
-                                       const std::vector<int> &fdList,
-                                       const std::vector<int32_t> &errCodes)
+ 
+ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadysWithoutFd(
+    const std::string &bundleName, const std::vector<std::string> &fileListWithoutfd, int32_t errCode)
 {
     return BError(BError::Codes::OK);
 }
-
-ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadysWithoutFd(const std::string &bundleName,
-                                                const std::vector<std::string> &fileListWithoutfd,
-                                                const std::vector<int32_t> &errCodes)
-{
-    return BError(BError::Codes::OK);
-}
-
+ 
 ErrCode ServiceReverseProxy::SetBatchSize(uint32_t size)
 {
     return BError(BError::Codes::OK);
 }
-
-ErrCode ServiceReverseProxy::BackupOnFileReadysWithoutFd(const std::string &bundleName,
-                                    const std::vector<std::string> &fileNames,
-                                    const std::vector<int> &errCodes)
+ 
+ErrCode ServiceReverseProxy::BackupOnFileReadysWithoutFd(
+    const std::string &bundleName, const std::vector<std::string> &fileNames, const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
-
+ 
 ErrCode ServiceReverseProxy::BackupOnFileReadys(const std::string &bundleName,
-                           const std::vector<std::string> &fileNames,
-                           const std::vector<int> &fds,
-                           const std::vector<int> &errCodes)
+    const std::vector<std::string> &fileNames, const std::vector<int> &fds, const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);
 }

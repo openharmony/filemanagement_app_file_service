@@ -1652,9 +1652,21 @@ void BackupExtExtension::AsyncDoBackup()
     });
 }
 
-void BackupExtExtension::DoBackupTaskCore(bool supportWithoutTar,
-                                          std::vector<std::shared_ptr<IFileInfo>> &allFiles,
-                                          int &ret)
+static ErrCode ReportBatchFiles(std::vector<std::shared_ptr<IFileInfo>> &tmpFiles,
+    std::vector<std::shared_ptr<IFileInfo>> &allFiles)
+{
+    ErrCode subRet = ReportAppFileReadys(tmpFiles);
+    allFiles.insert(allFiles.end(), tmpFiles.begin(), tmpFiles.end());
+    tmpFiles.clear();
+    if (subRet != ERR_OK) {
+        HILOGE("report files ready fail, err=%{public}d", subRet);
+        return static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+    }
+    return ERR_OK;
+}
+
+void BackupExtExtension::DoBackupTaskCore(
+    bool supportWithoutTar, std::vector<std::shared_ptr<IFileInfo>> &allFiles, int &ret)
 {
     int fdNum = 0;
     auto startTime = std::chrono::system_clock::now();
@@ -1675,13 +1687,7 @@ void BackupExtExtension::DoBackupTaskCore(bool supportWithoutTar,
         if (isWithoutTarFile) {
             tmpFiles.push_back(fileInfo);
             if (tmpFiles.size() == GetBatchSize()) {
-                ErrCode subRet = ReportAppFileReadys(tmpFiles);
-                allFiles.insert(allFiles.end(), tmpFiles.begin(), tmpFiles.end());
-                tmpFiles.clear();
-                if (subRet != ERR_OK) {
-                    HILOGE("report files ready fail, err=%{public}d", subRet);
-                    ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
-                }
+                ret = ReportBatchFiles(tmpFiles, allFiles);
             }
             fdNum++;
         } else {
@@ -1692,7 +1698,8 @@ void BackupExtExtension::DoBackupTaskCore(bool supportWithoutTar,
                 subRet = ERR_OK;
             }
             if (subRet != ERR_OK) { // 后续错误码上报DFX
-                HILOGE("report file ready fail,filename=%{public}s, err=%{public}d", fileInfo->filename_.c_str(), subRet);
+                HILOGE("report file ready fail,filename=%{public}s, err=%{public}d",
+                    fileInfo->filename_.c_str(), subRet);
                 ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
             }
         }

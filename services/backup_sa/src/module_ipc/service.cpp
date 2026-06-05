@@ -738,7 +738,6 @@ void Service::SetCurrentSessProperties(
     std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos, RestoreTypeEnum restoreType,
     std::string &backupVersion)
 {
-    HILOGI("Start");
     session_->SetOldBackupVersion(backupVersion);
     for (const auto &restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
@@ -786,7 +785,6 @@ void Service::SetCurrentSessProperties(
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
     }
-    HILOGI("End");
 }
 
 void Service::HandleCurGroupBackupInfos(

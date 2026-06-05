@@ -42,6 +42,9 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+    const int32_t DEFAULT_BATCH_SIZE = 500;
+}
 CreatorFunc ExtBackup::creator_ = nullptr;
 void ExtBackup::SetCreator(const CreatorFunc &creator)
 {
@@ -182,7 +185,7 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         restoreExtInfo_ = want.GetStringParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA);
         oldBackupVersion_ = want.GetStringParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA);
         supportWithoutTar_ = want.GetBoolParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, false);
-        batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, 500);
+        batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, DEFAULT_BATCH_SIZE);
         HILOGI("restoreExtInfo_ is %{public}s", GetAnonyString(restoreExtInfo_).c_str());
         HILOGI("Get version %{public}s type %{public}d from want when restore.", appVersionStr_.c_str(), restoreType_);
         HILOGI("oldBackupVersion_ is %{public}s", oldBackupVersion_.c_str());
@@ -190,7 +193,7 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
         backupScene_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_SCENE_PARA);
         supportWithoutTar_ = want.GetBoolParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, false);
-        batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, 500);
+        batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, DEFAULT_BATCH_SIZE);
         HILOGI(
             "backupExtInfo_ is %{public}s, backupScene_ is %{public}s, supportWithoutTar_ is %{public}d, batchSize_ is "
             "%{public}d",

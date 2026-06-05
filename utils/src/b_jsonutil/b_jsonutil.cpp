@@ -31,6 +31,7 @@ using namespace std;
 namespace {
     const static int BUNDLE_INDEX_DEFAULT_VAL = 0;
     const static std::string BUNDLE_INDEX_SPLICE = ":";
+    const int32_t DEFAULT_BATCH_SIZE = 500;
 }
 
 BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string &bundleNameStr)
@@ -206,68 +207,105 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
     }
 }
 
+static void ParseClearBackupData(
+    cJSON *root, const std::string &bundleName, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
+{
+    cJSON *clearBackupData = cJSON_GetObjectItem(root, "clearBackupData");
+    if (clearBackupData == nullptr || !cJSON_IsString(clearBackupData) || (clearBackupData->valuestring == nullptr)) {
+        HILOGE("Parse clearBackupData error.");
+        return;
+    }
+    std::string value = clearBackupData->valuestring;
+    bundleSettingInfo.isClearData = (value == "true");
+    HILOGI("bundleName:%{public}s clear data flag:%{public}d", bundleName.c_str(), bundleSettingInfo.isClearData);
+}
+
+static void ParseIsDefaultBackupAndRestore(cJSON *root, BJsonUtil::BundleDetailInfo &bundleDetailInfo)
+{
+    cJSON *isDefaultBackupAndRestore = cJSON_GetObjectItem(root, "isDefaultBackupAndRestore");
+    if (isDefaultBackupAndRestore != nullptr && cJSON_IsBool(isDefaultBackupAndRestore)) {
+        bundleDetailInfo.isDefaultBackupAndRestore = (isDefaultBackupAndRestore->type == cJSON_True) ? true : false;
+        HILOGI("Parse isDefaultBackupAndRestore success %{public}d", bundleDetailInfo.isDefaultBackupAndRestore);
+    }
+}
+
+static void ParseDelayTime(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
+{
+    cJSON *delayTime = cJSON_GetObjectItem(root, "delayTime");
+    if (delayTime != nullptr && cJSON_IsNumber(delayTime)) {
+        bundleSettingInfo.delayTime = delayTime->valueint;
+        HILOGI("Parse delayTime success, delayTime is %{public}d", bundleSettingInfo.delayTime);
+    }
+}
+
+static void ParseBackupScene(cJSON *root, BJsonUtil::BundleDetailInfo &bundleDetailInfo)
+{
+    cJSON *backupScene = cJSON_GetObjectItem(root, "backupScene");
+    if (backupScene != nullptr && cJSON_IsString(backupScene) && (backupScene->valuestring != nullptr)) {
+        HILOGI("Parse backupScene success");
+        bundleDetailInfo.backupScene = backupScene->valuestring;
+    }
+}
+
+static void ParseSupportWithoutTar(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
+{
+    cJSON *isSupportWithoutTar = cJSON_GetObjectItem(root, "isSupportWithoutTar");
+    if (isSupportWithoutTar != nullptr && cJSON_IsBool(isSupportWithoutTar)) {
+        bundleSettingInfo.isSupportWithoutTar = cJSON_IsTrue(isSupportWithoutTar);
+        HILOGI("Parse isSupportWithoutTar success, isSupportWithoutTar is %{public}d",
+            bundleSettingInfo.isSupportWithoutTar);
+    }
+}
+
+static void ParseBatchSize(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
+{
+    cJSON *batchSize = cJSON_GetObjectItem(root, "batchSize");
+    if (batchSize != nullptr && cJSON_IsNumber(batchSize)) {
+        bundleSettingInfo.batchSize = batchSize->valueint;
+        if (bundleSettingInfo.batchSize <= 0) {
+            HILOGW("batchSize is invalid");
+            bundleSettingInfo.batchSize = DEFAULT_BATCH_SIZE;
+        }
+        HILOGI("Parse batchSize success, batchSize is %{public}d", bundleSettingInfo.batchSize);
+    }
+}
+
+static bool ParseBundleInfos(cJSON *root, std::vector<BJsonUtil::BundleDetailInfo> &bundleDetails,
+    BJsonUtil::BundleDetailInfo bundleDetailInfo, int32_t userId)
+{
+    cJSON *infos = cJSON_GetObjectItem(root, "infos");
+    if (infos == nullptr || !cJSON_IsArray(infos) || cJSON_GetArraySize(infos) == 0) {
+        HILOGE("Parse json error, infos is not array");
+        return false;
+    }
+    int infosCount = cJSON_GetArraySize(infos);
+    InsertBundleDetailInfo(infos, infosCount, bundleDetails, bundleDetailInfo, userId);
+    return true;
+}
+
 void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
     BJsonUtil::BundleDetailInfo bundleDetailInfo, BJsonUtil::BundleSettingInfo &bundleSettingInfo, int32_t userId)
 {
     string bundleInfoCopy = move(bundleInfo);
-    if (!HasUnicastInfo(bundleInfoCopy)) {
-        if (!AddUnicastInfo(bundleInfoCopy)) {
-            HILOGE("AddUnicastInfo failed");
-            return;
-        }
+    if (!HasUnicastInfo(bundleInfoCopy) && !AddUnicastInfo(bundleInfoCopy)) {
+        HILOGE("AddUnicastInfo failed");
+        return;
     }
     cJSON *root = cJSON_Parse(bundleInfoCopy.c_str());
     if (root == nullptr) {
         HILOGE("Parse json error,root is null");
         return;
     }
-    cJSON *clearBackupData = cJSON_GetObjectItem(root, "clearBackupData");
-    if (clearBackupData == nullptr || !cJSON_IsString(clearBackupData) || (clearBackupData->valuestring == nullptr)) {
-        HILOGE("Parse clearBackupData error.");
-    } else {
-        std::string value = clearBackupData->valuestring;
-        bundleSettingInfo.isClearData = (value == "true");
-        HILOGI("bundleName:%{public}s clear data flag:%{public}d", bundleDetailInfo.bundleName.c_str(),
-            bundleSettingInfo.isClearData);
-    }
-    cJSON *isDefaultBackupAndRestore = cJSON_GetObjectItem(root, "isDefaultBackupAndRestore");
-    if (isDefaultBackupAndRestore != nullptr && cJSON_IsBool(isDefaultBackupAndRestore)) {
-        bundleDetailInfo.isDefaultBackupAndRestore = (isDefaultBackupAndRestore->type == cJSON_True) ? true : false;
-        HILOGI("Parse isDefaultBackupAndRestore success %{public}d", bundleDetailInfo.isDefaultBackupAndRestore);
-    }
-    cJSON *delayTime = cJSON_GetObjectItem(root, "delayTime");
-    if (delayTime != nullptr && cJSON_IsNumber(delayTime)) {
-        bundleSettingInfo.delayTime = delayTime->valueint;
-        HILOGI("Parse delayTime success, delayTime is %{public}d", bundleSettingInfo.delayTime);
-    }
-    cJSON *backupScene = cJSON_GetObjectItem(root, "backupScene");
-    if (backupScene != nullptr && cJSON_IsString(backupScene) && (backupScene->valuestring != nullptr)) {
-        HILOGI("Parse backupScene success");
-        bundleDetailInfo.backupScene = backupScene->valuestring;
-    }
-    cJSON *isSupportWithoutTar = cJSON_GetObjectItem(root, "isSupportWithoutTar");
-    if (isSupportWithoutTar != nullptr && cJSON_IsBool(isSupportWithoutTar)) {
-        bundleSettingInfo.isSupportWithoutTar = cJSON_IsTrue(isSupportWithoutTar);
-        HILOGI("Parse isSupportWithoutTar success, isSupportWithoutTar is %{public}d",
-               bundleSettingInfo.isSupportWithoutTar);
-    }
-    cJSON *batchSize = cJSON_GetObjectItem(root, "batchSize");
-    if (batchSize != nullptr && cJSON_IsNumber(batchSize)) {
-        bundleSettingInfo.batchSize = batchSize->valueint;
-        if (bundleSettingInfo.batchSize <= 0) {
-            HILOGW("batchSize is invalid");
-            bundleSettingInfo.batchSize = 500;
-        }
-        HILOGI("Parse batchSize success, batchSize is %{public}d", bundleSettingInfo.batchSize);
-    }
-    cJSON *infos = cJSON_GetObjectItem(root, "infos");
-    if (infos == nullptr || !cJSON_IsArray(infos) || cJSON_GetArraySize(infos) == 0) {
-        HILOGE("Parse json error, infos is not array");
+    ParseClearBackupData(root, bundleDetailInfo.bundleName, bundleSettingInfo);
+    ParseIsDefaultBackupAndRestore(root, bundleDetailInfo);
+    ParseDelayTime(root, bundleSettingInfo);
+    ParseBackupScene(root, bundleDetailInfo);
+    ParseSupportWithoutTar(root, bundleSettingInfo);
+    ParseBatchSize(root, bundleSettingInfo);
+    if (!ParseBundleInfos(root, bundleDetails, bundleDetailInfo, userId)) {
         cJSON_Delete(root);
         return;
     }
-    int infosCount = cJSON_GetArraySize(infos);
-    InsertBundleDetailInfo(infos, infosCount, bundleDetails, bundleDetailInfo, userId);
     cJSON_Delete(root);
 }
 

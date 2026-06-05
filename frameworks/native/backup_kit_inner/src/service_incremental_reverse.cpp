@@ -63,6 +63,7 @@ void ServiceReverse::AddIncrementalFileToBatch(const std::string &bundleName, co
     {
         std::lock_guard<std::mutex> lock(addIncrementalBatchLock_);
         for (size_t i = 0; i < fileNames.size(); ++i) {
+            HILOGI("dtc_test, AddIncrementalFileToBatch, fd=%{public}d", fds[i]);
             BackupFile file;
             file.bundleName = bundleName;
             file.uri = fileNames[i];
@@ -273,9 +274,7 @@ ErrCode ServiceReverse::IncrementalRestoreOnFileReadys(const std::string &bundle
 }
 
 ErrCode ServiceReverse::IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
-                                                       const std::vector<std::string> &fileNames,
-                                                       const std::vector<int> &fdList,
-                                                       const std::vector<int32_t> &errCodes)
+    const std::vector<std::string> &fileNames, const std::vector<int> &fdList, const std::vector<int32_t> &errCodes)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onFileReadyBatch) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
