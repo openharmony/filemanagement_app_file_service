@@ -893,17 +893,15 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CallbackExit_Test_0100, testing:
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_CallbackExit_Test_0100";
     try {
         ASSERT_TRUE(extExtension != nullptr);
-        
+
         // 先填充 fdList_ 和 manifestfdList_
         UniqueFd fd1(open("/dev/null", O_RDONLY));
-        UniqueFd fd2(open("/dev/null", O_RDONLY));
         extExtension->fdList_.push_back(std::move(fd1));
-        extExtension->manifestfdList_.push_back(std::move(fd2));
-        
+
         // 调用CallbackExit，传入COMMAND_GET_INCREMENTAL_FILE_HANDLES
         int32_t ret = extExtension->CallbackExit(
             static_cast<uint32_t>(IExtensionIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLES), 0);
-        
+
         // 验证返回值
         EXPECT_EQ(ret, ERR_NONE);
     } catch (...) {

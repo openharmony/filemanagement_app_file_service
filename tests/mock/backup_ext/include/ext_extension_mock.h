@@ -72,7 +72,7 @@ public:
     virtual int32_t CallbackEnter(uint32_t code) = 0;
     virtual int32_t CallbackExit(uint32_t code, int32_t result) = 0;
     virtual ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames, std::vector<int> &fdList,
-        std::vector<int> &manifestfdList) = 0;
+        std::vector<int32_t> &errCodes) = 0;
 public:
     BExtExtension() = default;
     virtual ~BExtExtension() = default;
@@ -120,7 +120,7 @@ public:
     MOCK_METHOD(int32_t, CallbackEnter, (uint32_t));
     MOCK_METHOD(int32_t, CallbackExit, (uint32_t, int32_t));
     MOCK_METHOD(ErrCode, GetIncrementalFileHandles, (const std::vector<std::string> &, std::vector<int> &,
-        std::vector<int> &));
+        std::vector<int32_t> &));
     MOCK_METHOD(std::string, GetBackupInfo, ());
     MOCK_METHOD(void, UpdateOnStartTime, ());
     MOCK_METHOD(ErrCode, IncrementalTarFileReady, (const TarMap &, const vector<struct ReportFileInfo> &,

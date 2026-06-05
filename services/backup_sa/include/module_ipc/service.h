@@ -41,7 +41,6 @@
 #include "svc_session_manager.h"
 #include "system_ability.h"
 #include "thread_pool.h"
-#include "string_raw_data.h"
 #include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {

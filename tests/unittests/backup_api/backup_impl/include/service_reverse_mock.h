@@ -230,38 +230,41 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode IncrementalRestoreOnFileReadys(const std::string &bundleName,
-                                           const std::vector<std::string> &fileNames,
-                                           const std::vector<int> &fdList,
-                                           const std::vector<int> &manifestfdList,
-                                           int32_t errCode) override
+    ErrCode IncrementalRestoreOnFileReadys(const std::string &bundleName, const std::vector<std::string> &fileNames,
+                                           const std::vector<int> &fdList, const std::vector<int> &manifestfdList,
+                                           const std::vector<int32_t> &errCodes) override
     {
         return BError(BError::Codes::OK);
     }
- 
+
+    ErrCode IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
+                                                    const std::vector<std::string> &fileNames,
+                                                    const std::vector<int> &fdList,
+                                                    const std::vector<int32_t> &errCodes) override
+    {
+        return BError(BError::Codes::OK);
+    }
+
     ErrCode IncrementalRestoreOnFileReadysWithoutFd(const std::string &bundleName,
                                                     const std::vector<std::string> &fileListWithoutfd,
-                                                    int32_t errCode) override
+                                                    const std::vector<int32_t> &errCodes) override
     {
         return BError(BError::Codes::OK);
     }
- 
+
     ErrCode SetBatchSize(uint32_t size) override
     {
         return BError(BError::Codes::OK);
     }
- 
-    ErrCode BackupOnFileReadysWithoutFd(const std::string &bundleName,
-                                        const std::vector<std::string> &fileNames,
+
+    ErrCode BackupOnFileReadysWithoutFd(const std::string &bundleName, const std::vector<std::string> &fileNames,
                                         const std::vector<int> &errCodes) override
     {
         return BError(BError::Codes::OK);
     }
- 
-    ErrCode BackupOnFileReadys(const std::string &bundleName,
-                               const std::vector<std::string> &fileNames,
-                               const std::vector<int> &fds,
-                               const std::vector<int> &errCodes) override
+
+    ErrCode BackupOnFileReadys(const std::string &bundleName, const std::vector<std::string> &fileNames,
+                               const std::vector<int> &fds, const std::vector<int> &errCodes) override
     {
         return BError(BError::Codes::OK);
     }

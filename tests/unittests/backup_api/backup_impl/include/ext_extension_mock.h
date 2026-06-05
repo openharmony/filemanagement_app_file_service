@@ -191,7 +191,7 @@ public:
     }
 
     ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames, std::vector<int> &fdList,
-        std::vector<int> &manifestfdList) override
+        std::vector<int32_t> &errCodes) override
     {
         return BError(BError::Codes::OK);
     }

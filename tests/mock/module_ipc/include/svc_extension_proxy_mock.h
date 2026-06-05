@@ -46,7 +46,7 @@ MOCK_METHOD(ErrCode, CleanBundleTempDir, ());
 MOCK_METHOD(ErrCode, HandleOnRelease, (int32_t));
 MOCK_METHOD(ErrCode, HandleGetCompatibilityInfo, (const std::string &, int32_t, bool, std::string &));
 MOCK_METHOD(int32_t, GetIncrementalFileHandles, (const std::vector<std::string> &,
-        std::vector<int> &, std::vector<int> &));
+        std::vector<int> &, std::vector<int32_t> &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_BACKUP_CONNECTION_MOCK_H

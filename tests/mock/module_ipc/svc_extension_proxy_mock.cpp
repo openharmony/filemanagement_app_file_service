@@ -111,7 +111,7 @@ ErrCode ExtensionProxy::GetIncrementalRpFileHandle(const std::string &fileName, 
 }
 
 ErrCode ExtensionProxy::GetIncrementalFileHandles(const std::vector<std::string> &fileNames, std::vector<int> &fdList,
-    std::vector<int> &manifestfdList)
+    std::vector<int32_t> &errCodes)
 {
     return 0;
 }

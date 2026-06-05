@@ -170,9 +170,9 @@ int32_t BackupExtExtension::CallbackExit(uint32_t code, int32_t result)
 }
  
 ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
-    std::vector<int> &fdList, std::vector<int> &manifestfdList)
+    std::vector<int> &fdList, std::vector<int32_t> &errCodes)
 {
-    return BExtExtension::extExtension->GetIncrementalFileHandles(fileNames, fdList, manifestfdList);
+    return BExtExtension::extExtension->GetIncrementalFileHandles(fileNames, fdList, errCodes);
 }
 
 void BackupExtExtension::UpdateOnStartTime()
