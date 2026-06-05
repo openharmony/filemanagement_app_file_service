@@ -65,26 +65,27 @@ static bool IsEmptyDirectory(const string &path)
     return isEmpty;
 }
 
-static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& smallFileSize,
-    const std::vector<std::string> &excludes, std::shared_ptr<ScanResultManager> instance = nullptr)
+static void ProcessFile(const ProcessInfo &info, int64_t &bigFileSize, int64_t &smallFileSize,
+    const std::vector<std::string> &excludes, const AdvancedScanOption &option = {})
 {
     if (info.restorePath_.empty() && BDir::IsDirsMatch(excludes, info.backupPath_)) {
         return;
     }
     struct stat sta = {};
-    if (StringUtils::CheckOverLongPath(info.backupPath_) >= BConstants::MAX_PATH_LEN) {
+    size_t restoreTempPathLen = option.enableBatch ? option.restoreTempPath.size() : 0;
+    if (StringUtils::CheckOverLongPath(info.backupPath_) + restoreTempPathLen >= BConstants::MAX_PATH_LEN) {
         return;
     }
     if (stat(info.backupPath_.data(), &sta) == -1) {
         HILOGE("stat file fail, errno=%{public}d", errno);
         return;
     }
-    if (instance != nullptr) {
+    if (option.resultManager != nullptr) {
         if (sta.st_size <= info.sizeBoundary_) {
-            instance->AddSmallFile(info.backupPath_, sta.st_size, info.restorePath_);
+            option.resultManager->AddSmallFile(info.backupPath_, sta.st_size, info.restorePath_);
             smallFileSize += sta.st_size;
         } else {
-            instance->AddBigFile(info.backupPath_, sta, info.restorePath_);
+            option.resultManager->AddBigFile(info.backupPath_, sta, info.restorePath_);
             bigFileSize += sta.st_size;
         }
         return;
@@ -99,14 +100,14 @@ static void ProcessFile(const ProcessInfo& info, int64_t& bigFileSize, int64_t& 
 }
 
 static tuple<ErrCode, int64_t, int64_t> ProcessSingleFile(const vector<string> &excludes, const string &backupPath,
-    const string& restorePath, off_t sizeBoundary = -1, std::shared_ptr<ScanResultManager> instance = nullptr)
+    const string &restorePath, off_t sizeBoundary = -1, const AdvancedScanOption &option = {})
 {
     if (backupPath == "/") {
         return {ERR_OK, 0, 0};
     }
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
-    ProcessFile({backupPath, restorePath, sizeBoundary}, bigFileSize, smallFileSize, excludes, instance);
+    ProcessFile({backupPath, restorePath, sizeBoundary}, bigFileSize, smallFileSize, excludes, option);
     return {ERR_OK, bigFileSize, smallFileSize};
 }
 
@@ -116,7 +117,7 @@ tuple<ErrCode, int64_t, int64_t> DirScanner::ScanDir(const string &backupPath, c
     HILOGD("scan dir, path: %{public}s", GetAnonyPath(backupPath).c_str());
     if (!filesystem::is_directory(backupPath)) {
         HILOGE("Invalid directory path: %{private}s", backupPath.c_str());
-        return ProcessSingleFile(excludes, backupPath, "", size);
+        return ProcessSingleFile(excludes, backupPath, "", size, scanOption_);
     }
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
@@ -144,7 +145,7 @@ tuple<ErrCode, int64_t, int64_t> DirScanner::ScanDir(const string &backupPath, c
             }
             std::string filePath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
             if (ptr->d_type == DT_REG) {
-                ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes);
+                ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes, scanOption_);
             } else if (ptr->d_type == DT_DIR) {
                 dirStack.push(filePath);
             } else {
@@ -163,7 +164,7 @@ tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &pat
         GetAnonyPath(restorePath).c_str());
     if (!filesystem::is_directory(backupPath)) {
         HILOGE("Invalid directory path: %{private}s", path.c_str());
-        return ProcessSingleFile(excludes, backupPath, restorePath, size);
+        return ProcessSingleFile(excludes, backupPath, restorePath, size, scanOption_);
     }
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
@@ -193,7 +194,7 @@ tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &pat
             std::string subBackupPath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
             std::string subRestorePath = StringUtils::PathAddDelimiter(currentRestorePath) + string(ptr->d_name);
             if (ptr->d_type == DT_REG) {
-                ProcessFile({subBackupPath, subRestorePath, size}, bigFileSize, smallFileSize, excludes);
+                ProcessFile({subBackupPath, subRestorePath, size}, bigFileSize, smallFileSize, excludes, scanOption_);
             } else if (ptr->d_type == DT_DIR) {
                 dirStack.push({subBackupPath, subRestorePath});
             } else {
@@ -205,7 +206,7 @@ tuple<ErrCode, int64_t, int64_t> CompatibleDirScanner::ScanDir(const string &pat
 }
 
 tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::string> &includes,
-    const std::vector<std::string> &excludes, bool enableBatch)
+    const std::vector<std::string> &excludes)
 {
     int64_t totalBigFileSize = 0;
     int64_t totalSmallFileSize = 0;
@@ -213,7 +214,8 @@ tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::st
     ErrCode finalErrCode = ERR_OK;
     for (const auto &item : includes) {
         auto [errCode, bigFileSize, smallFileSize] = ScanDir(
-            item, excludes, enableBatch ? BConstants::BIG_FILE_BOUNDARY_WITHOUT_TAR : BConstants::BIG_FILE_BOUNDARY);
+            item, excludes,
+            scanOption_.enableBatch ? BConstants::BIG_FILE_BOUNDARY_WITHOUT_TAR : BConstants::BIG_FILE_BOUNDARY);
         if (errCode == 0) {
             HILOGI("big files: %{public}" PRId64 "; small files: %{public}" PRId64 "", bigFileSize, smallFileSize);
             totalBigFileSize += bigFileSize ;
@@ -229,8 +231,14 @@ tuple<ErrCode, int64_t, int64_t> IDirScanner::ScanAllDirs(const std::set<std::st
     return {finalErrCode, totalBigFileSize, totalSmallFileSize};
 }
 
+void IDirScanner::SetAdvancedScanOption(const AdvancedScanOption &option)
+{
+    scanOption_ = option;
+}
+
 std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::string> &includes,
-    const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes, bool enableBatch)
+    const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes,
+    const AdvancedScanOption &option)
 {
     HILOGI("scan all dirs include:%{public}zu, compatIncludes:%{public}zu, excludes:%{public}zu",
         includes.size(), compatIncludes.size(), excludes.size());
@@ -239,13 +247,15 @@ std::tuple<ErrCode, int64_t, int64_t> BDir::ScanAllDirs(const std::set<std::stri
     int64_t smallFileSize = 0;
     if (!includes.empty()) {
         DirScanner scanner;
-        tie(errCode, bigFileSize, smallFileSize) = scanner.ScanAllDirs(includes, excludes, enableBatch);
+        scanner.SetAdvancedScanOption(option);
+        tie(errCode, bigFileSize, smallFileSize) = scanner.ScanAllDirs(includes, excludes);
     }
     if (errCode != ERR_OK) {
         HILOGE("scan normal dirs fail, err=%{public}d", errCode);
     }
     if (!compatIncludes.empty()) {
         CompatibleDirScanner compatScanner;
+        compatScanner.SetAdvancedScanOption(option);
         auto [compatErrCode, compatBigFileSize, compatSmallFileSize]
             = compatScanner.ScanAllDirs(compatIncludes, excludes);
         if (compatErrCode != ERR_OK) {
@@ -305,10 +315,12 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::DefaultScanAllDirs(const std
 tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backupPath, const vector<string> &excludes,
     std::shared_ptr<ScanResultManager> &instance, off_t size)
 {
+    AdvancedScanOption option;
+    option.resultManager = instance;
     HILOGD("scan dir, path: %{public}s", GetAnonyPath(backupPath).c_str());
     if (!filesystem::is_directory(backupPath)) {
         HILOGE("Invalid directory path: %{private}s", backupPath.c_str());
-        return ProcessSingleFile(excludes, backupPath, "", size, instance);
+        return ProcessSingleFile(excludes, backupPath, "", size, option);
     }
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
@@ -336,7 +348,7 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backup
             }
             std::string filePath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
             if (ptr->d_type == DT_REG) {
-                ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes, instance);
+                ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes, option);
             } else if (ptr->d_type == DT_DIR) {
                 dirStack.push(filePath);
             } else {

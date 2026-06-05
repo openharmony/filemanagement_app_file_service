@@ -1062,8 +1062,11 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     AncoBackupHelper::FilterAndSaveBackupPaths(expandIncludes, compatibleIncludes, excludes);
     // 扫描文件计算数据量
     appStatistic_->scanFileSpend_.Start();
+    AdvancedScanOption scanOption;
+    scanOption.enableBatch = GetSupportWithoutTar();
+    scanOption.restoreTempPath = GetRestoreTempPath(bundleName_);
     auto [errCode, bigFileSize, smallFileSize] =
-        BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes, GetSupportWithoutTar());
+        BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes, scanOption);
     auto [aErrCode, aBigFileSize, aSmallFileSize] = AncoBackupHelper::StartAncoScanAllDirs();
     bigFileSize += aBigFileSize;
     smallFileSize += aSmallFileSize;
