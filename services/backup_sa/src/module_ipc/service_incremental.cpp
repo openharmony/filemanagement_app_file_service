@@ -628,7 +628,7 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd
     return saConnection->CallRestoreSA(move(fd));
 }
 
-static void IncrementalRestoreOnFileReadys(const std::string &bundleName,
+void Service::IncrementalRestoreOnFileReadys(const std::string &bundleName,
     const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
     const std::vector<UniqueFd> &manifestfdList, const std::vector<int32_t> &errCodes)
 {
@@ -685,7 +685,7 @@ ErrCode Service::AppIncrementalFileReadys(const std::string &bundleName,
     }
 }
 
-static void IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
+void Service::IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
     const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
     const std::vector<int32_t> &errCodes)
 {

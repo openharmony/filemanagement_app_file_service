@@ -142,6 +142,12 @@ public:
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);
     void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
+    void IncrementalRestoreOnFileReadys(const std::string &bundleName,
+        const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
+        const std::vector<UniqueFd> &manifestfdList, const std::vector<int32_t> &errCodes);
+    void IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
+        const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
+        const std::vector<int32_t> &errCodes);
     ErrCode AppIncrementalFileReadys(const std::string &bundleName,
                                      const std::vector<std::string> &fileNames,
                                      const std::vector<UniqueFd> &fdList,

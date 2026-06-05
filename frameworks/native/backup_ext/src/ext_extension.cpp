@@ -819,7 +819,6 @@ ErrCode BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileI
 ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles)
 {
     HILOGD("ReportAppFileReadys enter filenameSize: %{public}lu", allFiles.size());
-    int32_t errCode = ERR_OK;
     vector<string> fileNames = {};
     vector<int> normalfds = {};
     vector<string> abnormalfileNames = {};
@@ -1753,13 +1752,13 @@ void BackupExtExtension::HandleSpecialVersionRestore()
     }
 }
 
-static void ExtractTarFiles(BackupExtExtension *ptr, const std::set<std::string> &fileSet,
+void BackupExtExtension::ExtractTarFiles(const std::set<std::string> &fileSet,
     const std::vector<ExtManageInfo> &extManageInfo, int &ret)
 {
     for (const auto &item : fileSet) {  // 处理要解压的tar文件
         off_t tarFileSize = 0;
         if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
-            ret = ptr->DoRestore(item, tarFileSize);
+            ret = DoRestore(item, tarFileSize);
         }
     }
 }
@@ -1780,7 +1779,7 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
                 return;
             }
             // 解压
-            ExtractTarFiles(ptr.get(), fileSet, extManageInfo, ret);
+            ptr->ExtractTarFiles(fileSet, extManageInfo, ret);
             if (!enableBatch) {
                 // 恢复用户tar包以及大文件
                 // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景

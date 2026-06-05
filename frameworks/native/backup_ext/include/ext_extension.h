@@ -235,6 +235,9 @@ private:
      */
     void AsyncTaskBackup(const std::string config);
 
+    void ExtractTarFiles(const std::set<std::string> &fileSet,
+        const std::vector<ExtManageInfo> &extManageInfo, int &ret);
+
     /**
      * @brief Executing Restoration Tasks Asynchronously
      *
@@ -479,6 +482,8 @@ private:
     ErrCode ReportNormalAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
     ErrCode ReportAncoAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
     ErrCode ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles);
+    ErrCode ReportBatchFiles(std::vector<std::shared_ptr<IFileInfo>> &tmpFiles,
+        std::vector<std::shared_ptr<IFileInfo>> &allFiles);
 
     // Helper function to open a file with O_RDONLY and set fdsan ownership tag
     int OpenFileWithFDSan(const std::string &path);

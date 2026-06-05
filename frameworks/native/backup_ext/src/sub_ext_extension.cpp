@@ -1652,7 +1652,7 @@ void BackupExtExtension::AsyncDoBackup()
     });
 }
 
-static ErrCode ReportBatchFiles(std::vector<std::shared_ptr<IFileInfo>> &tmpFiles,
+ErrCode BackupExtExtension::ReportBatchFiles(std::vector<std::shared_ptr<IFileInfo>> &tmpFiles,
     std::vector<std::shared_ptr<IFileInfo>> &allFiles)
 {
     ErrCode subRet = ReportAppFileReadys(tmpFiles);
@@ -1686,7 +1686,7 @@ void BackupExtExtension::DoBackupTaskCore(
         WaitToSendFd(startTime, fdNum);
         if (isWithoutTarFile) {
             tmpFiles.push_back(fileInfo);
-            if (tmpFiles.size() == GetBatchSize()) {
+            if (tmpFiles.size() == static_cast<size_t>(GetBatchSize())) {
                 ret = ReportBatchFiles(tmpFiles, allFiles);
             }
             fdNum++;
