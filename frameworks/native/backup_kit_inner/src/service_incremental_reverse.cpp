@@ -63,7 +63,6 @@ void ServiceReverse::AddIncrementalFileToBatch(const std::string &bundleName, co
     {
         std::lock_guard<std::mutex> lock(addIncrementalBatchLock_);
         for (size_t i = 0; i < fileNames.size(); ++i) {
-            HILOGI("dtc_test, AddIncrementalFileToBatch, fd=%{public}d", fds[i]);
             BackupFile file;
             file.bundleName = bundleName;
             file.uri = fileNames[i];

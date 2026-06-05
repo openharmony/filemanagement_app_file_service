@@ -879,7 +879,6 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoRestoreCallback_ReportFileInfos_0000, test
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoRestoreCallback_ReportFileInfos_0000";
 }
 
-
 /**
  * @tc.number: Ext_Extension_Sub_CallbackExit_Test_0100
  * @tc.name: Ext_Extension_Sub_CallbackExit_Test_0100
@@ -894,7 +893,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CallbackExit_Test_0100, testing:
     try {
         ASSERT_TRUE(extExtension != nullptr);
 
-        // 先填充 fdList_ 和 manifestfdList_
+        // 先填充 fdList_
         UniqueFd fd1(open("/dev/null", O_RDONLY));
         extExtension->fdList_.push_back(std::move(fd1));
 
@@ -924,23 +923,20 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CallbackExit_Test_0200, testing:
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_CallbackExit_Test_0200";
     try {
         ASSERT_TRUE(extExtension != nullptr);
-        
-        // 先填充 fdList_ 和 manifestfdList_
+
+        // 先填充 fdList_
         UniqueFd fd1(open("/dev/null", O_RDONLY));
-        UniqueFd fd2(open("/dev/null", O_RDONLY));
         extExtension->fdList_.push_back(std::move(fd1));
-        extExtension->manifestfdList_.push_back(std::move(fd2));
         size_t beforeSize = extExtension->fdList_.size();
-        
+
         // 调用CallbackExit，传入其他命令码（如COMMAND_HANDLE_BACKUP）
         int32_t ret = extExtension->CallbackExit(
             static_cast<uint32_t>(IExtensionIpcCode::COMMAND_HANDLE_BACKUP), 0);
-        
+
         // 验证返回值
         EXPECT_EQ(ret, ERR_NONE);
-        // 验证fdList_和manifestfdList_大小不变
+        // 验证fdList_大小不变
         EXPECT_EQ(extExtension->fdList_.size(), beforeSize);
-        EXPECT_EQ(extExtension->manifestfdList_.size(), beforeSize);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred.";

@@ -693,7 +693,6 @@ ErrCode Service::AppIncrementalFileReadysWithoutRp(const std::string &bundleName
             std::vector<int> normalFdList;
             std::vector<int32_t> normalErrCodes;
             for (size_t i = 0; i < fileNames.size(); i++) {
-                HILOGI("dtc_test, AppIncrementalFileReadysWithoutRp, fd=%{public}d", fdList[i].Get());
                 if (fdList[i] >= 0) {
                     normalFileNames.push_back(fileNames[i]);
                     normalFdList.push_back(fdList[i]);
