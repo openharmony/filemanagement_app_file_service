@@ -1172,7 +1172,7 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesBackupSession_0200, TestSize.Leve
         service->isOccupyingSession_.store(false);
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillOnce(Return(bundleInfos));
         EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
@@ -1239,9 +1239,9 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesDetailsBackupSession_0200, TestSi
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
-        EXPECT_CALL(*skeleton, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
         EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
         EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillOnce(Return(infos));
         EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
         auto ret = service->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);

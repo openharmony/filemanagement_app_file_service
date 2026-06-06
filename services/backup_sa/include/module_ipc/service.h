@@ -931,7 +931,7 @@ public:
     std::map<std::string, bool> defaultBundleMap_ = {};
     std::map<std::string, sptr<MigrateManager>> migrateMap_ = {};
     std::mutex migrateInstanceLock_;
-    RestoreTypeEnum restoreType_;
+    RestoreTypeEnum restoreType_ = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
     std::string oldBackupVersion_ = "";
 };
 } // namespace OHOS::FileManagement::Backup

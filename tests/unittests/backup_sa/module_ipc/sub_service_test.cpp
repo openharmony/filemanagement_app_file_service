@@ -333,8 +333,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0000, TestSize.Level1)
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_OnBackupExtensionDied_0000";
     try {
         GTEST_LOG_(INFO) << "1.isClean and connection nullptr";
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
@@ -363,8 +362,7 @@ HWTEST_F(ServiceTest, SUB_Service_OnBackupExtensionDied_0001, TestSize.Level1)
     auto totalStatistic_ = service->totalStatistic_;
     try {
         GTEST_LOG_(INFO) << "2.isClean and connection not nullptr";
-        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
-            .WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED));
         EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(true));
         EXPECT_CALL(*cdConfig, DeleteClearBundleRecord(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, IsOnAllBundlesFinished()).WillOnce(Return(false));
@@ -571,6 +569,37 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0004, TestSize.Level1)
     service->ExtConnectDied(callName);
     EXPECT_EQ(service->sched_->bundleTimeVec_.size(), 0);
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ExtConnectDied_0004";
+}
+
+/**
+ * @tc.number: SUB_Service_ClearAndNoticeClient_0000
+ * @tc.name: SUB_Service_ClearAndNoticeClient_0000
+ * @tc.desc: 测试 ClearAndNoticeClient 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceTest, SUB_Service_ClearAndNoticeClient_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_ClearAndNoticeClient_0000";
+    string callName = "ClearAndNoticeClient";
+    GTEST_LOG_(INFO) << "1. test normal";
+    EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false)).WillOnce(Return(true)).WillOnce(Return(true));
+    uint32_t origin= service->successBundlesNum_;
+    service->ClearAndNoticeClient(callName, 0, true);
+    service->ClearAndNoticeClient(callName, 0, true);
+    service->ClearAndNoticeClient(callName, 0, false);
+    uint32_t middle = service->successBundlesNum_;
+    EXPECT_EQ(2, middle - origin);
+
+    GTEST_LOG_(INFO) << "2. test session nullptr";
+    auto session_ = service->session_;
+    service->session_ = nullptr;
+    service->ClearAndNoticeClient(callName, 0, false);
+    service->session_ = session_;
+    EXPECT_EQ(0, service->successBundlesNum_ - middle);
+    GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_ClearAndNoticeClient_0000";
 }
 
 /**

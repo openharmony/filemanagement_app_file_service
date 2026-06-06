@@ -902,6 +902,93 @@ HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSession_0101, testing::
 }
 
 /**
+ * @tc.number: SUB_Service_AppendBundlesRestoreSessionData_InvalidRestoreType_0100
+ * @tc.name: SUB_Service_AppendBundlesRestoreSessionData_InvalidRestoreType_0100
+ * @tc.desc: 测试 AppendBundlesRestoreSessionData / AppendBundlesRestoreSessionDataByDetail 传入非法 restoreType
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSessionData_InvalidRestoreType_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_AppendBundlesRestoreSessionData_InvalidRestoreType_0100";
+    try {
+        servicePtr_->isOccupyingSession_.store(false);
+        servicePtr_->session_ = session_;
+        vector<BundleName> bundleNames {};
+        int32_t userId = 1;
+
+        GTEST_LOG_(INFO) << "1. AppendBundlesRestoreSessionData with restoreType=-1";
+        int ret = servicePtr_->AppendBundlesRestoreSessionData(-1, bundleNames, -1, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        GTEST_LOG_(INFO) << "2. AppendBundlesRestoreSessionData with restoreType=2";
+        ret = servicePtr_->AppendBundlesRestoreSessionData(-1, bundleNames, 2, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        GTEST_LOG_(INFO) << "3. AppendBundlesRestoreSessionDataByDetail with restoreType=-1";
+        vector<string> detailInfos;
+        ret = servicePtr_->AppendBundlesRestoreSessionDataByDetail(-1, bundleNames, detailInfos, -1, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+
+        GTEST_LOG_(INFO) << "4. AppendBundlesRestoreSessionDataByDetail with restoreType=2";
+        ret = servicePtr_->AppendBundlesRestoreSessionDataByDetail(-1, bundleNames, detailInfos, 2, userId);
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by InvalidRestoreType.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_AppendBundlesRestoreSessionData_InvalidRestoreType_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_AppendBundlesRestoreSessionData_ValidRestoreType_0100
+ * @tc.name: SUB_Service_AppendBundlesRestoreSessionData_ValidRestoreType_0100
+ * @tc.desc: 测试 AppendBundlesRestoreSessionData 传入合法 restoreType (RESTORE_DATA_WAIT_SEND)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSessionData_ValidRestoreType_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_AppendBundlesRestoreSessionData_ValidRestoreType_0100";
+    try {
+        servicePtr_->isOccupyingSession_.store(false);
+        servicePtr_->session_ = session_;
+        vector<BundleName> bundleNames {};
+        int32_t userId = 1;
+
+        GTEST_LOG_(INFO) << "1. AppendBundlesRestoreSessionData with restoreType=RESTORE_DATA_WAIT_SEND";
+        UniqueFd fd = servicePtr_->GetLocalCapabilities();
+        int ret = servicePtr_->AppendBundlesRestoreSessionData(fd.Get(), bundleNames,
+            RESTORE_DATA_WAIT_SEND, userId);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by ValidRestoreType.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_AppendBundlesRestoreSessionData_ValidRestoreType_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_AppendBundlesRestoreSessionData_DefaultRestoreType_0100
+ * @tc.name: SUB_Service_AppendBundlesRestoreSessionData_DefaultRestoreType_0100
+ * @tc.desc: 测试 restoreType_ 默认初始化为 RESTORE_DATA_WAIT_SEND
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSessionData_DefaultRestoreType_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_AppendBundlesRestoreSessionData_DefaultRestoreType_0100";
+    EXPECT_EQ(servicePtr_->restoreType_, RestoreTypeEnum::RESTORE_DATA_WAIT_SEND);
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_AppendBundlesRestoreSessionData_DefaultRestoreType_0100";
+}
+
+/**
  * @tc.number: SUB_Service_AppendBundlesBackupSession_0100
  * @tc.name: SUB_Service_AppendBundlesBackupSession_0100
  * @tc.desc: 测试 AppendBundlesBackupSession 接口

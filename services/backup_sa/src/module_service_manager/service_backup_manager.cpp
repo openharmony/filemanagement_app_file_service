@@ -456,10 +456,14 @@ ErrCode Service::AppendBundlesRestoreSessionData(int fd, const std::vector<std::
         HILOGE("AppendBundles restore session with infos error, session is empty");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
+    if (restoreType < RestoreTypeEnum::RESTORE_DATA_WAIT_SEND || restoreType > RestoreTypeEnum::RESTORE_DATA_READDY) {
+        HILOGE("restoreType is invalid:%{public}d", restoreType);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
     UniqueFd fdUnique(fd);
-    RestoreTypeEnum restoreTypeEnum = static_cast<RestoreTypeEnum>(restoreType);
-    SetUserIdAndRestoreType(restoreTypeEnum, userId);
+    restoreType_ = static_cast<RestoreTypeEnum>(restoreType);
+    SetUserIdAndRestoreType(restoreType_, userId);
     auto bizScene = BizScene::RESTORE;
     return AppendBundlesSession(bundleNames, bizScene, std::move(fdUnique));
 }
@@ -473,10 +477,14 @@ ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd, const std::vect
         HILOGE("AppendBundles restore session with infos error, session is empty");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
+    if (restoreType < RestoreTypeEnum::RESTORE_DATA_WAIT_SEND || restoreType > RestoreTypeEnum::RESTORE_DATA_READDY) {
+        HILOGE("restoreType is invalid:%{public}d", restoreType);
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
     UniqueFd fdUnique(fd);
-    RestoreTypeEnum restoreTypeEnum = static_cast<RestoreTypeEnum>(restoreType);
-    SetUserIdAndRestoreType(restoreTypeEnum, userId);
+    restoreType_ = static_cast<RestoreTypeEnum>(restoreType);
+    SetUserIdAndRestoreType(restoreType_, userId);
     auto bizScene = BizScene::RESTORE;
     return AppendBundlesSessionWithDetail(bundleNames, detailInfos, bizScene, std::move(fdUnique));
 }
