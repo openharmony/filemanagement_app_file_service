@@ -852,7 +852,7 @@ ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFil
     } else {
         HILOGW(
             "Report app file ready failed, reportRsWithoutFd: %{public}d, reportRs %{public}d, allfileSize: "
-            "%{public}lu",
+            "%{public}zu",
             reportRsWithoutFd, reportRs, normalfds.size());
     }
     return reportRs;
