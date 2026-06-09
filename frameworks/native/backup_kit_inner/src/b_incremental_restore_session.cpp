@@ -146,7 +146,7 @@ ErrCode BIncrementalRestoreSession::GetFileHandles(const string &bundleName, con
     if (proxy == nullptr) {
         return BError(BError::Codes::SDK_BROKEN_IPC, "Failed to get backup service").GetCode();
     }
-    HILOGI("Begin getFileHandles, bundle:%{public}s, fileNameSize:%{public}lu", bundleName.c_str(),
+    HILOGI("Begin getFileHandles, bundle:%{public}s, fileNameSize:%{public}zu", bundleName.c_str(),
         fileNames.size());
     return proxy->GetIncrementalFileHandles(bundleName, fileNames);
 }
