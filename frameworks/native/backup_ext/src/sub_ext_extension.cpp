@@ -1707,7 +1707,7 @@ void BackupExtExtension::DoBackupTaskCore(
     }
 
     if (supportWithoutTar && !tmpFiles.empty()) {
-        HILOGE("DoBackupTask tmpFiles size %{public}lu", tmpFiles.size());
+        HILOGE("DoBackupTask tmpFiles size %{public}zu", tmpFiles.size());
         ErrCode subRet = ReportAppFileReadys(tmpFiles);
         allFiles.insert(allFiles.end(), tmpFiles.begin(), tmpFiles.end());
         tmpFiles.clear();

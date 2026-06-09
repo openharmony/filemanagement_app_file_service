@@ -818,7 +818,7 @@ ErrCode BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileI
  
 ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles)
 {
-    HILOGD("ReportAppFileReadys enter filenameSize: %{public}lu", allFiles.size());
+    HILOGD("ReportAppFileReadys enter filenameSize: %{public}zu", allFiles.size());
     vector<string> fileNames = {};
     vector<int> normalfds = {};
     vector<string> abnormalfileNames = {};
