@@ -111,6 +111,8 @@ public:
     ErrCode GetIncrementalFileHandle(const std::string &fileName, int &fd, int &reportFd, int32_t &fdErrCode) override;
     ErrCode GetIncrementalRpFileHandle(const std::string &fileName, int32_t &fdErrCode) override;
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
+    void GetIncrementalFileHandlesInner(const std::vector<std::string> &fileNames, std::vector<int> &fdList,
+                                        std::vector<int32_t> &errCodes);
     ErrCode HandleIncrementalBackup(int incrementalFd, int manifestFd) override;
     ErrCode IncrementalOnBackup(bool isClearData) override;
     ErrCode GetIncrementalBackupFileHandle(int &fd, int &reportFd) override;
@@ -553,7 +555,8 @@ private:
     std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并发
     std::mutex updateFileStatLock_;
     AncoRestoreResult ancoRestoreRes_;
-    std::vector<UniqueFd> fdList_;
+    std::vector<std::vector<UniqueFd>> fdList_;
+    std::mutex fdListLock_;
 public:
     void SetSupportWithoutTar(bool isSupportWithoutTar);
     bool GetSupportWithoutTar() const;

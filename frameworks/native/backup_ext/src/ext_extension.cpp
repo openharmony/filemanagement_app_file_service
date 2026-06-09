@@ -222,7 +222,10 @@ int32_t BackupExtExtension::CallbackExit([[maybe_unused]] uint32_t code, [[maybe
     switch (static_cast<IExtensionIpcCode>(code)) {
         case IExtensionIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLES: {
             HILOGE("In COMMAND_GET_INCREMENTAL_FILE_HANDLES");
-            fdList_.clear();
+            {
+                std::unique_lock<std::mutex> lock_(fdListLock_);
+                fdList_.clear();
+            }
             break;
         }
         default:
@@ -513,14 +516,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::str
             }
             return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
         }
-        HILOGI("GetIncrementalFileHandles GetIncrementalFileHandle start");
-        for (const auto& fileName : fileNames) {
-            auto [errCode, fdval] = GetIncrementalFileHandlesInner(fileName);
-            HILOGD("GetIncrementalFileHandlesInner, fileName:%{public}s, fd:%{public}d", fileName.c_str(), fdval.Get());
-            fdList.push_back(fdval.Get());
-            errCodes.push_back(errCode);
-            fdList_.push_back(std::move(fdval));
-        }
+        GetIncrementalFileHandlesInner(fileNames, fdList, errCodes);
         HILOGI("GetIncrementalFileHandles Exit");
     } catch (...) {
         HILOGE("Failed to get incremental file handle");
@@ -530,15 +526,24 @@ ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::str
     return ERR_OK;
 }
  
-tuple<ErrCode, UniqueFd> BackupExtExtension::GetIncrementalFileHandlesInner(const string &fileName)
+void BackupExtExtension::GetIncrementalFileHandlesInner(const std::vector<std::string> &fileNames,
+                                                        std::vector<int> &fdList, std::vector<int32_t> &errCodes)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    try {
-        return GetIncreFileHandleForUntarNormalVersion(fileName);
-    } catch (...) {
-        HILOGE("Failed to get incremental file handle");
-        DoClear();
-        return {BError(BError::Codes::EXT_BROKEN_IPC).GetCode(), UniqueFd(-1)};
+    std::vector<UniqueFd> tmpfdList;
+    for (const auto &fileName : fileNames) {
+        auto [errCode, fdval] = GetIncreFileHandleForUntarNormalVersion(fileName);
+        if (fdval < 0) {
+            HILOGE("GetIncrementalFileHandlesInner fail, fileName:%{public}s, errCode:%{public}d",
+                   GetAnonyPath(fileName).c_str(), errCode);
+        }
+        fdList.push_back(fdval.Get());
+        errCodes.push_back(errCode);
+        tmpfdList.push_back(std::move(fdval));
+    }
+    {
+        std::unique_lock<std::mutex> lock_(fdListLock_);
+        fdList_.push_back(std::move(tmpfdList));
     }
 }
 
