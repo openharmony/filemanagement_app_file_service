@@ -32,6 +32,7 @@ class BSessionBackup {
 public:
     struct Callbacks {
         std::function<void(const BFileInfo &, UniqueFd, ErrCode)> onFileReady;    // 当备份服务有文件待发送时执行的回调
+        std::function<void(const std::vector<BackupFile>&)> onFileReadyBatch;  // 批量文件回调
         std::function<void(ErrCode, const BundleName)> onBundleStarted;  // 当启动某个应用的备份流程结束时执行的回调函数
         std::function<void(ErrCode, const BundleName)> onBundleFinished; // 当某个应用的备份流程结束或意外中止时执行的回调函数
         std::function<void(ErrCode)> onAllBundlesFinished;               // 当整个备份流程结束或意外中止时执行的回调函数

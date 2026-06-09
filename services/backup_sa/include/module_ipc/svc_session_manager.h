@@ -78,6 +78,8 @@ struct BackupExtInfo {
     bool isReadyLaunch {false};
     bool isRestoreEnd {false};
     std::string backupScene;
+    bool isSupportWithoutTar {false};
+    int32_t batchSize {500};
 };
 
 class Service;
@@ -615,6 +617,11 @@ public:
 
     void SetDelayTime(const std::string &bundleName, int32_t delayTime);
     int32_t GetDelayTime(const std::string &bundleName);
+
+    void SetSupportWithoutTar(const std::string &bundleName, bool isSupportWithoutTar);
+    bool GetSupportWithoutTar(const std::string &bundleName);
+    void SetBatchSize(const std::string &bundleName, int32_t batchSize);
+    int32_t GetBatchSize(const std::string &bundleName);
     
 private:
     /**

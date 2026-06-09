@@ -14,7 +14,6 @@
  */
 
 package OHOS.FileManagement.Backup;
-
 import ServiceReverseType;
 interface OHOS.FileManagement.Backup.IServiceReverse{
     [ipccode 999] void BackupOnBundleStarted([in] int backupOnBundleStartedErrCode, [in] String bundleName);
@@ -73,4 +72,19 @@ interface OHOS.FileManagement.Backup.IServiceReverse{
                                                              [in] String fileName,
                                                              [in] int incrementalRestoreOnFileReadyErrCode);
     [ipccode 31] void IncrementalRestoreOnMigrateResult([in] int incrementalRestoreOnMigrateResultErrCode, [in] String bundleName);
+    [ipccode 32, ipcincapacity 131071] void IncrementalRestoreOnFileReadys([in] String bundleName,
+                                                     [in] String[] fileNames,
+                                                     [in] FileDescriptor[] fileList,
+                                                     [in] FileDescriptor[] manifestfdList,
+                                                     [in] int[] errCodes);
+    [ipccode 33, ipcincapacity 131071] void IncrementalRestoreOnFileReadysWithoutRp([in] String bundleName,
+                                                     [in] String[] fileNames,
+                                                     [in] FileDescriptor[] fileList,
+                                                     [in] int[] errCodes);
+    [ipccode 34, ipcincapacity 131071] void IncrementalRestoreOnFileReadysWithoutFd([in] String bundleName,
+                                                              [in] String[] fileListWithoutfd,
+                                                              [in] int[] errCodes);
+    [ipccode 35] void SetBatchSize([in] unsigned int batchSize);
+    [ipccode 36, ipcincapacity 131071] void BackupOnFileReadys([in] String bundleName, [in] String[] fileNames, [in] FileDescriptor[] fds, [in] int[] errCodes);
+    [ipccode 37, ipcincapacity 131071] void BackupOnFileReadysWithoutFd([in] String bundleName, [in] String[] fileNames, [in] int[] errCodes);
 }

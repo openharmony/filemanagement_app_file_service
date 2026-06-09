@@ -160,4 +160,14 @@ void ExtBackup::SetBackupExtExtension(const wptr<BackupExtExtension> &extExtensi
 {
     BExtBackup::extBackup->SetBackupExtExtension(extExtension);
 }
+
+bool ExtBackup::GetSupportWithoutTar() const
+{
+    return BExtBackup::extBackup->GetSupportWithoutTar();
+}
+ 
+int32_t ExtBackup::GetBatchSize() const
+{
+    return BExtBackup::extBackup->GetBatchSize();
+}
 } // namespace OHOS::FileManagement::Backup

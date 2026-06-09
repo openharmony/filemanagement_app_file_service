@@ -44,6 +44,17 @@ struct ProcessInfo {
         : backupPath_(backupPath), restorePath_(restorePath), sizeBoundary_(sizeBoundary) {}
 };
 
+struct AdvancedScanOption {
+    bool enableBatch = false;
+    std::string restoreTempPath;
+    std::shared_ptr<ScanResultManager> resultManager;
+
+    AdvancedScanOption() : enableBatch(false), resultManager(nullptr) {}
+    AdvancedScanOption(
+        bool enableBatch, const std::string &restoreTempPath, const std::shared_ptr<ScanResultManager> &resultManager)
+        : enableBatch(enableBatch), restoreTempPath(restoreTempPath), resultManager(resultManager) {}
+};
+
 class IDirScanner {
 public:
     virtual ~IDirScanner() {};
@@ -51,6 +62,10 @@ public:
         const std::vector<std::string> &excludes);
     virtual std::tuple<ErrCode, int64_t, int64_t> ScanDir(const std::string &path,
         const std::vector<std::string> &excludes, off_t size = -1) = 0;
+    void SetAdvancedScanOption(const AdvancedScanOption &option);
+
+protected:
+    AdvancedScanOption scanOption_;
 };
 
 class DirScanner : public IDirScanner {
@@ -87,7 +102,9 @@ public:
      * @return 错误码、大文件总大小、小文件总大小
      */
     static std::tuple<ErrCode, int64_t, int64_t> ScanAllDirs(const std::set<std::string> &includes,
-        const std::set<std::string> &compatIncludes, const std::vector<std::string> &excludes);
+                                                             const std::set<std::string> &compatIncludes,
+                                                             const std::vector<std::string> &excludes,
+                                                             const AdvancedScanOption &option = {});
     /**
      * @brief 读取指定目录下所有文件(非递归)
      *

@@ -878,3 +878,68 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoRestoreCallback_ReportFileInfos_0000, test
     extExtension->errFileInfos_.clear();
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoRestoreCallback_ReportFileInfos_0000";
 }
+
+/**
+ * @tc.number: Ext_Extension_Sub_CallbackExit_Test_0100
+ * @tc.name: Ext_Extension_Sub_CallbackExit_Test_0100
+ * @tc.desc: 测试CallbackExit清空fdList
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CallbackExit_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_CallbackExit_Test_0100";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+
+        // 先填充 fdList_
+        UniqueFd fd1(open("/dev/null", O_RDONLY));
+        extExtension->fdList_.push_back(std::move(fd1));
+
+        // 调用CallbackExit，传入COMMAND_GET_INCREMENTAL_FILE_HANDLES
+        int32_t ret = extExtension->CallbackExit(
+            static_cast<uint32_t>(IExtensionIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLES), 0);
+
+        // 验证返回值
+        EXPECT_EQ(ret, ERR_NONE);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_CallbackExit_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_Sub_CallbackExit_Test_0200
+ * @tc.name: Ext_Extension_Sub_CallbackExit_Test_0200
+ * @tc.desc: 测试CallbackExit对其他命令不做处理
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CallbackExit_Test_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_Sub_CallbackExit_Test_0200";
+    try {
+        ASSERT_TRUE(extExtension != nullptr);
+
+        // 先填充 fdList_
+        UniqueFd fd1(open("/dev/null", O_RDONLY));
+        extExtension->fdList_.push_back(std::move(fd1));
+        size_t beforeSize = extExtension->fdList_.size();
+
+        // 调用CallbackExit，传入其他命令码（如COMMAND_HANDLE_BACKUP）
+        int32_t ret = extExtension->CallbackExit(
+            static_cast<uint32_t>(IExtensionIpcCode::COMMAND_HANDLE_BACKUP), 0);
+
+        // 验证返回值
+        EXPECT_EQ(ret, ERR_NONE);
+        // 验证fdList_大小不变
+        EXPECT_EQ(extExtension->fdList_.size(), beforeSize);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_Sub_CallbackExit_Test_0200";
+}

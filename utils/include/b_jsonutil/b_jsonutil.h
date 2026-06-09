@@ -41,9 +41,18 @@ public:
         int64_t incDataSize = -1;
     }BundleDataSize;
 
+    typedef struct FileStatInfo {
+        std::string path;
+        struct timespec st_atim;
+        struct timespec st_mtim;
+        int32_t st_mode;
+    }FileStatInfo;
+
     typedef struct BundleSettingInfo {
         bool isClearData {true};
         int32_t delayTime {0};
+        bool isSupportWithoutTar {false};
+        int32_t batchSize {500};
     }BundleSettingInfo;
 
     /**
@@ -265,6 +274,8 @@ public:
      */
     static bool FindBroadCastInfoByName(std::map<std::string, std::vector<BundleDetailInfo>> &bundleNameDetailsMap,
         std::string &bundleName, const std::string &jobType, std::map<std::string, std::string> &broadCastInfoMap);
+    
+    static std::string GetPath(const std::string &fileName);
 };
 } // namespace OHOS::FileManagement::Backup
 

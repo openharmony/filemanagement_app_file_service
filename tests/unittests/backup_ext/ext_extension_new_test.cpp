@@ -31,7 +31,6 @@
 #include "i_service_mock.h"
 
 #include "library_func_mock.h"
-#include "library_func_define.h"
 #include "tar_file.cpp"
 #include "untar_file.cpp"
 #define Persist GetFd

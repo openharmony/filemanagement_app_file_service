@@ -85,29 +85,40 @@ ErrCode Service::SetSessPropertiesRestore(const std::vector<std::string> &restor
     return BError(BError::Codes::OK);
 }
 
+static bool ValidateRestoreBundle(
+    const std::string &bundleNameIndexInfo, const std::vector<std::string> &restoreBundleNames)
+{
+    auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(), [&bundleNameIndexInfo](const auto &name) {
+        return name == bundleNameIndexInfo;
+    });
+    if (it == restoreBundleNames.end()) {
+        HILOGE("Can not find current bundle, bundleName:%{public}s", bundleNameIndexInfo.c_str());
+        return false;
+    }
+    return true;
+}
+
 ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::string> &restoreBundleNames,
     vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags)
+    std::map<std::string, BJsonUtil::BundleSettingInfo>& bundleSettingInfos)
 {
     session_->SetOldBackupVersion(oldBackupVersion_);
     std::vector<std::string> strategies = {
         "RestoreBasePropertyStrategy", "DefaultPropertyStrategy", "DataSizePropertyStrategy",
         "ClearDataFlagPropertyStrategy", "RestoreExtraPropertyStrategy"
     };
+    std::map<std::string, bool> isClearDataFlags = {};
+    for (const auto [bundle, info] : bundleSettingInfos) {
+        isClearDataFlags[bundle] = info.isClearData;
+    }
     for (const auto &restoreInfo : restoreBundleInfos) {
-        auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(), [&restoreInfo](const auto &bundleName) {
-            std::string bundleNameIndex = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
-            return bundleName == bundleNameIndex;
-        });
-        if (it == restoreBundleNames.end()) {
-            HILOGE("Can not find current bundle, bundleName:%{public}s, appIndex:%{public}d", restoreInfo.name.c_str(),
-                restoreInfo.appIndex);
+        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
+        if (!ValidateRestoreBundle(bundleNameIndexInfo, restoreBundleNames)) {
             continue;
         }
         HILOGI("bundleName: %{public}s, extensionName: %{public}s", restoreInfo.name.c_str(),
             restoreInfo.extensionName.c_str());
-        std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(restoreInfo.name, restoreInfo.appIndex);
         if (((!restoreInfo.allToBackup && !SpecialDefaultVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) &&
             !GetDefaultBundleResult(restoreInfo.name)) {
@@ -119,6 +130,12 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
         }
         if (BundleMgrAdapter::IsUser0BundleName(bundleNameIndexInfo, session_->GetSessionUserId())) {
             SendUserIdToApp(bundleNameIndexInfo, session_->GetSessionUserId());
+        }
+        auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
+        if (iterSet != bundleSettingInfos.end()) {
+            session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
+            session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
         StrategyContext context;
         context.bundleName = bundleNameIndexInfo;

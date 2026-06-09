@@ -32,9 +32,9 @@ namespace {
 const int32_t DEFAULT_MODE = 0100660; // 0660
 }
 
-static bool CheckBigFile(struct stat sta)
+static bool CheckBigFile(struct stat sta, bool isSupportWithoutTar = false)
 {
-    if (sta.st_size > BConstants::BIG_FILE_BOUNDARY) {
+    if (isSupportWithoutTar || sta.st_size > BConstants::BIG_FILE_BOUNDARY) {
         return true;
     }
     return false;
@@ -83,13 +83,14 @@ static bool CheckOwnPackTar(const string &fileName)
     return true;
 }
 
-static bool CheckUserTar(const string &fileName, struct stat sta, bool isAncoFile = false)
+static bool CheckUserTar(
+    const string &fileName, struct stat sta, bool isAncoFile = false, bool isSupportWithoutTar = false)
 {
     if (!isAncoFile && access(fileName.c_str(), F_OK) != 0) {
         HILOGI("file does not exists");
         return false;
     }
-    return (ExtractFileExt(fileName) == "tar") && CheckBigFile(sta);
+    return (ExtractFileExt(fileName) == "tar") && CheckBigFile(sta, isSupportWithoutTar);
 }
 
 Json::Value Stat2JsonValue(struct stat sta)
@@ -181,6 +182,52 @@ void BJsonEntityExtManage::SetExtManage(const std::vector<std::shared_ptr<IFileI
         value["information"]["stat"] = Stat2JsonValue(item->sta_);
         value["isUserTar"] = item->isBigFile_ && CheckUserTar(item->filePath_, item->sta_, item->isAncoFile_);
         value["isBigFile"] = item->isBigFile_;
+        obj_.append(value);
+    }
+}
+
+void BJsonEntityExtManage::SetExtManage(const map<string, tuple<string, struct stat, bool>> &info,
+    bool isSupportWithoutTar) const
+{
+    obj_.clear();
+ 
+    for (auto item = info.begin(); item != info.end(); ++item) {
+        Json::Value value;
+        value["fileName"] = item->first;
+        auto [path, sta, isBeforeTar] = item->second;
+        value["information"]["path"] = path;
+        value["isUserTar"] = isBeforeTar && CheckUserTar(path, sta, isSupportWithoutTar);
+        value["isBigFile"] = !CheckOwnPackTar(path) && CheckBigFile(sta, isSupportWithoutTar);
+        if (isSupportWithoutTar) {
+            value["information"]["stat"]["st_size"] = static_cast<int64_t>(sta.st_size);
+            value["information"]["stat"]["st_mode"] = static_cast<int32_t>(sta.st_mode);
+        } else {
+            value["information"]["stat"] = Stat2JsonValue(sta);
+        }
+ 
+        obj_.append(value);
+    }
+}
+ 
+void BJsonEntityExtManage::SetExtManage(const std::vector<std::shared_ptr<IFileInfo>> &allFiles,
+                                        bool isSupportWithoutTar) const
+{
+    obj_.clear();
+    for (const auto& item : allFiles) {
+        Json::Value value;
+        value["fileName"] = item->filename_;
+        std::string restorePath = item->GetRestorePath();
+        value["information"]["path"] = restorePath.empty() ? item->filePath_ : restorePath;
+        value["isUserTar"] =
+            item->isBigFile_ && CheckUserTar(item->filePath_, item->sta_, item->isAncoFile_, isSupportWithoutTar);
+        value["isBigFile"] = item->isBigFile_;
+        if (isSupportWithoutTar) {
+            value["information"]["stat"]["st_size"] = static_cast<int64_t>(item->sta_.st_size);
+            value["information"]["stat"]["st_mode"] = static_cast<int32_t>(item->sta_.st_mode);
+        } else {
+            value["information"]["stat"] = Stat2JsonValue(item->sta_);
+        }
+ 
         obj_.append(value);
     }
 }

@@ -227,6 +227,12 @@ private:
     ErrCode GetParament(const AAFwk::Want &want);
     static CreatorFunc creator_;
     wptr<BackupExtExtension> bakExtExtension_;
+    bool supportWithoutTar_ {false};
+    int32_t batchSize_ {500};
+    
+public:
+    bool GetSupportWithoutTar() const;
+    int32_t GetBatchSize() const;
 };
 } // namespace OHOS::FileManagement::Backup
 

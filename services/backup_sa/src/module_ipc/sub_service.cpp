@@ -26,6 +26,7 @@
 
 #include <fcntl.h>
 #include <iomanip>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/vfs.h>
@@ -67,6 +68,7 @@
 #include "parameters.h"
 #include "system_ability_definition.h"
 #include "module_ipc/enhance_service_manager.h"
+#include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -400,8 +402,8 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
             fd = session_->OnBundleExtManageInfo(callerName, move(fd));
         }
         bool fdFlag = fd < 0 ? true : false;
-        fdFlag ? session_->GetServiceReverseProxy()->BackupOnFileReadyWithoutFd(callerName, fileName, errCode) :
-                 session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
+        fdFlag ? session_->GetServiceReverseProxy()->BackupOnFileReadyWithoutFd(callerName, fileName, errCode)
+               : session_->GetServiceReverseProxy()->BackupOnFileReady(callerName, fileName, move(fd), errCode);
         FileReadyRadarReport(callerName, fileName, errCode, session_->GetScenario());
         if (session_->OnBundleFileReady(callerName, fileName)) {
             ret = HandleCurBundleFileReady(callerName, fileName, false);
@@ -410,6 +412,78 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
                     callerName.c_str(),  GetAnonyPath(fileName).c_str());
                 return ret;
             }
+        }
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode(); // 任意异常产生，终止监听该任务
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
+    }
+}
+
+ErrCode Service::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames, const vector<int> &errCodes)
+{
+    if (session_ == nullptr) {
+        HILOGE("AppFileReady error, session is empty");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
+    string callerName;
+    ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+    if (ret != ERR_OK) {
+        HILOGE("AppFileReady error, Get bundle name failed, ret:%{public}d", ret);
+        return ret;
+    }
+    return session_->GetServiceReverseProxy()->BackupOnFileReadysWithoutFd(callerName, abnormalfileNames, errCodes);
+}
+
+ErrCode Service::ProcessReadyFiles(
+    const std::vector<std::string>& fileNames,
+    const std::vector<int>& errCodes,
+    const std::string& callerName)
+{
+    for (size_t i = 0; i < fileNames.size(); ++i) {
+        string fileName = fileNames[i];
+        int errCode = errCodes[i];
+        string filePath = BJsonUtil::GetPath(fileName);
+
+        FileReadyRadarReport(callerName, filePath, errCode, session_->GetScenario());
+
+        if (session_->OnBundleFileReady(callerName, filePath)) {
+            ErrCode ret = HandleCurBundleFileReady(callerName, filePath, false);
+            if (ret != ERR_OK) {
+                HILOGE("Handle current bundle file failed, bundleName:%{public}s, fileName:%{public}s",
+                       callerName.c_str(), filePath.c_str());
+                return ret;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames,
+                               const vector<int> &fds,
+                               const vector<int> &errCodes)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    [[maybe_unused]] std::vector<UniqueFd> fdList(fds.begin(), fds.end());
+    try {
+        if (session_ == nullptr) {
+            HILOGE("AppFileReady error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        string callerName;
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("AppFileReady error, Get bundle name failed, ret:%{public}d", ret);
+            return ret;
+        }
+        HILOGI("AppfileReadys filenames size is, %{public}zu", fileNames.size());
+        session_->GetServiceReverseProxy()->BackupOnFileReadys(callerName, fileNames, fds, errCodes);
+        ret = ProcessReadyFiles(fileNames, errCodes, callerName);
+        if (ret != ERR_OK) {
+            return ret;
         }
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
@@ -531,6 +605,8 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_APP_CLONE_INDEX_PARA, bundleDetail.bundleIndex);
     want.SetParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA, oldBackupVersion);
     want.SetParam(BConstants::EXTENSION_BACKUP_SCENE_PARA, bundleDetail.backupScene);
+    want.SetParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, session_->GetSupportWithoutTar(bundleName));
+    want.SetParam(BConstants::EXTENSION_BATCH_SIZE_PARA, session_->GetBatchSize(bundleName));
 }
 
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,
@@ -562,7 +638,7 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
 }
 
 void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info,
-    std::map<std::string, bool> &isClearDataFlags, const std::string &bundleNameIndexInfo)
+    std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos, const std::string &bundleNameIndexInfo)
 {
     HILOGI("Begin");
     if (session_ == nullptr) {
@@ -570,9 +646,9 @@ void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &info,
         return;
     }
     session_->SetBundleDataSize(bundleNameIndexInfo, info.spaceOccupied);
-    auto iter = isClearDataFlags.find(bundleNameIndexInfo);
-    if (iter != isClearDataFlags.end()) {
-        session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
+    auto iter = bundleSettingInfos.find(bundleNameIndexInfo);
+    if (iter != bundleSettingInfos.end()) {
+        session_->SetClearDataFlag(bundleNameIndexInfo, iter->second.isClearData);
     }
     HILOGI("End");
 }

@@ -62,6 +62,19 @@ public:
     ;
     MOCK_METHOD(ErrCode, IncrementalRestoreOnProcessInfo, (const std::string &, const std::string &));
     MOCK_METHOD(ErrCode, IncrementalRestoreOnMigrateResult, (int32_t, const std::string &));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnFileReadys,
+                (const std::string &, const std::vector<std::string> &, const std::vector<int> &,
+                 const std::vector<int> &, const std::vector<int32_t> &));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnFileReadysWithoutRp,
+                (const std::string &, const std::vector<std::string> &, const std::vector<int> &,
+                 const std::vector<int32_t> &));
+    MOCK_METHOD(ErrCode, IncrementalRestoreOnFileReadysWithoutFd,
+                (const std::string &, const std::vector<std::string> &, const std::vector<int32_t> &));
+    MOCK_METHOD(ErrCode, SetBatchSize, (uint32_t));
+    MOCK_METHOD(ErrCode, BackupOnFileReadysWithoutFd, (const std::string &, const std::vector<std::string> &,
+                const std::vector<int> &));
+    MOCK_METHOD(ErrCode, BackupOnFileReadys, (const std::string &, const std::vector<std::string> &,
+                const std::vector<int> &, const std::vector<int> &));
 
 public:
     ServiceReverseProxyMock() : IRemoteProxy<IServiceReverse>(nullptr) {}

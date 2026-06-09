@@ -42,6 +42,9 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 
+namespace {
+    const int32_t DEFAULT_BATCH_SIZE = 500;
+}
 CreatorFunc ExtBackup::creator_ = nullptr;
 void ExtBackup::SetCreator(const CreatorFunc &creator)
 {
@@ -181,12 +184,20 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         restoreType_ = want.GetIntParam(BConstants::EXTENSION_RESTORE_TYPE_PARA, 0);
         restoreExtInfo_ = want.GetStringParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA);
         oldBackupVersion_ = want.GetStringParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA);
+        supportWithoutTar_ = want.GetBoolParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, false);
+        batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, DEFAULT_BATCH_SIZE);
         HILOGI("restoreExtInfo_ is %{public}s", GetAnonyString(restoreExtInfo_).c_str());
         HILOGI("Get version %{public}s type %{public}d from want when restore.", appVersionStr_.c_str(), restoreType_);
         HILOGI("oldBackupVersion_ is %{public}s", oldBackupVersion_.c_str());
     } else if (extAction_ == BConstants::ExtensionAction::BACKUP) {
         backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
         backupScene_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_SCENE_PARA);
+        supportWithoutTar_ = want.GetBoolParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, false);
+        batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, DEFAULT_BATCH_SIZE);
+        HILOGI(
+            "backupExtInfo_ is %{public}s, backupScene_ is %{public}s, supportWithoutTar_ is %{public}d, batchSize_ is "
+            "%{public}d",
+            backupExtInfo_.c_str(), backupScene_.c_str(), supportWithoutTar_, batchSize_);
         nlohmann::json j = nlohmann::json::parse(backupExtInfo_, nullptr, false);
         if (j.is_discarded()) {
             HILOGE("Parse json file path failed, backupExtInfo_ is %{public}s, backupScene_ is %{public}s,"
@@ -202,10 +213,14 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
                 fileManagerFileListClone_ = item["detail"];
             }
         }
-        HILOGI("backupExtInfo_ is %{public}s, backupScene_ is %{public}s, ancoFileListClone_ is %{public}s",
-            backupExtInfo_.c_str(), backupScene_.c_str(), ancoFileListClone_.c_str());
+        HILOGI(
+            "backupExtInfo_ is %{public}s, backupScene_ is %{public}s, ancoFileListClone_ is %{public}s, "
+            "fileManagerFileListClone_ is %{public}s",
+            backupExtInfo_.c_str(), backupScene_.c_str(), ancoFileListClone_.c_str(),
+            fileManagerFileListClone_.c_str());
     }
     /* backup don't need parament. */
+    HILOGI("supportWithoutTar_ is %{public}d batchSize_ is %{public}d", supportWithoutTar_, batchSize_);
     return ERR_OK;
 }
 
@@ -366,5 +381,15 @@ ErrCode ExtBackup::GetRestoreCompatibilityInfo(std::function<void(ErrCode, const
 {
     HILOGI("BackupExtensionAbility(base) GetRestoreCompatibilityInfo.");
     return ERR_OK;
+}
+
+bool ExtBackup::GetSupportWithoutTar() const
+{
+    return supportWithoutTar_;
+}
+ 
+int32_t ExtBackup::GetBatchSize() const
+{
+    return batchSize_;
 }
 } // namespace OHOS::FileManagement::Backup

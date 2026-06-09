@@ -29,22 +29,22 @@ HWTEST_F(ServiceTest, SUB_Service_HandleCurGroupBackupInfos_0000, TestSize.Level
         vector<BJsonEntityCaps::BundleInfo> backupInfos = {
             {.name = "bundleName", .appIndex = 0, .allToBackup = false, .versionName = ""} };
         map<string, vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
-        map<string, bool> isClearDataFlags;
+        map<string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false));
-        service->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
+        service->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
         EXPECT_TRUE(true);
 
         backupInfos[0].allToBackup = true;
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(false));
-        service->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
+        service->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
         EXPECT_TRUE(true);
 
         backupInfos[0].allToBackup = true;
         EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return(""));
         EXPECT_CALL(*jsonUtil, FindBundleInfoByName(_, _, _, _)).WillOnce(Return(true));
-        service->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
+        service->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

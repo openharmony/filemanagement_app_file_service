@@ -109,6 +109,10 @@ public:
     virtual std::string GetScenarioStr() = 0;
     virtual void SetDelayTime(const std::string &bundleName, int32_t delayTime) = 0;
     virtual int32_t GetDelayTime(const std::string &bundleName) = 0;
+    virtual void SetSupportWithoutTar(const std::string &bundleName, bool isSupportWithoutTar) = 0;
+    virtual bool GetSupportWithoutTar(const std::string &bundleName) = 0;
+    virtual void SetBatchSize(const std::string &bundleName, int32_t batchSize) = 0;
+    virtual int32_t GetBatchSize(const std::string &bundleName) = 0;
 public:
     static inline std::shared_ptr<BackupSvcSessionManager> session = nullptr;
 };
@@ -197,6 +201,10 @@ public:
     MOCK_METHOD(std::string, GetScenarioStr, ());
     MOCK_METHOD(void, SetDelayTime, (const std::string &, int32_t));
     MOCK_METHOD(int32_t, GetDelayTime, (const std::string &));
+    MOCK_METHOD(void, SetSupportWithoutTar, (const std::string &, bool));
+    MOCK_METHOD(bool, GetSupportWithoutTar, (const std::string &));
+    MOCK_METHOD(void, SetBatchSize, (const std::string &, int32_t));
+    MOCK_METHOD(int32_t, GetBatchSize, (const std::string &));
 };
 
 } // namespace OHOS::FileManagement::Backup

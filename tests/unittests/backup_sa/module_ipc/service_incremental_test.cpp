@@ -432,12 +432,16 @@ std::function<void()> Service::TimeOutCallback(wptr<Service> ptr, std::string bu
 void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo>&, std::vector<std::string>&,
     RestoreTypeEnum, std::string &) {}
 
-void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo>&, std::vector<std::string>&,
-    std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>>&, std::map<std::string, bool>&,
-    RestoreTypeEnum, std::string &) {}
+void Service::SetCurrentSessProperties(std::vector<BJsonEntityCaps::BundleInfo> &,
+                                       std::vector<std::string> &,
+                                       std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &,
+                                       std::map<std::string, BJsonUtil::BundleSettingInfo> &,
+                                       RestoreTypeEnum,
+                                       std::string &) {}
 
-void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo&, std::map<std::string, bool>&,
-    const std::string&) {}
+void Service::SetCurrentSessProperties(BJsonEntityCaps::BundleInfo &,
+                                       std::map<std::string, BJsonUtil::BundleSettingInfo> &,
+                                       const std::string &) {}
 
 void Service::ReleaseOnException() {}
 
@@ -684,6 +688,18 @@ ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleNam
 ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd)
 {
     return BService::serviceMock->GetApkFileHandle(path, fileName, fd);
+}
+
+ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
+    const std::vector<int> &errCodes)
+{
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode Service::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
+    const std::vector<int> &errCodes)
+{
+    return BError(BError::Codes::OK);
 }
 } // namespace OHOS::FileManagement::Backup
 

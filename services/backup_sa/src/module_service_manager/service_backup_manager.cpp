@@ -22,6 +22,13 @@
 
 namespace OHOS::FileManagement::Backup {
 
+static const std::vector<std::string> STRATEGY_LIST = {
+"DefaultPropertyStrategy",
+"DataSizePropertyStrategy",
+"ClearDataFlagPropertyStrategy",
+"BackupExtraPropertyStrategy"
+};
+
 static std::string GetKeyInMap(const std::map<std::string, bool> &map, const std::string& fileName)
 {
     for (const auto& pair : map) {
@@ -74,14 +81,14 @@ ErrCode Service::CallSetSessPropertiesWithDetail(
     const vector<BundleName> &bundleNames,
     vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags,
+    std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos,
     BizScene &scene)
 {
     ErrCode result = ERR_OK;
     if (scene == BizScene::BACKUP) {
-        result = SetSessPropertiesWithDetailBackup(bundleNames, bundleInfos, bundleNameDetailMap, isClearDataFlags);
+        result = SetSessPropertiesWithDetailBackup(bundleNames, bundleInfos, bundleNameDetailMap, bundleSettingInfos);
     } else if (scene == BizScene::RESTORE) {
-        result = SetSessPropertiesWithDetailRestore(bundleNames, bundleInfos, bundleNameDetailMap, isClearDataFlags);
+        result = SetSessPropertiesWithDetailRestore(bundleNames, bundleInfos, bundleNameDetailMap, bundleSettingInfos);
     }
     return result;
 }
@@ -160,7 +167,7 @@ ErrCode Service::SetSessPropertiesBackup(const std::vector<std::string> &bundleN
 ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string> &bundleNames,
     vector<BJsonEntityCaps::BundleInfo> &backupBundleInfos,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags)
+    std::map<std::string, BJsonUtil::BundleSettingInfo>& bundleSettingInfos)
 {
     if (session_ == nullptr) {
         HILOGE("Set current session properties error, session is empty");
@@ -173,13 +180,10 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
         bundleNameIndexBundleInfoMap[bundleNameIndexInfo] = bundleInfo;
     }
 
-    std::vector<std::string> strategies = {
-        "DefaultPropertyStrategy",
-        "DataSizePropertyStrategy",
-        "ClearDataFlagPropertyStrategy",
-        "BackupExtraPropertyStrategy"
-    };
-
+    std::map<std::string, bool> isClearDataFlags = {};
+    for (const auto &[bundle, info] : bundleSettingInfos) {
+        isClearDataFlags[bundle] = info.isClearData;
+    }
     for (const auto &item : bundleNames) {
         string bundleName = item;
         if (BundleMgrAdapter::IsUser0BundleName(bundleName, userId)) {
@@ -193,6 +197,12 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
             session_->RemoveExtInfo(bundleName);
             continue;
         }
+        auto iterSet = bundleSettingInfos.find(bundleName);
+        if (iterSet != bundleSettingInfos.end()) {
+            session_->SetClearDataFlag(bundleName, iterSet->second.isClearData);
+            session_->SetSupportWithoutTar(bundleName, iterSet->second.isSupportWithoutTar);
+            session_->SetBatchSize(bundleName, iterSet->second.batchSize);
+        }
 
         StrategyContext context;
         context.bundleName = bundleName;
@@ -205,7 +215,7 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
         context.bundleNameDetailMap = &bundleNameDetailMap;
         context.isClearDataFlags = &isClearDataFlags;
 
-        PropertyStrategyExecutor::GetInstance().ExecuteStrategies(context, strategies);
+        PropertyStrategyExecutor::GetInstance().ExecuteStrategies(context, STRATEGY_LIST);
     }
     return BError(BError::Codes::OK);
 }
@@ -495,35 +505,35 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
     UniqueFd fd)
 {
     try {
-        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, detailInfos, bundleNamesOnly,
-            session_->GetSessionUserId(), isClearDataFlags);
-        std::vector<BundleName> newBundleNames = bundleNames;
-        if (scene == BizScene::RESTORE) {
-            newBundleNames = HandleBroadcastOnlyBundles(bundleNameDetailMap, bundleNames);
-            if (newBundleNames.empty()) {
-                HILOGE("newBundleNames is empty.");
-                return BError(BError::Codes::OK);
-            }
+            session_->GetSessionUserId(), bundleSettingInfos);
+        std::vector<BundleName> newBundleNames = HandleBroadcastOnlyBundles(bundleNameDetailMap, bundleNames);
+        if (newBundleNames.empty()) {
+            HILOGE("newBundleNames is empty.");
+            return BError(BError::Codes::OK);
         }
         SetDefaultApps(newBundleNames, bundleNameDetailMap);
         std::vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         vector<string> supportBundleNames = CallGetSupportBundleNames(newBundleNames, bundleInfos, scene, move(fd));
         AppendBundles(supportBundleNames);
         CallSetSessPropertiesWithDetail(supportBundleNames, bundleInfos,
-            bundleNameDetailMap, isClearDataFlags, scene);
+            bundleNameDetailMap, bundleSettingInfos, scene);
         OnStartSched();
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }

@@ -189,6 +189,12 @@ public:
     {
         return BError(BError::Codes::OK);
     }
+
+    ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames, std::vector<int> &fdList,
+        std::vector<int32_t> &errCodes) override
+    {
+        return BError(BError::Codes::OK);
+    }
 private:
     int32_t nHandleBackupNum_ = 0;
 };

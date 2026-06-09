@@ -17,9 +17,64 @@
 
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
+#include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
+
+void ServiceReverse::FlushPendingFiles()
+{
+    HILOGI("FlushPendingFiles %{public}zu ok", pendingFiles_.size());
+    std::vector<BackupFile> filesToFlush;
+    std::vector<BackupFile> errfilesToFlush;
+    {
+        std::lock_guard<std::mutex> lock(addBatchLock_);
+        if (pendingFiles_.empty()) {
+            return;
+        }
+        for (const auto &file : pendingFiles_) {
+            if (SUCCEEDED(file.errCode)) {
+                filesToFlush.push_back(file);
+            } else {
+                errfilesToFlush.push_back(file);
+            }
+        }
+        pendingFiles_.clear();
+    }
+    if (!callbacksBackup_.onFileReadyBatch) {
+        HILOGE("callback is nullptr");
+        return;
+    }
+    if (!filesToFlush.empty()) {
+        callbacksBackup_.onFileReadyBatch(filesToFlush);
+    }
+    if (!errfilesToFlush.empty()) {
+        callbacksBackup_.onFileReadyBatch(errfilesToFlush);
+    }
+}
+ 
+void ServiceReverse::AddFileToBatch(const std::string &bundleName, const std::vector<std::string> &fileNames,
+                                    const std::vector<int> &fds, const std::vector<int> &manifestFds,
+                                    const std::vector<int32_t> &errCodes)
+{
+    bool needFlush = false;
+    {
+        std::lock_guard<std::mutex> lock(addBatchLock_);
+        for (size_t i = 0; i < fileNames.size(); ++i) {
+            BackupFile file;
+            file.bundleName = bundleName;
+            file.uri = fileNames[i];
+            file.fd = fds[i];
+            file.manifestFd = manifestFds[i];
+            file.errCode = errCodes[i];
+            pendingFiles_.push_back(file);
+        }
+        needFlush = (pendingFiles_.size() >= batchSize_);
+    }
+    if (needFlush) {
+        FlushPendingFiles();
+    }
+}
 
 ErrCode ServiceReverse::BackupOnFileReady(const std::string &bundleName,
                                           const std::string &fileName,
@@ -70,6 +125,7 @@ ErrCode ServiceReverse::BackupOnResultReport(const std::string &result, const st
 
 ErrCode ServiceReverse::BackupOnBundleFinished(int32_t errCode, const std::string &bundleName)
 {
+    FlushPendingFiles();
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onBundleFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return BError(BError::Codes::OK);
@@ -81,6 +137,7 @@ ErrCode ServiceReverse::BackupOnBundleFinished(int32_t errCode, const std::strin
 
 ErrCode ServiceReverse::BackupOnAllBundlesFinished(int32_t errCode)
 {
+    FlushPendingFiles();
     HILOGI("errCode = %{public}d", errCode);
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onAllBundlesFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
@@ -123,6 +180,7 @@ ErrCode ServiceReverse::RestoreOnBundleStarted(int32_t errCode, const std::strin
 
 ErrCode ServiceReverse::RestoreOnBundleFinished(int32_t errCode, const std::string &bundleName)
 {
+    FlushPendingFiles();
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onBundleFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return BError(BError::Codes::OK);
@@ -134,6 +192,7 @@ ErrCode ServiceReverse::RestoreOnBundleFinished(int32_t errCode, const std::stri
 
 ErrCode ServiceReverse::RestoreOnAllBundlesFinished(int32_t errCode)
 {
+    FlushPendingFiles();
     HILOGI("errCode = %{public}d", errCode);
     if (scenario_ != Scenario::RESTORE || !callbacksRestore_.onAllBundlesFinished) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
@@ -169,6 +228,34 @@ ErrCode ServiceReverse::RestoreOnFileReadyWithoutFd(const std::string &bundleNam
     }
     BFileInfo bFileInfo(bundleName, fileName, 0);
     callbacksRestore_.onFileReady(bFileInfo, UniqueFd(INVALID_FD), errCode);
+    return BError(BError::Codes::OK);
+}
+
+ErrCode ServiceReverse::BackupOnFileReadys(const std::string &bundleName,
+                                           const std::vector<std::string> &fileNames,
+                                           const std::vector<int> &fds,
+                                           const std::vector<int> &errCodes)
+{
+    if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onFileReadyBatch) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return BError(BError::Codes::OK);
+    }
+    std::vector<int> manifestFds(fileNames.size(), INVALID_FD);
+    AddFileToBatch(bundleName, fileNames, fds, manifestFds, errCodes);
+    return BError(BError::Codes::OK);
+}
+ 
+ErrCode ServiceReverse::BackupOnFileReadysWithoutFd(const std::string &bundleName,
+                                                    const std::vector<std::string> &fileNames,
+                                                    const std::vector<int> &errCodes)
+{
+    if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onFileReadyBatch) {
+        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
+        return BError(BError::Codes::OK);
+    }
+    std::vector<int> fds(fileNames.size(), INVALID_FD);
+    std::vector<int> manifestFds(fileNames.size(), INVALID_FD);
+    AddFileToBatch(bundleName, fileNames, fds, manifestFds, errCodes);
     return BError(BError::Codes::OK);
 }
 

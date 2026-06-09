@@ -609,10 +609,10 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             return ret;
         }
         std::vector<std::string> bundleNamesOnly;
-        std::map<std::string, bool> isClearDataFlags;
+        std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
             BJsonUtil::BuildBundleInfos(bundleNames, bundleInfos, bundleNamesOnly, session_->GetSessionUserId(),
-            isClearDataFlags);
+            bundleSettingInfos);
         std::vector<BundleName> newBundleNames = HandleBroadcastOnlyBundles(bundleNameDetailMap, bundleNames);
         if (newBundleNames.empty()) {
             HILOGE("newBundleNames is empty.");
@@ -627,7 +627,7 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             return BError(BError::Codes::OK);
         }
         AppendBundles(restoreBundleNames);
-        SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, isClearDataFlags, restoreType,
+        SetCurrentSessProperties(restoreInfos, restoreBundleNames, bundleNameDetailMap, bundleSettingInfos, restoreType,
             oldBackupVersion);
         OnStartSched();
         HILOGI("End");
@@ -735,9 +735,9 @@ void Service::SetCurrentSessProperties(
     std::vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos,
     std::vector<std::string> &restoreBundleNames,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags, RestoreTypeEnum restoreType, std::string &backupVersion)
+    std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos, RestoreTypeEnum restoreType,
+    std::string &backupVersion)
 {
-    HILOGI("Start");
     session_->SetOldBackupVersion(backupVersion);
     for (const auto &restoreInfo : restoreBundleInfos) {
         auto it = find_if(restoreBundleNames.begin(), restoreBundleNames.end(),
@@ -761,9 +761,11 @@ void Service::SetCurrentSessProperties(
             continue;
         }
         SetBundleParam(restoreInfo, bundleNameIndexInfo, restoreType);
-        auto iter = isClearDataFlags.find(bundleNameIndexInfo);
-        if (iter != isClearDataFlags.end()) {
-            session_->SetClearDataFlag(bundleNameIndexInfo, iter->second);
+        auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
+        if (iterSet != bundleSettingInfos.end()) {
+            session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
+            session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
         BJsonUtil::BundleDetailInfo broadCastInfo;
         BJsonUtil::BundleDetailInfo uniCastInfo;
@@ -783,19 +785,18 @@ void Service::SetCurrentSessProperties(
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
     }
-    HILOGI("End");
 }
 
 void Service::HandleCurGroupBackupInfos(
     std::vector<BJsonEntityCaps::BundleInfo> &backupInfos,
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
-    std::map<std::string, bool> &isClearDataFlags)
+    std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos)
 {
     for (auto &info : backupInfos) {
         HILOGI("Current backupInfo bundleName:%{public}s, extName:%{public}s, appIndex:%{public}d", info.name.c_str(),
                info.extensionName.c_str(), info.appIndex);
         std::string bundleNameIndexInfo = BJsonUtil::BuildBundleNameIndexInfo(info.name, info.appIndex);
-        SetCurrentSessProperties(info, isClearDataFlags, bundleNameIndexInfo);
+        SetCurrentSessProperties(info, bundleSettingInfos, bundleNameIndexInfo);
         BJsonUtil::BundleDetailInfo uniCastInfo;
         if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
             HILOGI("current bundle:%{public}s, unicast info:%{public}s, unicast info size:%{public}zu",
@@ -808,6 +809,11 @@ void Service::HandleCurGroupBackupInfos(
         std::string backupScene = "";
         if (BJsonUtil::FindBackupSceneByName(bundleNameDetailMap, bundleNameIndexInfo, backupScene)) {
             session_->SetBackupScene(bundleNameIndexInfo, backupScene);
+        }
+        auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
+        if (iterSet != bundleSettingInfos.end()) {
+            session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
     }
 }

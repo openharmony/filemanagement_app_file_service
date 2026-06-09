@@ -48,6 +48,7 @@ class GeneralCallbacks {
 public:
     GeneralCallbacks(const napi_env &env, const LibN::NVal &thisPtr, const LibN::NVal &jsCallbacks)
         : onFileReady(env, thisPtr, jsCallbacks.GetProp("onFileReady")),
+          onFileReadyBatch(env, thisPtr, jsCallbacks.GetProp("onFileReadyBatch")),
           onBundleBegin(env, thisPtr, jsCallbacks.GetProp("onBundleBegin")),
           onBundleEnd(env, thisPtr, jsCallbacks.GetProp("onBundleEnd")),
           onAllBundlesEnd(env, thisPtr, jsCallbacks.GetProp("onAllBundlesEnd")),
@@ -60,6 +61,7 @@ public:
     void RemoveCallbackRef();
 public:
     LibN::NAsyncWorkCallback onFileReady;
+    LibN::NAsyncWorkCallback onFileReadyBatch;
     LibN::NAsyncWorkCallback onBundleBegin;
     LibN::NAsyncWorkCallback onBundleEnd;
     LibN::NAsyncWorkCallback onAllBundlesEnd;

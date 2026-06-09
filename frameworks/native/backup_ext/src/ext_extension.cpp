@@ -62,7 +62,7 @@
 #include "sandbox_helper.h"
 #include "service_client.h"
 #include "tar_file.h"
-
+#include <filesystem>
 namespace OHOS::FileManagement::Backup {
 const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                  append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
@@ -210,6 +210,25 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
         return UniqueFd(BConstants::INVALID_FD_NUM);
     }
     return fd;
+}
+
+int32_t BackupExtExtension::CallbackEnter([[maybe_unused]] uint32_t code)
+{
+    return ERR_NONE;
+}
+ 
+int32_t BackupExtExtension::CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result)
+{
+    switch (static_cast<IExtensionIpcCode>(code)) {
+        case IExtensionIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLES: {
+            HILOGE("In COMMAND_GET_INCREMENTAL_FILE_HANDLES");
+            fdList_.clear();
+            break;
+        }
+        default:
+            break;
+    }
+    return ERR_NONE;
 }
 
 ErrCode BackupExtExtension::GetFileHandleWithUniqueFd(const std::string &fileName,
@@ -365,6 +384,27 @@ static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string
     return ERR_OK;
 }
 
+static ErrCode GetIncrementalFileHandleUntarPath(const string &fileName, const string &bundleName, std::string &realDir)
+{
+    string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
+        path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
+        path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+    }
+    realDir = path + fileName;
+    std::filesystem::path prePath(realDir);
+    std::filesystem::path dirPath = prePath.parent_path();
+    HILOGD("realDir: %{public}s", realDir.c_str());
+    try {
+        std::filesystem::create_directories(dirPath);
+    } catch (const std::filesystem::filesystem_error &e) {
+        HILOGE("filesystem_error: %{public}s", e.what());
+        return e.code().value();
+    }
+    return ERR_OK;
+}
+
 tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNormalVersion(const std::string &fileName)
 {
     HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
@@ -405,6 +445,31 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
     return {errCode, move(fd), move(reportFd)};
 }
 
+tuple<ErrCode, UniqueFd> BackupExtExtension::GetIncreFileHandleForUntarNormalVersion(
+    const std::string &fileName)
+{
+    HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
+    std::string realDir;
+    int32_t errCode = ERR_OK;
+    UniqueFd fd(BConstants::INVALID_FD_NUM);
+    do {
+        std::string filePath = "";
+        filePath = fileName;
+        errCode = GetIncrementalFileHandleUntarPath(filePath, bundleName_, realDir);
+        if (errCode != ERR_OK) {
+            HILOGE("GetIncrementalFileHandleUntarPath failed, err = %{public}d", errCode);
+            break;
+        }
+        fd = UniqueFd(open(realDir.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        if (fd < 0) {
+            HILOGE("Failed to open tar file = %{public}s, err = %{public}d", GetAnonyPath(realDir).c_str(), errno);
+            errCode = errno;
+            break;
+        }
+    } while (0);
+    return {errCode, move(fd)};
+}
+
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName,
                                                      int &fd, int &reportFd, int32_t &fdErrCode)
 {
@@ -414,6 +479,67 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName
     fd = dup(fdval.Get());
     reportFd = dup(reportFdVal.Get());
     return ERR_OK;
+}
+
+ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+                                                      std::vector<int> &fdList,
+                                                      std::vector<int32_t> &errCodes)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HILOGI("GetIncrementalFileHandles enter fileNames");
+    try {
+        if (extension_ == nullptr) {
+            HILOGE("Failed to get incremental file handle, extension  is invalid");
+            throw BError(BError::Codes::EXT_INVAL_ARG, "extension is invalid");
+        }
+        if (extension_->GetExtensionAction() != BConstants::ExtensionAction::RESTORE) {
+            HILOGE("Failed to get incremental file handle, action is invalid, action %{public}d.",
+                extension_->GetExtensionAction());
+            throw BError(BError::Codes::EXT_INVAL_ARG, "Action is invalid");
+        }
+        VerifyCaller();
+        for (auto fileName : fileNames) {
+            if (BDir::IsFilePathValid(fileName)) {
+                continue;
+            }
+            auto proxy = ServiceClient::GetInstance();
+            if (proxy == nullptr) {
+                throw BError(BError::Codes::EXT_BROKEN_IPC, string("Failed to AGetInstance"));
+            }
+            HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(fileName).c_str());
+            auto ret = proxy->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG));
+            if (ret != ERR_OK) {
+                HILOGE("Failed to notify app incre done. err = %{public}d", ret);
+            }
+            return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+        }
+        HILOGI("GetIncrementalFileHandles GetIncrementalFileHandle start");
+        for (const auto& fileName : fileNames) {
+            auto [errCode, fdval] = GetIncrementalFileHandlesInner(fileName);
+            HILOGD("GetIncrementalFileHandlesInner, fileName:%{public}s, fd:%{public}d", fileName.c_str(), fdval.Get());
+            fdList.push_back(fdval.Get());
+            errCodes.push_back(errCode);
+            fdList_.push_back(std::move(fdval));
+        }
+        HILOGI("GetIncrementalFileHandles Exit");
+    } catch (...) {
+        HILOGE("Failed to get incremental file handle");
+        DoClear();
+        return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
+    }
+    return ERR_OK;
+}
+ 
+tuple<ErrCode, UniqueFd> BackupExtExtension::GetIncrementalFileHandlesInner(const string &fileName)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        return GetIncreFileHandleForUntarNormalVersion(fileName);
+    } catch (...) {
+        HILOGE("Failed to get incremental file handle");
+        DoClear();
+        return {BError(BError::Codes::EXT_BROKEN_IPC).GetCode(), UniqueFd(-1)};
+    }
 }
 
 tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
@@ -562,7 +688,7 @@ ErrCode BackupExtExtension::IndexFileReady(const std::vector<std::shared_ptr<IFi
     }
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
     auto cache = cachedEntity.Structuralize();
-    cache.SetExtManage(allFiles);
+    cache.SetExtManage(allFiles, isSupportWithoutTar_);
     cachedEntity.Persist();
     close(cachedEntity.GetFd().Release());
     int32_t err = 0;
@@ -633,8 +759,8 @@ ErrCode BackupExtExtension::ReportNormalAppFileReady(const string& filename, con
         CloseFileWithFDSan(fdval);
         return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
     }
-    int reportRs = fdval < 0 ? proxy->AppFileReadyWithoutFd(filename, errCode) :
-        proxy->AppFileReady(filename, fdval, errCode);
+    int reportRs =
+        fdval < 0 ? proxy->AppFileReadyWithoutFd(filename, errCode) : proxy->AppFileReady(filename, fdval, errCode);
     CloseFileWithFDSan(fdval);
     if (SUCCEEDED(reportRs)) {
         HILOGD("Report app file ready success, filename: %{public}s", filename.c_str());
@@ -656,6 +782,80 @@ ErrCode BackupExtExtension::ReportAncoAppFileReady(const string &filename, const
         return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
     }
     return proxy->AppAncoFileReady(filename, filePath, needDelete);
+}
+
+ErrCode BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileInfo>> &allFiles,
+                                              vector<string> &fileNames,
+                                              vector<int> &normalfds,
+                                              vector<string> &abnormalfileNames,
+                                              vector<int> &errCodes)
+{
+    ErrCode ret = ERR_OK;
+    for (auto it = allFiles.begin(); it != allFiles.end();) {
+        const string &filePath = (*it)->filePath_;
+        std::string newPath = BExcepUltils::Canonicalize(filePath);
+        int fdval = open(newPath.data(), O_RDONLY);
+        if (fdval < 0) {
+            int errCode = errno;
+            HILOGE("open file failed, filename: %{public}s, err: %{public}d", filePath.c_str(), errCode);
+            if (errCode == ERR_NO_PERMISSION) {
+                HILOGW("noPermissionFile, don't need to backup, path: %{public}s", GetAnonyString(filePath).c_str());
+                it = allFiles.erase(it);
+                continue;
+            }
+            abnormalfileNames.push_back(FileInfoToString(*it));
+            errCodes.push_back(errCode);
+            ret = errCode;
+        } else {
+            fileNames.push_back(FileInfoToString(*it));
+            normalfds.push_back(fdval);
+            fdsan_exchange_owner_tag(fdval, 0, BConstants::FDSAN_EXT_TAG);
+        }
+        it++;
+    }
+    return ret;
+}
+ 
+ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles)
+{
+    HILOGD("ReportAppFileReadys enter filenameSize: %{public}zu", allFiles.size());
+    vector<string> fileNames = {};
+    vector<int> normalfds = {};
+    vector<string> abnormalfileNames = {};
+    vector<int> errCodes = {};
+    ErrCode errCode = ProcessReadysInfo(allFiles, fileNames, normalfds, abnormalfileNames, errCodes);
+    if (errCode != ERR_OK) {
+        return errCode;
+    }
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("ServiceClient is null");
+        for (auto fdval : normalfds) {
+            CloseFileWithFDSan(fdval);
+        }
+        return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
+    }
+ 
+    int reportRsWithoutFd = ERR_OK;
+    if (!abnormalfileNames.empty()) {
+        reportRsWithoutFd = proxy->AppFileReadysWithoutFd(abnormalfileNames, errCodes);
+    }
+ 
+    vector<int> temp(normalfds.size(), ERR_OK);
+    HILOGI("send get file Names length %{public}zu", fileNames.size());
+    int reportRs = proxy->AppFileReadys(fileNames, normalfds, temp);
+    for (auto fdval : normalfds) {
+        CloseFileWithFDSan(fdval);
+    }
+    if (SUCCEEDED(reportRs) && SUCCEEDED(reportRsWithoutFd)) {
+        HILOGI("Report app file ready success, filenameSize: %{public}zu", allFiles.size());
+    } else {
+        HILOGW(
+            "Report app file ready failed, reportRsWithoutFd: %{public}d, reportRs %{public}d, allfileSize: "
+            "%{public}zu",
+            reportRsWithoutFd, reportRs, normalfds.size());
+    }
+    return reportRs;
 }
 
 ErrCode BackupExtExtension::PublishFile(const std::string &fileName)
@@ -861,7 +1061,11 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     AncoBackupHelper::FilterAndSaveBackupPaths(expandIncludes, compatibleIncludes, excludes);
     // 扫描文件计算数据量
     appStatistic_->scanFileSpend_.Start();
-    auto [errCode, bigFileSize, smallFileSize] = BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes);
+    AdvancedScanOption scanOption;
+    scanOption.enableBatch = GetSupportWithoutTar();
+    scanOption.restoreTempPath = GetRestoreTempPath(bundleName_);
+    auto [errCode, bigFileSize, smallFileSize] =
+        BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes, scanOption);
     auto [aErrCode, aBigFileSize, aSmallFileSize] = AncoBackupHelper::StartAncoScanAllDirs();
     bigFileSize += aBigFileSize;
     smallFileSize += aSmallFileSize;
@@ -1428,6 +1632,9 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
             ancoStats.push_back(item.sta);
             continue;
         }
+        if (GetSupportWithoutTar() && !StringUtils::IsAncoFile(item.hashName)) {
+            continue;
+        }
         RestoreOneBigFile(path, item, appendTargetPath);
     }
     ExecuteAncoMove(ancoSourcePath, ancoTargetPath, ancoStats);
@@ -1545,10 +1752,23 @@ void BackupExtExtension::HandleSpecialVersionRestore()
     }
 }
 
+void BackupExtExtension::ExtractTarFiles(const std::set<std::string> &fileSet,
+    const std::vector<ExtManageInfo> &extManageInfo, int &ret)
+{
+    for (const auto &item : fileSet) {  // 处理要解压的tar文件
+        off_t tarFileSize = 0;
+        if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
+            ret = DoRestore(item, tarFileSize);
+        }
+    }
+}
+
 void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
     const std::vector<ExtManageInfo> extManageInfo)
 {
-    auto task = [obj {wptr<BackupExtExtension>(this)}, fileSet {fileSet}, extManageInfo {extManageInfo}]() {
+    bool enableBatch = GetSupportWithoutTar();
+    auto task = [obj {wptr<BackupExtExtension>(this)}, fileSet {fileSet}, extManageInfo {extManageInfo},
+                 enableBatch]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
@@ -1559,18 +1779,14 @@ void BackupExtExtension::AsyncTaskRestore(std::set<std::string> fileSet,
                 return;
             }
             // 解压
-            for (const auto &item : fileSet) { // 处理要解压的tar文件
-                off_t tarFileSize = 0;
-                if (ExtractFileExt(item) == "tar" && !IsUserTar(item, extManageInfo, tarFileSize)) {
-                    ret = ptr->DoRestore(item, tarFileSize);
-                }
+            ptr->ExtractTarFiles(fileSet, extManageInfo, ret);
+            if (!enableBatch) {
+                // 恢复用户tar包以及大文件
+                // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
+                bool appendTargetPath =
+                    ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
+                ptr->RestoreBigFiles(appendTargetPath);
             }
-            // 恢复用户tar包以及大文件
-            // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
-            bool appendTargetPath =
-                ptr->extension_->UseFullBackupOnly() && !ptr->extension_->SpecialVersionForCloneAndCloud();
-            ptr->RestoreBigFiles(appendTargetPath);
-            ptr->DeleteBackupIdxFile();
             if (ret == ERR_OK) {
                 ptr->AsyncTaskRestoreForUpgrade();
             } else {
@@ -1614,8 +1830,7 @@ int BackupExtExtension::DealIncreRestoreBigAndTarFile()
     }
     // 恢复用户tar包以及大文件
     // 目的地址是否需要拼接path(临时目录)，FullBackupOnly为true并且非特殊场景
-    bool appendTargetPath =
-        extension_->UseFullBackupOnly() && !extension_->SpecialVersionForCloneAndCloud();
+    bool appendTargetPath = extension_->UseFullBackupOnly() && !extension_->SpecialVersionForCloneAndCloud();
     RestoreBigFiles(appendTargetPath);
     // delete 1.tar/manage.json
     DeleteBackupIncrementalIdxFile();
@@ -2207,7 +2422,7 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
     }
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(std::move(fdIndex));
     auto cache = cachedEntity.Structuralize();
-    cache.SetExtManage(pkgInfo);
+    cache.SetExtManage(pkgInfo, isSupportWithoutTar_);
     cachedEntity.Persist();
     close(cachedEntity.GetFd().Release());
 

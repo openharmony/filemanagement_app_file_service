@@ -254,6 +254,11 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
         } else if (fileName.empty()) {
             it->second.receExtAppDone = true;
         }
+        HILOGD(
+            "Condition met: receExtManageJson=%{public}s, fileNameInfo_empty=%{public}s, receExtAppDone=%{public}s",
+            it->second.receExtManageJson ? "true" : "false",
+            it->second.fileNameInfo.empty() ? "true" : "false",
+            it->second.receExtAppDone ? "true" : "false");
         if (it->second.receExtManageJson && it->second.fileNameInfo.empty() && it->second.receExtAppDone) {
             HILOGI("The bundle manage json info and file info support current app done, bundle:%{public}s",
                 bundleName.c_str());
@@ -261,8 +266,7 @@ bool SvcSessionManager::OnBundleFileReady(const string &bundleName, const string
             return true;
         }
     }
-    HILOGD("End, bundleName name is:%{private}s, fileNameInfo size:%{public}zu",
-        bundleName.c_str(), it->second.fileNameInfo.size());
+    HILOGD("End, bundleName name is:%{private}s", bundleName.c_str());
     return false;
 }
 
@@ -285,7 +289,6 @@ UniqueFd SvcSessionManager::OnBundleExtManageInfo(const string &bundleName, Uniq
         HILOGD("fileName %{public}s", GetAnonyPath(fileName).data());
         OnBundleFileReady(bundleName, fileName);
     }
-    HILOGD("info size = %{public}zu", info.size());
     unique_lock<shared_mutex> lock(lock_);
     auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
     if (!findBundleSuc) {
@@ -1529,5 +1532,71 @@ int32_t SvcSessionManager::GetDelayTime(const std::string &bundleName)
         return 0;
     }
     return it->second.delayTime;
+}
+
+void SvcSessionManager::SetSupportWithoutTar(const std::string &bundleName, bool isSupportWithoutTar)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+    it->second.isSupportWithoutTar = isSupportWithoutTar;
+    HILOGI("bundleName:%{public}s, set isSupportWithoutTar:%{public}d.", bundleName.c_str(), isSupportWithoutTar);
+}
+ 
+bool SvcSessionManager::GetSupportWithoutTar(const std::string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+    return it->second.isSupportWithoutTar;
+}
+ 
+void SvcSessionManager::SetBatchSize(const std::string &bundleName, int32_t batchSize)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+    if (batchSize <= 0) {
+        HILOGE("Invalid batchSize: %{public}d", batchSize);
+        return;
+    }
+    it->second.batchSize = batchSize;
+    HILOGI("bundleName:%{public}s, set batchSize:%{public}d.", bundleName.c_str(), batchSize);
+}
+ 
+int32_t SvcSessionManager::GetBatchSize(const std::string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return 0;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return 0;
+    }
+    return it->second.batchSize;
 }
 } // namespace OHOS::FileManagement::Backup

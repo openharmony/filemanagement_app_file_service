@@ -1065,7 +1065,7 @@ HWTEST_F(ServiceSubTest, SUB_Service_HandleCurGroupBackupInfos_0100, testing::ex
     GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_HandleCurGroupBackupInfos_0100";
     std::vector<BJsonEntityCaps::BundleInfo> backupInfos;
     std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
-    std::map<std::string, bool> isClearDataFlags;
+    std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
     BJsonEntityCaps::BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME;
     bundleInfo.appIndex = 0;
@@ -1076,7 +1076,7 @@ HWTEST_F(ServiceSubTest, SUB_Service_HandleCurGroupBackupInfos_0100, testing::ex
     servicePtr_->session_ = session_;
     BackupExtInfo extInfo;
     session_->impl_.backupExtNameMap.emplace(BUNDLE_NAME, extInfo);
-    servicePtr_->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, isClearDataFlags);
+    servicePtr_->HandleCurGroupBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
     EXPECT_EQ(session_->impl_.backupExtNameMap[BUNDLE_NAME].backupExtName, bundleInfo.extensionName);
 
     GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_HandleCurGroupBackupInfos_0100";
