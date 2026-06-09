@@ -123,6 +123,9 @@ struct stat JsonValue2Stat(const Json::Value &value)
         sta.st_atim.tv_nsec = value["st_atim"].isMember("tv_nsec") && value["st_atim"]["tv_nsec"].isInt64()
                                   ? value["st_atim"]["tv_nsec"].asInt64()
                                   : 0;
+    } else {
+        sta.st_atim.tv_sec = 0;
+        sta.st_atim.tv_nsec = 0;
     }
     if (value.isMember("st_mtim")) {
         sta.st_mtim.tv_sec = value["st_mtim"].isMember("tv_sec") && value["st_mtim"]["tv_sec"].isInt64()
@@ -131,6 +134,9 @@ struct stat JsonValue2Stat(const Json::Value &value)
         sta.st_mtim.tv_nsec = value["st_mtim"].isMember("tv_nsec") && value["st_mtim"]["tv_nsec"].isInt64()
                                   ? value["st_mtim"]["tv_nsec"].asInt64()
                                   : 0;
+    } else {
+        sta.st_mtim.tv_sec = 0;
+        sta.st_mtim.tv_nsec = 0;
     }
 
     return sta;
