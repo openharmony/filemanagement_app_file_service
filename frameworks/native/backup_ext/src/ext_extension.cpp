@@ -24,6 +24,7 @@
 #include <map>
 #include <regex>
 #include <string>
+#include <sys/syscall.h>
 #include <thread>
 #include <tuple>
 #include <unordered_map>
@@ -223,8 +224,10 @@ int32_t BackupExtExtension::CallbackExit([[maybe_unused]] uint32_t code, [[maybe
         case IExtensionIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLES: {
             HILOGE("In COMMAND_GET_INCREMENTAL_FILE_HANDLES");
             {
-                std::unique_lock<std::mutex> lock_(fdListLock_);
-                fdList_.clear();
+                std::unique_lock<std::mutex> lock_(fdListsLock_);
+                auto tid = syscall(SYS_gettid);
+                HILOGI("close fds of tid: %{public}ld", tid);
+                fdLists_[tid].clear();
             }
             break;
         }
@@ -527,25 +530,32 @@ ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::str
 }
  
 void BackupExtExtension::GetIncrementalFileHandlesInner(const std::vector<std::string> &fileNames,
-                                                        std::vector<int> &fdList, std::vector<int32_t> &errCodes)
+                                                        std::vector<int> &fdList, 
+                                                        std::vector<int32_t> &errCodes)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     std::vector<UniqueFd> tmpfdList;
-    for (const auto &fileName : fileNames) {
-        auto [errCode, fdval] = GetIncreFileHandleForUntarNormalVersion(fileName);
-        if (fdval < 0) {
-            HILOGE("GetIncrementalFileHandlesInner fail, fileName:%{public}s, errCode:%{public}d",
-                   GetAnonyPath(fileName).c_str(), errCode);
+    {
+        std::unique_lock<std::mutex> lock_(fileOpenLock_);
+        for (const auto &fileName : fileNames) {
+            auto [errCode, fdval] = GetIncreFileHandleForUntarNormalVersion(fileName);
+            if (fdval < 0) {
+                HILOGE("GetIncrementalFileHandlesInner fail, fileName:%{public}s, errCode:%{public}d",
+                    GetAnonyPath(fileName).c_str(), errCode);
+            }
+            fdList.push_back(fdval.Get());
+            errCodes.push_back(errCode);
+            tmpfdList.push_back(std::move(fdval));
         }
-        fdList.push_back(fdval.Get());
-        errCodes.push_back(errCode);
-        tmpfdList.push_back(std::move(fdval));
     }
     {
-        std::unique_lock<std::mutex> lock_(fdListLock_);
-        fdList_.push_back(std::move(tmpfdList));
+        std::unique_lock<std::mutex> lock_(fdListsLock_);
+        auto tid = syscall(SYS_gettid);
+        HILOGI("save fds of tid: %{public}ld", tid);
+        fdLists_[tid] = std::move(tmpfdList);
     }
 }
+
 
 tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {

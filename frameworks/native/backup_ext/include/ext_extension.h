@@ -555,8 +555,9 @@ private:
     std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并发
     std::mutex updateFileStatLock_;
     AncoRestoreResult ancoRestoreRes_;
-    std::vector<std::vector<UniqueFd>> fdList_;
-    std::mutex fdListLock_;
+    std::map<pid_t, std::vector<UniqueFd>> fdLists_;
+    std::mutex fdListsLock_;
+    std::mutex fileOpenLock_;
 public:
     void SetSupportWithoutTar(bool isSupportWithoutTar);
     bool GetSupportWithoutTar() const;
