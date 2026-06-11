@@ -1488,14 +1488,12 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    auto proxy = backupConnection->GetBackupExtProxy();
-    if (!proxy) {
-        HILOGE("Extension backup Proxy is empty.");
-        backupConnection->DisconnectBackupExtAbility();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+    auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
+    if (!enhanceService) {
+        HILOGE("AppAncoFileReady, enhance service is not loaded");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    proxy->CleanBundleTempDir();
+    enhanceService->RemoveAncoTempDir(bundleName);
     backupConnection->DisconnectBackupExtAbility();
     session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return BError(BError::Codes::OK);

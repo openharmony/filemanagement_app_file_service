@@ -2564,7 +2564,7 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0100, testing::ext::TestSiz
 /**
  * @tc.number: SUB_Service_CleanBundleTempDir_0200
  * @tc.name: SUB_Service_CleanBundleTempDir_0200
- * @tc.desc: 测试 CleanBundleTempDir 的正常/异常分支
+ * @tc.desc: 测试 CleanBundleTempDir 的正常分支
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -2583,10 +2583,12 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0200, testing::ext::TestSiz
         EXPECT_CALL(*token, VerifyAccessToken(_, _))
             .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
-        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
-        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EXPECT_CALL(*mockEnhanceService, RemoveAncoTempDir(bundleName)).WillOnce(Return());
         auto res = service->CleanBundleTempDir(bundleName);
         EXPECT_EQ(res, BError(BError::Codes::OK).GetCode());
     } catch (...) {
@@ -2598,7 +2600,7 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0200, testing::ext::TestSiz
 /**
  * @tc.number: SUB_Service_CleanBundleTempDir_0300
  * @tc.name: SUB_Service_CleanBundleTempDir_0300
- * @tc.desc: 测试 CleanBundleTempDir 的正常/异常分支
+ * @tc.desc: 测试 CleanBundleTempDir enhanceService为空的情况
  * @tc.size: MEDIUM
  * @tc.type: FUNC
  * @tc.level Level 1
@@ -2617,14 +2619,17 @@ HWTEST_F(ServiceTest, SUB_Service_CleanBundleTempDir_0300, testing::ext::TestSiz
         EXPECT_CALL(*token, VerifyAccessToken(_, _))
             .WillOnce(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(wptr(connectPtr)));
-        EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(nullptr));
         EXPECT_CALL(*connect, IsExtAbilityConnected()).WillOnce(Return(true));
-        EXPECT_CALL(*connect, DisconnectBackupExtAbility()).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetScenario()).WillRepeatedly(Return(IServiceReverseType::Scenario::UNDEFINED));
+        EXPECT_CALL(*connect, ConnectBackupExtAbility(_, _, _))
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
+        EnhanceServiceManager::GetInstance().service_ = nullptr;
         auto res = service->CleanBundleTempDir(bundleName);
+        EnhanceServiceManager::GetInstance().service_ = mockEnhanceService;
         EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceTest-an exception occurred by CleanBundleTempDir";
     }
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_CleanBundleTempDir_0300";
 }
