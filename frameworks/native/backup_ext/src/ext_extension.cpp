@@ -530,8 +530,7 @@ ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::str
 }
  
 void BackupExtExtension::GetIncrementalFileHandlesInner(const std::vector<std::string> &fileNames,
-                                                        std::vector<int> &fdList, 
-                                                        std::vector<int32_t> &errCodes)
+                                                        std::vector<int> &fdList, std::vector<int32_t> &errCodes)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     std::vector<UniqueFd> tmpfdList;
