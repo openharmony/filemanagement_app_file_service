@@ -353,6 +353,14 @@ const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const uint64_t FDSAN_EXT_TAG = 0xD004303;
 const uint64_t FDSAN_UTIL_TAG = 0xD004305;
 const int32_t MAX_PATH_LEN = 4096;
+
+static inline bool CheckBundlePermissions(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        return false;
+    }
+    return bundleName == BUNDLE_MEDIAL_DATA || bundleName == BUNDLE_FILE_MANAGER;
+}
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H
