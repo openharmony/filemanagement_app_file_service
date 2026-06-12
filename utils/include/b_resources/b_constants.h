@@ -235,6 +235,16 @@ static inline std::string GetBundleBackupDir(int32_t userId, std::string bundleN
     return str;
 }
 
+static inline std::string GetAncoRestoreDir(const std::string &bundleName)
+{
+    std::string str;
+    str.append(PATH_FILEMANAGE_BACKUP_HOME_ANCO);
+    str.append(BACKSLASH);
+    str.append(bundleName);
+    str.append(SA_BUNDLE_BACKUP_RESTORE);
+    return str;
+}
+
 constexpr uint32_t APP_BASE_PATH_DEPTH = 4;
 
 // 备份恢复配置文件暂存路径

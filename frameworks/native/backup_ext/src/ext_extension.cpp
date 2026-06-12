@@ -112,7 +112,7 @@ static string GetRestoreTempPath(const string &bundleName, const string &hashNam
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
         if (StringUtils::IsAncoFile(hashName)) {
-            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            path = BConstants::GetAncoRestoreDir(bundleName);
         } else {
             if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
                 string str = string("Failed to create .backup folder.").append(std::generic_category().message(errno));
@@ -123,7 +123,7 @@ static string GetRestoreTempPath(const string &bundleName, const string &hashNam
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
         path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         if (StringUtils::IsAncoFile(hashName)) {
-            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            path = BConstants::GetAncoRestoreDir(bundleName);
         }
     }
     return path;
@@ -343,47 +343,31 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForSpec
     return { errCode, move(fd), move(reportFd) };
 }
 
-static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string &bundleName, std::string &tarName)
+static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string &bundleName, std::string &fullPath)
 {
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
         if (StringUtils::IsAncoFile(fileName)) {
-            if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).data(), S_IRWXU) && errno != EEXIST) {
-                string errMsg =
-                    string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-                HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
-                return errno;
-            }
-            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            path = BConstants::GetAncoRestoreDir(bundleName);
         } else {
-            if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
-                string errMsg =
-                    string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-                HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
-                return errno;
-            }
             path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         }
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
-        path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         if (StringUtils::IsAncoFile(fileName)) {
-            if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).data(), S_IRWXU) && errno != EEXIST) {
-                string errMsg =
-                    string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-                HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
-                return errno;
-            }
-            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            path = BConstants::GetAncoRestoreDir(bundleName);
+        } else {
+            path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         }
     }
-    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-        string errMsg =
-            string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-        HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
-        return errno;
+    try {
+        std::filesystem::create_directories(path);
+    } catch (const std::filesystem::filesystem_error &e) {
+        HILOGE("fail to create dir: %{public}s, code: %{public}d, msg: %{public}s", GetAnonyPath(path).c_str(),
+               e.code().value(), e.what());
+        return e.code().value();
     }
-    tarName = path + fileName;
-    HILOGD("GetIncrementalFileHandlePath tarName is %{public}s", GetAnonyPath(tarName).c_str());
+    fullPath = path + fileName;
+    HILOGD("GetIncrementalFileHandlePath, fullPath: %{public}s", fullPath.c_str());
     return ERR_OK;
 }
 
@@ -1198,8 +1182,7 @@ int BackupExtExtension::DoIncrementalRestore()
     for (const auto &item : fileSet) { // 处理要解压的tar文件
         err = ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath);
     }
-    if (tempPath == std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO)
-        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) {
+    if (tempPath == BConstants::GetAncoRestoreDir(bundleName_)) {
         auto [ancoTarFiles, ancoTarFileSizes, ancoTarFileNames] = ancoTarInfo;
         auto errCode = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
         if (errCode != ERR_OK) {
@@ -1252,7 +1235,7 @@ ErrCode BackupExtExtension::ProcessTarFile(const std::string& item, const std::v
             return ERR_INVALID_VALUE;
         }
         unordered_map<string, struct ReportFileInfo> result;
-        if (path == string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) {
+        if (path == BConstants::GetAncoRestoreDir(bundleName_)) {
             ancoTarFiles.push_back(tarName);
             ancoTarFileSizes.push_back(tarFileSize);
             ancoTarFileNames.push_back(item);
@@ -2093,9 +2076,7 @@ void BackupExtExtension::DoClearInner()
                 string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         }
         AncoBackupHelper::DestroyAncoBackupTask();
-        if (bundleName_.compare(MEDIA_LIBRARY_BUNDLE_NAME) == 0 || bundleName_.compare(FILE_MANAGER_BUNDLE_NAME) == 0) {
-            AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
-        }
+        AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
     } catch (...) {
         HILOGE("Failed to clear");
     }
