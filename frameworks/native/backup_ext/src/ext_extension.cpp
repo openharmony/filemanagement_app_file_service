@@ -112,7 +112,7 @@ static string GetRestoreTempPath(const string &bundleName, const string &hashNam
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
         if (StringUtils::IsAncoFile(hashName)) {
-            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            path = BConstants::GetAncoRestoreDir(bundleName);
         } else {
             if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
                 string str = string("Failed to create .backup folder.").append(std::generic_category().message(errno));
@@ -123,7 +123,7 @@ static string GetRestoreTempPath(const string &bundleName, const string &hashNam
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
         path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         if (StringUtils::IsAncoFile(hashName)) {
-            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            path = BConstants::GetAncoRestoreDir(bundleName);
         }
     }
     return path;
@@ -343,47 +343,31 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForSpec
     return { errCode, move(fd), move(reportFd) };
 }
 
-static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string &bundleName, std::string &tarName)
+static ErrCode GetIncrementalFileHandlePath(const string &fileName, const string &bundleName, std::string &fullPath)
 {
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
         if (StringUtils::IsAncoFile(fileName)) {
-            if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).data(), S_IRWXU) && errno != EEXIST) {
-                string errMsg =
-                    string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-                HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
-                return errno;
-            }
-            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            path = BConstants::GetAncoRestoreDir(bundleName);
         } else {
-            if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).data(), S_IRWXU) && errno != EEXIST) {
-                string errMsg =
-                    string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-                HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
-                return errno;
-            }
             path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         }
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
-        path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         if (StringUtils::IsAncoFile(fileName)) {
-            if (mkdir(string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).data(), S_IRWXU) && errno != EEXIST) {
-                string errMsg =
-                    string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-                HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
-                return errno;
-            }
-            path = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+            path = BConstants::GetAncoRestoreDir(bundleName);
+        } else {
+            path = string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
         }
     }
-    if (mkdir(path.data(), S_IRWXU) && errno != EEXIST) {
-        string errMsg =
-            string("Failed to create .backup folder. ").append(std::generic_category().message(errno));
-        HILOGE("%{public}s, errno = %{public}d", errMsg.c_str(), errno);
-        return errno;
+    try {
+        std::filesystem::create_directories(path);
+    } catch (const std::filesystem::filesystem_error &e) {
+        HILOGE("fail to create dir: %{public}s, code: %{public}d, msg: %{public}s", GetAnonyPath(path).c_str(),
+               e.code().value(), e.what());
+        return e.code().value();
     }
-    tarName = path + fileName;
-    HILOGD("GetIncrementalFileHandlePath tarName is %{public}s", GetAnonyPath(tarName).c_str());
+    fullPath = path + fileName;
+    HILOGD("GetIncrementalFileHandlePath, fullPath: %{public}s", fullPath.c_str());
     return ERR_OK;
 }
 
@@ -1039,8 +1023,10 @@ void BackupExtExtension::DoPacket()
     if (fileCount > 0) {
         DoPacketOnce(packFiles, tarPath, reportCb, totalTarUs);
     }
-    uint64_t ancoSmallFileCount;
-    AncoBackupHelper::StartAncoPacket(ancoSmallFileCount);
+    uint64_t ancoSmallFileCount = 0;
+    if (BConstants::CheckBundlePermissions(bundleName_)) {
+        AncoBackupHelper::StartAncoPacket(ancoSmallFileCount);
+    }
     appStatistic_->smallFileCount_ += ancoSmallFileCount;
     appStatistic_->tarSpend_ = static_cast<uint32_t>(totalTarUs / MS_TO_US);
     HILOGI("TarSpend: %{public}u ms", appStatistic_->tarSpend_);
@@ -1063,7 +1049,9 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
     BDir::PreDealExcludes(excludes);
     PathHasEl3OrEl4(expandIncludes, excludes);
-    AncoBackupHelper::FilterAndSaveBackupPaths(expandIncludes, compatibleIncludes, excludes);
+    if (BConstants::CheckBundlePermissions(bundleName_)) {
+        AncoBackupHelper::FilterAndSaveBackupPaths(expandIncludes, compatibleIncludes, excludes);
+    }
     // 扫描文件计算数据量
     appStatistic_->scanFileSpend_.Start();
     AdvancedScanOption scanOption;
@@ -1071,11 +1059,16 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     scanOption.restoreTempPath = GetRestoreTempPath(bundleName_);
     auto [errCode, bigFileSize, smallFileSize] =
         BDir::ScanAllDirs(expandIncludes, compatibleIncludes, excludes, scanOption);
-    auto [aErrCode, aBigFileSize, aSmallFileSize] = AncoBackupHelper::StartAncoScanAllDirs();
-    bigFileSize += aBigFileSize;
-    smallFileSize += aSmallFileSize;
+    if (BConstants::CheckBundlePermissions(bundleName_)) {
+        auto [aErrCode, aBigFileSize, aSmallFileSize] = AncoBackupHelper::StartAncoScanAllDirs();
+        bigFileSize += aBigFileSize;
+        smallFileSize += aSmallFileSize;
+        if (errCode == ERR_OK) {
+            errCode = aErrCode;
+        }
+    }
     appStatistic_->scanFileSpend_.End();
-    if (errCode != 0 || aErrCode != 0) {
+    if (errCode != 0) {
         HILOGE("scan dirs fail, err=%{public}d", errCode);
     }
     appStatistic_->bigFileSize_ = static_cast<uint64_t>(bigFileSize);
@@ -1198,8 +1191,7 @@ int BackupExtExtension::DoIncrementalRestore()
     for (const auto &item : fileSet) { // 处理要解压的tar文件
         err = ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath);
     }
-    if (tempPath == std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO)
-        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) {
+    if (BConstants::CheckBundlePermissions(bundleName_) && tempPath == BConstants::GetAncoRestoreDir(bundleName_)) {
         auto [ancoTarFiles, ancoTarFileSizes, ancoTarFileNames] = ancoTarInfo;
         auto errCode = AncoIncrementalRestoreHelper::AddAncoTars(ancoTarFiles, ancoTarFileSizes, ancoTarFileNames);
         if (errCode != ERR_OK) {
@@ -1252,7 +1244,7 @@ ErrCode BackupExtExtension::ProcessTarFile(const std::string& item, const std::v
             return ERR_INVALID_VALUE;
         }
         unordered_map<string, struct ReportFileInfo> result;
-        if (path == string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE)) {
+        if (path == BConstants::GetAncoRestoreDir(bundleName_)) {
             ancoTarFiles.push_back(tarName);
             ancoTarFileSizes.push_back(tarFileSize);
             ancoTarFileNames.push_back(item);
@@ -1284,7 +1276,9 @@ void BackupExtExtension::AsyncTaskBackup(const string config)
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         try {
-            AncoBackupHelper::CreateAncoBackupTask(obj);
+            if (BConstants::CheckBundlePermissions(ptr->bundleName_)) {
+                AncoBackupHelper::CreateAncoBackupTask(obj);
+            }
             ptr->ScanAllDirsTask(config);
             ptr->DoPacket(); // 关注点：大文件的传输如果速度较慢，会导致tar包挤压，手机空间会有所增加
             ScanFileSingleton::GetInstance().SetCompletedFlag(true);
@@ -1648,16 +1642,10 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
     HILOGI("End Restore Big Files");
 }
 
-bool BackupExtExtension::NeedAncoRestore() const
-{
-    return bundleName_ == MEDIA_LIBRARY_BUNDLE_NAME ||
-           bundleName_ == FILE_MANAGER_BUNDLE_NAME;
-}
-
 void BackupExtExtension::ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath,
     const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
 {
-    if (!NeedAncoRestore()) {
+    if (!BConstants::CheckBundlePermissions(bundleName_)) {
         return;
     }
     
@@ -1857,7 +1845,9 @@ void BackupExtExtension::AsyncTaskIncrementalRestore()
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
         BExcepUltils::BAssert(ptr->extension_, BError::Codes::EXT_INVAL_ARG, "Extension handle have been released");
         try {
-            AncoIncrementalRestoreHelper::CreateAncoRestoreTask(obj);
+            if (BConstants::CheckBundlePermissions(ptr->bundleName_)) {
+                AncoIncrementalRestoreHelper::CreateAncoRestoreTask(obj);
+            }
             int ret = ptr->DealIncreRestoreBigAndTarFile();
             if (ret == ERR_OK) {
                 HILOGI("after extra, do incremental restore.");
@@ -2092,8 +2082,8 @@ void BackupExtExtension::DoClearInner()
             ForceRemoveDirectoryBMS(
                 string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
         }
-        AncoBackupHelper::DestroyAncoBackupTask();
-        if (bundleName_.compare(MEDIA_LIBRARY_BUNDLE_NAME) == 0 || bundleName_.compare(FILE_MANAGER_BUNDLE_NAME) == 0) {
+        if (BConstants::CheckBundlePermissions(bundleName_)) {
+            AncoBackupHelper::DestroyAncoBackupTask();
             AncoIncrementalRestoreHelper::DestroyAncoRestoreTask();
         }
     } catch (...) {

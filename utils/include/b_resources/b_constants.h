@@ -235,6 +235,16 @@ static inline std::string GetBundleBackupDir(int32_t userId, std::string bundleN
     return str;
 }
 
+static inline std::string GetAncoRestoreDir(const std::string &bundleName)
+{
+    std::string str;
+    str.append(PATH_FILEMANAGE_BACKUP_HOME_ANCO);
+    str.append(BACKSLASH);
+    str.append(bundleName);
+    str.append(SA_BUNDLE_BACKUP_RESTORE);
+    return str;
+}
+
 constexpr uint32_t APP_BASE_PATH_DEPTH = 4;
 
 // 备份恢复配置文件暂存路径
@@ -343,6 +353,14 @@ const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const uint64_t FDSAN_EXT_TAG = 0xD004303;
 const uint64_t FDSAN_UTIL_TAG = 0xD004305;
 const int32_t MAX_PATH_LEN = 4096;
+
+static inline bool CheckBundlePermissions(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        return false;
+    }
+    return bundleName == BUNDLE_MEDIAL_DATA || bundleName == BUNDLE_FILE_MANAGER;
+}
 } // namespace OHOS::FileManagement::Backup::BConstants
 
 #endif // OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H
