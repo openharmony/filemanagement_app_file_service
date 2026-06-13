@@ -730,7 +730,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetRestoreTempPath_Test_0001, testin
     std::string hashName = "file_anco";
     std::string hashName2 = "file.txt";
     EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName),
-        string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+        BConstants::GetAncoRestoreDir(BConstants::BUNDLE_FILE_MANAGER));
     EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName2),
         string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
     EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName2),
@@ -758,7 +758,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetRestoreTempPath_Test_0002, testin
     std::string hashName = "file_anco";
     std::string hashName2 = "file.txt";
     EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName),
-        string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+        BConstants::GetAncoRestoreDir(BConstants::BUNDLE_FILE_MANAGER));
     EXPECT_EQ(GetRestoreTempPath(BConstants::BUNDLE_FILE_MANAGER, hashName2),
         string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetRestoreTempPath_Test_0002";
@@ -776,70 +776,16 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetRestoreTempPath_Test_0002, testin
 HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetIncrementalFileHandlePath_Test_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetIncrementalFileHandlePath_Test_0000";
-    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Return(ERR_OK));
 
     const string fileName = "1.txt";
     const string fileName2 = "test_anco";
-    string tarName = "2.tar";
-    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, tarName), ERR_OK);
-    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
-    EXPECT_EQ(GetIncrementalFileHandlePath(fileName2, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
-    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, tarName), ERR_OK);
+    string fullPath;
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, fullPath), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, fullPath), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName2, BConstants::BUNDLE_FILE_MANAGER, fullPath), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, fullPath), ERR_OK);
+    EXPECT_EQ(GetIncrementalFileHandlePath(fileName2, BConstants::BUNDLE_MEDIAL_DATA, fullPath), ERR_OK);
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetIncrementalFileHandlePath_Test_0000";
-}
-
-/**
- * @tc.number: Ext_Extension_GetIncrementalFileHandlePath_Test_0001
- * @tc.name: Ext_Extension_GetIncrementalFileHandlePath_Test_0001
- * @tc.desc: 测试 GetIncrementalFileHandlePath - FAILURE
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetIncrementalFileHandlePath_Test_0001, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetIncrementalFileHandlePath_Test_0001";
-    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Invoke([&](const char *pathname, mode_t mode) {
-        errno = ENOENT;
-        return -1;
-    }));
-
-    const string fileName = "1.txt";
-    const string fileName2 = "test_anco";
-    string tarName = "2.tar";
-    EXPECT_NE(GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, tarName), ERR_OK);
-    EXPECT_NE(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
-    EXPECT_NE(GetIncrementalFileHandlePath(fileName2, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
-    EXPECT_NE(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, tarName), ERR_OK);
-    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetIncrementalFileHandlePath_Test_0001";
-}
-
-/**
- * @tc.number: Ext_Extension_GetIncrementalFileHandlePath_Test_0002
- * @tc.name: Ext_Extension_GetIncrementalFileHandlePath_Test_0002
- * @tc.desc: 测试 GetIncrementalFileHandlePath - SUCCESS
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I9P3Y3
- */
-HWTEST_F(ExtExtensionNewTest, Ext_Extension_GetIncrementalFileHandlePath_Test_0002, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_GetIncrementalFileHandlePath_Test_0002";
-    EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Invoke([&](const char *pathname, mode_t mode) {
-        errno = EEXIST;
-        return -1;
-    }));
-
-    const string fileName = "1.txt";
-    const string fileName2 = "test_anco";
-    string tarName = "2.tar";
-    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, tarName), ERR_OK);
-    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
-    EXPECT_EQ(GetIncrementalFileHandlePath(fileName2, BConstants::BUNDLE_FILE_MANAGER, tarName), ERR_OK);
-    EXPECT_EQ(GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, tarName), ERR_OK);
-    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_GetIncrementalFileHandlePath_Test_0002";
 }
 
 /**

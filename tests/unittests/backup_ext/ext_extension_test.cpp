@@ -475,8 +475,7 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1000, testing::ext::TestSize.Level
         std::string bundleName = BConstants::BUNDLE_FILE_MANAGER;
         std::string hashName = "file_anco";
         auto ret = GetRestoreTempPath(bundleName, hashName);
-        EXPECT_EQ(ret, string(BConstants::PATH_FILEMANAGE_BACKUP_HOME_ANCO)
-            .append(BConstants::SA_BUNDLE_BACKUP_RESTORE));
+        EXPECT_EQ(ret, BConstants::GetAncoRestoreDir(bundleName));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
@@ -526,9 +525,9 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1201, testing::ext::TestSize.Level
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_1201";
     try {
         const string fileName = "test_anco";
-        string tarName = "2.tar";
-        auto ret = GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName);
-        EXPECT_NE(ret, ERR_OK);
+        string fullPath;
+        auto ret = GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, fullPath);
+        EXPECT_EQ(ret, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
