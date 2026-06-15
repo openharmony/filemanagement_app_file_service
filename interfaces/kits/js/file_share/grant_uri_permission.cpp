@@ -230,7 +230,7 @@ namespace ModuleFileShare {
             uriPermInfo.mode = GetModeFromFlag(flag);
         } else if (NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_string)) {
             auto [succFlag, flag, lenFlag] = NVal(env, funcArg[NARG_POS::THIRD]).ToUTF8String();
-            if (!flag) {
+            if (!succFlag) {
                 LOGE("FileShare::GetJSArgs get flag parameter failed!");
                 NError(EINVAL).ThrowErr(env);
                 return false;
