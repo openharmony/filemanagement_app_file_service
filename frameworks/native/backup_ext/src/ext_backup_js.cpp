@@ -573,7 +573,7 @@ ErrCode ExtBackupJs::OnBackup(function<void(ErrCode, std::string)> callback,
 {
     HILOGI("BackupExtensionAbility(JS) OnBackup ex");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-        "The app does not provide the onBackup interface.");
+        "jsObj_(std::unique_ptr<NativeReference>) is null.");
     BExcepUltils::BAssert(callback, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnBackup callback is nullptr.");
     BExcepUltils::BAssert(callbackEx, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnBackup callbackEx is nullptr.");
     callExtDefaultFunc_.store(false);
@@ -666,7 +666,7 @@ ErrCode ExtBackupJs::OnRestore(function<void(ErrCode, std::string)> callback,
 {
     HILOGI("BackupExtensionAbility(JS) OnRestore.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-        "The app does not provide the onRestore interface.");
+        "jsObj_(std::unique_ptr<NativeReference>) is null.");
     BExcepUltils::BAssert(callback, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnRestore callback is nullptr.");
     BExcepUltils::BAssert(callbackEx, BError::Codes::EXT_BROKEN_FRAMEWORK, "OnRestore callbackEx is nullptr.");
     callExtDefaultFunc_.store(false);
@@ -758,7 +758,7 @@ ErrCode ExtBackupJs::GetBackupInfo(std::function<void(ErrCode, const std::string
 {
     HILOGI("BackupExtensionAbility(JS) GetBackupInfo begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the GetBackupInfo interface.");
+                          "jsObj_(std::unique_ptr<NativeReference>) is null.");
     callbackInfoBackup_ = std::make_shared<CallbackInfoBackup>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callBackInfo {callbackInfoBackup_}](napi_env env,
         napi_value result) -> bool {
@@ -988,7 +988,7 @@ ErrCode ExtBackupJs::OnProcess(std::function<void(ErrCode, const std::string)> c
 {
     HILOGI("BackupExtensionAbility(JS) OnProcess begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the OnProcess interface.");
+                          "jsObj_(std::unique_ptr<NativeReference>) is null");
     onProcessCallback_ = std::make_shared<OnProcessCallBackInfo>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callBackInfo {onProcessCallback_}](napi_env env,
         napi_value result) -> bool {
@@ -1022,7 +1022,7 @@ ErrCode ExtBackupJs::OnRelease(std::function<void(ErrCode, const std::string)> c
 {
     HILOGI("BackupExtensionAbility(JS) OnRelease begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the OnRelease interface.");
+                          "jsObj_(std::unique_ptr<NativeReference>) is null");
     scenario_ = scenario;
     onReleaseCallback_ = std::make_shared<CallbackInfo>(callback);
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfo {onReleaseCallback_}](napi_env env,
@@ -1101,7 +1101,7 @@ ErrCode ExtBackupJs::GetBackupCompatibilityInfo(std::function<void(ErrCode, cons
 {
     HILOGI("BackupExtensionAbility(JS) GetBackupCompatibilityInfo begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the GetBackupCompatibilityInfo interface.");
+                          "jsObj_(std::unique_ptr<NativeReference>) is null.");
     extInfo_ = extInfo;
     getComInfoCallbackEx_ = std::make_shared<CallbackInfoEx>(callbackEx);
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {getComInfoCallbackEx_}](napi_env env,
@@ -1142,7 +1142,7 @@ ErrCode ExtBackupJs::GetRestoreCompatibilityInfo(std::function<void(ErrCode, con
 {
     HILOGI("BackupExtensionAbility(JS) GetRestoreCompatibilityInfo begin.");
     BExcepUltils::BAssert(jsObj_, BError::Codes::EXT_BROKEN_FRAMEWORK,
-                          "The app does not provide the GetRestoreCompatibilityInfo interface.");
+                          "jsObj_(std::unique_ptr<NativeReference>) is null.");
     extInfo_ = extInfo;
     getComInfoCallbackEx_ = std::make_shared<CallbackInfoEx>(callbackEx);
     auto retParser = [jsRuntime {&jsRuntime_}, callbackInfoEx {getComInfoCallbackEx_}](napi_env env,
