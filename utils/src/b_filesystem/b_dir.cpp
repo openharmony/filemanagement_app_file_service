@@ -62,7 +62,7 @@ static bool IsInGroup(gid_t targetGid)
         for (int i = 0; i < ngroups; i++) {
             if (smallGroups[i] == targetGid) {
                 return true;
-            }    
+            }
         }
         return false;
     }
