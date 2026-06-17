@@ -81,7 +81,7 @@ static bool IsInGroup(gid_t targetGid)
     for (int i = 0; i < ngroups; i++) {
         if (largeGroups[i] == targetGid) {
             return true;
-        }    
+        }
     }
     return false;
 }
@@ -403,7 +403,6 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backup
     stack<string> dirStack;
     dirStack.push(backupPath);
     if (!CheckPermission(backupPath)) {
-        HILOGE("Permission check fail, path: %{public}s", GetAnonyPath(backupPath).c_str());
         return {ERR_OK, 0, 0};
     }
     while (!dirStack.empty()) {
