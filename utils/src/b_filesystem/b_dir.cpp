@@ -48,43 +48,6 @@ using namespace std;
 const size_t TOP_ELE = 0;
 const std::string APP_DATA_DIR = BConstants::PATH_PUBLIC_HOME +
     BConstants::PATH_APP_DATA + BConstants::FILE_SEPARATOR_CHAR;
-constexpr int MAX_SUPPLEMENTARY_GROUPS = 64;
-
-static bool IsInGroup(gid_t targetGid)
-{
-    if (getegid() == targetGid) {
-        return true;
-    }
-
-    gid_t smallGroups[MAX_SUPPLEMENTARY_GROUPS];
-    int ngroups = getgroups(MAX_SUPPLEMENTARY_GROUPS, smallGroups);
-    if (ngroups >= 0 && ngroups <= MAX_SUPPLEMENTARY_GROUPS) {
-        for (int i = 0; i < ngroups; i++) {
-            if (smallGroups[i] == targetGid) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    int maxGroups = getgroups(0, nullptr);
-    if (maxGroups <= 0) {
-        return false;
-    }
-
-    std::vector<gid_t> largeGroups(maxGroups);
-    ngroups = getgroups(largeGroups.size(), largeGroups.data());
-    if (ngroups <= 0) {
-        return false;
-    }
-
-    for (int i = 0; i < ngroups; i++) {
-        if (largeGroups[i] == targetGid) {
-            return true;
-        }
-    }
-    return false;
-}
 
 static bool CheckPermission(const std::string &path)
 {
@@ -93,33 +56,10 @@ static bool CheckPermission(const std::string &path)
         return false;
     }
 
-    uid_t euid = geteuid();
-    if (euid == 0) {
-        return true;
+    if ((st.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) == 0) {
+        return false;
     }
-    bool isDir = S_ISDIR(st.st_mode);
-
-    if (euid == st.st_uid) {
-        if (isDir) {
-            return (st.st_mode & S_IRUSR) && (st.st_mode & S_IXUSR);
-        } else {
-            return st.st_mode & S_IRUSR;
-        }
-    }
-
-    if (IsInGroup(st.st_gid)) {
-        if (isDir) {
-            return (st.st_mode & S_IRGRP) && (st.st_mode & S_IXGRP);
-        } else {
-            return st.st_mode & S_IRGRP;
-        }
-    }
-
-    if (isDir) {
-        return (st.st_mode & S_IROTH) && (st.st_mode & S_IXOTH);
-    } else {
-        return st.st_mode & S_IROTH;
-    }
+    return true;
 }
 
 static bool IsEmptyDirectory(const string &path)
