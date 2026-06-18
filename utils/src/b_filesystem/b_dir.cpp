@@ -342,9 +342,6 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backup
     int64_t smallFileSize = 0;
     stack<string> dirStack;
     dirStack.push(backupPath);
-    if (!CheckPermission(backupPath)) {
-        return {ERR_OK, 0, 0};
-    }
     while (!dirStack.empty()) {
         auto currentPath = dirStack.top();
         dirStack.pop();
@@ -369,6 +366,9 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backup
                 continue;
             }
             std::string filePath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
+            if (!CheckPermission(filePath)) {
+                continue;
+            }
             if (ptr->d_type == DT_REG) {
                 ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes, option);
             } else if (ptr->d_type == DT_DIR) {
