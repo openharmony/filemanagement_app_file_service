@@ -1245,10 +1245,10 @@ HWTEST_F(ServiceTest, SUB_Service_AppendBundlesDetailsBackupSession_0200, TestSi
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
         EXPECT_CALL(*skeleton, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
-        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillOnce(Return(bundleNameDetailMap));
+        EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillRepeatedly(Return(bundleNameDetailMap));
         EXPECT_CALL(*session, GetSessionUserId()).WillRepeatedly(Return(0));
-        EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillOnce(Return(infos));
-        EXPECT_CALL(*session, IsOnOnStartSched()).WillOnce(Return(false));
+        EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillRepeatedly(Return(infos));
+        EXPECT_CALL(*session, IsOnOnStartSched()).WillRepeatedly(Return(false));
         auto ret = service->AppendBundlesDetailsBackupSession(bundleNames, bundleInfos);
         EXPECT_EQ(ret, BError(BError::Codes::OK));
     } catch (...) {

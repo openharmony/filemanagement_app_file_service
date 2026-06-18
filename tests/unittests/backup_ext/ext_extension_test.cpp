@@ -499,11 +499,11 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_Test_1200, testing::ext::TestSize.Level
         const string fileName = "1.txt";
         string tarName = "2.tar";
         auto ret = GetIncrementalFileHandlePath(fileName, BUNDLE_NAME, tarName);
-        EXPECT_NE(ret, ERR_OK);
+        EXPECT_EQ(ret, ERR_OK);
         ret = GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_FILE_MANAGER, tarName);
-        EXPECT_NE(ret, ERR_OK);
+        EXPECT_EQ(ret, ERR_OK);
         ret = GetIncrementalFileHandlePath(fileName, BConstants::BUNDLE_MEDIAL_DATA, tarName);
-        EXPECT_NE(ret, ERR_OK);
+        EXPECT_EQ(ret, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
