@@ -38,6 +38,7 @@ public:
     MOCK_METHOD(ErrCode, StartAncoMove, (const std::string &, int &, AncoRestoreResult &), (override));
     MOCK_METHOD(int, OpenAncoFileReadOnly, (const std::string &));
     MOCK_METHOD(bool, RemoveAncoFile, (const std::string &));
+    MOCK_METHOD(void, RemoveAncoTempDir, (const std::string &));
     MOCK_METHOD(void, GetIncrementalAncoFileHandle, (const std::string &, const std::string &, int &, int &, int &));
     MOCK_METHOD(int32_t, MoveFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
     MOCK_METHOD(int32_t, OpenFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));

@@ -82,6 +82,7 @@ public:
     // fd needs to be released by the caller.
     virtual int OpenAncoFileReadOnly(const std::string &sandboxPath) = 0;
     virtual bool RemoveAncoFile(const std::string &sandboxPath) = 0;
+    virtual void RemoveAncoTempDir(const std::string &bundleName) = 0;
     // fd needs to be released by the caller.
     virtual void GetIncrementalAncoFileHandle(const std::string &bundleName, const std::string &fileName, int &fdVal,
         int &reportFdVal, int &errCode) = 0;
