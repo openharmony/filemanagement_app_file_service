@@ -722,7 +722,7 @@ HWTEST_F(FileShareTest, File_share_IsValidPath_0001, testing::ext::TestSize.Leve
     GTEST_LOG_(INFO) << "FileShareTest-begin File_share_IsValidPath_0001";
  
     std::string longPath(4097, 'a');
-    result = SandboxHelper::IsValidPath(longPath);
+    bool result = SandboxHelper::IsValidPath(longPath);
     EXPECT_FALSE(result);
  
     result = SandboxHelper::IsValidPath("/data/test");
