@@ -388,9 +388,18 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::DefaultScanAllDirs(const std
     return {finalErrCode, totalBigFileSize, totalSmallFileSize};
 }
 
-static void ProcessDirectoryEntries(const string &currentPath, DIR *dir, off_t size,
-    int64_t &bigFileSize, int64_t &smallFileSize, const vector<string> &excludes,
-    const AdvancedScanOption &option, stack<string> &dirStack)
+struct ScanDirContext {
+    off_t sizeBoundary;
+    int64_t bigFileSize = 0;
+    int64_t smallFileSize = 0;
+    const vector<string> &excludes;
+    AdvancedScanOption option;
+    stack<string> dirStack;
+    int64_t stackCount = 0;
+    std::shared_ptr<ScanResultManager> resultManager;
+};
+
+static void ProcessDirectoryEntries(const string &currentPath, DIR *dir, ScanDirContext &ctx)
 {
     struct dirent *ptr = nullptr;
     while (!!(ptr = readdir(dir))) {
@@ -402,9 +411,10 @@ static void ProcessDirectoryEntries(const string &currentPath, DIR *dir, off_t s
             continue;
         }
         if (ptr->d_type == DT_REG) {
-            ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes, option);
+            ProcessFile({filePath, "", ctx.sizeBoundary}, ctx.bigFileSize, ctx.smallFileSize,
+                ctx.excludes, ctx.option);
         } else if (ptr->d_type == DT_DIR) {
-            dirStack.push(filePath);
+            ctx.dirStack.push(filePath);
         } else {
             HILOGE("Not support file type");
         }
@@ -414,30 +424,26 @@ static void ProcessDirectoryEntries(const string &currentPath, DIR *dir, off_t s
 tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backupPath, const vector<string> &excludes,
     std::shared_ptr<ScanResultManager> &instance, off_t size)
 {
-    AdvancedScanOption option;
-    option.resultManager = instance;
+    ScanDirContext ctx {size, 0, 0, excludes, {}, {}, 0, instance};
+    ctx.option.resultManager = instance;
     HILOGD("scan dir, path: %{public}s", GetAnonyPath(backupPath).c_str());
     if (!filesystem::is_directory(backupPath)) {
         HILOGE("Invalid directory path: %{private}s", backupPath.c_str());
-        return ProcessSingleFile(excludes, backupPath, "", size, option);
+        return ProcessSingleFile(excludes, backupPath, "", size, ctx.option);
     }
-    int64_t bigFileSize = 0;
-    int64_t smallFileSize = 0;
-    stack<string> dirStack;
-    dirStack.push(backupPath);
-    int64_t stackCount = 0;
-    while (!dirStack.empty()) {
-        auto currentPath = dirStack.top();
-        stackCount++;
-        dirStack.pop();
-        if (BDir::IsDirsMatch(excludes, currentPath)) {
+    ctx.dirStack.push(backupPath);
+    while (!ctx.dirStack.empty()) {
+        auto currentPath = ctx.dirStack.top();
+        ctx.stackCount++;
+        ctx.dirStack.pop();
+        if (BDir::IsDirsMatch(ctx.excludes, currentPath)) {
             continue;
         }
-        if (stackCount != 1 && !CheckPermission(currentPath)) {
+        if (ctx.stackCount != 1 && !CheckPermission(currentPath)) {
             continue;
         }
         if (IsEmptyDirectory(currentPath)) {
-            instance->AddSmallFile(StringUtils::PathAddDelimiter(currentPath), 0);
+            ctx.resultManager->AddSmallFile(StringUtils::PathAddDelimiter(currentPath), 0);
             continue;
         }
         unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(currentPath.c_str()), closedir};
@@ -445,9 +451,9 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backup
             HILOGE("openDir fail, path:%{public}s, errno:%{public}d", GetAnonyPath(currentPath).c_str(), errno);
             continue;
         }
-        ProcessDirectoryEntries(currentPath, dir.get(), size, bigFileSize, smallFileSize, excludes, option, dirStack);
+        ProcessDirectoryEntries(currentPath, dir.get(), ctx);
     }
-    return {ERR_OK, bigFileSize, smallFileSize};
+    return {ERR_OK, ctx.bigFileSize, ctx.smallFileSize};
 }
 
 void BDir::PreDealExcludes(std::vector<std::string> &excludes)
