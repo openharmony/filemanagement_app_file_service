@@ -619,7 +619,7 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0012, testing::ext::TestSize.
 HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0013, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0013";
-    std::string fileUri = "file://com.demo.a/data/storage/el2/base/files1/test%20name";
+    std::string fileUri = "file://com.demo.a/a%11%22%33%44%55%66%77%88%99%10%11%12%13%14%15%16%17aa";
     std::string physicalPath;
     int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
     EXPECT_EQ(ret, -EINVAL);
@@ -952,7 +952,7 @@ HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0008, testing::ext::Tes
 HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0009, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetBackupPhysicalPath_0009";
-    std::string fileUri = "file://com.demo.a/data/storage/el2/base/files1/test%20name.txt";
+    std::string fileUri = "file://com.demo.a/a%11%22%33%44%55%66%77%88%99%10%11%12%13%14%15%16%17aa.txt";
     std::string physicalPath;
     int32_t ret = SandboxHelper::GetBackupPhysicalPath(fileUri, "100", physicalPath);
     EXPECT_EQ(ret, -EINVAL);
@@ -1214,7 +1214,7 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalDir_002, testing::ext::TestSize.Le
 HWTEST_F(FileShareTest, File_share_GetPhysicalDir_003, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalDir_003";
-    std::string uri = "file://com.demo.a/data/storage/el2/base/files1/test%20name.txt";
+    std::string uri = "file://com.demo.a/a%11%22%33%44%55%66%77%88%99%10%11%12%13%14%15%16%17aa.txt";
     std::string physicalDir;
     int32_t ret = SandboxHelper::GetPhysicalDir(uri, "100", physicalDir);
     EXPECT_EQ(ret, -EINVAL);
@@ -1271,7 +1271,7 @@ HWTEST_F(FileShareTest, File_share_Decode_0002, testing::ext::TestSize.Level1)
 HWTEST_F(FileShareTest, File_share_Decode_0003, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileShareTest-begin File_share_Decode_0003";
-    std::string encodedUri = "aaaaaaaaaaaaaaaaaa%";
+    std::string encodedUri = "a%11%22%33%44%55%66%77%88%99%10%11%12%13%14%15%16%17aa";
     std::string decoded = SandboxHelper::Decode(encodedUri);
     EXPECT_EQ(decoded, "");
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_Decode_0003";
