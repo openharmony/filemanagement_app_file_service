@@ -540,7 +540,7 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
 bool SandboxHelper::IsValidPath(const std::string &filePath)
 {
     if (filePath.length() > MAX_PATH_LENGTH) {
-        LOGE("The fileUri exceeds maximum allowed length or is null");
+        LOGE("The fileUri exceeds maximum allowed length");
         return false;
     }
     size_t pos = filePath.find(PATH_INVALID_FLAG1);
