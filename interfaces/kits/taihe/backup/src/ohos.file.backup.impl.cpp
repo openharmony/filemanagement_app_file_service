@@ -51,11 +51,13 @@ using IncrementalBackupTime = ::ohos::file::backup::IncrementalBackupTime;
 
 class SessionBackupImpl {
 public:
-    SessionBackupImpl() {
+    SessionBackupImpl()
+    {
         // Don't forget to implement the constructor.
     }
 
-    explicit SessionBackupImpl(uintptr_t callbacks) {
+    explicit SessionBackupImpl(uintptr_t callbacks)
+    {
         ani_env *env = taihe::get_env();
         ani_object callbackObj = reinterpret_cast<ani_object>(callbacks);
         if (env == nullptr) {
@@ -70,8 +72,7 @@ public:
         }
         ani_status status = ANI_OK;
         status = env->GlobalReference_Create(callbackObj, &callbackRef_);
-        if (ANI_OK != status)
-        {
+        if (ANI_OK != status) {
             callbackRef_ = nullptr;
             HILOGE(" GlobalReference_Create failed");
             return;
@@ -98,21 +99,21 @@ public:
         }, errMsg, errCode);
     }
 
-    ~SessionBackupImpl() {
-        if (callbackRef_)
-        {
+    ~SessionBackupImpl()
+    {
+        if (callbackRef_) {
             ani_env *env = taihe::get_env();
             ani_status status = ANI_OK;
             status = env->GlobalReference_Delete(callbackRef_);
-            if (ANI_OK != status)
-            {
+            if (ANI_OK != status) {
                 HILOGE(" GlobalReference_Delete failed");
             }
             callbackRef_ = nullptr;
         }
     }
 
-    ::ohos::file::backup::FileData GetLocalCapabilitiesSync() {
+    ::ohos::file::backup::FileData GetLocalCapabilitiesSync()
+    {
         ::ohos::file::backup::FileData data;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -130,7 +131,8 @@ public:
         return data;
     }
 
-    void GetBackupDataSizeSync(bool isPreciseScan, ::taihe::array_view<IncrementalBackupTime> dataList) {
+    void GetBackupDataSizeSync(bool isPreciseScan, ::taihe::array_view<IncrementalBackupTime> dataList)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -143,8 +145,7 @@ public:
         }
         std::vector<BIncrementalData> bundleNames;
         ::taihe::array<::ohos::file::backup::IncrementalBackupTime> dataListTemp(dataList);
-        for (auto it = dataListTemp.begin(); it != dataListTemp.end(); ++it)
-        {
+        for (auto it = dataListTemp.begin(); it != dataListTemp.end(); ++it) {
             BIncrementalData data;
             data.bundleName = std::string(it->bundleName);
             data.lastIncrementalTime = it->lastIncrementalTime;
@@ -154,7 +155,8 @@ public:
     }
 
     void AppendBundlesSync1(::taihe::array_view<::taihe::string> bundlesToBackup,
-                            ::taihe::optional_view<::taihe::array<::taihe::string>> infos) {
+                            ::taihe::optional_view<::taihe::array<::taihe::string>> infos)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -168,16 +170,13 @@ public:
         std::vector<std::string> bundleNames;
         std::vector<std::string> bundleInfos;
         ::taihe::array<::taihe::string> bundles(bundlesToBackup);
-        for (auto it = bundles.begin(); it != bundles.end(); ++it)
-        {
+        for (auto it = bundles.begin(); it != bundles.end(); ++it) {
             bundleNames.push_back(std::string(*it));
         }
 
-        if (infos.has_value())
-        {
+        if (infos.has_value()) {
             ::taihe::array<::taihe::string> infosTemp = infos.value();
-            for (auto it = infosTemp.begin(); it != infosTemp.end(); ++it)
-            {
+            for (auto it = infosTemp.begin(); it != infosTemp.end(); ++it) {
                 bundleInfos.push_back(std::string(*it));
             }
         }
@@ -185,7 +184,8 @@ public:
         bSessionBackup->AppendBundles(bundleNames, bundleInfos);
     }
 
-    void AppendBundlesSync2(::taihe::array_view<::taihe::string> bundlesToBackup) {
+    void AppendBundlesSync2(::taihe::array_view<::taihe::string> bundlesToBackup)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -199,15 +199,15 @@ public:
 
         std::vector<std::string> bundleNames;
         ::taihe::array<::taihe::string> bundles(bundlesToBackup);
-        for (auto it = bundles.begin(); it != bundles.end(); ++it)
-        {
+        for (auto it = bundles.begin(); it != bundles.end(); ++it) {
             bundleNames.push_back(std::string(*it));
         }
 
         bSessionBackup->AppendBundles(bundleNames);
     }
 
-    void ReleaseSync() {
+    void ReleaseSync()
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -221,7 +221,8 @@ public:
         bSessionBackup->Release();
     }
 
-    int32_t cancel(::taihe::string_view bundleName) {
+    int32_t cancel(::taihe::string_view bundleName)
+    {
         int result = 0;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -237,7 +238,8 @@ public:
         return result;
     }
 
-    bool CleanBundleTempDirSync(::taihe::string_view bundleName) {
+    bool CleanBundleTempDirSync(::taihe::string_view bundleName)
+    {
         bool result = false;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -250,10 +252,9 @@ public:
             return result;
         }
         ErrCode code = bSessionBackup->CleanBundleTempDir(std::string(bundleName));
-        if (BError(BError::Codes::OK) == code)
-        {
+        if (BError(BError::Codes::OK) == code) {
             result = true;
-        }else {
+        } else {
             ::taihe::set_business_error((int32_t)code, "CleanBundleTempDirSync error");
         }
         return result;
@@ -290,11 +291,13 @@ private:
 
 class SessionRestoreImpl {
 public:
-    SessionRestoreImpl() {
+    SessionRestoreImpl()
+    {
         // Don't forget to implement the constructor.
     }
 
-    explicit SessionRestoreImpl(uintptr_t callbacks) {
+    explicit SessionRestoreImpl(uintptr_t callbacks)
+    {
         ani_env *env = taihe::get_env();
         ani_object callbackObj = reinterpret_cast<ani_object>(callbacks);
         if (env == nullptr) {
@@ -309,8 +312,7 @@ public:
         }
         ani_status status = ANI_OK;
         status = env->GlobalReference_Create(callbackObj, &callbackRef_);
-        if (ANI_OK != status)
-        {
+        if (ANI_OK != status) {
             callbackRef_ = nullptr;
             HILOGE(" GlobalReference_Create failed");
             return;
@@ -335,21 +337,21 @@ public:
         }, errMsg, errCode);
     }
 
-    ~SessionRestoreImpl() {
-        if (callbackRef_)
-        {
+    ~SessionRestoreImpl()
+    {
+        if (callbackRef_) {
             ani_env *env = taihe::get_env();
             ani_status status = ANI_OK;
             status = env->GlobalReference_Delete(callbackRef_);
-            if (ANI_OK != status)
-            {
+            if (ANI_OK != status) {
                 HILOGE(" GlobalReference_Delete failed");
             }
             callbackRef_ = nullptr;
         }
     }
 
-    ::ohos::file::backup::FileData GetLocalCapabilitiesSync() {
+    ::ohos::file::backup::FileData GetLocalCapabilitiesSync()
+    {
         ::ohos::file::backup::FileData data;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -368,7 +370,8 @@ public:
     }
 
     void AppendBundlesSync1(int32_t remoteCapabilitiesFd, ::taihe::array_view<::taihe::string> bundlesToBackup,
-                            ::taihe::optional_view<::taihe::array<::taihe::string>> infos) {
+                            ::taihe::optional_view<::taihe::array<::taihe::string>> infos)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -383,16 +386,13 @@ public:
         std::vector<std::string> bundleNames;
         std::vector<std::string> bundleInfos;
         ::taihe::array<::taihe::string> bundles(bundlesToBackup);
-        for (auto it = bundles.begin(); it != bundles.end(); ++it)
-        {
+        for (auto it = bundles.begin(); it != bundles.end(); ++it) {
             bundleNames.push_back(std::string(*it));
         }
 
-        if (infos.has_value())
-        {
+        if (infos.has_value()) {
             ::taihe::array<::taihe::string> infosTemp = infos.value();
-            for (auto it = infosTemp.begin(); it != infosTemp.end(); ++it)
-            {
+            for (auto it = infosTemp.begin(); it != infosTemp.end(); ++it) {
                 bundleInfos.push_back(std::string(*it));
             }
             bIncrementalRestoreSession->AppendBundles(UniqueFd(remoteCapabilitiesFd), bundleNames, bundleInfos);
@@ -401,7 +401,8 @@ public:
         }
     }
 
-    void AppendBundlesSync2(int32_t remoteCapabilitiesFd, ::taihe::array_view<::taihe::string> bundlesToBackup) {
+    void AppendBundlesSync2(int32_t remoteCapabilitiesFd, ::taihe::array_view<::taihe::string> bundlesToBackup)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -415,15 +416,15 @@ public:
 
         std::vector<std::string> bundleNames;
         ::taihe::array<::taihe::string> bundles(bundlesToBackup);
-        for (auto it = bundles.begin(); it != bundles.end(); ++it)
-        {
+        for (auto it = bundles.begin(); it != bundles.end(); ++it) {
             bundleNames.push_back(std::string(*it));
         }
 
         bIncrementalRestoreSession->AppendBundles(UniqueFd(remoteCapabilitiesFd), bundleNames);
     }
 
-    void PublishFileSync(::ohos::file::backup::FileMeta const& fileMeta) {
+    void PublishFileSync(::ohos::file::backup::FileMeta const& fileMeta)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -443,7 +444,8 @@ public:
         bIncrementalRestoreSession->PublishSAFile(fileInfo, UniqueFd(std::atoi(fileName.c_str())));
     }
 
-    void GetFileHandleSync(::ohos::file::backup::FileMeta const& fileMeta) {
+    void GetFileHandleSync(::ohos::file::backup::FileMeta const& fileMeta)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -460,7 +462,8 @@ public:
         bIncrementalRestoreSession->GetFileHandle(bundleName, fileName);
     }
 
-    void ReleaseSync() {
+    void ReleaseSync()
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -474,7 +477,8 @@ public:
         bIncrementalRestoreSession->Release();
     }
 
-    int32_t cancel(::taihe::string_view bundleName) {
+    int32_t cancel(::taihe::string_view bundleName)
+    {
         int result = 0;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -490,7 +494,8 @@ public:
         return result;
     }
 
-    bool CleanBundleTempDirSync(::taihe::string_view bundleName) {
+    bool CleanBundleTempDirSync(::taihe::string_view bundleName)
+    {
         bool result = false;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -503,16 +508,16 @@ public:
             return result;
         }
         ErrCode code = bIncrementalRestoreSession->CleanBundleTempDir(std::string(bundleName));
-        if (BError(BError::Codes::OK) == code)
-        {
+        if (BError(BError::Codes::OK) == code) {
             result = true;
-        }else {
+        } else {
             ::taihe::set_business_error((int32_t)code, "CleanBundleTempDirSync error");
         }
         return result;
     }
 
-    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName, ::taihe::string_view extInfo) {
+    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName, ::taihe::string_view extInfo)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -543,11 +548,13 @@ private:
 
 class IncrementalBackupSessionImpl {
 public:
-    IncrementalBackupSessionImpl() {
+    IncrementalBackupSessionImpl()
+    {
         // Don't forget to implement the constructor.
     }
 
-    explicit IncrementalBackupSessionImpl(uintptr_t callbacks) {
+    explicit IncrementalBackupSessionImpl(uintptr_t callbacks)
+    {
         ani_env *env = taihe::get_env();
         ani_object callbackObj = reinterpret_cast<ani_object>(callbacks);
         if (env == nullptr) {
@@ -562,8 +569,7 @@ public:
         }
         ani_status status = ANI_OK;
         status = env->GlobalReference_Create(callbackObj, &callbackRef_);
-        if (ANI_OK != status)
-        {
+        if (ANI_OK != status) {
             callbackRef_ = nullptr;
             HILOGE(" GlobalReference_Create failed");
             return;
@@ -590,7 +596,8 @@ public:
         }, errMsg, errCode);
     }
 
-    ::ohos::file::backup::FileData GetLocalCapabilitiesSync() {
+    ::ohos::file::backup::FileData GetLocalCapabilitiesSync()
+    {
         ::ohos::file::backup::FileData data;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -610,7 +617,8 @@ public:
         return data;
     }
 
-    void GetBackupDataSizeSync(bool isPreciseScan, ::taihe::array_view<IncrementalBackupTime> dataList) {
+    void GetBackupDataSizeSync(bool isPreciseScan, ::taihe::array_view<IncrementalBackupTime> dataList)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -623,8 +631,7 @@ public:
         }
         std::vector<BIncrementalData> bundleNames;
         ::taihe::array<::ohos::file::backup::IncrementalBackupTime> dataListTemp(dataList);
-        for (auto it = dataListTemp.begin(); it != dataListTemp.end(); ++it)
-        {
+        for (auto it = dataListTemp.begin(); it != dataListTemp.end(); ++it) {
             BIncrementalData data;
             data.bundleName = std::string(it->bundleName);
             data.lastIncrementalTime = it->lastIncrementalTime;
@@ -633,7 +640,8 @@ public:
         bIncrementalBackupSession->GetBackupDataSize(isPreciseScan, bundleNames);
     }
 
-    void AppendBundlesSync(::taihe::array_view<::ohos::file::backup::IncrementalBackupData> bundlesToBackup) {
+    void AppendBundlesSync(::taihe::array_view<::ohos::file::backup::IncrementalBackupData> bundlesToBackup)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -647,19 +655,16 @@ public:
         std::vector<BIncrementalData> backupBundles;
         std::vector<std::string> bundleInfos;
         ::taihe::array<::ohos::file::backup::IncrementalBackupData> bundles(bundlesToBackup);
-        for (auto it = bundles.begin(); it != bundles.end(); ++it)
-        {
+        for (auto it = bundles.begin(); it != bundles.end(); ++it) {
             BIncrementalData data;
             data.bundleName = std::string(it->incrementalBackupTime.bundleName);
             data.lastIncrementalTime = it->incrementalBackupTime.lastIncrementalTime;
             data.manifestFd = it->fileManifestData.manifestFd;
-            if (it->backupParams.parameters.has_value())
-            {
+            if (it->backupParams.parameters.has_value()) {
                 data.backupParameters = std::string(it->backupParams.parameters.value());
             }
 
-            if (it->backupPriority.priority.has_value())
-            {
+            if (it->backupPriority.priority.has_value()) {
                 data.backupPriority = it->backupPriority.priority.value();
             }
             backupBundles.push_back(data);
@@ -668,7 +673,8 @@ public:
     }
 
     void AppendBundlesSync2(::taihe::array_view<::ohos::file::backup::IncrementalBackupData> bundlesToBackup,
-                            ::taihe::array_view<::taihe::string> infos) {
+                            ::taihe::array_view<::taihe::string> infos)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -682,34 +688,31 @@ public:
         std::vector<BIncrementalData> backupBundles;
         std::vector<std::string> bundleInfos;
         ::taihe::array<::ohos::file::backup::IncrementalBackupData> bundles(bundlesToBackup);
-        for (auto it = bundles.begin(); it != bundles.end(); ++it)
-        {
+        for (auto it = bundles.begin(); it != bundles.end(); ++it) {
             BIncrementalData data;
             data.bundleName = std::string(it->incrementalBackupTime.bundleName);
             data.lastIncrementalTime = it->incrementalBackupTime.lastIncrementalTime;
             data.manifestFd = it->fileManifestData.manifestFd;
-            if (it->backupParams.parameters.has_value())
-            {
+            if (it->backupParams.parameters.has_value()) {
                 data.backupParameters = std::string(it->backupParams.parameters.value());
             }
 
-            if (it->backupPriority.priority.has_value())
-            {
+            if (it->backupPriority.priority.has_value()) {
                 data.backupPriority = it->backupPriority.priority.value();
             }
             backupBundles.push_back(data);
         }
 
         ::taihe::array<::taihe::string> infosTemp(infos);
-        for (auto it = infosTemp.begin(); it != infosTemp.end(); ++it)
-        {
+        for (auto it = infosTemp.begin(); it != infosTemp.end(); ++it) {
             bundleInfos.push_back(std::string(*it));
         }
 
         bIncrementalBackupSession->AppendBundles(backupBundles, bundleInfos);
     }
 
-    void ReleaseSync() {
+    void ReleaseSync()
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -723,7 +726,8 @@ public:
         bIncrementalBackupSession->Release();
     }
 
-    int32_t cancel(::taihe::string_view bundleName) {
+    int32_t cancel(::taihe::string_view bundleName)
+    {
         int result = 0;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -739,7 +743,8 @@ public:
         return result;
     }
 
-    bool CleanBundleTempDirSync(::taihe::string_view bundleName) {
+    bool CleanBundleTempDirSync(::taihe::string_view bundleName)
+    {
         bool result = false;
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
@@ -755,13 +760,14 @@ public:
         if (BError(BError::Codes::OK) == code)
         {
             result = true;
-        }else {
+        } else {
             ::taihe::set_business_error((int32_t)code, "CleanBundleTempDirSync error");
         }
         return result;
     }
 
-    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName, ::taihe::string_view extInfo) {
+    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName, ::taihe::string_view extInfo)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -790,7 +796,8 @@ private:
     std::shared_ptr<TaiheGeneralCallbacks> taiheGeneralCallbacks = nullptr;
 };
 
-::taihe::string getBackupVersion() {
+::taihe::string getBackupVersion()
+{
     if (!SAUtils::CheckBackupPermission()) {
         HILOGE("Has not permission!");
         ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -805,7 +812,8 @@ private:
     return ::taihe::string(result);
 }
 
-::ohos::file::backup::FileData GetLocalCapabilitiesSync1() {
+::ohos::file::backup::FileData GetLocalCapabilitiesSync1()
+{
     ::ohos::file::backup::FileData data;
     if (!SAUtils::CheckBackupPermission()) {
         HILOGE("Has not permission!");
@@ -834,7 +842,8 @@ private:
     return data;
 }
 
-FileData GetLocalCapabilitiesSync2(::taihe::array_view<::ohos::file::backup::IncrementalBackupTime> dataList) {
+FileData GetLocalCapabilitiesSync2(::taihe::array_view<::ohos::file::backup::IncrementalBackupTime> dataList)
+{
     ::ohos::file::backup::FileData data;
     if (!SAUtils::CheckBackupPermission()) {
         HILOGE("Has not permission!");
@@ -848,8 +857,7 @@ FileData GetLocalCapabilitiesSync2(::taihe::array_view<::ohos::file::backup::Inc
     }
     std::vector<BIncrementalData> bundleNames;
     ::taihe::array<::ohos::file::backup::IncrementalBackupTime> dataListTemp(dataList);
-    for (auto it = dataListTemp.begin(); it != dataListTemp.end(); ++it)
-    {
+    for (auto it = dataListTemp.begin(); it != dataListTemp.end(); ++it) {
         BIncrementalData data;
         data.bundleName = std::string(it->bundleName);
         data.lastIncrementalTime = it->lastIncrementalTime;
@@ -871,7 +879,8 @@ FileData GetLocalCapabilitiesSync2(::taihe::array_view<::ohos::file::backup::Inc
     return data;
 }
 
-::taihe::string getBackupInfo(::taihe::string_view bundleToBackup) {
+::taihe::string getBackupInfo(::taihe::string_view bundleToBackup)
+{
     if (!SAUtils::CheckBackupPermission()) {
         HILOGE("Has not permission!");
         ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
@@ -903,7 +912,8 @@ FileData GetLocalCapabilitiesSync2(::taihe::array_view<::ohos::file::backup::Inc
     return ::taihe::string(result);
 }
 
-bool updateTimer(::taihe::string_view bundleName, int32_t timeout) {
+bool updateTimer(::taihe::string_view bundleName, int32_t timeout)
+{
     bool result = false;
     if (!SAUtils::CheckBackupPermission()) {
         HILOGE("Has not permission!");
@@ -935,7 +945,8 @@ bool updateTimer(::taihe::string_view bundleName, int32_t timeout) {
     return true;
 }
 
-bool updateSendRate(::taihe::string_view bundleName, int32_t sendRate) {
+bool updateSendRate(::taihe::string_view bundleName, int32_t sendRate)
+{
     bool result = false;
     if (!SAUtils::CheckBackupPermission()) {
         HILOGE("Has not permission!");
@@ -967,19 +978,22 @@ bool updateSendRate(::taihe::string_view bundleName, int32_t sendRate) {
     return true;
 }
 
-::ohos::file::backup::SessionBackup CreateSessionBackup(uintptr_t callbacks) {
+::ohos::file::backup::SessionBackup CreateSessionBackup(uintptr_t callbacks)
+{
     // The parameters in the make_holder function should be of the same type
     // as the parameters in the constructor of the actual implementation class.
     return taihe::make_holder<SessionBackupImpl, ::ohos::file::backup::SessionBackup>(callbacks);
 }
 
-::ohos::file::backup::SessionRestore CreateSessionRestore(uintptr_t callbacks) {
+::ohos::file::backup::SessionRestore CreateSessionRestore(uintptr_t callbacks)
+{
     // The parameters in the make_holder function should be of the same type
     // as the parameters in the constructor of the actual implementation class.
     return taihe::make_holder<SessionRestoreImpl, ::ohos::file::backup::SessionRestore>(callbacks);
 }
 
-::ohos::file::backup::IncrementalBackupSession CreateIncrementalBackupSession(uintptr_t callbacks) {
+::ohos::file::backup::IncrementalBackupSession CreateIncrementalBackupSession(uintptr_t callbacks)
+{
     // The parameters in the make_holder function should be of the same type
     // as the parameters in the constructor of the actual implementation class.
     return taihe::make_holder<IncrementalBackupSessionImpl, ::ohos::file::backup::IncrementalBackupSession>(callbacks);
