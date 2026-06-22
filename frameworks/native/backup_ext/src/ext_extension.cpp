@@ -65,9 +65,6 @@
 #include "tar_file.h"
 #include <filesystem>
 namespace OHOS::FileManagement::Backup {
-const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
-                                 append(BConstants::SA_BUNDLE_BACKUP_BACKUP).
-                                 append(BConstants::EXT_BACKUP_MANAGE);
 const string INDEX_FILE_RESTORE = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                   append(BConstants::SA_BUNDLE_BACKUP_RESTORE).
                                   append(BConstants::EXT_BACKUP_MANAGE);
@@ -676,19 +673,8 @@ ErrCode BackupExtExtension::HandleClear()
     }
 }
 
-ErrCode BackupExtExtension::IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>>& allFiles)
+ErrCode BackupExtExtension::IndexFileReady()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    UniqueFd fd(open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
-    if (fd.Get() < 0) {
-        HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_BACKUP.c_str(), errno);
-        return BError::GetCodeByErrno(errno);
-    }
-    BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(move(fd));
-    auto cache = cachedEntity.Structuralize();
-    cache.SetExtManage(allFiles, isSupportWithoutTar_);
-    cachedEntity.Persist();
-    close(cachedEntity.GetFd().Release());
     int32_t err = 0;
     appStatistic_->manageJsonSize_ = BFile::GetFileSize(INDEX_FILE_BACKUP, err);
     if (err != 0) {

@@ -69,6 +69,23 @@ public:
      */
     std::vector<ExtManageInfo> GetExtManageInfo() const;
 
+    /**
+     * @brief 判断是否是用户自身tar包
+     *
+     * @return bool true-是用户自身tar
+     */
+    static bool CheckUserTar(const std::string &fileName,
+                             struct stat sta,
+                             bool isAncoFile = false,
+                             bool isSupportWithoutTar = false);
+ 
+    /**
+     * @brief 将文件stat信息转换为json内容对象
+     *
+     * @return Json::Value json内容对象
+     */
+    static Json::Value Stat2JsonValue(struct stat sta);
+
 public:
     /**
      * @brief 构造方法，具备T(Json::Value&, std::any)能力的构造函数

@@ -793,22 +793,22 @@ HWTEST_F(BJsonEntityExtManageTest, CheckUserTar_Test_1001, testing::ext::TestSiz
         std::string fileName = "test.tar";
         struct stat mockStat;
         mockStat.st_size = 1024;
-        EXPECT_FALSE(CheckUserTar("", mockStat, false));
+        EXPECT_FALSE(BJsonEntityExtManage::CheckUserTar("", mockStat, false));
 
         fileName = "test.txt";
-        EXPECT_FALSE(CheckUserTar(fileName, mockStat, false));
+        EXPECT_FALSE(BJsonEntityExtManage::CheckUserTar(fileName, mockStat, false));
 
         fileName = "large_file.tar";
         mockStat.st_size = 1024 * 1024 * 1024;
-        EXPECT_FALSE(CheckUserTar(fileName, mockStat, false));
+        EXPECT_FALSE(BJsonEntityExtManage::CheckUserTar(fileName, mockStat, false));
 
         fileName = "test.tar";
         mockStat.st_size = 3 * 1024 * 1024;
-        EXPECT_FALSE(CheckUserTar(fileName, mockStat, false));
+        EXPECT_FALSE(BJsonEntityExtManage::CheckUserTar(fileName, mockStat, false));
 
-        EXPECT_FALSE(CheckUserTar("anco_file.txt", mockStat, true));
+        EXPECT_FALSE(BJsonEntityExtManage::CheckUserTar("anco_file.txt", mockStat, true));
 
-        EXPECT_TRUE(CheckUserTar("anco_file.tar", mockStat, true));
+        EXPECT_TRUE(BJsonEntityExtManage::CheckUserTar("anco_file.tar", mockStat, true));
         
     } catch (...) {
         EXPECT_TRUE(false);

@@ -48,6 +48,9 @@
 #include "b_utils/string_utils.h"
 
 namespace OHOS::FileManagement::Backup {
+const string INDEX_FILE_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME)
+                                     .append(BConstants::SA_BUNDLE_BACKUP_BACKUP)
+                                     .append(BConstants::EXT_BACKUP_MANAGE);
 class BackupExtExtension;
 class AncoBackupCallback : public AncoBackupCallbackStub {
 public:
@@ -144,6 +147,7 @@ public:
         reportOnProcessRetPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         doBackupPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         onReleaseTaskPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        manageJsonFilePool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
         SetStagingPathProperties();
         appStatistic_ = std::make_shared<RadarAppStatistic>();
     }
@@ -155,6 +159,7 @@ public:
         reportOnProcessRetPool_.Stop();
         doBackupPool_.Stop();
         onReleaseTaskPool_.Stop();
+        manageJsonFilePool_.Stop();
         if (callJsOnProcessThread_.joinable()) {
             callJsOnProcessThread_.join();
         }
@@ -478,7 +483,7 @@ private:
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
     void ReportAppStatistic(const std::string &func, ErrCode errCode);
-    ErrCode IndexFileReady(const std::vector<std::shared_ptr<IFileInfo>> &allFiles);
+    ErrCode IndexFileReady();
     // fileInfo cannot be empty
     ErrCode ReportAppFileReady(const std::shared_ptr<IFileInfo> &fileInfo, int &fdNum);
     ErrCode ReportNormalAppFileReady(const string &filename, const string &filePath, bool needDelete = false);
@@ -494,11 +499,16 @@ private:
 
     void ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath, const std::vector<std::string> &ancoTargetPath,
         const std::vector<StatInfo> &ancoStats);
+    bool InitManageJsonFd();
+    void CloseManageJsonFd();
+    void DoAppendFiles(const std::vector<std::shared_ptr<IFileInfo>>& tmpFiles, int &ret, bool isSupportWithoutTar);
+    void WaitforFdAppendComplete(std::vector<std::shared_ptr<IFileInfo>> &files);
     std::string FileInfoToString(std::shared_ptr<IFileInfo> fileInfo);
     std::shared_mutex lock_;
     std::shared_ptr<ExtBackup> extension_;
     std::string backupInfo_;
     OHOS::ThreadPool threadPool_;
+    OHOS::ThreadPool manageJsonFilePool_;
     std::mutex updateSendRateLock_;
     std::condition_variable startSendFdRateCon_;
     std::condition_variable waitSendFdCon_;
@@ -557,6 +567,12 @@ private:
     std::map<pid_t, std::vector<UniqueFd>> fdLists_;
     std::mutex fdListsLock_;
     std::mutex fileOpenLock_;
+    std::condition_variable initManageJsonCon_;
+    std::mutex appendManageJsonLock_;
+    UniqueFd manageJsonFd_;
+    std::mutex manageJsonFdLock_;
+    std::atomic<int> pendingAppendCount_ { 0 };
+    std::atomic<bool> isFirstWrite_ {true};
 public:
     void SetSupportWithoutTar(bool isSupportWithoutTar);
     bool GetSupportWithoutTar() const;

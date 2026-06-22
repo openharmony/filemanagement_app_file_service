@@ -83,8 +83,8 @@ static bool CheckOwnPackTar(const string &fileName)
     return true;
 }
 
-static bool CheckUserTar(
-    const string &fileName, struct stat sta, bool isAncoFile = false, bool isSupportWithoutTar = false)
+bool BJsonEntityExtManage::CheckUserTar(
+    const string &fileName, struct stat sta, bool isAncoFile, bool isSupportWithoutTar)
 {
     if (!isAncoFile && access(fileName.c_str(), F_OK) != 0) {
         HILOGI("file does not exists");
@@ -93,7 +93,7 @@ static bool CheckUserTar(
     return (ExtractFileExt(fileName) == "tar") && CheckBigFile(sta, isSupportWithoutTar);
 }
 
-Json::Value Stat2JsonValue(struct stat sta)
+Json::Value BJsonEntityExtManage::Stat2JsonValue(struct stat sta)
 {
     Json::Value value;
     value["st_size"] = static_cast<int64_t>(sta.st_size);
