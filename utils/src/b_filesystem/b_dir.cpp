@@ -388,6 +388,29 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::DefaultScanAllDirs(const std
     return {finalErrCode, totalBigFileSize, totalSmallFileSize};
 }
 
+static void ProcessDirectoryEntries(const string &currentPath, DIR *dir, off_t size,
+    int64_t &bigFileSize, int64_t &smallFileSize, const vector<string> &excludes,
+    const AdvancedScanOption &option, stack<string> &dirStack)
+{
+    struct dirent *ptr = nullptr;
+    while (!!(ptr = readdir(dir))) {
+        if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+            continue;
+        }
+        std::string filePath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
+        if (!CheckPermission(filePath)) {
+            continue;
+        }
+        if (ptr->d_type == DT_REG) {
+            ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes, option);
+        } else if (ptr->d_type == DT_DIR) {
+            dirStack.push(filePath);
+        } else {
+            HILOGE("Not support file type");
+        }
+    }
+}
+
 tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backupPath, const vector<string> &excludes,
     std::shared_ptr<ScanResultManager> &instance, off_t size)
 {
@@ -422,23 +445,7 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backup
             HILOGE("openDir fail, path:%{public}s, errno:%{public}d", GetAnonyPath(currentPath).c_str(), errno);
             continue;
         }
-        struct dirent *ptr = nullptr;
-        while (!!(ptr = readdir(dir.get()))) {
-            if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
-                continue;
-            }
-            std::string filePath = StringUtils::PathAddDelimiter(currentPath) + string(ptr->d_name);
-            if (!CheckPermission(filePath)) {
-                continue;
-            }
-            if (ptr->d_type == DT_REG) {
-                ProcessFile({filePath, "", size}, bigFileSize, smallFileSize, excludes, option);
-            } else if (ptr->d_type == DT_DIR) {
-                dirStack.push(filePath);
-            } else {
-                HILOGE("Not support file type");
-            }
-        }
+        ProcessDirectoryEntries(currentPath, dir.get(), size, bigFileSize, smallFileSize, excludes, option, dirStack);
     }
     return {ERR_OK, bigFileSize, smallFileSize};
 }
