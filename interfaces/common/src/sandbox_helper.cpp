@@ -118,7 +118,6 @@ string SandboxHelper::Decode(const string &uri)
         } else {
             outPutStr += uri[index];
             index++;
-            decodeDepth++;
         }
     }
 
