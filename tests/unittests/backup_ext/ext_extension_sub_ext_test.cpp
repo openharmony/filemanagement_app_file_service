@@ -22,6 +22,9 @@
  * @tc.level Level 1
  * @tc.require: NA
  */
+
+#include <sys/syscall.h>
+
 HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupHelper_CreateAncoBackupTask_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupHelper_CreateAncoBackupTask_0000";
@@ -896,7 +899,8 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CallbackExit_Test_0100, testing:
         // 先填充 fdList_
         std::vector<UniqueFd> fds;
         fds.push_back(UniqueFd(open("/dev/null", O_RDONLY)));
-        extExtension->fdList_.push_back(std::move(fds));
+        auto tid = syscall(SYS_gettid);
+        extExtension->fdLists_.emplace(tid, std::move(fds));
 
         // 调用CallbackExit，传入COMMAND_GET_INCREMENTAL_FILE_HANDLES
         int32_t ret = extExtension->CallbackExit(
@@ -928,8 +932,9 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CallbackExit_Test_0200, testing:
         // 先填充 fdList_
         std::vector<UniqueFd> fds;
         fds.push_back(UniqueFd(open("/dev/null", O_RDONLY)));
-        extExtension->fdList_.push_back(std::move(fds));
-        size_t beforeSize = extExtension->fdList_.size();
+        auto tid = syscall(SYS_gettid);
+        extExtension->fdLists_.emplace(tid, std::move(fds));
+        size_t beforeSize = extExtension->fdLists_[tid].size();
 
         // 调用CallbackExit，传入其他命令码（如COMMAND_HANDLE_BACKUP）
         int32_t ret = extExtension->CallbackExit(
@@ -938,7 +943,7 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CallbackExit_Test_0200, testing:
         // 验证返回值
         EXPECT_EQ(ret, ERR_NONE);
         // 验证fdList_大小不变
-        EXPECT_EQ(extExtension->fdList_.size(), beforeSize);
+        EXPECT_EQ(extExtension->fdLists_[tid].size(), beforeSize);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred.";

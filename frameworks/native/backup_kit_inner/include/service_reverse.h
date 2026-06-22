@@ -146,7 +146,7 @@ private:
     BIncrementalRestoreSession::Callbacks callbacksIncrementalRestore_;
     std::vector<BackupFile> pendingFiles_;
     std::vector<BackupFile> pendingIncrementalFiles_;
-    uint32_t batchSize_ = 2000;
+    uint32_t batchSize_{500};
     std::mutex addBatchLock_;
     std::mutex addIncrementalBatchLock_;
 };
