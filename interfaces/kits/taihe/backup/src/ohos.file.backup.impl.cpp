@@ -252,8 +252,7 @@ public:
             return result;
         }
         ErrCode code = bSessionBackup->CleanBundleTempDir(std::string(bundleName));
-        if (BError(BError::Codes::OK) == code)
-        {
+        if (BError(BError::Codes::OK) == code) {
             result = true;
         } else {
             ::taihe::set_business_error((int32_t)code, "CleanBundleTempDirSync error");
@@ -509,8 +508,7 @@ public:
             return result;
         }
         ErrCode code = bIncrementalRestoreSession->CleanBundleTempDir(std::string(bundleName));
-        if (BError(BError::Codes::OK) == code)
-        {
+        if (BError(BError::Codes::OK) == code) {
             result = true;
         } else {
             ::taihe::set_business_error((int32_t)code, "CleanBundleTempDirSync error");
