@@ -75,6 +75,7 @@ taihe_shared_library("file_share_taihe") {
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:dataobs_manager",
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_common",
     "ability_runtime:uri_permission_mgr",
