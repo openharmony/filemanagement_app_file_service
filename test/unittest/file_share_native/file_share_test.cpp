@@ -360,6 +360,7 @@ HWTEST_F(FileShareTest, File_share_DeleteShareFile_0008, testing::ext::TestSize.
 
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_DeleteShareFile_0008";
 }
+
 /**
  * @tc.name: File_share_GetPhysicalPath_0001
  * @tc.desc: Test function of GetPhysicalPath() interface for SUCCESS.
@@ -517,6 +518,115 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0007, testing::ext::TestSize.
 }
 
 /**
+ * @tc.name: File_share_GetPhysicalPath_0008
+ * @tc.desc: Test function of GetPhysicalPath() interface with invalid URI containing "../" at start.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0008, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0008";
+    std::string fileUri = "file://docs/../test.jpg";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0008";
+}
+ 
+/**
+ * @tc.name: File_share_GetPhysicalPath_0009
+ * @tc.desc: Test function of GetPhysicalPath() interface with URI exceeding max path length after decode.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0009, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0009";
+    std::string longPathSegment(5000, 'a');
+    std::string fileUri = "file://com.demo.a/" + longPathSegment;
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0009";
+}
+ 
+/**
+ * @tc.name: File_share_GetPhysicalPath_0010
+ * @tc.desc: Test function of GetPhysicalPath() interface with invalid path prefix (storage but not docs authority).
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0010, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0010";
+    std::string fileUri = "file://com.demo.a/storage/Users/currentUser/test.jpg";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0010";
+}
+ 
+/**
+ * @tc.name: File_share_GetPhysicalPath_0011
+ * @tc.desc: Test function of GetPhysicalPath() interface with FUSE path but wrong bundle name.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0011, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0011";
+    std::string fileUri = "file://com.demo.a/mnt/data/fuse/test.jpg";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0011";
+}
+ 
+/**
+ * @tc.name: File_share_GetPhysicalPath_0012
+ * @tc.desc: Test function of GetPhysicalPath() interface with empty sandbox path after decode.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0012, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0012";
+    std::string fileUri = "file://com.demo.a/%00";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0012";
+}
+ 
+/**
+ * @tc.name: File_share_GetPhysicalPath_0013
+ * @tc.desc: Test function of GetPhysicalPath() interface with empty sandbox path after decode.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalPath_0013, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalPath_0013";
+    std::string fileUri = "file://com.demo.a/a%11%22%33%44%55%66%77%88%99%10%11%12%13%14%15%16%17aa";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalPath_0013";
+}
+
+/**
  * @tc.name: File_share_GetMediaSharePath_0001
  * @tc.desc: Test function of GetMediaSharePath() interface for SUCCESS.
  * @tc.size: MEDIUM
@@ -597,6 +707,28 @@ HWTEST_F(FileShareTest, File_share_CheckValidPath_0001, testing::ext::TestSize.L
     ret = SandboxHelper::CheckValidPath(filePath2);
     EXPECT_FALSE(ret);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_CheckValidPath_0001";
+}
+
+/**
+ * @tc.name: File_share_IsValidPath_0001
+ * @tc.desc: Test function of IsValidPath() interface for FAILURE with empty string.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_IsValidPath_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_IsValidPath_0001";
+ 
+    std::string longPath(4097, 'a');
+    bool result = SandboxHelper::IsValidPath(longPath);
+    EXPECT_FALSE(result);
+ 
+    result = SandboxHelper::IsValidPath("/data/test");
+    EXPECT_TRUE(result);
+ 
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_IsValidPath_0001";
 }
 
 /**
@@ -790,6 +922,41 @@ HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0007, testing::ext::Tes
     ret = SandboxHelper::GetBackupPhysicalPath(fileUri7, "100", physicalPath);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0007";
+}
+
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0008
+ * @tc.desc: Test function of GetBackupPhysicalPath() for URI exceeding maximum allowed length.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0008, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetBackupPhysicalPath_0008";
+    std::string longUri = "file://com.demo.a/" + std::string(4090, 'a');
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(longUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+ 
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0008";
+}
+ 
+/**
+ * @tc.name: File_share_GetBackupPhysicalPath_0009
+ * @tc.desc: Test function of GetBackupPhysicalPath().
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(FileShareTest, File_share_GetBackupPhysicalPath_0009, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetBackupPhysicalPath_0009";
+    std::string fileUri = "file://com.demo.a/a%11%22%33%44%55%66%77%88%99%10%11%12%13%14%15%16%17aa.txt";
+    std::string physicalPath;
+    int32_t ret = SandboxHelper::GetBackupPhysicalPath(fileUri, "100", physicalPath);
+    EXPECT_EQ(ret, -EINVAL);
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetBackupPhysicalPath_0009";
 }
 
 /**
@@ -1019,4 +1186,94 @@ HWTEST_F(FileShareTest, File_share_GetPhysicalDir_001, testing::ext::TestSize.Le
     GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalDir_001";
 }
 
+/**
+ * @tc.name: File_share_GetPhysicalDir_002
+ * @tc.desc: Test function of GetPhysicalDir() for URI exceeding maximum allowed length.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalDir_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalDir_002";
+    std::string longUri = "file://com.demo.a/" + std::string(4090, 'a');
+    std::string physicalDir;
+    int32_t ret = SandboxHelper::GetPhysicalDir(longUri, "100", physicalDir);
+    EXPECT_EQ(ret, -EINVAL);
+ 
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalDir_002";
+}
+ 
+/**
+ * @tc.name: File_share_GetPhysicalDir_003
+ * @tc.desc: Test function of GetPhysicalDir() for URI exceeding maximum allowed length.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(FileShareTest, File_share_GetPhysicalDir_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_GetPhysicalDir_003";
+    std::string uri = "file://com.demo.a/a%11%22%33%44%55%66%77%88%99%10%11%12%13%14%15%16%17aa.txt";
+    std::string physicalDir;
+    int32_t ret = SandboxHelper::GetPhysicalDir(uri, "100", physicalDir);
+    EXPECT_EQ(ret, -EINVAL);
+ 
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_GetPhysicalDir_003";
+}
+ 
+/**
+ * @tc.name: File_share_Decode_0001
+ * @tc.desc: Test function of Decode() interface for SUCCESS with normal encoded string.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_Decode_0001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_Decode_0001";
+    std::string encodedUri = "Hello%20World%21";
+    std::string decoded = SandboxHelper::Decode(encodedUri);
+    EXPECT_EQ(decoded, "Hello World!");
+ 
+    encodedUri = "%2F%2Fmedia%2FPhoto%2Ftest.jpg";
+    decoded = SandboxHelper::Decode(encodedUri);
+    EXPECT_EQ(decoded, "//media/Photo/test.jpg");
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_Decode_0001";
+}
+ 
+/**
+ * @tc.name: File_share_Decode_0002
+ * @tc.desc: Test function of Decode() interface for empty string.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_Decode_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_Decode_0002";
+    std::string encodedUri = "";
+    std::string decoded = SandboxHelper::Decode(encodedUri);
+    EXPECT_EQ(decoded, "");
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_Decode_0002";
+}
+ 
+/**
+ * @tc.name: File_share_Decode_0003
+ * @tc.desc: Test function of Decode() interface for SUCCESS with normal encoded string.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7PDZL
+ */
+HWTEST_F(FileShareTest, File_share_Decode_0003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin File_share_Decode_0003";
+    std::string encodedUri = "a%11%22%33%44%55%66%77%88%99%10%11%12%13%14%15%16%17aa";
+    std::string decoded = SandboxHelper::Decode(encodedUri);
+    EXPECT_EQ(decoded, "");
+    GTEST_LOG_(INFO) << "FileShareTest-end File_share_Decode_0003";
+}
 } // namespace

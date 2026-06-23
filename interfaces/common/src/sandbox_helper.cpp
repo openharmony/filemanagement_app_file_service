@@ -56,6 +56,8 @@ namespace {
     const uint32_t PATH_INVALID_FLAG_LEN = 3;
     const std::string NETWORK_PARA = "?networkid=";
     const std::string AMPERSAND = "&";
+    const size_t MAX_PATH_LENGTH = 4096;
+    const size_t MAX_URI_DECODE_DEPTH = 16;
 }
 
 namespace {
@@ -102,11 +104,17 @@ string SandboxHelper::Decode(const string &uri)
     std::string outPutStr;
     const int32_t encodeLen = 2;
     size_t index = 0;
+    size_t decodeDepth = 0;
     while (index < uri.length()) {
         if (uri[index] == '%') {
+            if (decodeDepth >= MAX_URI_DECODE_DEPTH) {
+                LOGE("Decode percent-encoding depth exceeds maximum allowed");
+                return "";
+            }
             std::string inputStr(uri.substr(index + 1, encodeLen));
             outPutStr += static_cast<char>(strtol(inputStr.c_str(), nullptr, DECODE_FORMAT_NUM));
             index += encodeLen + 1;
+            decodeDepth++;
         } else {
             outPutStr += uri[index];
             index++;
@@ -399,7 +407,7 @@ int32_t SandboxHelper::GetPhysicalDir(const std::string &fileUri, const std::str
                                       std::string &physicalDir)
 {
     if (!IsValidPath(fileUri)) {
-        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../'characters");
+        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../' characters or exceeds maximum allowed length");
         return -EINVAL;
     }
     Uri uri(fileUri);
@@ -410,6 +418,10 @@ int32_t SandboxHelper::GetPhysicalDir(const std::string &fileUri, const std::str
     }
 
     string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if (sandboxPath.length() > MAX_PATH_LENGTH || sandboxPath.length() == 0) {
+        LOGE("sandboxPath length exceeds maximum allowed length or decodes error");
+        return -EINVAL;
+    }
     if ((sandboxPath.find(FILE_MANAGER_URI_HEAD) == 0 && bundleName != FILE_MANAGER_AUTHORITY) ||
         (sandboxPath.find(FUSE_URI_HEAD) == 0 && bundleName != DLP_MANAGER_BUNDLE_NAME)) {
         return -EINVAL;
@@ -440,7 +452,7 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
                                        std::string &physicalPath)
 {
     if (!IsValidPath(fileUri)) {
-        LOGE("fileUri is ValidUri, The fileUri contains '../' characters");
+        LOGE("fileUri is ValidUri, The fileUri contains '../' characters or exceeds maximum allowed length");
         return -EINVAL;
     }
     Uri uri(fileUri);
@@ -450,6 +462,10 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
     }
 
     string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if (sandboxPath.length() > MAX_PATH_LENGTH || sandboxPath.length() == 0) {
+        LOGE("sandboxPath length exceeds maximum allowed length or decodes error");
+        return -EINVAL;
+    }
     if ((sandboxPath.find(FILE_MANAGER_URI_HEAD) == 0 && bundleName != FILE_MANAGER_AUTHORITY) ||
         (sandboxPath.find(FUSE_URI_HEAD) == 0 && bundleName != DLP_MANAGER_BUNDLE_NAME)) {
         return -EINVAL;
@@ -480,7 +496,7 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
                                              std::string &physicalPath)
 {
     if (!IsValidPath(fileUri)) {
-        LOGE("fileUri is ValidUri, The fileUri contains '../' characters");
+        LOGE("fileUri is ValidUri, The fileUri contains '../' characters or exceeds maximum allowed length");
         return -EINVAL;
     }
     Uri uri(fileUri);
@@ -490,6 +506,10 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
     }
 
     string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if (sandboxPath.length() > MAX_PATH_LENGTH || sandboxPath.length() == 0) {
+        LOGE("sandboxPath length exceeds maximum allowed length or decodes error");
+        return -EINVAL;
+    }
     if ((sandboxPath.find(FILE_MANAGER_URI_HEAD) == 0 && bundleName != FILE_MANAGER_AUTHORITY) ||
         (sandboxPath.find(FUSE_URI_HEAD) == 0 && bundleName != DLP_MANAGER_BUNDLE_NAME)) {
         return -EINVAL;
@@ -518,6 +538,10 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
 
 bool SandboxHelper::IsValidPath(const std::string &filePath)
 {
+    if (filePath.length() > MAX_PATH_LENGTH) {
+        LOGE("The fileUri exceeds maximum allowed length");
+        return false;
+    }
     size_t pos = filePath.find(PATH_INVALID_FLAG1);
     while (pos != string::npos) {
         if (pos == 0 || filePath[pos - 1] == BACKSLASH) {
