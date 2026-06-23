@@ -143,6 +143,11 @@ ErrCode Service::SetSessPropertiesBackup(const std::vector<std::string> &bundleN
     std::vector<std::string> strategies = {"DefaultPropertyStrategy", "DataSizePropertyStrategy"};
 
     for (const auto &bundleName : bundleNames) {
+        std::string userBundleName = bundleName;
+        if (BundleMgrAdapter::IsUser0BundleName(userBundleName, userId)) {
+            HILOGE("bundleName:%{public}s is zero user bundle", userBundleName.c_str());
+            SendUserIdToApp(userBundleName, userId);
+        }
         auto it = bundleNameIndexBundleInfoMap.find(bundleName);
         if (it == bundleNameIndexBundleInfoMap.end()) {
             HILOGE("Current bundleName can not find bundleInfo, bundleName:%{public}s", bundleName.c_str());
