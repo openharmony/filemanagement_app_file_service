@@ -16,14 +16,21 @@
 #include "ext_extension.h"
 
 #include <algorithm>
+#include <atomic>
+#include <cerrno>
 #include <chrono>
 #include <cinttypes>
+#include <cstdio>
 #include <fstream>
 #include <fnmatch.h>
 #include <iomanip>
+#include <iterator>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <regex>
 #include <string>
+#include <sys/types.h>
 #include <thread>
 #include <tuple>
 #include <unordered_map>
@@ -50,6 +57,7 @@
 #include "b_hiaudit/hi_audit.h"
 #include "b_json/b_json_cached_entity.h"
 #include "b_json/b_json_entity_onbackupex_ret.h"
+#include "b_json/b_json_entity_ext_manage.h"
 #include "b_jsonutil/b_jsonutil.h"
 #include "b_ohos/startup/backup_para.h"
 #include "b_radar/b_radar.h"
@@ -67,6 +75,7 @@
 namespace OHOS::FileManagement::Backup {
 const uint32_t MAX_FD_GROUP_USE_TIME = 1000; // 每组打开最大时间1000ms
 const uint32_t HIERARCHY_OF_FILE_ENCRYPTION_TYPE = 3;
+const int MANAGE_JSON_GENERATE_MAX_TIMEOUT = 15; // manageJson文件最长等待时间
 
 ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
 {
@@ -1657,7 +1666,6 @@ ErrCode BackupExtExtension::ReportBatchFiles(std::vector<std::shared_ptr<IFileIn
 {
     ErrCode subRet = ReportAppFileReadys(tmpFiles);
     allFiles.insert(allFiles.end(), tmpFiles.begin(), tmpFiles.end());
-    tmpFiles.clear();
     if (subRet != ERR_OK) {
         HILOGE("report files ready fail, err=%{public}d", subRet);
         return static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
@@ -1671,6 +1679,11 @@ void BackupExtExtension::DoBackupTaskCore(
     int fdNum = 0;
     auto startTime = std::chrono::system_clock::now();
     std::vector<std::shared_ptr<IFileInfo>> tmpFiles;
+    bool initRet = InitManageJsonFd();
+    if (!initRet) {
+        ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+        return;
+    }
     while (!ScanFileSingleton::GetInstance().IsProcessCompleted() ||
            ScanFileSingleton::GetInstance().HasFileReady()) {
         ScanFileSingleton::GetInstance().WaitForFiles();
@@ -1688,12 +1701,15 @@ void BackupExtExtension::DoBackupTaskCore(
             tmpFiles.push_back(fileInfo);
             if (tmpFiles.size() == static_cast<size_t>(GetBatchSize())) {
                 ret = ReportBatchFiles(tmpFiles, allFiles);
+                DoAppendFiles(tmpFiles, ret, supportWithoutTar);
+                tmpFiles.clear();
             }
             fdNum++;
         } else {
             ErrCode subRet = ReportAppFileReady(fileInfo, fdNum);
             if (subRet != ERR_NO_PERMISSION) {
                 allFiles.push_back(fileInfo);
+                DoAppendFiles(std::vector<std::shared_ptr<IFileInfo>> {fileInfo}, ret, supportWithoutTar);
             } else {
                 subRet = ERR_OK;
             }
@@ -1707,14 +1723,9 @@ void BackupExtExtension::DoBackupTaskCore(
     }
 
     if (supportWithoutTar && !tmpFiles.empty()) {
-        HILOGE("DoBackupTask tmpFiles size %{public}zu", tmpFiles.size());
-        ErrCode subRet = ReportAppFileReadys(tmpFiles);
-        allFiles.insert(allFiles.end(), tmpFiles.begin(), tmpFiles.end());
+        ret = ReportBatchFiles(tmpFiles, allFiles);
+        DoAppendFiles(tmpFiles, ret, supportWithoutTar);
         tmpFiles.clear();
-        if (subRet != ERR_OK) {
-            HILOGE("report files ready fail, err=%{public}d", subRet);
-            ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
-        }
     }
 }
 
@@ -1725,7 +1736,8 @@ void BackupExtExtension::DoBackupTask()
     HILOGD("supportWithoutTar is, %{public}d", supportWithoutTar);
     int ret = ERR_OK;
     DoBackupTaskCore(supportWithoutTar, allFiles, ret);
-    int indexRet = IndexFileReady(allFiles); // 无需WaitToSendFd，sendRate=0时克隆实际还可以继续接收数据
+    WaitforFdAppendComplete(allFiles);
+    int indexRet = IndexFileReady(); // 无需WaitToSendFd，sendRate=0时克隆实际还可以继续接收数据
     if (indexRet != ERR_OK) {
         HILOGE("report app file ready fail, err=%{public}d", indexRet);
         ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
@@ -2087,5 +2099,132 @@ std::string BackupExtExtension::FileInfoToString(std::shared_ptr<IFileInfo> file
     value["st_mtim"]["tv_nsec"] = static_cast<int64_t>(fileInfo->sta_.st_mtim.tv_nsec);
     Json::FastWriter writer;
     return writer.write(value);
+}
+
+bool BackupExtExtension::InitManageJsonFd()
+{
+    std::lock_guard<std::mutex> lock(manageJsonFdLock_);
+    if (manageJsonFd_.Get() >= 0) {
+        HILOGI("InitManageJsonFd: fd already initialized, fd=%{public}d", manageJsonFd_.Get());
+    } else {
+        string dirPath = ExtractFilePath(INDEX_FILE_BACKUP.data());
+        if (!ForceCreateDirectory(dirPath.data())) {
+            HILOGE("InitManageJsonFd: Failed to create directory, path=%{private}s, err=%{public}d", dirPath.c_str(),
+                   errno);
+            return false;
+        }
+    }
+    (void)unlink(INDEX_FILE_BACKUP.data());
+    int rawFd = open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (rawFd < 0) {
+        HILOGE("InitManageJsonFd: Failed to open file, err=%{public}d", errno);
+        return false;
+    }
+ 
+    manageJsonFd_ = UniqueFd(rawFd);
+    ssize_t writeLen = write(manageJsonFd_.Get(), "[", 1);
+    if (writeLen < 0 || writeLen != 1) {
+        HILOGE("InitManageJsonFd: faild write [ , err=%{public}d", errno);
+        close(manageJsonFd_.Release());
+        return false;
+    }
+    HILOGI("InitManageJsonFd: successfully opened fd=%{public}d", rawFd);
+    return true;
+}
+ 
+void BackupExtExtension::CloseManageJsonFd()
+{
+    std::lock_guard<std::mutex> lock(manageJsonFdLock_);
+    if (manageJsonFd_.Get() >= 0) {
+        ssize_t writeLen = write(manageJsonFd_.Get(), "]", 1);
+        if (writeLen < 0 || writeLen != 1) {
+            HILOGE("CloseManageJsonFd: faild write end symbol ] , err=%{public}d", errno);
+        }
+        close(manageJsonFd_.Release());
+        HILOGD("CloseManageJsonFd: closed fd");
+    } else {
+        HILOGW("CloseManageJsonFd: file not find");
+    }
+}
+ 
+void BackupExtExtension::DoAppendFiles(const std::vector<std::shared_ptr<IFileInfo>> &tmpFiles, int &ret,
+                                       bool isSupportWithoutTar)
+{
+    auto task = [obj {wptr<BackupExtExtension>(this)}, tmpFiles, &ret, isSupportWithoutTar]() {
+        auto ptr = obj.promote();
+        if (ptr == nullptr) {
+            HILOGE("DoAppendFiles: Ext extension handle have been released");
+            return;
+        }
+        std::unique_lock<std::mutex> lock(ptr->appendManageJsonLock_);
+        ptr->pendingAppendCount_.fetch_add(tmpFiles.size());
+        if (ptr->manageJsonFd_.Get() < 0) {
+            HILOGE("DoAppendFiles: fd not initialized, fd=%{public}d", ptr->manageJsonFd_.Get());
+            ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+            ptr->initManageJsonCon_.notify_all();
+            return;
+        }
+        for (const auto &item : tmpFiles) {
+            Json::Value value;
+            value["fileName"] = item->filename_;
+            std::string restorePath = item->GetRestorePath();
+            value["information"]["path"] = restorePath.empty() ? item->filePath_ : restorePath;
+            value["isUserTar"] =
+                item->isBigFile_ &&
+                BJsonEntityExtManage::CheckUserTar(item->filePath_, item->sta_, item->isAncoFile_, isSupportWithoutTar);
+            value["isBigFile"] = item->isBigFile_;
+            if (isSupportWithoutTar) {
+                value["information"]["stat"]["st_size"] = static_cast<int64_t>(item->sta_.st_size);
+                value["information"]["stat"]["st_mode"] = static_cast<int32_t>(item->sta_.st_mode);
+            } else {
+                value["information"]["stat"] = BJsonEntityExtManage::Stat2JsonValue(item->sta_);
+            }
+            Json::StreamWriterBuilder builder;
+            builder["commentStyle"] = "None";
+            builder["indentation"] = "";
+            std::string jsonContent = Json::writeString(builder, value);
+            if (ptr->isFirstWrite_) {
+                ptr->isFirstWrite_.store(false);
+            } else {
+                jsonContent = ',' + jsonContent;
+            }
+            jsonContent += '\n';
+            ssize_t writeLen = write(ptr->manageJsonFd_.Get(), jsonContent.data(), jsonContent.size());
+            if (writeLen < 0 || writeLen != static_cast<ssize_t>(jsonContent.size())) {
+                HILOGE("DoAppendFiles: write failed, err=%{public}d, written=%{public}zd, expected=%{public}zu", errno,
+                       writeLen, jsonContent.size());
+                ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
+            }
+        }
+        ptr->initManageJsonCon_.notify_all();
+    };
+    manageJsonFilePool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("DoAppendFiles: Failed to add task to thread pool");
+        }
+    });
+}
+ 
+void BackupExtExtension::WaitforFdAppendComplete(std::vector<std::shared_ptr<IFileInfo>> &files)
+{
+    std::unique_lock<std::mutex> lock {appendManageJsonLock_};
+    auto waitStatus = initManageJsonCon_.wait_for(
+        lock, std::chrono::seconds(MANAGE_JSON_GENERATE_MAX_TIMEOUT), [obj {wptr<BackupExtExtension>(this)}, files]() {
+            auto ptr = obj.promote();
+            if (ptr == nullptr) {
+                HILOGE("WaitforFdAppendComplete: Ext extension handle have been released");
+                return true;
+            }
+            if (ptr->pendingAppendCount_.load() == files.size()) {
+                return true;
+            }
+            return false;
+        });
+    if (!waitStatus) {
+        HILOGE("WaitforFdAppendComplete: generate manageJson timeout");
+    }
+    CloseManageJsonFd();
 }
 } // namespace OHOS::FileManagement::Backup

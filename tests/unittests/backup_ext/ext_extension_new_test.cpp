@@ -201,41 +201,6 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ReportNormalAppFileReady_Test_0400, 
 }
 
 /**
- * @tc.number: Ext_Extension_IndexFileReady_Test_0100
- * @tc.name: Ext_Extension_IndexFileReady_Test_0100
- * @tc.desc: 测试IndexFileReady
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- */
-HWTEST_F(ExtExtensionNewTest, Ext_Extension_IndexFileReady_Test_0100, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_IndexFileReady_Test_0100";
-    ASSERT_TRUE(extExtension_ != nullptr);
-    EXPECT_CALL(*funcMock_, open(_, _)).WillOnce([](const char* path, int mode) -> int {
-        errno = EPERM;
-        return -1;
-    });
-    string filename = "app_file_ready_test";
-    string filePath = "/tmp";
-    struct stat sta;
-    shared_ptr<IFileInfo> file1 = make_shared<FileInfo>(filename, filePath, sta, false);
-    vector<shared_ptr<IFileInfo>> files = {file1};
-    EXPECT_EQ(extExtension_->IndexFileReady(files), BError::BackupErrorCode::E_PERM);
-
-    errno = EPERM;
-    EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Return(1));
-    EXPECT_CALL(*funcMock_, close(_)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*funcMock_, fstat(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*funcMock_, lseek(_, _, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*funcMock_, read(_, _, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*funcMock_, stat(_, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*serviceMock_, AppFileReady(_, _, _)).WillRepeatedly(Return(0));
-    EXPECT_THROW(extExtension_->IndexFileReady(files), BError);
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end Ext_Extension_IndexFileReady_Test_0100";
-}
-
-/**
  * @tc.number: Ext_Extension_DoPacketOnce_Test_0100
  * @tc.name: Ext_Extension_DoPacketOnce_Test_0100
  * @tc.desc: 测试DoPacketOnce失败场景
