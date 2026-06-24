@@ -1058,8 +1058,8 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
         auto [aErrCode, aBigFileSize, aSmallFileSize] = AncoBackupHelper::StartAncoScanAllDirs();
         bigFileSize += aBigFileSize;
         smallFileSize += aSmallFileSize;
-        if (errCode == ERR_OK) {
-            errCode = aErrCode;
+        if (aErrCode != ERR_OK) {
+            HILOGE("scan anco dirs fail, err=%{public}d", aErrCode);
         }
     }
     appStatistic_->scanFileSpend_.End();
