@@ -178,11 +178,6 @@ bool Parse::VerifyFsRequestConfigParam(napi_env env, LibN::NFuncArg &funcArg,
         NError(BError(BError::Codes::SDK_INVAL_ARG, "ParseFsRequestConfig failed.").GetCode()).ThrowErr(env);
         return false;
     }
-    if (convertedTriggerType != BConstants::DEVICE_GARBAGE_COLLECTION) {
-        NError(BError(BError::Codes::SA_INVAL_ARG, "Invalid parameter for device garbage collection.")
-            .GetCode()).ThrowErr(env);
-        return false;
-    }
     triggerType = convertedTriggerType;
     writeSize = convertedWriteSize;
     waitTime = convertedWaitTime;

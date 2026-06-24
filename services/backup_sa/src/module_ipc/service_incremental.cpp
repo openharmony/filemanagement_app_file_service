@@ -1482,13 +1482,20 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
-    void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
+    void *handle = (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) ?
+        dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY) :
+        dlopen("/system/lib64/libsmart_storage_service_client.z.so", RTLD_LAZY);
     if (!handle) {
         HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
-    CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
+    CallDeviceTaskRequest func = nullptr;
+    if (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) {
+        func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
+    } else {
+        func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDirectTlc"));
+    }
     if (func == nullptr) {
         HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
         dlclose(handle);
