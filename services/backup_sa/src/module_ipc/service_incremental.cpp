@@ -1482,26 +1482,43 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
-    void *handle = (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) ?
-        dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY) :
-        dlopen("/system/lib64/libsmart_storage_service_client.z.so", RTLD_LAZY);
+    
+    auto [handle, func] = LoadGcLibrary(triggerType);
+    if (handle == nullptr || func == nullptr) {
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
+    }
+
+    ErrCode errCode = ExecuteGcTask(handle, func, triggerType, writeSize, waitTime);
+    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+    return errCode;
+}
+
+std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
+{
+    const char* libPath =  (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) ?
+        "/system/lib64/libioqos_service_client.z.so" :
+        "/system/lib64/libsmart_storage_service_client.z.so";
+    void *handle = dlopen(libPath, RTLD_LAZY);
     if (!handle) {
-        HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, dlerror());
+        return {nullptr, nullptr};
     }
-    CallDeviceTaskRequest func = nullptr;
-    if (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) {
-        func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
-    } else {
-        func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDirectTlc"));
-    }
+
+    const char* symbolName = (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) ?
+        "CallDeviceTaskRequest" : "CallDirectTlc";
+    CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, symbolName));
     if (func == nullptr) {
-        HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
+        HILOGE("%{public}s dlsym failed, errno = %{public}s", symbolName, dlerror());
         dlclose(handle);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+        return {nullptr, nullptr};
     }
+    return {handle, func};
+}
+
+ErrCode Service::ExecuteGcTask(void* handle, CallDeviceTaskRequest func,
+                               int triggerType, unsigned int writeSize, unsigned int waitTime)
+{
     std::unique_lock<std::mutex> lock(gcMtx_);
     if (gcProgress_ == nullptr) {
         gcProgress_ = std::make_shared<GcProgressInfo>();
@@ -1519,13 +1536,11 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     isGcTaskDone_.store(false, std::memory_order_release);
     if (func(triggerType, writeSize, waitTime, cb) != ERROR_OK) {
         dlclose(handle);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
         [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
     dlclose(handle);
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return DealWithGcErrcode(isGcTaskDone_.load(std::memory_order_acquire), gcProgress_);
 }
 } // namespace OHOS::FileManagement::Backup
