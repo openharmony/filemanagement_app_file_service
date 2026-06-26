@@ -57,7 +57,6 @@ namespace {
     const std::string NETWORK_PARA = "?networkid=";
     const std::string AMPERSAND = "&";
     const size_t MAX_PATH_LENGTH = 4096;
-    const size_t MAX_URI_DECODE_DEPTH = 16;
 }
 
 namespace {
@@ -104,17 +103,11 @@ string SandboxHelper::Decode(const string &uri)
     std::string outPutStr;
     const int32_t encodeLen = 2;
     size_t index = 0;
-    size_t decodeDepth = 0;
     while (index < uri.length()) {
         if (uri[index] == '%') {
-            if (decodeDepth >= MAX_URI_DECODE_DEPTH) {
-                LOGE("Decode percent-encoding depth exceeds maximum allowed");
-                return "";
-            }
             std::string inputStr(uri.substr(index + 1, encodeLen));
             outPutStr += static_cast<char>(strtol(inputStr.c_str(), nullptr, DECODE_FORMAT_NUM));
             index += encodeLen + 1;
-            decodeDepth++;
         } else {
             outPutStr += uri[index];
             index++;
