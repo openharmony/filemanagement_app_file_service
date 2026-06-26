@@ -39,6 +39,7 @@ size_t Fread(void*, size_t, size_t, FILE*);
 size_t Fwrite(const void*, size_t, size_t, FILE*);
 char* Realpath(const char*, char*);
 FILE* Fopen(const char*, const char*);
+FILE* Fdopen(int, const char*);
 int Fclose(FILE*);
 int Chmod(const char*, mode_t);
 int Stat(const char*, struct stat*);
@@ -72,6 +73,7 @@ public:
     virtual size_t fwrite(const void*, size_t, size_t, FILE*) = 0;
     virtual char* realpath(const char*, char*) = 0;
     virtual FILE* fopen(const char*, const char*) = 0;
+    virtual FILE* fdopen(int, const char*) = 0;
     virtual int fclose(FILE*) = 0;
     virtual int chmod(const char*, mode_t) = 0;
     virtual int stat(const char*, struct stat*) = 0;
@@ -106,6 +108,7 @@ public:
     MOCK_METHOD(size_t, fwrite, (const void*, size_t, size_t, FILE*));
     MOCK_METHOD(char*, realpath, (const char*, char*));
     MOCK_METHOD(FILE*, fopen, (const char*, const char*));
+    MOCK_METHOD(FILE*, fdopen, (int, const char*));
     MOCK_METHOD(int, fclose, (FILE*));
     MOCK_METHOD(int, chmod, (const char*, mode_t));
     MOCK_METHOD(int, stat, (const char*, struct stat*));

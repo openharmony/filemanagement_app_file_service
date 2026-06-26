@@ -904,19 +904,26 @@ HWTEST_F(UntarFileSupTest, SUB_Untar_File_IncrementalUnPacket_0100, testing::ext
         string rootPath;
         errno = EPERM;
         unordered_map<string, struct ReportFileInfo> includes;
-        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(-1));
         auto [ret, info, err] = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, includes);
         EXPECT_EQ(ret, EPERM);
 
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
+        EXPECT_CALL(*funcMock, fdopen(_, _)).WillOnce(Return(nullptr));
+        tie(ret, info, err) = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, includes);
+        EXPECT_EQ(ret, EPERM);
+
         char c = '\0';
-        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(reinterpret_cast<FILE*>(&c)));
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
+        EXPECT_CALL(*funcMock, fdopen(_, _)).WillOnce(Return(reinterpret_cast<FILE*>(&c)));
         EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(1));
         EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, fclose(_)).WillOnce(Return(0));
         tie(ret, info, err) = UntarFile::GetInstance().IncrementalUnPacket(tarFile, rootPath, includes);
         EXPECT_EQ(ret, 0);
 
-        EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(reinterpret_cast<FILE*>(&c)));
+        EXPECT_CALL(*funcMock, open(_, _)).WillOnce(Return(1));
+        EXPECT_CALL(*funcMock, fdopen(_, _)).WillOnce(Return(reinterpret_cast<FILE*>(&c)));
         EXPECT_CALL(*funcMock, fseeko(_, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, ftello(_)).WillOnce(Return(0));
         EXPECT_CALL(*funcMock, fread(_, _, _, _)).WillOnce(Return(0));

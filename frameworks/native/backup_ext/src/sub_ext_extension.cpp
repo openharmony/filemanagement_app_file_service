@@ -2115,7 +2115,7 @@ bool BackupExtExtension::InitManageJsonFd()
         }
     }
     (void)unlink(INDEX_FILE_BACKUP.data());
-    int rawFd = open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    int rawFd = open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR);
     if (rawFd < 0) {
         HILOGE("InitManageJsonFd: Failed to open file, err=%{public}d", errno);
         return false;
