@@ -179,7 +179,7 @@ bool TarFile::TraversalFile(string &backupPath, int &err, const std::string &res
         HiAudit::GetInstance(false).Write(auditLog);
         return false;
     }
-    int fd = open(backupPath.c_str(), O_RDONLY);
+    int fd = open(backupPath.c_str(), O_RDONLY | O_UNCACHE);
     if (fd < 0 && errno == ERR_NO_PERMISSION) {
         HILOGI("noPermissionFlie, don't need to backup, path = %{public}s, err = %{public}d",
             GetAnonyString(backupPath).c_str(), errno);
