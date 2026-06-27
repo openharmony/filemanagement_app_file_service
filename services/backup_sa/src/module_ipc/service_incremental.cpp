@@ -1473,24 +1473,21 @@ bool Service::VerifyDataClone()
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
+    CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
     if (session_ == nullptr || isOccupyingSession_.load()) {
         HILOGE("session is nullptr or occupied, StartCleanData failed.");
         return BError(BError::Codes::SA_INVAL_ARG).GetCode();
     }
-    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
     if (!VerifyDataClone()) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
     }
     
     auto [handle, func] = LoadGcLibrary(triggerType);
     if (handle == nullptr || func == nullptr) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
     }
 
     ErrCode errCode = ExecuteGcTask(handle, func, triggerType, writeSize, waitTime);
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return errCode;
 }
 
@@ -1501,7 +1498,12 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
         "/system/lib64/libsmart_storage_service_client.z.so";
     void *handle = dlopen(libPath, RTLD_LAZY);
     if (!handle) {
-        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, dlerror());
+        std::string error = dlerror();
+        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error);
+        AppRadar::Info info("", "", error);
+        AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
+                static_cast<int32_t>(BError::Codes::EXT_BROKEN_IPC).GetCode());
         return {nullptr, nullptr};
     }
 
@@ -1509,7 +1511,12 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
         "CallDeviceTaskRequest" : "CallDirectTlc";
     CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, symbolName));
     if (func == nullptr) {
-        HILOGE("%{public}s dlsym failed, errno = %{public}s", symbolName, dlerror());
+        std::string error = dlerror();
+        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error);
+        AppRadar::Info info("", "", error);
+        AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
+                static_cast<int32_t>(BError::Codes::EXT_BROKEN_IPC).GetCode());
         dlclose(handle);
         return {nullptr, nullptr};
     }
