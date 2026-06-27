@@ -144,6 +144,7 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::IncrementalUnPacket(
     tarFilePtr_ = fdopen(fd, "rb");
     if (tarFilePtr_ == nullptr) {
         HILOGE("Failed to fdopen , err = %{public}d", errno);
+        close(fd);
         return {errno, {}, {}};
     }
 
