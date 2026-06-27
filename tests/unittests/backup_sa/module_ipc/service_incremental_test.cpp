@@ -2681,6 +2681,115 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0108, Tes
 }
 
 /**
+ * @tc.number: SUB_ServiceIncremental_LoadGcLibrary_0000
+ * @tc.name: SUB_ServiceIncremental_LoadGcLibrary_0000
+ * @tc.desc: 测试 LoadGcLibrary 函数 triggerType==0 dlopen failed
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0000";
+    int testTriggerType = 0;
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).willOnce(Return(nullptr));
+    auto [handle, func] = service->LoadGcLibrary(testTriggerType);
+    EXPECT_EQ(handle, nullptr);
+    EXPECT_EQ(func, nullptr);
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_LoadGcLibrary_0000";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_LoadGcLibrary_0001
+ * @tc.name: SUB_ServiceIncremental_LoadGcLibrary_0001
+ * @tc.desc: 测试 LoadGcLibrary 函数 triggerType==0 dlsym failed
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0001";
+    int testTriggerType = 0;
+    void *handle = &testTriggerType;
+
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).willOnce(Return(handle));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).willOnce(Return(nullptr));
+    auto [retHandle, retFunc] = service->LoadGcLibrary(testTriggerType);
+    EXPECT_EQ(retHandle, nullptr);
+    EXPECT_EQ(retFunc, nullptr);
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_LoadGcLibrary_0001";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_LoadGcLibrary_0002
+ * @tc.name: SUB_ServiceIncremental_LoadGcLibrary_0002
+ * @tc.desc: 测试 LoadGcLibrary 函数 triggerType==1 dlopen failed
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0002";
+    int testTriggerType = 1;
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).willOnce(Return(nullptr));
+    auto [handle, func] = service->LoadGcLibrary(testTriggerType);
+    EXPECT_EQ(handle, nullptr);
+    EXPECT_EQ(func, nullptr);
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_LoadGcLibrary_0002";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_LoadGcLibrary_0003
+ * @tc.name: SUB_ServiceIncremental_LoadGcLibrary_0003
+ * @tc.desc: 测试 LoadGcLibrary 函数 triggerType==1 dlsym failed
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0003";
+    int testTriggerType = 1;
+    void *handle = &testTriggerType;
+
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).willOnce(Return(handle));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).willOnce(Return(nullptr));
+    auto [retHandle, retFunc] = service->LoadGcLibrary(testTriggerType);
+    EXPECT_EQ(retHandle, nullptr);
+    EXPECT_EQ(retFunc, nullptr);
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_LoadGcLibrary_0003";
+}
+
+/**
+ * @tc.number: SUB_ServiceIncremental_ExecuteGcTask_0000
+ * @tc.name: SUB_ServiceIncremental_ExecuteGcTask_0000
+ * @tc.desc: 测试 ExecuteGcTask 函数 func return failed
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
+HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_ExecuteGcTask_0000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_ExecuteGcTask_0000";
+    int testTriggerType = 0;
+    unsigned int testWriteSize = 1000;
+    unsigned int testWaitTime = 180;
+    void *handle = &testTriggerType;
+    CallDeviceTaskRequest func = gcFuncMock1;
+
+    auto res = service->ExecuteGcTask(handle, func, testTriggerType, testWriteSize, testWaitTime);
+    EXPECT_EQ(res, static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED));
+    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_ExecuteGcTask_0000";
+}
+
+/**
  * @tc.number: SUB_ServiceIncremental_VerifyDataClone_0101
  * @tc.name: SUB_ServiceIncremental_VerifyDataClone_0101
  * @tc.desc: 测试 VerifyDataClone 函数 VerifyCaller failed
