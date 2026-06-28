@@ -211,6 +211,26 @@ HWTEST_F(AncoScanResultTest, StringUtils_IsAncoFile_0000, testing::ext::TestSize
     EXPECT_FALSE(StringUtils::IsAncoFile("c2ef43d4b51e3282"));
     EXPECT_TRUE(StringUtils::IsAncoFile("part_anco.0.tar"));
     EXPECT_FALSE(StringUtils::IsAncoFile("part.0.tar"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("c2ef43d4b51e3282.tar_anco_aa"));
+    EXPECT_TRUE(StringUtils::IsAncoFile("c2ef43d4b51e3282_anco.tar_aa"));
     GTEST_LOG_(INFO) << "AncoScanResultTest-end StringUtils_IsAncoFile_0000";
+}
+
+/**
+* @tc.number: StringUtils_RemoveFileExtension_0000
+* @tc.name: StringUtils_RemoveFileExtension_0000
+* @tc.desc: Test function of RemoveFileExtension.
+* @tc.size: MEDIUM
+* @tc.type: FUNC
+* @tc.level Level 1
+* @tc.require: I6F3GV
+*/
+HWTEST_F(AncoScanResultTest, StringUtils_RemoveFileExtension_0000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AncoScanResultTest-begin StringUtils_RemoveFileExtension_0000";
+    EXPECT_EQ(StringUtils::RemoveFileExtension("Bv1Pp2HfrVDlWj5yfhT.tar"), "Bv1Pp2HfrVDlWj5yfhT");
+    EXPECT_EQ(StringUtils::RemoveFileExtension("c2ef43d4b51e3282"), "c2ef43d4b51e3282");
+    EXPECT_EQ(StringUtils::RemoveFileExtension("c2ef43d4b51e3282_anco.tar_anco"), "c2ef43d4b51e3282_anco");
+    GTEST_LOG_(INFO) << "AncoScanResultTest-end StringUtils_RemoveFileExtension_0000";
 }
 } // namespace OHOS::FileManagement::Backup
