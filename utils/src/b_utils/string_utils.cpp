@@ -21,7 +21,6 @@
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
-constexpr size_t TAR_SUFFIX_LEN = 4;
 constexpr size_t CLOUD_HASH_LENGTH = 33;
 
 bool StringUtils::EndsWith(const std::string& str, const std::string& suffix)
