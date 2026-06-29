@@ -1496,7 +1496,7 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
 
 std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
 {
-    const char* libPath =  (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) ?
+    const char* libPath =  (triggerType == BConstants::DEVICE_GARBAGE_COLLECTION) ?
         "/system/lib64/libioqos_service_client.z.so" :
         "/system/lib64/libsmart_storage_service_client.z.so";
     void *handle = dlopen(libPath, RTLD_LAZY);
@@ -1505,7 +1505,7 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
         return {nullptr, nullptr};
     }
 
-    const char* symbolName = (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) ?
+    const char* symbolName = (triggerType == BConstants::DEVICE_GARBAGE_COLLECTION) ?
         "CallDeviceTaskRequest" : "CallDirectTlc";
     CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, symbolName));
     if (func == nullptr) {
