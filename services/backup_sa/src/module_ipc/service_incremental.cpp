@@ -1473,25 +1473,35 @@ bool Service::VerifyDataClone()
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
-    if (session_ == nullptr || isOccupyingSession_.load()) {
-        HILOGE("session is nullptr or occupied, StartCleanData failed.");
-        return BError(BError::Codes::SA_INVAL_ARG).GetCode();
-    }
-    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-    if (!VerifyDataClone()) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
-    }
-    
-    auto [handle, func] = LoadGcLibrary(triggerType);
-    if (handle == nullptr || func == nullptr) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
-    }
+    try {
+        if (session_ == nullptr || isOccupyingSession_.load()) {
+            HILOGE("session is nullptr or occupied, StartCleanData failed.");
+            return BError(BError::Codes::SA_INVAL_ARG).GetCode();
+        }
+        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        if (!VerifyDataClone()) {
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
+        }
+        
+        auto [handle, func] = LoadGcLibrary(triggerType);
+        if (handle == nullptr || func == nullptr) {
+            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
+        }
 
-    ErrCode errCode = ExecuteGcTask(handle, func, triggerType, writeSize, waitTime);
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-    return errCode;
+        ErrCode errCode = ExecuteGcTask(handle, func, triggerType, writeSize, waitTime);
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return errCode;
+    } catch (const BError &e) {
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        HILOGE("StartCleanData failed, errCode = %{public}d", e.GetCode());
+        return e.GetCode();
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
+        return EPERM;
+    }
 }
 
 std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
