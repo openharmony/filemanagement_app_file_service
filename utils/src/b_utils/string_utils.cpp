@@ -21,7 +21,6 @@
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
-constexpr size_t TAR_SUFFIX_LEN = 4;
 constexpr size_t CLOUD_HASH_LENGTH = 33;
 
 bool StringUtils::EndsWith(const std::string& str, const std::string& suffix)
@@ -187,6 +186,15 @@ uint32_t StringUtils::CheckOverLongPath(const std::string &path)
     return len;
 }
 
+std::string StringUtils::RemoveFileExtension(const std::string &fileName)
+{
+    size_t pos = fileName.rfind('.');
+    if (pos == std::string::npos) {
+        return fileName;
+    }
+    return fileName.substr(0, pos);
+}
+
 bool StringUtils::IsAncoFile(const std::string &fileName)
 {
     auto hasUppercase = [](const std::string &str) -> bool {
@@ -194,16 +202,11 @@ bool StringUtils::IsAncoFile(const std::string &fileName)
             return std::isupper(c);
         });
     };
-    std::string fileNameWithoutExt;
-    if (ExtractFileExt(fileName) == "tar") {
-        fileNameWithoutExt = fileName.substr(0, fileName.size() - TAR_SUFFIX_LEN);
-    } else {
-        fileNameWithoutExt = fileName;
-    }
+    std::string fileNameWithoutExt = RemoveFileExtension(fileName);
     if (hasUppercase(fileNameWithoutExt) && fileNameWithoutExt.size() == CLOUD_HASH_LENGTH) {
         return false;
     } else {
-        return fileName.find(BConstants::ANCO_TAG) != std::string::npos;
+        return fileNameWithoutExt.find(BConstants::ANCO_TAG) != std::string::npos;
     }
 }
 

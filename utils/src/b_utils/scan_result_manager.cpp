@@ -18,6 +18,7 @@
 #include "b_error/b_error.h"
 #include "b_utils/storage_manager_helper.h"
 #include <filemgmt_libhilog.h>
+#include <directory_ex.h>
 
 namespace OHOS::FileManagement::Backup {
 
@@ -91,6 +92,10 @@ void ScanResultManager::AddBigFile(const std::string& filePath, const struct sta
         hashName = StringUtils::GenHashName(filePath + std::to_string(i));
     }
     hashNameSet_.emplace(hashName);
+    std::string ext = ExtractFileExt(filePath);
+    if (!ext.empty()) {
+        hashName += "." + ext;
+    }
     if (restorePath.empty()) {
         pendingFileQueue_.push(std::make_shared<FileInfo>(hashName, filePath, sta, true));
     } else {
@@ -126,6 +131,10 @@ void ScanResultManager::AddAncoBigFile(
     }
     hashNameSet_.emplace(hashName);
     hashName += BConstants::ANCO_TAG;
+    std::string ext = ExtractFileExt(filePath);
+    if (!ext.empty()) {
+        hashName += "." + ext;
+    }
     if (restorePath.empty()) {
         pendingFileQueue_.push(std::make_shared<AncoFileInfo>(hashName, filePath, sta, true));
     } else {

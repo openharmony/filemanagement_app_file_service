@@ -212,6 +212,48 @@ HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_002, testing::ext::TestSize.Le
 }
 
 /**
+ * @tc.number: ADD_BIG_FILE_TEST_003
+ * @tc.name: ADD_BIG_FILE_TEST_003
+ * @tc.desc: Test function of AddBigFile
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_003";
+    std::string filePath = "test3.txt";
+    std::string restorePath = "";
+    struct stat sta = {};
+    manager_.AddBigFile(filePath, sta, restorePath);
+    auto fileInfo = manager_.GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), restorePath);
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-end: ADD_BIG_FILE_TEST_003";
+}
+
+/**
+ * @tc.number: ADD_BIG_FILE_TEST_004
+ * @tc.name: ADD_BIG_FILE_TEST_004
+ * @tc.desc: Test function of AddBigFile
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_004";
+    std::string filePath = "test4.txt";
+    std::string restorePath = "restore4";
+    struct stat sta = {};
+    manager_.AddBigFile(filePath, sta, restorePath);
+    auto fileInfo = manager_.GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), restorePath);
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-end: ADD_BIG_FILE_TEST_004";
+}
+
+/**
  * @tc.number: ADD_TAR_FILE_TEST_001
  * @tc.name: ADD_TAR_FILE_TEST_001
  * @tc.desc: Test function of AddTarFile with maxTarSize check
@@ -450,6 +492,78 @@ HWTEST_F(ScanResultManagerTest, ADD_ANCO_BIG_FILE_TEST_001, testing::ext::TestSi
 }
 
 /**
+* @tc.number: ADD_ANCO_BIGFILE_TEST_002
+* @tc.name: ADD_ANCO_BIGFILE_TEST_002
+* @tc.desc: Test function of AddAncoBigFile
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+*/
+HWTEST_F(ScanResultManagerTest, ADD_ANCO_BIGFILE_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_ANCO_BIGFILE_TEST_002";
+    std::string filePath = "/test/path/to/anco_file";
+    std::string restorePath = "";
+    struct stat sta = {};
+
+    manager_.AddAncoBigFile(filePath, restorePath, sta);
+
+    auto fileInfo = manager_.GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), "");
+
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-end: ADD_ANCO_BIGFILE_TEST_002";
+}
+
+/**
+* @tc.number: ADD_ANCO_BIGFILE_TEST_003
+* @tc.name: ADD_ANCO_BIGFILE_TEST_003
+* @tc.desc: Test function of AddAncoBigFile
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+*/
+HWTEST_F(ScanResultManagerTest, ADD_ANCO_BIGFILE_TEST_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_ANCO_BIGFILE_TEST_003";
+    std::string filePath = "/test/path/to/anco_file.txt";
+    std::string restorePath = "";
+    struct stat sta = {};
+
+    manager_.AddAncoBigFile(filePath, restorePath, sta);
+
+    auto fileInfo = manager_.GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), "");
+
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-end: ADD_ANCO_BIGFILE_TEST_003";
+}
+
+/**
+* @tc.number: ADD_ANCO_BIGFILE_TEST_004
+* @tc.name: ADD_ANCO_BIGFILE_TEST_004
+* @tc.desc: Test function of AddAncoBigFile
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level Level 1
+*/
+HWTEST_F(ScanResultManagerTest, ADD_ANCO_BIGFILE_TEST_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_ANCO_BIGFILE_TEST_004";
+    std::string filePath = "/test/path/to/anco_file.txt";
+    std::string restorePath = "/restore/path/to/anco_file.txt";
+    struct stat sta = {};
+
+    manager_.AddAncoBigFile(filePath, restorePath, sta);
+
+    auto fileInfo = manager_.GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), "/restore/path/to/anco_file.txt");
+
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-end: ADD_ANCO_BIGFILE_TEST_004";
+}
+
+/**
 * @tc.number: ADD_ANCO_TARFILE_TEST_001
 * @tc.name: ADD_ANCO_TARFILE_TEST_001
 * @tc.desc: Test function of AddAncoTarFile
@@ -474,29 +588,13 @@ HWTEST_F(ScanResultManagerTest, ADD_ANCO_TARFILE_TEST_001, testing::ext::TestSiz
 }
 
 /**
-* @tc.number: ADD_ANCO_BIGFILE_TEST_002
-* @tc.name: ADD_ANCO_BIGFILE_TEST_002
-* @tc.desc: Test function of AddAncoBigFile
+* @tc.number: ADD_ANCO_TARFILE_TEST_002
+* @tc.name: ADD_ANCO_TARFILE_TEST_002
+* @tc.desc: Test function of AddAncoTarFile
 * @tc.size: SMALL
 * @tc.type: FUNC
 * @tc.level Level 1
 */
-HWTEST_F(ScanResultManagerTest, ADD_ANCO_BIGFILE_TEST_002, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_ANCO_BIGFILE_TEST_002";
-    std::string filePath = "/test/path/to/anco_file";
-    std::string restorePath = "";
-    struct stat sta = {};
-
-    manager_.AddAncoBigFile(filePath, restorePath, sta);
-
-    auto fileInfo = manager_.GetFileInfo();
-    ASSERT_NE(fileInfo, nullptr);
-    EXPECT_EQ(fileInfo->GetRestorePath(), "");
-
-    GTEST_LOG_(INFO) << "ScanResultManagerTest-end: ADD_ANCO_BIGFILE_TEST_002";
-}
-
 HWTEST_F(ScanResultManagerTest, ADD_ANCO_TARFILE_TEST_002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_ANCO_TARFILE_TEST_002";
