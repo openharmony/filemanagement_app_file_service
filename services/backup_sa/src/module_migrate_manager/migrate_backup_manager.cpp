@@ -248,8 +248,10 @@ void MigrateManager::DoBackupTask(const std::string &bundleName)
 {
     int ret = ERR_OK;
     int fdNum = 0;
+    auto startTime = std::chrono::system_clock::now();
     while (!GetScanInstance(bundleName)->IsProcessCompleted() || GetScanInstance(bundleName)->HasFileReady()) {
-        GetScanInstance(bundleName)->WaitForCompleted();
+        GetScanInstance(bundleName)->WaitForFiles();
+        WaitToSendFd(startTime, fdNum);
         std::shared_ptr<IFileInfo> fileInfo = GetScanInstance(bundleName)->GetFileInfo();
         if (fileInfo == nullptr) {
             HILOGE("Get null file info!!");
@@ -300,13 +302,12 @@ ErrCode MigrateManager::ReportAppFileReady(const std::string &bundleName,
     if (errCode != 0) {
         HILOGE("GetFileHandle fail err:%{public}d", errCode);
     }
-    int reportRs =
-        fd.Get() < 0 ? servicePtr_->DefaultAppFileReadyWithoutFd(fileName, newPath, errCode) :
+    int reportRs = fd.Get() < 0 ? servicePtr_->DefaultAppFileReadyWithoutFd(fileName, newPath, errCode) :
         servicePtr_->DefaultAppFileReady(fileName, newPath, move(fd), errCode);
     if (SUCCEEDED(reportRs)) {
         HILOGD("Report app file ready success, fileName: %{public}s", fileName.c_str());
         if (needDelete) {
-            auto ret = RemoveFile(newPath);
+            bool ret = enhanceService->RemoveFile(bundleName, newPath);
             HILOGD("RemoveFile result:%{public}d, newPath:%{public}s", ret, newPath.c_str());
         }
     } else {
