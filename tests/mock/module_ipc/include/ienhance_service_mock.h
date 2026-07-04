@@ -49,6 +49,7 @@ public:
         const std::string &, UniqueFd &, UniqueFd &));
     MOCK_METHOD(ErrCode, StartDefaultAppUnPack, (const std::string &));
     MOCK_METHOD(void, StartDefaultAppClear, (const std::string &));
+    MOCK_METHOD(bool, RemoveFile, (const std::string &, const std::string &));
     MOCK_METHOD(ErrCode, DefaultAppRestoreBigFiles, (const std::string &, bool));
     MOCK_METHOD(ErrCode, DefaultOpenFile, (const std::string &, const std::string &,
         UniqueFd &));

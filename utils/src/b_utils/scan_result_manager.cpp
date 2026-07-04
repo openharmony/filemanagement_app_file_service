@@ -69,18 +69,20 @@ std::string CompatibleSmallFileInfo::GetRestorePath()
 
 uint64_t ScanResultManager::GetMaxTarSize()
 {
-    static std::once_flag initFlag;
-    std::call_once(initFlag, [&]() {
-        uint64_t freeSize = StorageManagerHelper::GetInstance().GetFreeSize();
-        if (freeSize == 0) {
-            HILOGE("get freeSize fail!");
-        }
-        if (freeSize < TEN_GB) {
-            maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
-        } else {
-            maxTarSize_.store(freeSize - NINE_GB);
-        }
-    });
+    if (maxTarSize_.load() > 0) {
+        return maxTarSize_.load();
+    }
+
+    uint64_t freeSize = StorageManagerHelper::GetInstance().GetFreeSize();
+    if (freeSize == 0) {
+        HILOGE("get freeSize fail!");
+    }
+    if (freeSize < TEN_GB) {
+        maxTarSize_.store(ONE_HUNDRED_FIFTY_MB);
+    } else {
+        maxTarSize_.store(freeSize - NINE_GB);
+    }
+    HILOGI("maxTarSize init:%{public}u MB", static_cast<uint32_t>(maxTarSize_.load() / MEGA_BYTE));
     return maxTarSize_.load();
 }
 

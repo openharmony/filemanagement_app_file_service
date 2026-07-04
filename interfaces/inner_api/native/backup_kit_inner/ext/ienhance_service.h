@@ -98,6 +98,7 @@ public:
         const std::string &fileName, UniqueFd &fd, UniqueFd &reportFd) = 0;
     virtual ErrCode StartDefaultAppUnPack(const std::string &bundleName) = 0;
     virtual void StartDefaultAppClear(const std::string &bundleName) = 0;
+    virtual bool RemoveFile(const std::string &bundleName, const std::string &filePath) = 0;
     virtual ErrCode DefaultAppRestoreBigFiles(const std::string &bundleName, bool appendTargetPath) = 0;
     virtual ErrCode DefaultOpenFile(const std::string &bundleName, const std::string &path, UniqueFd &fd) = 0;
     virtual ErrCode GetIndexFile(const std::string &bundleName, const std::string &path,
