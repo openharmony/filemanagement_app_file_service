@@ -1511,7 +1511,7 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
         AppRadar::Info info("", "", error);
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
                 AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
-                static_cast<int32_t>(BError::Codes::EXT_BROKEN_IPC).GetCode());
+                BError::Codes::EXT_BROKEN_IPC).GetCode();
         return {nullptr, nullptr};
     }
 
@@ -1524,7 +1524,7 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
         AppRadar::Info info("", "", error);
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
                 AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
-                static_cast<int32_t>(BError::Codes::EXT_BROKEN_IPC).GetCode());
+                BError::Codes::EXT_BROKEN_IPC).GetCode();
         dlclose(handle);
         return {nullptr, nullptr};
     }
