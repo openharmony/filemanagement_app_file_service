@@ -392,6 +392,41 @@ bool BJsonUtil::BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string
     return true;
 }
 
+bool BJsonUtil::AddRestoreSpend(uint32_t restoreSpend, std::string &jsonStr)
+{
+    cJSON *root = cJSON_Parse(jsonStr.c_str());
+    if (root == nullptr) {
+        return false;
+    }
+    cJSON *resultInfoArray = cJSON_GetObjectItem(root, "resultInfo");
+    if (resultInfoArray == nullptr || !cJSON_IsArray(resultInfoArray)) {
+        cJSON_Delete(root);
+        return false;
+    }
+    int arraySize = cJSON_GetArraySize(resultInfoArray);
+    for (int i = 0; i < arraySize; ++i) {
+        cJSON *item = cJSON_GetArrayItem(resultInfoArray, i);
+        if (!cJSON_HasObjectItem(item, "type")) {
+            continue;
+        }
+        cJSON *typeObj = cJSON_GetObjectItem(item, "type");
+        if (typeObj && cJSON_IsString(typeObj) && std::string(typeObj->valuestring) == "ErrorInfo") {
+            cJSON_AddNumberToObject(item, "restoreSpend", restoreSpend);
+            char *newJsonStr = cJSON_Print(root);
+            if (newJsonStr == nullptr) {
+                cJSON_Delete(root);
+                return false;
+            }
+            jsonStr = std::string(newJsonStr);
+            cJSON_Delete(root);
+            cJSON_free(newJsonStr);
+            return true;
+        }
+    }
+    cJSON_Delete(root);
+    return false;
+}
+
 bool BJsonUtil::AddAncoFileResult(const AncoRestoreResult &ancoRestoreRes, std::string &jsonStr)
 {
     cJSON *root = cJSON_Parse(jsonStr.c_str());
