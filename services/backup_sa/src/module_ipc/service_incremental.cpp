@@ -1473,27 +1473,35 @@ bool Service::VerifyDataClone()
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
-    CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
-    if (session_ == nullptr || isOccupyingSession_.load()) {
-        HILOGE("session is nullptr or occupied, StartCleanData failed.");
-        return BError(BError::Codes::SA_INVAL_ARG).GetCode();
-    }
-    if (!VerifyDataClone()) {
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
-    }
-    
-    auto [handle, func] = LoadGcLibrary(triggerType);
-    if (handle == nullptr || func == nullptr) {
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
-    }
+    try {
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
+        if (session_ == nullptr || isOccupyingSession_.load()) {
+            HILOGE("session is nullptr or occupied, StartCleanData failed.");
+            return BError(BError::Codes::SA_INVAL_ARG).GetCode();
+        }
+        if (!VerifyDataClone()) {
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
+        }
+        
+        auto [handle, func] = LoadGcLibrary(triggerType);
+        if (handle == nullptr || func == nullptr) {
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
+        }
 
-    ErrCode errCode = ExecuteGcTask(handle, func, triggerType, writeSize, waitTime);
-    return errCode;
+        ErrCode errCode = ExecuteGcTask(handle, func, triggerType, writeSize, waitTime);
+        return errCode;
+    } catch (const BError &e) {
+        HILOGE("StartCleanData failed, errCode = %{public}d", e.GetCode());
+        return e.GetCode();
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
+    }
 }
 
 std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
 {
-    const char* libPath =  (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) ?
+    const char* libPath =  (triggerType == BConstants::DEVICE_GARBAGE_COLLECTION) ?
         "/system/lib64/libioqos_service_client.z.so" :
         "/system/lib64/libsmart_storage_service_client.z.so";
     void *handle = dlopen(libPath, RTLD_LAZY);
@@ -1507,7 +1515,7 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
         return {nullptr, nullptr};
     }
 
-    const char* symbolName = (triggerType == BConstans::DEVICE_GARBAGE_COLLECTION) ?
+    const char* symbolName = (triggerType == BConstants::DEVICE_GARBAGE_COLLECTION) ?
         "CallDeviceTaskRequest" : "CallDirectTlc";
     CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, symbolName));
     if (func == nullptr) {
