@@ -21,6 +21,7 @@
 #include <string>
 #include <string_view>
 #include <unistd.h>
+#include <set>
 
 namespace OHOS::FileManagement::Backup::BConstants {
 
