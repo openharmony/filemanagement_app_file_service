@@ -534,7 +534,7 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
     HILOGI("begin %{public}s", bundleName.data());
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     BConstants::ExtensionAction action;
-    if (GetDefaultBundleResult(bundleName)) {
+    if (defaultAppManager_->IsDefaultBundle(bundleName)) {
         HILOGI("enter DefaultAPP clone, bundleName:%{public}s", bundleName.c_str());
         // 移除拉起超时定时器，进入下一阶段状态机
         sched_->RemoveExtConn(bundleName);

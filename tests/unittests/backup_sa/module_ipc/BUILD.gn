@@ -102,6 +102,7 @@ ohos_unittest("backup_service_test") {
     "${path_backup}/services/backup_sa/src/module_service_manager/service_restore_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_backup_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_restore_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "service_test.cpp",
@@ -204,6 +205,7 @@ ohos_unittest("backup_service_throw_test") {
     "${path_backup}/services/backup_sa/src/module_service_manager/service_restore_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_backup_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_restore_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
@@ -357,6 +359,7 @@ ohos_unittest("backup_service_scheduler_test") {
 
   sources = [
     "${path_backup_mock}/timer/timer_mock.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_sched/sched_scheduler.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "sched_scheduler_test.cpp",
@@ -437,6 +440,7 @@ ohos_unittest("backup_restore_deps_manager_test") {
     "${path_backup}/services/backup_sa/src/module_service_manager/service_restore_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_backup_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_restore_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
@@ -525,6 +529,7 @@ ohos_unittest("backup_service_incremental_test") {
     "${path_backup}/frameworks/native/backup_kit_inner/src/service_client.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_restore_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
     "service_incremental_test.cpp",
   ]
 
@@ -623,6 +628,7 @@ ohos_unittest("backup_service_other_test") {
     "${path_backup}/services/backup_sa/src/module_service_manager/service_restore_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_backup_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_restore_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
     "service_other_test.cpp",
   ]
 
@@ -708,6 +714,7 @@ ohos_unittest("backup_service_other_test_extended") {
     "${path_backup}/services/backup_sa/src/module_service_manager/service_restore_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_backup_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_restore_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "${path_backup_mock}/accesstoken/src/accesstoken_kit_mock.cpp",
     "${path_backup_mock}/b_radar/src/runninglock_mock.cpp",
@@ -812,6 +819,7 @@ ohos_unittest("backup_service_sub_test") {
     "${path_backup}/services/backup_sa/src/module_service_manager/service_restore_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_backup_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_restore_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
     "${path_backup}/services/backup_sa/src/module_notify/notify_work_service.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
     "service_sub_test.cpp",

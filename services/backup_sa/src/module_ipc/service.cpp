@@ -943,7 +943,7 @@ void Service::ExtStart(const string &bundleName)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("begin ExtStart, bundle name:%{public}s", bundleName.data());
-        if (GetDefaultBundleResult(bundleName)) {
+        if (defaultAppManager_->IsDefaultBundle(bundleName)) {
             HILOGI("begin DefaultExtStart, bundle name:%{public}s", bundleName.data());
             IServiceReverseType::Scenario scenario = session_->GetScenario();
             CallStartDefaultBundleTask(bundleName, scenario);
@@ -1087,7 +1087,7 @@ void Service::ExtConnectFailed(const string &bundleName, ErrCode ret)
 
 void Service::StartRunningTimer(const std::string &bundleName)
 {
-    if (GetDefaultBundleResult(bundleName)) {
+    if (defaultAppManager_->IsDefaultBundle(bundleName)) {
         return;
     }
     auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
@@ -1324,6 +1324,11 @@ void Service::SessionDeactive()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
+        ErrCode errCode = VerifyCaller();
+        if (errCode != ERR_OK) {
+            HILOGE("verify caller failed, errCode:%{public}d", errCode);
+            return;
+        }
         TotalStatReport();
         isInRelease_.store(true);
         //清理处置状态
@@ -1344,32 +1349,7 @@ void Service::SessionDeactive()
             }
             return;
         }
-        isInRelease_.store(false);
-        if (!bundleNameList.empty()) {
-            DelClearBundleRecord(bundleNameList);
-        }
-        ClearRecord();
-        // 结束定时器
-        if (sched_ == nullptr) {
-            HILOGE("Session deactive error, sched is empty");
-            return;
-        }
-        sched_->ClearSchedulerData();
-        // 清除缓存数据
-        if (session_ == nullptr) {
-            HILOGE("Session deactive error, session is empty");
-            return;
-        }
-        ret = session_->ClearSessionData();
-        if (clearRecorder_ != nullptr && !ret && isRmConfigFile_.load()) {
-            clearRecorder_->DeleteConfigFile();
-        }
-        // close session
-        StopAll(nullptr, true);
-        if (session_->GetSessionCnt() <= 0) {
-            HILOGI("do unload Service.");
-            sched_->TryUnloadService();
-        }
+        ProcessDeactiveCleanup(bundleNameList, ret);
     } catch (...) {
         HILOGE("Unexpected exception");
     }
@@ -1387,6 +1367,34 @@ std::function<void(const std::string &&)> Service::GetBackupInfoConnectDone(wptr
         }
         thisPtr->getBackupInfoCondition_.notify_one();
     };
+}
+
+void Service::ProcessDeactiveCleanup(std::vector<std::string> &bundleNameList, ErrCode ret)
+{
+    isInRelease_.store(false);
+    if (!bundleNameList.empty()) {
+        DelClearBundleRecord(bundleNameList);
+    }
+    ClearRecord();
+    if (sched_ == nullptr) {
+        HILOGE("Session deactive error, sched is empty");
+        return;
+    }
+    sched_->ClearSchedulerData();
+    if (session_ == nullptr) {
+        HILOGE("Session deactive error, session is empty");
+        return;
+    }
+    ret = session_->ClearSessionData();
+    defaultAppManager_->ClearDefaultAppData();
+    if (clearRecorder_ != nullptr && !ret && isRmConfigFile_.load()) {
+        clearRecorder_->DeleteConfigFile();
+    }
+    StopAll(nullptr, true);
+    if (session_->GetSessionCnt() <= 0) {
+        HILOGI("do unload Service.");
+        sched_->TryUnloadService();
+    }
 }
 
 std::function<void(const std::string &&, bool)> Service::GetBackupInfoConnectDied(wptr<Service> obj,
@@ -1586,7 +1594,7 @@ ErrCode Service::UpdateTimer(const BundleName &bundleName, uint32_t timeout, boo
 
 ErrCode Service::UpdateDefaultAppSendRate(const std::string &bundleName, int32_t sendRate, bool &result)
 {
-    auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
+    auto instance = defaultAppManager_->GetMigrateInstance(bundleName, GetUserIdDefault());
     ErrCode ret = ERR_OK;
     if (instance != nullptr) {
         ret = instance->UpdateFdSendRate(bundleName, sendRate);
@@ -1654,7 +1662,7 @@ ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate,
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-    if (GetDefaultBundleResult(bundleName)) {
+    if (defaultAppManager_->IsDefaultBundle(bundleName)) {
         return UpdateDefaultAppSendRate(bundleName, sendRate, result);
     }
     return UpdateNormalAppSendRate(bundleName, sendRate, result);

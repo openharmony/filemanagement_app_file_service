@@ -195,6 +195,10 @@ int MigrateManager::DealIncreRestoreBigAndTarFile()
     auto startTime = std::chrono::system_clock::now();
     // 解压
     int ret = CreateDefaultTask(bundleName_);
+    if (ret != ERR_OK) {
+        HILOGE("CreateDefaultTask failed, err:%{public}d", ret);
+        return ret;
+    }
     ret = DoIncrementalRestore();
     if (ret != ERR_OK) {
         HILOGE("Do incremental restore err");
@@ -304,7 +308,10 @@ void MigrateManager::DoClear()
             HILOGI("configured not clear data.");
             return;
         }
-        DoClearInner();
+        if (!hasCleared_.load()) {
+            DoClearInner();
+            hasCleared_.store(true);
+        }
     } catch (...) {
         HILOGE("Failed to clear");
     }
@@ -313,12 +320,6 @@ void MigrateManager::DoClear()
 void MigrateManager::DoClearInner()
 {
     try {
-        string callerName;
-        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
-        if (ret != ERR_OK) {
-            HILOGE("error, Get bundle name failed, ret:%{public}d", ret);
-            return;
-        }
         auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
         if (!enhanceService) {
             HILOGW("enhance service is not loaded");
@@ -401,16 +402,7 @@ ErrCode MigrateManager::HandleExtOnDisconnect(BackupType scenario, bool isAppRes
     try {
         HILOGI("Begin, scenario:%{public}d, isAppResultReport:%{public}d, errCode:%{public}d", scenario,
             isAppResultReport, errCode);
-        std::string callerName;
-        auto ret = VerifyCallerAndGetCallerName(callerName);
-        if (ret != ERR_OK) {
-            HILOGE("HandleExtDisconnect VerifyCaller failed, get bundle failed, ret:%{public}d", ret);
-            if (isAppResultReport) {
-                HandleCurBundleEndWork(callerName, scenario);
-                servicePtr_->OnAllBundlesFinished(BError(BError::Codes::OK));
-            }
-            return ret;
-        }
+        ErrCode ret = ERR_OK;
         if (isAppResultReport && (scenario == BackupType::FULL_RESTORE ||
             scenario == BackupType::INCREMENTAL_RESTORE)) {
             HandleCurBundleEndWork(bundleName_, scenario);

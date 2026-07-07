@@ -1,0 +1,85 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/app_file_service/backup.gni")
+
+ohos_unittest("default_app_manager_test") {
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "${path_backup_mock}/timer/timer_mock.cpp",
+    "${path_backup}/services/backup_sa/src/module_ipc/enhance_service_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/default_app_manager.cpp",
+    "${path_backup}/services/backup_sa/src/module_migrate_manager/migrate_restore_manager.cpp",
+    "default_app_manager_test.cpp",
+  ]
+  sources += backup_mock_src
+  sources += backup_mock_service_src
+  sources += backup_mock_session_manager_src
+  sources += backup_mock_module_external_src
+
+  include_dirs = [
+    "${path_backup}/services/backup_sa/include",
+    "${path_backup}/services/backup_sa/include/module_migrate_manager",
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
+    "${path_backup}/tests/unittests/backup_api/backup_impl/include",
+  ]
+
+  deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils:backup_utils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
+    "ability_runtime:ability_manager",
+    "access_token:libtokenid_sdk",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
+  }
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private = public",
+  ]
+
+  use_exceptions = true
+}
+
+group("migrate_manager_test") {
+  testonly = true
+  deps = [ ":default_app_manager_test" ]
+}

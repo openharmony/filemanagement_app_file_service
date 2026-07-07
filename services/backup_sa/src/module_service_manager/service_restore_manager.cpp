@@ -121,7 +121,7 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
             restoreInfo.extensionName.c_str());
         if (((!restoreInfo.allToBackup && !SpecialDefaultVersion(restoreInfo.versionName)) ||
             (restoreInfo.extensionName.empty() && !SAUtils::IsSABundleName(restoreInfo.name))) &&
-            !GetDefaultBundleResult(restoreInfo.name)) {
+            !defaultAppManager_->IsDefaultBundle(restoreInfo.name)) {
             AppStatReportErr(restoreInfo.name, "SetCurrentSessProperties",
                 RadarError(MODULE_BMS, BError(BError::Codes::SA_FORBID_BACKUP_RESTORE)));
             OnBundleStarted(BError(BError::Codes::SA_FORBID_BACKUP_RESTORE), session_, bundleNameIndexInfo);
@@ -207,7 +207,7 @@ ErrCode Service::SendDefaultIncrementalFileHandle(const std::string &bundleName,
         }
         return BError(BError::Codes::EXT_INVAL_ARG);
     }
-    auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
+    auto instance = defaultAppManager_->GetMigrateInstance(bundleName, GetUserIdDefault());
     if (instance == nullptr) {
         HILOGE("Failed to GetMigrateInstance");
         return BError(BError::Codes::EXT_INVAL_ARG);
@@ -236,14 +236,14 @@ ErrCode Service::PublishDefaultIncrementalFile(const BFileInfo &fileInfo)
     HILOGI("Start Default publish, bundleName:%{public}s", fileInfo.owner.c_str());
     if (!fileInfo.fileName.empty()) {
         HILOGE("Forbid to use PublishIncrementalFile with fileName for App");
-        return EPERM;
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     if (session_ == nullptr) {
         HILOGE("session is empty, bundleName:%{public}s", fileInfo.owner.c_str());
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     session_->SetPublishFlag(fileInfo.owner);
-    auto instance = GetMigrateInstance(wptr<Service>(this), fileInfo.owner, GetUserIdDefault());
+    auto instance = defaultAppManager_->GetMigrateInstance(fileInfo.owner, GetUserIdDefault());
     if (instance == nullptr) {
         HILOGE("Failed to GetMigrateInstance");
         return BError(BError::Codes::EXT_INVAL_ARG);

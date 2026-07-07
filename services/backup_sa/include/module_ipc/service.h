@@ -33,6 +33,7 @@
 #include "iservice_reverse.h"
 #include "module_sched/sched_scheduler.h"
 #include "module_migrate_manager/migrate_manager.h"
+#include "module_migrate_manager/default_app_manager.h"
 #ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
 #include "running_lock.h"
@@ -278,7 +279,7 @@ public:
      *
      */
     void SessionDeactive();
-
+    void ProcessDeactiveCleanup(std::vector<std::string> &bundleNameList, ErrCode ret);
     /**
      * @brief 构造拉起应用所需的want
      *
@@ -399,7 +400,6 @@ public:
     void DoNoticeClientFinish(const std::string &bundleName, ErrCode errCode, bool isRestoreEnd);
 // default clone
     ErrCode SendDefaultIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
-    void SetDefaultBundleName(const std::vector<std::string> &bundleNames, bool result);
     void CallStartDefaultBundleTask(const std::string &bundleName, IServiceReverseType::Scenario &scenario);
     void StartBundleTaskBackup(const std::string &bundleName);
     void StartBundleTaskRestore(const std::string &bundleName);
@@ -421,10 +421,6 @@ public:
         vector<BJsonEntityCaps::BundleInfo> &bundleInfos,
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
          std::map<std::string, BJsonUtil::BundleSettingInfo>& bundleSettingInfos);
-    sptr<MigrateManager> GetMigrateInstance(wptr<Service> servicePtr,
-        const std::string &bundleName, int32_t userId);
-    bool GetDefaultBundleResult(const vector<string> &bundleNames);
-    bool GetDefaultBundleResult(const string &bundleName);
     void SetDefaultApps(const vector<string> &bundleNames,
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> detailMap);
     ErrCode InitSession(const sptr<IServiceReverse> &remote, IServiceReverseType::Scenario &scenario,
@@ -508,6 +504,8 @@ public:
         logElapsed("BJsonClearDataConfig construct");
         sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
         logElapsed("SchedScheduler construct");
+        defaultAppManager_ = std::make_unique<DefaultAppManager>(wptr<Service>(this));
+        logElapsed("DefaultAppManager construct");
 #ifdef POWER_MANAGER_ENABLED
         runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>();
         logElapsed("RadarRunningLockStatistic construct");
@@ -944,9 +942,7 @@ public:
     bool isIncBackup_ = false;
     sptr<SvcSessionManager> session_;
     std::map<BundleName, std::atomic<bool>> backupExtOnReleaseMap_;
-    std::map<std::string, bool> defaultBundleMap_ = {};
-    std::map<std::string, sptr<MigrateManager>> migrateMap_ = {};
-    std::mutex migrateInstanceLock_;
+    std::unique_ptr<DefaultAppManager> defaultAppManager_;
     RestoreTypeEnum restoreType_ = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
     std::string oldBackupVersion_ = "";
 };

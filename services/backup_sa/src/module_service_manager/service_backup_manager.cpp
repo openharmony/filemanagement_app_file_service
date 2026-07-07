@@ -29,30 +29,6 @@ static const std::vector<std::string> STRATEGY_LIST = {
 "BackupExtraPropertyStrategy"
 };
 
-static std::string GetKeyInMap(const std::map<std::string, bool> &map, const std::string& fileName)
-{
-    for (const auto& pair : map) {
-        if (pair.second == true && fileName.find(pair.first) != string::npos) {
-            return pair.first;
-        }
-    }
-    return "";
-}
-
-// 初始化migrate
-sptr<MigrateManager> Service::GetMigrateInstance(wptr<Service> servicePtr,
-    const std::string &bundleName, int32_t userId)
-{
-    std::lock_guard<std::mutex> lock(migrateInstanceLock_);
-    auto it = migrateMap_.find(bundleName);
-    if (it == migrateMap_.end()) {
-        auto instance = sptr(new MigrateManager(servicePtr, bundleName, userId));
-        migrateMap_[bundleName] = instance;
-        return instance;
-    }
-    return it->second;
-}
-
 std::vector<std::string> Service::CallGetSupportBundleNames(const vector<BundleName> &bundleNames,
     vector<BJsonEntityCaps::BundleInfo> &bundleInfos, BizScene &scene, UniqueFd fd)
 {
@@ -229,7 +205,7 @@ std::vector<std::string> Service::GetSupportBundleNamesBackup(const vector<Bundl
     std::vector<BJsonEntityCaps::BundleInfo> &backupInfos)
 {
     auto bundleDetails = MakeDetailList(bundleNames);
-    auto defaultFlag = GetDefaultBundleResult(bundleNames);
+    auto defaultFlag = defaultAppManager_->IsDefaultBundle(bundleNames);
     backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundleDetails,
         session_->GetSessionUserId(), defaultFlag);
     // 这里要走service里面的原逻辑，后面细化的时候再处理
@@ -247,34 +223,9 @@ void Service::SetDefaultApps(const vector<string> &bundleNames,
 {
     for (const auto &bundlePair : detailMap) {
         for (const auto &detailInfo : bundlePair.second) {
-            SetDefaultBundleName(bundleNames, detailInfo.isDefaultBackupAndRestore);
+            defaultAppManager_->SetDefaultBundleName(bundleNames, detailInfo.isDefaultBackupAndRestore);
         }
     }
-}
-
-void Service::SetDefaultBundleName(const vector<string> &bundleNames, bool result)
-{
-    for (const auto &bundleName : bundleNames) {
-        defaultBundleMap_[bundleName] = result;
-        HILOGI("bundleName:%{public}s, result:%{public}d", bundleName.c_str(), result);
-    }
-}
-
-bool Service::GetDefaultBundleResult(const vector<string> &bundleNames)
-{
-    for (const auto &bundleName : bundleNames) {
-        return GetDefaultBundleResult(bundleName);
-    }
-    return false;
-}
-
-bool Service::GetDefaultBundleResult(const string &bundleName)
-{
-    auto it = defaultBundleMap_.find(bundleName);
-    if (it == defaultBundleMap_.end()) {
-        return false;
-    }
-    return it->second;
 }
 
 void Service::StartBundleTaskBackup(const std::string &bundleName)
@@ -282,7 +233,7 @@ void Service::StartBundleTaskBackup(const std::string &bundleName)
     HILOGI("Begin handle current bundle full backup or full restore, bundleName:%{public}s", bundleName.c_str());
     IServiceReverseType::Scenario scenario = session_->GetScenario();
     ErrCode ret = ERR_OK;
-    auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
+    auto instance = defaultAppManager_->GetMigrateInstance(bundleName, GetUserIdDefault());
     if (instance == nullptr) {
         HILOGE("Failed to GetMigrateInstance");
         return;
@@ -320,7 +271,7 @@ ErrCode Service::DefaultAppFileReady(const string &fileName, const std::string &
             HILOGE("AppFileReady error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        string callerName = GetKeyInMap(defaultBundleMap_, filePath);
+        string callerName = defaultAppManager_->GetCallerNameByFilePath(filePath);
         ErrCode ret = ERR_OK;
         if (fileName.find('/') != string::npos) {
             HILOGE("AppFileReady error, filename is not valid, fileName:%{public}s", GetAnonyPath(fileName).c_str());
@@ -387,6 +338,7 @@ ErrCode Service::InitSession(const sptr<IServiceReverse>& remote,
     StopAll(nullptr, true);
     return ret;
 }
+
 ErrCode Service::InitSessionWithErrMsg(const sptr<IServiceReverse>& remote, IServiceReverseType::Scenario &scenario,
     BizScene &scene, int32_t &errCodeForMsg, std::string& errMsg)
 {
@@ -510,7 +462,7 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
     UniqueFd fd)
 {
     try {
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
@@ -528,17 +480,14 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
         CallSetSessPropertiesWithDetail(supportBundleNames, bundleInfos,
             bundleNameDetailMap, bundleSettingInfos, scene);
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }

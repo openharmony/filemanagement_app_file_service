@@ -298,6 +298,7 @@ ohos_shared_library("backup_sa") {
     "src/module_external/storage_manager_service.cpp",
     "src/module_service_manager/service_backup_manager.cpp",
     "src/module_service_manager/service_restore_manager.cpp",
+    "src/module_migrate_manager/default_app_manager.cpp",
     "src/module_migrate_manager/migrate_backup_manager.cpp",
     "src/module_migrate_manager/migrate_restore_manager.cpp",
     "src/module_strategy/service_strategy.cpp"
@@ -310,6 +311,7 @@ ohos_shared_library("backup_sa") {
 
   include_dirs = [
     "include",
+    "include/module_migrate_manager",
     "include/module_notify",
     "${path_backup}/interfaces/inner_api/native/backup_kit_inner/impl",
   ]
