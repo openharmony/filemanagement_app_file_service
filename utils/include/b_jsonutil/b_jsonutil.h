@@ -172,6 +172,17 @@ public:
     static bool AddAncoFileResult(const AncoRestoreResult &ancoRestoreRes, std::string &jsonStr);
 
     /**
+     * @brief 添加应用恢复耗时
+     *
+     * @param jsonStr 组建结果
+     * @param errCode 错误码
+     *
+     * @return 是否组建成功
+     *
+     */
+    static bool AddRestoreSpend(uint32_t restoreSpend, std::string &jsonStr);
+
+    /**
      * @brief 组建App进度返回的信息
      *
      * @param jsonStr 组建结果
