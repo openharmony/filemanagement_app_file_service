@@ -1507,7 +1507,7 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
     void *handle = dlopen(libPath, RTLD_LAZY);
     if (!handle) {
         std::string error = dlerror();
-        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error);
+        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error.c_str());
         AppRadar::Info info("", "", error);
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
                 AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
@@ -1520,7 +1520,7 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
     CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, symbolName));
     if (func == nullptr) {
         std::string error = dlerror();
-        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error);
+        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error.c_str());
         AppRadar::Info info("", "", error);
         AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
                 AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
