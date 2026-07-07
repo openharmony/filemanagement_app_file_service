@@ -2129,9 +2129,11 @@ void BackupExtExtension::AppResultReport(std::string restoreRetInfo, BackupResto
     auto proxy = ServiceClient::GetInstance();
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceClient handle");
     BJsonUtil::AddAncoFileResult(ancoRestoreRes_, restoreRetInfo);
-    uint32_t restoreSpend = appStatistic_->onRestoreSpend_.GetSpan() +
-        appStatistic_->onRestoreexSpend_.GetSpan();
-    BJsonUtil::AddRestoreSpend(restoreSpend, restoreRetInfo);
+    if (appStatistic_) {
+        uint32_t restoreSpend = appStatistic_->onRestoreSpend_.GetSpan() +
+            appStatistic_->onRestoreexSpend_.GetSpan();
+        BJsonUtil::AddRestoreSpend(restoreSpend, restoreRetInfo);
+    }
     HILOGI("restoreRetInfo is %{public}s", restoreRetInfo.c_str());
     auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario, errCode);
     if (ret != ERR_OK) {
