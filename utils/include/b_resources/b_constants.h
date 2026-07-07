@@ -333,6 +333,13 @@ static inline std::string FILE_BACKUP_RESTORE_STATISTIC = "FILE_BACKUP_RESTORE_S
 
 // Garbage collection
 constexpr int DEVICE_GARBAGE_COLLECTION = 0;
+/*
+ * 0: 内存清理
+ * 1：关闭IO直落TLC策略
+ * 2：开启IO直落TLC策略
+ * 3：查询IO存储策略
+ */
+static std::set<int> INTERCEPT_TRIGGER_TYPES = {0, 1, 2, 3};
 constexpr int GC_TASK_DONE = 0;
 constexpr int GC_DEVICE_OK = 0;
 constexpr int GC_DEVICE_INCOMPATIBLE = -7;

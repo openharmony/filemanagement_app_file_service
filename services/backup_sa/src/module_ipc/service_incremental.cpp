@@ -1473,28 +1473,67 @@ bool Service::VerifyDataClone()
 
 ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
-    if (session_ == nullptr || isOccupyingSession_.load()) {
-        HILOGE("session is nullptr or occupied, StartCleanData failed.");
-        return BError(BError::Codes::SA_INVAL_ARG).GetCode();
+    try {
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
+        if (session_ == nullptr || isOccupyingSession_.load()) {
+            HILOGE("session is nullptr or occupied, StartCleanData failed.");
+            return BError(BError::Codes::SA_INVAL_ARG).GetCode();
+        }
+        if (!VerifyDataClone()) {
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
+        }
+        
+        auto [handle, func] = LoadGcLibrary(triggerType);
+        if (handle == nullptr || func == nullptr) {
+            return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
+        }
+
+        ErrCode errCode = ExecuteGcTask(handle, func, triggerType, writeSize, waitTime);
+        return errCode;
+    } catch (const BError &e) {
+        HILOGE("StartCleanData failed, errCode = %{public}d", e.GetCode());
+        return e.GetCode();
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
     }
-    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
-    if (!VerifyDataClone()) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
-    }
-    void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY);
+}
+
+std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
+{
+    const char* libPath =  (triggerType == BConstants::DEVICE_GARBAGE_COLLECTION) ?
+        "/system/lib64/libioqos_service_client.z.so" :
+        "/system/lib64/libsmart_storage_service_client.z.so";
+    void *handle = dlopen(libPath, RTLD_LAZY);
     if (!handle) {
-        HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+        std::string error = dlerror();
+        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error);
+        AppRadar::Info info("", "", error);
+        AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
+                static_cast<int32_t>(BError::Codes::EXT_BROKEN_IPC).GetCode());
+        return {nullptr, nullptr};
     }
-    CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
+
+    const char* symbolName = (triggerType == BConstants::DEVICE_GARBAGE_COLLECTION) ?
+        "CallDeviceTaskRequest" : "CallDirectTlc";
+    CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, symbolName));
     if (func == nullptr) {
-        HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
+        std::string error = dlerror();
+        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error);
+        AppRadar::Info info("", "", error);
+        AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
+                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
+                static_cast<int32_t>(BError::Codes::EXT_BROKEN_IPC).GetCode());
         dlclose(handle);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
-        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+        return {nullptr, nullptr};
     }
+    return {handle, func};
+}
+
+ErrCode Service::ExecuteGcTask(void* handle, CallDeviceTaskRequest func,
+                               int triggerType, unsigned int writeSize, unsigned int waitTime)
+{
     std::unique_lock<std::mutex> lock(gcMtx_);
     if (gcProgress_ == nullptr) {
         gcProgress_ = std::make_shared<GcProgressInfo>();
@@ -1512,13 +1551,11 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
     isGcTaskDone_.store(false, std::memory_order_release);
     if (func(triggerType, writeSize, waitTime, cb) != ERROR_OK) {
         dlclose(handle);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
     }
     gcVariable_.wait_for(lock, std::chrono::seconds(BConstants::GC_MAX_WAIT_TIME_S),
         [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
     dlclose(handle);
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return DealWithGcErrcode(isGcTaskDone_.load(std::memory_order_acquire), gcProgress_);
 }
 } // namespace OHOS::FileManagement::Backup
