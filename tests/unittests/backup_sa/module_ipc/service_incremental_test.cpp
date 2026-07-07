@@ -2693,7 +2693,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0000, Test
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0000";
     int testTriggerType = 0;
-    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).willOnce(Return(nullptr));
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(nullptr));
     auto [handle, func] = service->LoadGcLibrary(testTriggerType);
     EXPECT_EQ(handle, nullptr);
     EXPECT_EQ(func, nullptr);
@@ -2715,8 +2715,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0001, Test
     int testTriggerType = 0;
     void *handle = &testTriggerType;
 
-    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).willOnce(Return(handle));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).willOnce(Return(nullptr));
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(handle));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(nullptr));
     auto [retHandle, retFunc] = service->LoadGcLibrary(testTriggerType);
     EXPECT_EQ(retHandle, nullptr);
     EXPECT_EQ(retFunc, nullptr);
@@ -2736,7 +2736,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0002, Test
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0002";
     int testTriggerType = 1;
-    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).willOnce(Return(nullptr));
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(nullptr));
     auto [handle, func] = service->LoadGcLibrary(testTriggerType);
     EXPECT_EQ(handle, nullptr);
     EXPECT_EQ(func, nullptr);
@@ -2758,8 +2758,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0003, Test
     int testTriggerType = 1;
     void *handle = &testTriggerType;
 
-    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).willOnce(Return(handle));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).willOnce(Return(nullptr));
+    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(handle));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(nullptr));
     auto [retHandle, retFunc] = service->LoadGcLibrary(testTriggerType);
     EXPECT_EQ(retHandle, nullptr);
     EXPECT_EQ(retFunc, nullptr);
