@@ -1509,9 +1509,9 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
         std::string error = dlerror();
         HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error.c_str());
         AppRadar::Info info("", "", error);
-        AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
-                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
-                BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
+        AppRadar::GetInstance().RecordDefaultFuncRes(
+            info, "Service::LoadGcLibrary",AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_DEFAULT, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
         return {nullptr, nullptr};
     }
 
@@ -1522,9 +1522,9 @@ std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
         std::string error = dlerror();
         HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error.c_str());
         AppRadar::Info info("", "", error);
-        AppRadar::GetInstance().RecordDefaultFuncRes(info, "Service::LoadGcLibrary",
-                AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_DEFAULT,
-                BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
+        AppRadar::GetInstance().RecordDefaultFuncRes(
+            info, "Service::LoadGcLibrary",AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_DEFAULT, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
         dlclose(handle);
         return {nullptr, nullptr};
     }
