@@ -584,4 +584,79 @@ HWTEST_F(StringUtilsTest, STRINGUTILS_IS_SUBDIRECTORY_TEST_001, testing::ext::Te
     EXPECT_FALSE(StringUtils::IsSubdirectory("/a/b", ""));
     EXPECT_TRUE(StringUtils::IsSubdirectory("/a/b/", "/a/b/c//"));
 }
+
+
+/**
+* @tc.number: STRINGUTILS_GET_FILE_NAME_TEST_001
+* @tc.name: GetFileName_MultipleScenarios
+* @tc.desc: Test multiple scenarios for GetFileName function
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_GET_FILE_NAME_TEST_001, testing::ext::TestSize.Level1) {
+    // 1. 基础场景：包含路径分隔符的标准路径
+    EXPECT_EQ(StringUtils::GetFileName("/a/b/c.txt"), "c.txt");
+    EXPECT_EQ(StringUtils::GetFileName("/usr/local/bin"), "bin");
+
+    // 2. 基础场景：包含反斜杠的路径
+    EXPECT_EQ(StringUtils::GetFileName("C:\\Program Files\\app.exe"), "app.exe");
+    EXPECT_EQ(StringUtils::GetFileName("D:\\Data\\file"), "file");
+
+    // 3. 混合场景：路径末尾包含分隔符
+    // 注意：根据实现逻辑，find_last_of 找到最后一个分隔符，substr 取其后内容。
+    // 如果分隔符是最后一个字符，substr 会返回空字符串。
+    EXPECT_EQ(StringUtils::GetFileName("/a/b/c/"), "");
+    EXPECT_EQ(StringUtils::GetFileName("C:\\a\\b\\"), "");
+
+    // 4. 边缘场景：只有文件名，不包含路径分隔符
+    EXPECT_EQ(StringUtils::GetFileName("filename.txt"), "filename.txt");
+    EXPECT_EQ(StringUtils::GetFileName("config"), "config");
+
+    // 5. 边缘场景：空字符串
+    EXPECT_EQ(StringUtils::GetFileName(""), "");
+
+    // 6. 边缘场景：只有分隔符
+    EXPECT_EQ(StringUtils::GetFileName("/"), "");
+    EXPECT_EQ(StringUtils::GetFileName("\\"), "");
+    EXPECT_EQ(StringUtils::GetFileName("////"), "");
+
+    // 7. 边缘场景：文件名中包含点（测试是否只取最后一段）
+    EXPECT_EQ(StringUtils::GetFileName("/a/b/archive.tar.gz"), "archive.tar.gz");
+}
+
+/**
+* @tc.number: STRINGUTILS_IS_PATH_WITH_DIRECTORY_TEST_001
+* @tc.name: IsPathWithDirectory_MultipleScenarios
+* @tc.desc: Test multiple scenarios for IsPathWithDirectory function
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_IS_PATH_WITH_DIRECTORY_TEST_001, testing::ext::TestSize.Level1) {
+    // 1. 基础场景：包含路径分隔符的路径
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("/a/b/c.txt"));
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("/usr/local/bin"));
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("C:\\Program Files\\app.exe"));
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("D:\\Data\\file"));
+
+    // 2. 基础场景：相对路径
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("./config.ini"));
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("../test/file"));
+
+    // 3. 边缘场景：单纯文件名，不包含路径分隔符
+    EXPECT_FALSE(StringUtils::IsPathWithDirectory("filename.txt"));
+    EXPECT_FALSE(StringUtils::IsPathWithDirectory("config"));
+    EXPECT_FALSE(StringUtils::IsPathWithDirectory("Makefile"));
+
+    // 4. 边缘场景：空字符串
+    EXPECT_FALSE(StringUtils::IsPathWithDirectory(""));
+
+    // 5. 边缘场景：只有分隔符（根据实现逻辑，这会被视为包含路径）
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("/"));
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("\\"));
+    EXPECT_TRUE(StringUtils::IsPathWithDirectory("////"));
+}
 } // namespace OHOS::FileManagement::Backup
