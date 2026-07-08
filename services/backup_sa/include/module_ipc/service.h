@@ -488,7 +488,7 @@ public:
         auto logElapsed = [&startTime](const char* step) {
             auto now = std::chrono::steady_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - startTime).count();
-            HILOGI("Service construct %{public}s cost %{public}ld us", step, elapsed);
+            HILOGI("Service construct %{public}s cost %{public}lld us", step, elapsed);
             startTime = now;
         };
         
