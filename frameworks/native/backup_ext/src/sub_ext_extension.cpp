@@ -1679,8 +1679,7 @@ void BackupExtExtension::DoBackupTaskCore(
     int fdNum = 0;
     auto startTime = std::chrono::system_clock::now();
     std::vector<std::shared_ptr<IFileInfo>> tmpFiles;
-    bool initRet = InitManageJsonFd();
-    if (!initRet) {
+    if (!InitManageJsonFd()) {
         ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
         return;
     }
