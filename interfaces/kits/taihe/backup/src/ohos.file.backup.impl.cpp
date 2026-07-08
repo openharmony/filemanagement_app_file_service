@@ -260,7 +260,8 @@ public:
         return result;
     }
 
-    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName, ::taihe::string_view extInfo) {
+    ::taihe::string GetCompatibilityInfoSync(::taihe::string_view bundleName, ::taihe::string_view extInfo)
+    {
         if (!SAUtils::CheckBackupPermission()) {
             HILOGE("Has not permission!");
             ::taihe::set_business_error(BACKUP_PERMISSION, "CheckBackupPermission error");
