@@ -861,6 +861,9 @@ private:
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         GcProgressInfoUpdate progressData);
     bool VerifyDataClone();
+    std::pair<void*, CallDeviceTaskRequest> LoadGcLibrary(int triggerType);
+    ErrCode ExecuteGcTask(void* handle, CallDeviceTaskRequest func,
+        int triggerType, unsigned int writeSize, unsigned int waitTime);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);
