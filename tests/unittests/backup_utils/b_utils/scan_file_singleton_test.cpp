@@ -254,6 +254,48 @@ HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_004, testing::ext::TestSize.Le
 }
 
 /**
+ * @tc.number: ADD_BIG_FILE_TEST_005
+ * @tc.name: ADD_BIG_FILE_TEST_005
+ * @tc.desc: Test function of AddBigFile
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_005";
+    std::string filePath = "test5.txt_anco_aaa";
+    std::string restorePath = "";
+    struct stat sta = {};
+    manager_.AddBigFile(filePath, sta, restorePath);
+    auto fileInfo = manager_.GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), restorePath);
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-end: ADD_BIG_FILE_TEST_005";
+}
+ 
+/**
+ * @tc.number: ADD_BIG_FILE_TEST_006
+ * @tc.name: ADD_BIG_FILE_TEST_006
+ * @tc.desc: Test function of AddBigFile
+ * @tc.size: SMALL
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_006";
+    std::string filePath = "test5.txt_anco_sss";
+    std::string restorePath = "restore6";
+    struct stat sta = {};
+    manager_.AddBigFile(filePath, sta, restorePath);
+    auto fileInfo = manager_.GetFileInfo();
+    ASSERT_NE(fileInfo, nullptr);
+    EXPECT_EQ(fileInfo->GetRestorePath(), restorePath);
+    GTEST_LOG_(INFO) << "ScanResultManagerTest-end: ADD_BIG_FILE_TEST_006";
+}
+
+/**
  * @tc.number: ADD_TAR_FILE_TEST_001
  * @tc.name: ADD_TAR_FILE_TEST_001
  * @tc.desc: Test function of AddTarFile with maxTarSize check

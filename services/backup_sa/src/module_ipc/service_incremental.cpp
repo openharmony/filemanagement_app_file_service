@@ -938,7 +938,7 @@ ErrCode Service::ProcessFileHandlesByAction(const std::string &bundleName,
             }
         }
  
-        HILOGI("Restore getIncrementalFileHandle begin, bundleName:%{public}s", bundleName.c_str());
+        HILOGI("Restore getIncrementalFileHandles begin, bundleName:%{public}s", bundleName.c_str());
  
         auto err = SendIncrementalFileHandles(bundleName, fileNames);
         if (err != ERR_OK) {
@@ -961,7 +961,7 @@ ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const 
     try {
         HILOGI("Begin get incrementalFileHandles");
         if (session_ == nullptr) {
-            HILOGE("GetIncrementalFileHandle error, session is empty");
+            HILOGE("GetIncrementalFileHandles error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
         ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
@@ -976,7 +976,7 @@ ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const 
         }
         return ProcessFileHandlesByAction(bundleName, fileNames, action);
     } catch (const BError &e) {
-        HILOGE("GetIncrementalFileHandle exception, bundleName:%{public}s", bundleName.c_str());
+        HILOGE("GetIncrementalFileHandles exception, bundleName:%{public}s", bundleName.c_str());
         return e.GetCode();
     }
 }
@@ -1070,7 +1070,7 @@ ErrCode Service::SendIncrementalFileHandlesByEnhance(
     std::vector<int32_t> errCodes;
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
-        HILOGE("SendIncrementalFileHandle, enhance service is not loaded");
+        HILOGE("SendIncrementalFileHandles, enhance service is not loaded");
         errCodes.resize(fileNames.size(), BError(BError::Codes::SA_ENHANCE_SERVICE_UNAVAILABLE).GetCode());
         return session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadysWithoutFd(
             bundleName, fileNames, errCodes);
