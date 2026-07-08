@@ -1679,8 +1679,7 @@ void BackupExtExtension::DoBackupTaskCore(
     int fdNum = 0;
     auto startTime = std::chrono::system_clock::now();
     std::vector<std::shared_ptr<IFileInfo>> tmpFiles;
-    bool initRet = InitManageJsonFd();
-    if (!initRet) {
+    if (!InitManageJsonFd()) {
         ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
         return;
     }
@@ -1694,7 +1693,8 @@ void BackupExtExtension::DoBackupTaskCore(
         }
         bool isWithoutTarFile = supportWithoutTar && !fileInfo->isAncoFile_;
         if (isWithoutTarFile) {
-            fileInfo->filename_ = fileInfo->filePath_;
+            std::string restorePath = fileInfo->GetRestorePath();
+            fileInfo->filename_ = restorePath.empty() ? fileInfo->filePath_ : restorePath;
         }
         WaitToSendFd(startTime, fdNum);
         if (isWithoutTarFile) {
@@ -2089,7 +2089,8 @@ std::string BackupExtExtension::FileInfoToString(std::shared_ptr<IFileInfo> file
     if (fileInfo->isAncoFile_) {
         value["path"] = fileInfo->filename_;
     } else {
-        value["path"] = fileInfo->filePath_;
+        std::string restorePath = fileInfo->GetRestorePath();
+        value["path"] = restorePath.empty() ? fileInfo->filePath_ : restorePath;
     }
  
     value["st_mode"] = static_cast<uint64_t>(fileInfo->sta_.st_mode);

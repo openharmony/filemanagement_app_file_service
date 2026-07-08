@@ -195,13 +195,17 @@ std::string StringUtils::RemoveFileExtension(const std::string &fileName)
     return fileName.substr(0, pos);
 }
 
-bool StringUtils::IsAncoFile(const std::string &fileName)
+bool StringUtils::IsAncoFile(const std::string &filePath)
 {
     auto hasUppercase = [](const std::string &str) -> bool {
         return std::any_of(str.begin(), str.end(), [](char c) {
             return std::isupper(c);
         });
     };
+    if (IsPathWithDirectory(filePath)) {
+        return false;
+    }
+    std::string fileName = GetFileName(filePath);
     std::string fileNameWithoutExt = RemoveFileExtension(fileName);
     if (hasUppercase(fileNameWithoutExt) && fileNameWithoutExt.size() == CLOUD_HASH_LENGTH) {
         return false;
@@ -232,5 +236,20 @@ std::string StringUtils::RemoveTrailingSlash(const std::string &path)
         result.pop_back();
     }
     return result;
+}
+
+std::string StringUtils::GetFileName(const std::string& filePath)
+{
+    size_t lastSlashPos = filePath.find_last_of("/\\");
+    if (lastSlashPos == std::string::npos) {
+        return filePath;
+    }
+    return filePath.substr(lastSlashPos + 1);
+}
+
+bool StringUtils::IsPathWithDirectory(const std::string& filePath)
+{
+    size_t lastSlashPos = filePath.find_last_of("/\\");
+    return (lastSlashPos != std::string::npos);
 }
 } // namespace OHOS::FileManagement::Backup
