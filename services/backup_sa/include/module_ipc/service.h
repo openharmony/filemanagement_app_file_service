@@ -484,16 +484,33 @@ public:
 public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
+        auto startTime = std::chrono::steady_clock::now();
+        auto logElapsed = [&startTime](const char* step) {
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - startTime).count();
+            HILOGI("Service construct %{public}s cost %{public}lld us", step, elapsed);
+            startTime = now;
+        };
+        
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
+        logElapsed("threadPool_.Start");
         sendScannendResultThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
+        logElapsed("sendScannendResultThreadPool_.Start");
         getDataSizeThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
+        logElapsed("getDataSizeThreadPool_.Start");
         callbackScannedInfoThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
+        logElapsed("callbackScannedInfoThreadPool_.Start");
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
+        logElapsed("SvcSessionManager construct");
         disposal_ = make_shared<BJsonDisposalConfig>();
+        logElapsed("BJsonDisposalConfig construct");
         clearRecorder_ = make_shared<BJsonClearDataConfig>();
+        logElapsed("BJsonClearDataConfig construct");
         sched_ = sptr(new SchedScheduler(wptr(this), wptr(session_)));
+        logElapsed("SchedScheduler construct");
 #ifdef POWER_MANAGER_ENABLED
         runningLockStatistic_ = std::make_shared<RadarRunningLockStatistic>();
+        logElapsed("RadarRunningLockStatistic construct");
 #endif
     };
     ~Service() override
