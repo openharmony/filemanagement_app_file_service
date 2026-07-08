@@ -485,10 +485,11 @@ public:
     explicit Service(int32_t saID, bool runOnCreate = false) : SystemAbility(saID, runOnCreate)
     {
         auto startTime = std::chrono::steady_clock::now();
-        auto logElapsed = [&startTime]()(const char* step) {
+        auto logElapsed = [&startTime](const char* step) {
             auto now = std::chrono::steady_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - startTime).count();
             HILOGI("Service construct %{public}s cost %{public}ld us", step, elapsed);
+            startTime = now;
         };
         
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
