@@ -1324,11 +1324,6 @@ void Service::SessionDeactive()
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
         HILOGI("Begin");
-        ErrCode errCode = VerifyCaller();
-        if (errCode != ERR_OK) {
-            HILOGE("verify caller failed, errCode:%{public}d", errCode);
-            return;
-        }
         TotalStatReport();
         isInRelease_.store(true);
         //清理处置状态

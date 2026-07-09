@@ -78,7 +78,8 @@ std::string DefaultAppManager::GetCallerNameByFilePath(const std::string &filePa
 {
     std::shared_lock<std::shared_mutex> lock(defaultAppMutex_);
     for (const auto &[bundleName, manager] : defaultAppMap_) {
-        if (filePath.find(BConstants::GetBundleDir(BConstants::DEFAULT_USER_ID, bundleName)) == 0) {
+        if (filePath.find(BConstants::GetBundleDir(BConstants::DEFAULT_USER_ID, bundleName)) == 0 ||
+            filePath.find(BConstants::GetBundleDir(BConstants::DEFAULT_USER_ID, bundleName, false)) == 0) {
             return bundleName;
         }
     }
