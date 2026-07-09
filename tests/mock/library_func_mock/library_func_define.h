@@ -24,6 +24,7 @@
 #define fwrite Fwrite
 #define realpath Realpath
 #define fopen Fopen
+#define fdopen Fdopen
 #define fclose Fclose
 #define chmod Chmod
 #define utime(filePath, time) Utime((filePath), (time))

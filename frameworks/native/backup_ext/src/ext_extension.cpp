@@ -202,7 +202,7 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
             return UniqueFd(BConstants::INVALID_FD_NUM);
         }
     }
-    UniqueFd fd(open(fileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    UniqueFd fd(open(fileName.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
     if (fd < 0) {
         HILOGE("Open file failed, file name is %{public}s, err = %{public}d", GetAnonyPath(fileName).c_str(), errno);
         return UniqueFd(BConstants::INVALID_FD_NUM);
@@ -324,7 +324,8 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForSpec
         HILOGI("FileName is too long, report HashName is:%{public}s", reportHashName.c_str());
         std::string reportParentPath = fileName.substr(0, reportParentPathPos);
         std::string reportFullHashName = reportParentPath + BConstants::FILE_SEPARATOR_CHAR + reportHashName;
-        UniqueFd reportHashFd(open(reportFullHashName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        UniqueFd reportHashFd(open(reportFullHashName.data(),
+            O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
         if (reportHashFd < 0) {
             HILOGE("Failed open report file = %{public}s, err = %{public}d",
                 GetAnonyPath(reportFullHashName).c_str(), errno);
@@ -334,7 +335,7 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForSpec
         reportHashSrcPathMap_.emplace(fileName, reportFullHashName);
         return { errCode, move(fd), move(reportHashFd) };
     }
-    UniqueFd reportFd(open(reportFullFileName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    UniqueFd reportFd(open(reportFullFileName.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
     if (reportFd < 0) {
         HILOGE("Failed to open report file = %{public}s, err = %{public}d",
             GetAnonyPath(reportFullFileName).c_str(), errno);
@@ -409,7 +410,7 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
             HILOGE("The file already exists, tarname = %{public}s, err =%{public}d",
                 GetAnonyPath(tarName).c_str(), errno);
         }
-        fd = UniqueFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        fd = UniqueFd(open(tarName.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open tar file = %{public}s, err = %{public}d", GetAnonyPath(tarName).c_str(), errno);
             errCode = errno;
@@ -421,7 +422,7 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
             HILOGE("The report file already exists, Name = %{public}s, err =%{public}d",
                 GetAnonyPath(reportName).c_str(), errno);
         }
-        reportFd = UniqueFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        reportFd = UniqueFd(open(reportName.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
         if (reportFd < 0) {
             HILOGE("Failed to open report file = %{public}s, err = %{public}d",
                 GetAnonyPath(reportName).c_str(), errno);
@@ -447,7 +448,7 @@ tuple<ErrCode, UniqueFd> BackupExtExtension::GetIncreFileHandleForUntarNormalVer
             HILOGE("GetIncrementalFileHandleUntarPath failed, err = %{public}d", errCode);
             break;
         }
-        fd = UniqueFd(open(realDir.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+        fd = UniqueFd(open(realDir.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open tar file = %{public}s, err = %{public}d", GetAnonyPath(realDir).c_str(), errno);
             errCode = errno;
@@ -727,7 +728,7 @@ ErrCode BackupExtExtension::ReportNormalAppFileReady(const string& filename, con
 {
     int32_t errCode = ERR_OK;
     std::string newPath = BExcepUltils::Canonicalize(filePath);
-    int fdval = open(newPath.data(), O_RDONLY);
+    int fdval = open(newPath.data(), O_RDONLY | O_UNCACHE);
     if (fdval < 0) {
         errCode = errno;
         HILOGE("open file failed, filename: %{public}s, err: %{public}d", GetAnonyString(filePath).c_str(), errCode);
@@ -778,7 +779,7 @@ ErrCode BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileI
     for (auto it = allFiles.begin(); it != allFiles.end();) {
         const string &filePath = (*it)->filePath_;
         std::string newPath = BExcepUltils::Canonicalize(filePath);
-        int fdval = open(newPath.data(), O_RDONLY);
+        int fdval = open(newPath.data(), O_RDONLY | O_UNCACHE);
         if (fdval < 0) {
             int errCode = errno;
             HILOGE("open file failed, filename: %{public}s, err: %{public}d", filePath.c_str(), errCode);
@@ -1565,7 +1566,7 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path, const ExtMan
     string itemFileName = item.fileName;
     // check if item.hasName and fileName need decode by report item attribute
     string reportPath = GetReportFileName(path + item.hashName);
-    UniqueFd fd(open(reportPath.data(), O_RDONLY));
+    UniqueFd fd(open(reportPath.data(), O_RDONLY | O_UNCACHE));
     if (fd < 0) {
         HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportPath.c_str(), errno);
         errFileInfos_[item.hashName].emplace_back(errno);
@@ -1599,7 +1600,7 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     string indexFileRestorePath = GetIndexFileRestorePath(bundleName_);
-    UniqueFd fd(open(indexFileRestorePath.data(), O_RDONLY));
+    UniqueFd fd(open(indexFileRestorePath.data(), O_RDONLY | O_UNCACHE));
     if (fd < 0) {
         HILOGE("Failed to open index json file = %{private}s, err = %{public}d", indexFileRestorePath.c_str(), errno);
         return;

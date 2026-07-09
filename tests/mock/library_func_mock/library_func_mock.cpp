@@ -56,6 +56,11 @@ FILE *Fopen(const char *pathname, const char *mode)
     return LibraryFunc::libraryFunc_->fopen(pathname, mode);
 }
 
+FILE *Fdopen(int fd, const char *mode)
+{
+    return LibraryFunc::libraryFunc_->fdopen(fd, mode);
+}
+
 int Fclose(FILE *stream)
 {
     return LibraryFunc::libraryFunc_->fclose(stream);

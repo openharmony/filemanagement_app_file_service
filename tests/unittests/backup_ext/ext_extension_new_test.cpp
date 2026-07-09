@@ -992,7 +992,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0001, testing::e
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
 
     EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Invoke([&](const char *filename, int flags, ...) {
-        errno = ERR_NO_PERMISSION;
+        errno = ERR_OK;
         return -1;
     }));
     EXPECT_CALL(*funcMock_, fopen(_, _)).WillRepeatedly(Invoke([&](const char *pathname, const char *mode) {
@@ -1039,7 +1039,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0002, testing::e
     EXPECT_CALL(*extBackupMock_, GetExtensionAction()).WillRepeatedly(Return(BConstants::ExtensionAction::RESTORE));
     EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Invoke([&](const char *filename, int flags, ...) {
-        errno = ERR_NO_PERMISSION;
+        errno = ERR_OK;
         return -1;
     }));
     EXPECT_CALL(*funcMock_, fopen(_, _)).WillRepeatedly(Invoke([&](const char *pathname, const char *mode) {

@@ -16,6 +16,10 @@
 #ifndef OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H
 #define OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H
 
+#ifndef O_UNCACHE
+#define O_UNCACHE 0x40000000
+#endif
+
 #include <array>
 #include <cstdint>
 #include <string>
