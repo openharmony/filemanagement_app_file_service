@@ -39,6 +39,7 @@ static inline const char *EXTENSION_APP_CLONE_INDEX_PARA = "ohos.extra.param.key
 static inline const char *EXTENSION_OLD_BACKUP_VERSION_PARA = "oldBackupVersion";
 static inline const char *EXTENSION_BACKUP_SCENE_PARA = "backupScene";
 static inline const char *EXTENSION_SUPPORT_WITHOUT_TAR_PARA = "supportWithoutTar";
+static inline const char *EXTENSION_EXCLUDE_INFOS_PARA = "excludeInfos";
 static inline const char *EXTENSION_BATCH_SIZE_PARA = "batchSize";
 
 enum class ExtensionAction {

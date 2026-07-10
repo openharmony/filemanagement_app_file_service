@@ -16,6 +16,8 @@
 #ifndef OHOS_FILEMGMT_BACKUP_EXT_BACKUP_H
 #define OHOS_FILEMGMT_BACKUP_EXT_BACKUP_H
 
+#include <vector>
+
 #include "b_resources/b_constants.h"
 #include "ext_backup_context_js.h"
 #include "extension_base.h"
@@ -228,10 +230,12 @@ private:
     static CreatorFunc creator_;
     wptr<BackupExtExtension> bakExtExtension_;
     bool supportWithoutTar_ {false};
+    std::vector<std::string> excludeInfos_;
     int32_t batchSize_ {500};
     
 public:
     bool GetSupportWithoutTar() const;
+    std::vector<std::string> GetExcludeInfos() const;
     int32_t GetBatchSize() const;
 };
 } // namespace OHOS::FileManagement::Backup
