@@ -381,6 +381,8 @@ ErrCode MigrateManager::ScanAllDirs(int64_t &totalSize, const string &bundleName
     if (servicePtr_ != nullptr && servicePtr_->session_ != nullptr) {
         excludes = servicePtr_->session_->GetExcludeInfos(bundleName);
     }
+    HILOGI("TestTag MigrateManager::ScanAllDirs, bundleName:%{public}s, excludeInfos size:%{public}zu",
+        bundleName.c_str(), excludes.size());
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
 
     string callerName;

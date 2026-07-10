@@ -259,8 +259,10 @@ static void ParseSupportWithoutTar(cJSON *root, BJsonUtil::BundleSettingInfo &bu
 
 static void ParseExcludeInfos(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
 {
+    HILOGI("TestTag ParseExcludeInfos begin");
     cJSON *excludeInfos = cJSON_GetObjectItem(root, "excludeInfos");
     if (excludeInfos == nullptr || !cJSON_IsArray(excludeInfos)) {
+        HILOGI("TestTag ParseExcludeInfos field missing or invalid");
         return;
     }
     int excludeInfosCount = cJSON_GetArraySize(excludeInfos);
@@ -270,7 +272,7 @@ static void ParseExcludeInfos(cJSON *root, BJsonUtil::BundleSettingInfo &bundleS
             bundleSettingInfo.excludeInfos.emplace_back(excludeInfo->valuestring);
         }
     }
-    HILOGI("Parse excludeInfos success, size is %{public}zu", bundleSettingInfo.excludeInfos.size());
+    HILOGI("TestTag ParseExcludeInfos success, size:%{public}zu", bundleSettingInfo.excludeInfos.size());
 }
 
 static void ParseBatchSize(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
