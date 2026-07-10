@@ -79,6 +79,7 @@ struct BackupExtInfo {
     bool isRestoreEnd {false};
     std::string backupScene;
     bool isSupportWithoutTar {false};
+    std::vector<std::string> excludeInfos;
     int32_t batchSize {500};
 };
 
@@ -620,6 +621,8 @@ public:
 
     void SetSupportWithoutTar(const std::string &bundleName, bool isSupportWithoutTar);
     bool GetSupportWithoutTar(const std::string &bundleName);
+    void SetExcludeInfos(const std::string &bundleName, const std::vector<std::string> &excludeInfos);
+    std::vector<std::string> GetExcludeInfos(const std::string &bundleName);
     void SetBatchSize(const std::string &bundleName, int32_t batchSize);
     int32_t GetBatchSize(const std::string &bundleName);
     

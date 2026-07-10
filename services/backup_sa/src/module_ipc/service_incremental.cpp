@@ -541,6 +541,7 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
         if (iter != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iter->second.isClearData);
             session_->SetDelayTime(bundleNameIndexInfo, iter->second.delayTime);
+            session_->SetExcludeInfos(bundleNameIndexInfo, iter->second.excludeInfos);
         }
         BJsonUtil::BundleDetailInfo uniCastInfo;
         if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {

@@ -765,6 +765,7 @@ void Service::SetCurrentSessProperties(
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
         BJsonUtil::BundleDetailInfo broadCastInfo;
@@ -813,6 +814,7 @@ void Service::HandleCurGroupBackupInfos(
         auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
     }

@@ -257,6 +257,22 @@ static void ParseSupportWithoutTar(cJSON *root, BJsonUtil::BundleSettingInfo &bu
     }
 }
 
+static void ParseExcludeInfos(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
+{
+    cJSON *excludeInfos = cJSON_GetObjectItem(root, "excludeInfos");
+    if (excludeInfos == nullptr || !cJSON_IsArray(excludeInfos)) {
+        return;
+    }
+    int excludeInfosCount = cJSON_GetArraySize(excludeInfos);
+    for (int i = 0; i < excludeInfosCount; i++) {
+        cJSON *excludeInfo = cJSON_GetArrayItem(excludeInfos, i);
+        if (cJSON_IsString(excludeInfo) && excludeInfo->valuestring != nullptr) {
+            bundleSettingInfo.excludeInfos.emplace_back(excludeInfo->valuestring);
+        }
+    }
+    HILOGI("Parse excludeInfos success, size is %{public}zu", bundleSettingInfo.excludeInfos.size());
+}
+
 static void ParseBatchSize(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
 {
     cJSON *batchSize = cJSON_GetObjectItem(root, "batchSize");
@@ -301,6 +317,7 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
     ParseDelayTime(root, bundleSettingInfo);
     ParseBackupScene(root, bundleDetailInfo);
     ParseSupportWithoutTar(root, bundleSettingInfo);
+    ParseExcludeInfos(root, bundleSettingInfo);
     ParseBatchSize(root, bundleSettingInfo);
     if (!ParseBundleInfos(root, bundleDetails, bundleDetailInfo, userId)) {
         cJSON_Delete(root);

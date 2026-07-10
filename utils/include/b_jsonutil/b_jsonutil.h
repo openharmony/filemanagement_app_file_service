@@ -52,6 +52,7 @@ public:
         bool isClearData {true};
         int32_t delayTime {0};
         bool isSupportWithoutTar {false};
+        std::vector<std::string> excludeInfos;
         int32_t batchSize {500};
     }BundleSettingInfo;
 

@@ -616,6 +616,28 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_0100, testing::ext::TestS
     GTEST_LOG_(INFO) << "BJsonUtilTest-end ParseBundleInfoJson_0100";
 }
 
+/**
+ * @tc.name: b_jsonutil_ParseBundleInfoJson_ExcludeInfos_0100
+ * @tc.desc: Test parsing excludeInfos from bundle settings.
+ * @tc.type: FUNC
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_ParseBundleInfoJson_ExcludeInfos_0100, testing::ext::TestSize.Level1)
+{
+    BJsonUtil::BundleDetailInfo detailInfo = {
+        .bundleName = "bundle", .bundleIndex = 0, .userId = 100};
+    std::string bundleInfo = R"({
+        "infos":[{"type":"broadcast", "details":[]}],
+        "excludeInfos":["/data/a", 1, "/data/b"]
+    })";
+    std::vector<BJsonUtil::BundleDetailInfo> bundleDetailInfos;
+    BJsonUtil::BundleSettingInfo bundleSettingInfo;
+
+    BJsonUtil::ParseBundleInfoJson(bundleInfo, bundleDetailInfos, detailInfo, bundleSettingInfo, 100);
+
+    ASSERT_EQ(bundleSettingInfo.excludeInfos.size(), 2u);
+    EXPECT_EQ(bundleSettingInfo.excludeInfos[0], "/data/a");
+    EXPECT_EQ(bundleSettingInfo.excludeInfos[1], "/data/b");
+}
 
 /**
  * @tc.number: b_jsonutil_ParseBundleInfoJson_0200
