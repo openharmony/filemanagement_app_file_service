@@ -206,8 +206,6 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleName, iterSet->second.isClearData);
             session_->SetSupportWithoutTar(bundleName, iterSet->second.isSupportWithoutTar);
-            HILOGI("TestTag SetSessPropertiesWithDetailBackup, bundleName:%{public}s, excludeInfos size:%{public}zu",
-                bundleName.c_str(), iterSet->second.excludeInfos.size());
             session_->SetExcludeInfos(bundleName, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleName, iterSet->second.batchSize);
         }

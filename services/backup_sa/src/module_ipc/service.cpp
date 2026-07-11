@@ -765,8 +765,6 @@ void Service::SetCurrentSessProperties(
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
-            HILOGI("TestTag SetCurrentSessProperties restore, bundleName:%{public}s, excludeInfos size:%{public}zu",
-                bundleNameIndexInfo.c_str(), iterSet->second.excludeInfos.size());
             session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
@@ -816,8 +814,6 @@ void Service::HandleCurGroupBackupInfos(
         auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
-            HILOGI("TestTag HandleCurGroupBackupInfos, bundleName:%{public}s, excludeInfos size:%{public}zu",
-                bundleNameIndexInfo.c_str(), iterSet->second.excludeInfos.size());
             session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }

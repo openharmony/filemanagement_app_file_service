@@ -1568,8 +1568,6 @@ bool SvcSessionManager::GetSupportWithoutTar(const std::string &bundleName)
 void SvcSessionManager::SetExcludeInfos(const std::string &bundleName,
     const std::vector<std::string> &excludeInfos)
 {
-    HILOGI("TestTag SetExcludeInfos begin, bundleName:%{public}s, size:%{public}zu",
-        bundleName.c_str(), excludeInfos.size());
     unique_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
@@ -1581,13 +1579,11 @@ void SvcSessionManager::SetExcludeInfos(const std::string &bundleName,
         return;
     }
     it->second.excludeInfos = excludeInfos;
-    HILOGI("TestTag SetExcludeInfos success, bundleName:%{public}s, size:%{public}zu",
-        bundleName.c_str(), excludeInfos.size());
+    HILOGI("bundleName:%{public}s, set excludeInfos size:%{public}zu.", bundleName.c_str(), excludeInfos.size());
 }
 
 std::vector<std::string> SvcSessionManager::GetExcludeInfos(const std::string &bundleName)
 {
-    HILOGI("TestTag GetExcludeInfos begin, bundleName:%{public}s", bundleName.c_str());
     shared_lock<shared_mutex> lock(lock_);
     if (!impl_.clientToken) {
         HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
@@ -1598,8 +1594,6 @@ std::vector<std::string> SvcSessionManager::GetExcludeInfos(const std::string &b
         HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
         return {};
     }
-    HILOGI("TestTag GetExcludeInfos success, bundleName:%{public}s, size:%{public}zu",
-        bundleName.c_str(), it->second.excludeInfos.size());
     return it->second.excludeInfos;
 }
 

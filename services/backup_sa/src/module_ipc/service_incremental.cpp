@@ -541,8 +541,6 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
         if (iter != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iter->second.isClearData);
             session_->SetDelayTime(bundleNameIndexInfo, iter->second.delayTime);
-            HILOGI("TestTag HandleCurGroupIncBackupInfos, bundleName:%{public}s, excludeInfos size:%{public}zu",
-                bundleNameIndexInfo.c_str(), iter->second.excludeInfos.size());
             session_->SetExcludeInfos(bundleNameIndexInfo, iter->second.excludeInfos);
         }
         BJsonUtil::BundleDetailInfo uniCastInfo;

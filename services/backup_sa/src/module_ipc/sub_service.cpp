@@ -606,10 +606,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA, oldBackupVersion);
     want.SetParam(BConstants::EXTENSION_BACKUP_SCENE_PARA, bundleDetail.backupScene);
     want.SetParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, session_->GetSupportWithoutTar(bundleName));
-    auto excludeInfos = session_->GetExcludeInfos(bundleName);
-    HILOGI("TestTag SetWant, bundleName:%{public}s, excludeInfos size:%{public}zu",
-        bundleName.c_str(), excludeInfos.size());
-    want.SetParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA, excludeInfos);
+    want.SetParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA, session_->GetExcludeInfos(bundleName));
     want.SetParam(BConstants::EXTENSION_BATCH_SIZE_PARA, session_->GetBatchSize(bundleName));
 }
 
