@@ -1040,10 +1040,6 @@ ErrCode BackupExtExtension::ScanAllDirs(const BJsonEntityExtensionConfig &usrCon
     vector<string> excludes = {};
     GetScanDirList(includes, BConstants::INCLUDES, usrConfig);
     GetScanDirList(excludes, BConstants::EXCLUDES, usrConfig);
-    if (extension_ != nullptr) {
-        auto excludeInfos = extension_->GetExcludeInfos();
-        excludes.insert(excludes.end(), excludeInfos.begin(), excludeInfos.end());
-    }
     // 不用放在expand通配符之后，约束是compat的路径配置要与includes中某些路径配置完全一致
     auto compatibleIncludes = DivideIncludesByCompatInfo(includes, usrConfig);
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);

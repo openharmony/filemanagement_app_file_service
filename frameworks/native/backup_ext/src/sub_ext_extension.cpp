@@ -2011,6 +2011,10 @@ void BackupExtExtension::GetScanDirList(vector<string>& pathInclude, string type
         pathInclude.insert(pathInclude.end(), std::make_move_iterator(fileManagerFilePaths.begin()),
             std::make_move_iterator(fileManagerFilePaths.end()));
     }
+    if (type == BConstants::EXCLUDES) {
+        auto excludeInfos = extension_->GetExcludeInfos();
+        pathInclude.insert(pathInclude.end(), excludeInfos.begin(), excludeInfos.end());
+    }
 }
 
 set<string> BackupExtExtension::DivideIncludesByCompatInfo(vector<string>& includes,
