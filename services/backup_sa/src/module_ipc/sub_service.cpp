@@ -1970,8 +1970,8 @@ ErrCode Service::DoEnhanceMove(const std::string &srcFile, const std::string &de
     FileBackupParam param = {};
     if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), srcFile.c_str(), srcFile.length()) != EOK ||
         strncpy_s(param.dstFilePath, sizeof(param.dstFilePath), destFile.c_str(), destFile.length()) != EOK ||
-        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
-        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%d", gid) < 0) {
+        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%u", uid) < 0 ||
+        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%u", gid) < 0) {
         HILOGE("Dassemble param error");
         return BError(BError::Codes::SA_INVAL_ARG, "assemble param error").GetCode();
     }
@@ -2120,8 +2120,8 @@ ErrCode Service::DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid
 
     FileBackupParam param = {};
     if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), filePath.c_str(), filePath.length()) != EOK ||
-        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
-        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%d", gid) < 0) {
+        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%u", uid) < 0 ||
+        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%u", gid) < 0) {
         HILOGE("assemble param error");
         return BError(BError::Codes::SA_INVAL_ARG, "assemble param error").GetCode();
     }

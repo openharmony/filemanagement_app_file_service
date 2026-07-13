@@ -753,7 +753,7 @@ bool BundleMgrAdapter::GetUidGidForBundleName(const std::string &bundleName, int
         return false;
     }
     uid = bundleInfo.uid;
-    gid = bundleInfo.gid;
+    gid = static_cast<gid_t>(bundleInfo.gid);
     HILOGI("End GetUidGidForBundleName, bundleName:%{public}s, uid:%{public}d, gid:%{public}d",
         bundleName.c_str(), uid, gid);
     return true;

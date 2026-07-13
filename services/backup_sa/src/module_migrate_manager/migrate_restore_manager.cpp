@@ -273,6 +273,10 @@ ErrCode MigrateManager::DealIncrementalDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
+        if (servicePtr_ == nullptr) {
+            HILOGE("servicePtr_ is null");
+            return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+        }
         if (servicePtr_->session_ == nullptr) {
             HILOGE("AppIncrementalDone error, session is null");
             return BError(BError::Codes::SA_INVAL_ARG);

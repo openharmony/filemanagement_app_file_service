@@ -85,10 +85,10 @@ void SvcBackupConnection::GenErrorByStatus(int errCode, bool hasConnected)
         error_ = BError(errCode, BError::Codes::EXT_ABILITY_DIED, errMsg);
     } else {
         connectSpend_.End();
-        uint32_t failSpend = connectSpend_.GetSpan();
+        uint64_t failSpend = connectSpend_.GetSpan();
         string errMsg = "{\"failSpend\": " + to_string(failSpend) + ",\"isCleanCalled\":"
             + to_string(isCleanCalled_) + "}";
-        if (failSpend >= TimeUtils::GetAmsTimeout() * SECOND_TO_MS) {
+        if (failSpend >= static_cast<uint64_t>(TimeUtils::GetAmsTimeout() * SECOND_TO_MS)) {
             error_ = BError(errCode, BError::Codes::SA_BOOT_EXT_TIMEOUT, errMsg);
         } else {
             error_ = BError(errCode, BError::Codes::EXT_ABILITY_DIED, errMsg);
