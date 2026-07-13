@@ -135,6 +135,7 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
         StrategyContext context;

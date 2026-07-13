@@ -1564,7 +1564,39 @@ bool SvcSessionManager::GetSupportWithoutTar(const std::string &bundleName)
     }
     return it->second.isSupportWithoutTar;
 }
- 
+
+void SvcSessionManager::SetExcludeInfos(const std::string &bundleName,
+    const std::vector<std::string> &excludeInfos)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+    it->second.excludeInfos = excludeInfos;
+    HILOGI("bundleName:%{public}s, set excludeInfos size:%{public}zu.", bundleName.c_str(), excludeInfos.size());
+}
+
+std::vector<std::string> SvcSessionManager::GetExcludeInfos(const std::string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return {};
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return {};
+    }
+    return it->second.excludeInfos;
+}
+
 void SvcSessionManager::SetBatchSize(const std::string &bundleName, int32_t batchSize)
 {
     unique_lock<shared_mutex> lock(lock_);

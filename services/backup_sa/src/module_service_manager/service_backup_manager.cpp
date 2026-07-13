@@ -182,6 +182,7 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleName, iterSet->second.isClearData);
             session_->SetSupportWithoutTar(bundleName, iterSet->second.isSupportWithoutTar);
+            session_->SetExcludeInfos(bundleName, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleName, iterSet->second.batchSize);
         }
 

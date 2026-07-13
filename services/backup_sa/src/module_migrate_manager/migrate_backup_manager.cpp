@@ -372,6 +372,9 @@ ErrCode MigrateManager::ScanAllDirs(int64_t &totalSize, const string &bundleName
     HILOGI("Start scanning files and calculate datasize");
     vector<string> includes = GetDefaultIncludePath(userId_, bundleName);
     vector<string> excludes = {};
+    if (servicePtr_ != nullptr && servicePtr_->session_ != nullptr) {
+        excludes = servicePtr_->session_->GetExcludeInfos(bundleName);
+    }
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
 
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();

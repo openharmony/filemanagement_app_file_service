@@ -185,6 +185,7 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         restoreExtInfo_ = want.GetStringParam(BConstants::EXTENSION_RESTORE_EXT_INFO_PARA);
         oldBackupVersion_ = want.GetStringParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA);
         supportWithoutTar_ = want.GetBoolParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, false);
+        excludeInfos_ = want.GetStringArrayParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA);
         batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, DEFAULT_BATCH_SIZE);
         HILOGI("restoreExtInfo_ is %{public}s", GetAnonyString(restoreExtInfo_).c_str());
         HILOGI("Get version %{public}s type %{public}d from want when restore.", appVersionStr_.c_str(), restoreType_);
@@ -193,6 +194,7 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
         backupScene_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_SCENE_PARA);
         supportWithoutTar_ = want.GetBoolParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, false);
+        excludeInfos_ = want.GetStringArrayParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA);
         batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, DEFAULT_BATCH_SIZE);
         HILOGI(
             "backupExtInfo_ is %{public}s, backupScene_ is %{public}s, supportWithoutTar_ is %{public}d, batchSize_ is "
@@ -387,7 +389,12 @@ bool ExtBackup::GetSupportWithoutTar() const
 {
     return supportWithoutTar_;
 }
- 
+
+std::vector<std::string> ExtBackup::GetExcludeInfos() const
+{
+    return excludeInfos_;
+}
+
 int32_t ExtBackup::GetBatchSize() const
 {
     return batchSize_;
