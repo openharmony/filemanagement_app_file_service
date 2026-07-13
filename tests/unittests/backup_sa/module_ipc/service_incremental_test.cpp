@@ -501,13 +501,9 @@ std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntity
     return BService::serviceMock->GetSupportBackupBundleNames(bundleInfos, isIncBackup, srcBundleNames, isDefaultApp);
 }
 
-bool Service::GetDefaultBundleResult(const string &bundleName) { return false; }
-bool Service::GetDefaultBundleResult(const vector<string> &bundleNames) { return false; }
 ErrCode Service::PublishDefaultIncrementalFile(const BFileInfo &fileInfo) { return ERR_OK; }
 ErrCode Service::SendDefaultIncrementalFileHandle(const std::string &bundleName,
     const std::string &fileName) { return ERR_OK; }
-sptr<MigrateManager> Service::GetMigrateInstance(wptr<Service> servicePtr,
-    const std::string &bundleName, int32_t userId) { return nullptr; }
 
 ErrCode Service::HandleCurBundleFileReady(const std::string &bundleName, const std::string &fileName, bool isIncBackup)
 {
@@ -2410,9 +2406,8 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_ClearIncrementalStatFile
         EXPECT_EQ(ret, 0);
         EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
         service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
-        
-        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillOnce(Return(false));
         EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillRepeatedly(Return(bundleInfo));
+        EXPECT_CALL(*directMock, ForceRemoveDirectoryBMS(_)).WillOnce(Return(false));
         service->ClearIncrementalStatFile(userId, bundleInfo.bundleName);
         EXPECT_EQ(bundleInfo.bundleIndex, 0);
         string cmdRmdir = string("rm -r ") + path;

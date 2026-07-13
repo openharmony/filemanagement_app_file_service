@@ -229,15 +229,20 @@ static inline std::string GetSaBundleBackupToolDir(int32_t userId)
     return str;
 }
 
-static inline std::string GetBundleBackupDir(int32_t userId, std::string bundleName)
+static inline std::string GetBundleDir(int32_t userId, std::string bundleName, bool isEl2 = true)
 {
+    std::string el = isEl2 ? CONTEXT_ELS[1] : CONTEXT_ELS[0];
     std::string str;
-    str.append("/data/app/el2/");
+    str.append("/data/app/").append(el).append("/");
     str.append(std::to_string(userId));
     str.append("/base/");
-    str.append(bundleName);
-    str.append("/.backup");
+    str.append(bundleName).append("/");
     return str;
+}
+
+static inline std::string GetBundleBackupDir(int32_t userId, std::string bundleName)
+{
+    return GetBundleDir(userId, bundleName) + ".backup";
 }
 
 static inline std::string GetAncoRestoreDir(const std::string &bundleName)

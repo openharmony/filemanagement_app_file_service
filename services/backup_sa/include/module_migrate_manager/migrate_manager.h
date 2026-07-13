@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_BACKUP_MIGRATE_MANAGER_H
 #define OHOS_FILEMGMT_BACKUP_MIGRATE_MANAGER_H
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 #include <shared_mutex>
@@ -70,7 +71,6 @@ public:
     void DoClearInner();
     void AppDone(ErrCode errCode, const std::string &bundleName);
     void ReportAppStatistic(const std::string &func, ErrCode errCode);
-    ErrCode VerifyCallerAndGetCallerName(const std::string &bundleName);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
     void HandleExtOnRelease(bool isAppResultReport, ErrCode errCode);
     ErrCode HandleExtOnDisconnect(BackupType scenario, bool isAppResultReport, ErrCode errCode);
@@ -117,6 +117,7 @@ private:
     OHOS::ThreadPool threadPool_;
     OHOS::ThreadPool doBackupPool_;
 
+    std::atomic<bool> hasCleared_{false};
     bool isClearData_ {true};
     bool isDebug_ {true};
     int32_t userId_ = 0;

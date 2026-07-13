@@ -343,12 +343,6 @@ ErrCode MigrateManager::IndexFileReady(const std::string &bundleName)
 
 void MigrateManager::DoPacket(const string &bundleName)
 {
-    string callerName;
-    ErrCode ret = VerifyCallerAndGetCallerName(callerName);
-    if (ret != ERR_OK) {
-        HILOGE("error, Get bundle name failed, ret:%{public}d", ret);
-        return;
-    }
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
         HILOGW("enhance service is not loaded");
@@ -380,18 +374,12 @@ ErrCode MigrateManager::ScanAllDirs(int64_t &totalSize, const string &bundleName
     vector<string> excludes = {};
     set<string> expandIncludes = BDir::ExpandPathWildcard(includes, true);
 
-    string callerName;
-    ErrCode ret = VerifyCallerAndGetCallerName(callerName);
-    if (ret != ERR_OK) {
-        HILOGE("error, Get bundle name failed, ret:%{public}d", ret);
-        return ret;
-    }
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
         HILOGW("enhance service is not loaded");
         return BError(BError::Codes::OK);
     }
-    ret = enhanceService->MakeDir(bundleName);
+    auto ret = enhanceService->MakeDir(bundleName);
 
     auto instance = GetScanInstance(bundleName);
     if (instance == nullptr) {
@@ -436,28 +424,6 @@ void MigrateManager::CloseFileWithFDSan(int fd)
     }
 }
 
-ErrCode MigrateManager::VerifyCallerAndGetCallerName(const std::string &bundleName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    uint32_t tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int tokenType = Security::AccessToken::AccessTokenKit::GetTokenType(tokenCaller);
-    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        Security::AccessToken::NativeTokenInfo nativeTokenInfo;
-        if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(tokenCaller, nativeTokenInfo) != 0) {
-            HILOGE("Verify and get caller name failed, Get token info failed");
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        if (nativeTokenInfo.processName != BConstants::BACKUP_SA_NAME) {
-            HILOGE("Verify processName failed, %{public}s", nativeTokenInfo.processName.c_str());
-            return BError(BError::Codes::SA_INVAL_ARG);
-        }
-        return BError(BError::Codes::OK);
-    } else {
-        string str = to_string(tokenCaller);
-        HILOGE("Verify and get caller name failed, Invalid token type = %{private}s", GetAnonyString(str).c_str());
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
-}
 void MigrateManager::UpdateFileStat(std::string filePath, uint64_t fileSize)
 {
     std::lock_guard<std::mutex> lock(updateFileStatLock_);

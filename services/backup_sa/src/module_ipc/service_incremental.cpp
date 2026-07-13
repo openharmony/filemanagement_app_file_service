@@ -556,7 +556,7 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
 ErrCode Service::PublishIncrementalFile(const BFileInfo &fileInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    if (GetDefaultBundleResult(fileInfo.owner)) {
+    if (defaultAppManager_->IsDefaultBundle(fileInfo.owner)) {
         return PublishDefaultIncrementalFile(fileInfo);
     }
     ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
@@ -906,7 +906,7 @@ ErrCode Service::GetIncrementalFileHandle(const std::string &bundleName, const s
             HILOGI("Restore getIncrementalFileHandle begin, bundleName:%{public}s, fileName:%{public}s",
                 bundleName.c_str(), GetAnonyPath(fileName).c_str());
             ErrCode err = ERR_OK;
-            if (GetDefaultBundleResult(bundleName)) {
+            if (defaultAppManager_->IsDefaultBundle(bundleName)) {
                 err = SendDefaultIncrementalFileHandle(bundleName, fileName);
             } else {
                 err = SendIncrementalFileHandle(bundleName, fileName);
@@ -1285,10 +1285,10 @@ bool Service::CancelSessionClean(sptr<SvcSessionManager> session, std::string bu
         HILOGE("Session is nullptr");
         return false;
     }
-    if (GetDefaultBundleResult(bundleName)) {
+    if (defaultAppManager_->IsDefaultBundle(bundleName)) {
         session->StopFwkTimer(bundleName);
         session->StopExtTimer(bundleName);
-        auto instance = GetMigrateInstance(wptr<Service>(this), bundleName, GetUserIdDefault());
+        auto instance = defaultAppManager_->GetMigrateInstance(bundleName, GetUserIdDefault());
         if (instance != nullptr) {
             instance->DoClear();
         }
