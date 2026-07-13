@@ -94,7 +94,8 @@ void ScanResultManager::AddBigFile(const std::string& filePath, const struct sta
         hashName = StringUtils::GenHashName(filePath + std::to_string(i));
     }
     hashNameSet_.emplace(hashName);
-    std::string ext = ExtractFileExt(filePath);
+    std::string fileName = ExtractFileName(filePath);
+    std::string ext = ExtractFileExt(fileName);
     if (!ext.empty() && ext.find(BConstants::ANCO_TAG) == std::string::npos) {
         hashName += "." + ext;
     }
@@ -133,7 +134,8 @@ void ScanResultManager::AddAncoBigFile(
     }
     hashNameSet_.emplace(hashName);
     hashName += BConstants::ANCO_TAG;
-    std::string ext = ExtractFileExt(filePath);
+    std::string fileName = ExtractFileName(filePath);
+    std::string ext = ExtractFileExt(fileName);
     if (!ext.empty()) {
         hashName += "." + ext;
     }
