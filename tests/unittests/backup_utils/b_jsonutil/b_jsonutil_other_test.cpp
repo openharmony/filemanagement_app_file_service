@@ -812,4 +812,263 @@ HWTEST_F(BJsonUtilTest, b_jsonutil_AddAncoFileResult_0911, testing::ext::TestSiz
     }
     GTEST_LOG_(INFO) << "BJsonUtilTest-end AddAncoFileResult_0911";
 }
+
+/**
+ * @tc.number: b_jsonutil_AddRestoreSpend_1001
+ * @tc.name: b_jsonutil_AddRestoreSpend_1001
+ * @tc.desc: Test function of AddRestoreSpend interface, cJSON_Parse fail.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_AddRestoreSpend_1001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin AddRestoreSpend_1001";
+    try {
+        std::string jsonStr = R"({"resultInfo": []})";
+        uint32_t restoreSpend = 100;
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(nullptr));
+        bool result = BJsonUtil::AddRestoreSpend(restoreSpend, jsonStr);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end AddRestoreSpend_1001";
+}
+
+/**
+ * @tc.number: b_jsonutil_AddRestoreSpend_1002
+ * @tc.name: b_jsonutil_AddRestoreSpend_1002
+ * @tc.desc: Test function of AddRestoreSpend interface, GetObjectItem resultInfo fail.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_AddRestoreSpend_1002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin AddRestoreSpend_1002";
+    try {
+        std::string jsonStr = R"({"resultInfo": []})";
+        uint32_t restoreSpend = 100;
+        auto mockRoot = make_shared<cJSON>();
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool result = BJsonUtil::AddRestoreSpend(restoreSpend, jsonStr);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end AddRestoreSpend_1002";
+}
+
+/**
+ * @tc.number: b_jsonutil_AddRestoreSpend_1003
+ * @tc.name: b_jsonutil_AddRestoreSpend_1003
+ * @tc.desc: Test function of AddRestoreSpend interface, resultInfo is not array.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_AddRestoreSpend_1003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin AddRestoreSpend_1003";
+    try {
+        std::string jsonStr = R"({"resultInfo": []})";
+        uint32_t restoreSpend = 100;
+        auto mockRoot = make_shared<cJSON>();
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(false));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool result = BJsonUtil::AddRestoreSpend(restoreSpend, jsonStr);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end AddRestoreSpend_1003";
+}
+
+/**
+ * @tc.number: b_jsonutil_AddRestoreSpend_1004
+ * @tc.name: b_jsonutil_AddRestoreSpend_1004
+ * @tc.desc: Test function of AddRestoreSpend interface, empty resultInfo array.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_AddRestoreSpend_1004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin AddRestoreSpend_1004";
+    try {
+        std::string jsonStr = R"({"resultInfo": []})";
+        uint32_t restoreSpend = 100;
+        auto mockRoot = make_shared<cJSON>();
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(0));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool result = BJsonUtil::AddRestoreSpend(restoreSpend, jsonStr);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end AddRestoreSpend_1004";
+}
+
+/**
+ * @tc.number: b_jsonutil_AddRestoreSpend_1005
+ * @tc.name: b_jsonutil_AddRestoreSpend_1005
+ * @tc.desc: Test function of AddRestoreSpend interface, item has no type field, continue and fail.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_AddRestoreSpend_1005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin AddRestoreSpend_1005";
+    try {
+        std::string jsonStr = R"({"resultInfo": []})";
+        uint32_t restoreSpend = 100;
+        auto mockRoot = make_shared<cJSON>();
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool result = BJsonUtil::AddRestoreSpend(restoreSpend, jsonStr);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end AddRestoreSpend_1005";
+}
+
+/**
+ * @tc.number: b_jsonutil_AddRestoreSpend_1006
+ * @tc.name: b_jsonutil_AddRestoreSpend_1006
+ * @tc.desc: Test function of AddRestoreSpend interface, type is not ErrorInfo.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_AddRestoreSpend_1006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin AddRestoreSpend_1006";
+    try {
+        std::string jsonStr = R"({"resultInfo": []})";
+        uint32_t restoreSpend = 100;
+        auto mockRoot = make_shared<cJSON>();
+        mockRoot->valuestring = const_cast<char *>("CountInfo");
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool result = BJsonUtil::AddRestoreSpend(restoreSpend, jsonStr);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end AddRestoreSpend_1006";
+}
+
+/**
+ * @tc.number: b_jsonutil_AddRestoreSpend_1007
+ * @tc.name: b_jsonutil_AddRestoreSpend_1007
+ * @tc.desc: Test function of AddRestoreSpend interface, cJSON_Print fail.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_AddRestoreSpend_1007, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin AddRestoreSpend_1007";
+    try {
+        std::string jsonStr = R"({"resultInfo": []})";
+        uint32_t restoreSpend = 100;
+        auto mockRoot = make_shared<cJSON>();
+        mockRoot->valuestring = const_cast<char *>("ErrorInfo");
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_AddNumberToObject(_, _, _)).Times(1);
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(nullptr));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        bool result = BJsonUtil::AddRestoreSpend(restoreSpend, jsonStr);
+        EXPECT_FALSE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end AddRestoreSpend_1007";
+}
+
+/**
+ * @tc.number: b_jsonutil_AddRestoreSpend_1008
+ * @tc.name: b_jsonutil_AddRestoreSpend_1008
+ * @tc.desc: Test function of AddRestoreSpend interface, success.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 0
+ * @tc.require: I6F3GV
+ */
+HWTEST_F(BJsonUtilTest, b_jsonutil_AddRestoreSpend_1008, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BJsonUtilTest-begin AddRestoreSpend_1008";
+    try {
+        std::string jsonStr = R"({"resultInfo": []})";
+        uint32_t restoreSpend = 100;
+        auto mockRoot = make_shared<cJSON>();
+        mockRoot->valuestring = const_cast<char *>("ErrorInfo");
+
+        EXPECT_CALL(*cJsonMock, cJSON_Parse(_)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_GetObjectItem(_, _)).WillRepeatedly(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_IsArray(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArraySize(_)).WillOnce(Return(1));
+        EXPECT_CALL(*cJsonMock, cJSON_GetArrayItem(_, _)).WillOnce(Return(mockRoot.get()));
+        EXPECT_CALL(*cJsonMock, cJSON_HasObjectItem(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_IsString(_)).WillOnce(Return(true));
+        EXPECT_CALL(*cJsonMock, cJSON_AddNumberToObject(_, _, _)).Times(1);
+        EXPECT_CALL(*cJsonMock, cJSON_Print(_)).WillOnce(Return(const_cast<char *>("{\"resultInfo\":[]}")));
+        EXPECT_CALL(*cJsonMock, cJSON_Delete(_)).WillOnce(Return());
+        EXPECT_CALL(*cJsonMock, cJSON_free(_)).WillOnce(Return());
+        bool result = BJsonUtil::AddRestoreSpend(restoreSpend, jsonStr);
+        EXPECT_TRUE(result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BJsonUtilTest-an exception occurred.";
+    }
+    GTEST_LOG_(INFO) << "BJsonUtilTest-end AddRestoreSpend_1008";
+}
 }
