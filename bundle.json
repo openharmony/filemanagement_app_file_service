@@ -50,7 +50,8 @@
                 "storage_service",
                 "sandbox_manager",
                 "selinux_adapter",
-                "zlib"
+                "zlib",
+                "taihe_ffi_gen"
             ],
             "third_party": [
                 "bounds_checking_function"
