@@ -339,4 +339,14 @@ bool Parcel::ReadInt64(int64_t &value)
     }
     return isSuccess;
 }
+
+bool MessageParcel::WriteFileDescriptor(int fd)
+{
+    return true;
+}
+ 
+int MessageParcel::ReadFileDescriptor()
+{
+    return -1;
+}
 } // namespace OHOS::FileManagement::Backup

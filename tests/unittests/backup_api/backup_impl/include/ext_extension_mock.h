@@ -190,8 +190,8 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames, std::vector<int> &fdList,
-        std::vector<int32_t> &errCodes) override
+    ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+                                      std::vector<FileOpenResult> &openResults) override
     {
         return BError(BError::Codes::OK);
     }

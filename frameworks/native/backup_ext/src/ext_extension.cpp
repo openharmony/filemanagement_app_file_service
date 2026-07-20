@@ -211,30 +211,6 @@ static UniqueFd GetFileHandleForSpecialCloneCloud(const string &fileName)
     return fd;
 }
 
-int32_t BackupExtExtension::CallbackEnter([[maybe_unused]] uint32_t code)
-{
-    return ERR_NONE;
-}
- 
-int32_t BackupExtExtension::CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result)
-{
-    switch (static_cast<IExtensionIpcCode>(code)) {
-        case IExtensionIpcCode::COMMAND_GET_INCREMENTAL_FILE_HANDLES: {
-            HILOGE("In COMMAND_GET_INCREMENTAL_FILE_HANDLES");
-            {
-                std::unique_lock<std::mutex> lock_(fdListsLock_);
-                auto tid = syscall(SYS_gettid);
-                HILOGI("close fds of tid: %{public}ld", tid);
-                fdLists_[tid].clear();
-            }
-            break;
-        }
-        default:
-            break;
-    }
-    return ERR_NONE;
-}
-
 ErrCode BackupExtExtension::GetFileHandleWithUniqueFd(const std::string &fileName,
                                                       int32_t &getFileHandleErrCode,
                                                       int &fd)
@@ -434,29 +410,27 @@ tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncreFileHandleForNorm
     return {errCode, move(fd), move(reportFd)};
 }
 
-tuple<ErrCode, UniqueFd> BackupExtExtension::GetIncreFileHandleForUntarNormalVersion(
-    const std::string &fileName)
+FileOpenResult BackupExtExtension::GetIncreFileHandleForUntarNormalVersion(const std::string &fileName)
 {
-    HILOGI("extension: GetIncrementalFileHandle single to single Name:%{public}s", GetAnonyPath(fileName).c_str());
-    std::string realDir;
     int32_t errCode = ERR_OK;
     UniqueFd fd(BConstants::INVALID_FD_NUM);
     do {
-        std::string filePath = "";
-        filePath = fileName;
-        errCode = GetIncrementalFileHandleUntarPath(filePath, bundleName_, realDir);
+        std::string realDir;
+        errCode = GetIncrementalFileHandleUntarPath(fileName, bundleName_, realDir);
         if (errCode != ERR_OK) {
-            HILOGE("GetIncrementalFileHandleUntarPath failed, err = %{public}d", errCode);
+            HILOGE("Failed to get incremental file handle path, fileName:%{public}s, errCode:%{public}d",
+                   GetAnonyPath(fileName).c_str(), errCode);
             break;
         }
-        fd = UniqueFd(open(realDir.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
+        fd = UniqueFd(open(realDir.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
         if (fd < 0) {
-            HILOGE("Failed to open tar file = %{public}s, err = %{public}d", GetAnonyPath(realDir).c_str(), errno);
             errCode = errno;
+            HILOGE("Failed to open file, path:%{public}s, errno:%{public}d", GetAnonyPath(realDir).c_str(),
+                   errCode);
             break;
         }
     } while (0);
-    return {errCode, move(fd)};
+    return FileOpenResult(errCode, std::move(fd));
 }
 
 ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName,
@@ -471,11 +445,11 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName
 }
 
 ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
-                                                      std::vector<int> &fdList,
-                                                      std::vector<int32_t> &errCodes)
+                                                      std::vector<FileOpenResult> &openResults)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    HILOGI("GetIncrementalFileHandles enter fileNames");
+    HILOGI("Enter GetIncrementalFileHandles, input file count: %{public}zu, output container size: %{public}zu",
+           fileNames.size(), openResults.size());
     try {
         if (extension_ == nullptr) {
             HILOGE("Failed to get incremental file handle, extension  is invalid");
@@ -502,8 +476,14 @@ ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::str
             }
             return BError(BError::Codes::EXT_INVAL_ARG).GetCode();
         }
-        GetIncrementalFileHandlesInner(fileNames, fdList, errCodes);
-        HILOGI("GetIncrementalFileHandles Exit");
+        {
+            std::unique_lock<std::mutex> lock_(fileOpenLock_);
+            for (const auto &fileName : fileNames) {
+                auto openResult = GetIncreFileHandleForUntarNormalVersion(fileName);
+                openResults.push_back(openResult);
+            }
+        }
+        HILOGI("Successfully processed %{public}zu files", fileNames.size());
     } catch (...) {
         HILOGE("Failed to get incremental file handle");
         DoClear();
@@ -511,33 +491,6 @@ ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::str
     }
     return ERR_OK;
 }
- 
-void BackupExtExtension::GetIncrementalFileHandlesInner(const std::vector<std::string> &fileNames,
-                                                        std::vector<int> &fdList, std::vector<int32_t> &errCodes)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    std::vector<UniqueFd> tmpfdList;
-    {
-        std::unique_lock<std::mutex> lock_(fileOpenLock_);
-        for (const auto &fileName : fileNames) {
-            auto [errCode, fdval] = GetIncreFileHandleForUntarNormalVersion(fileName);
-            if (fdval < 0) {
-                HILOGE("GetIncrementalFileHandlesInner fail, fileName:%{public}s, errCode:%{public}d",
-                    GetAnonyPath(fileName).c_str(), errCode);
-            }
-            fdList.push_back(fdval.Get());
-            errCodes.push_back(errCode);
-            tmpfdList.push_back(std::move(fdval));
-        }
-    }
-    {
-        std::unique_lock<std::mutex> lock_(fdListsLock_);
-        auto tid = syscall(SYS_gettid);
-        HILOGI("save fds of tid: %{public}ld", tid);
-        fdLists_[tid] = std::move(tmpfdList);
-    }
-}
-
 
 tuple<ErrCode, UniqueFd, UniqueFd> BackupExtExtension::GetIncrementalFileHandle(const string &fileName)
 {
@@ -770,13 +723,12 @@ ErrCode BackupExtExtension::ReportAncoAppFileReady(const string &filename, const
     return proxy->AppAncoFileReady(filename, filePath, needDelete);
 }
 
-ErrCode BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileInfo>> &allFiles,
-                                              vector<string> &fileNames,
-                                              vector<int> &normalfds,
-                                              vector<string> &abnormalfileNames,
-                                              vector<int> &errCodes)
+void BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileInfo>> &allFiles,
+                                           vector<string> &fileNames,
+                                           vector<int> &normalfds,
+                                           vector<string> &abnormalfileNames,
+                                           vector<int> &errCodes)
 {
-    ErrCode ret = ERR_OK;
     for (auto it = allFiles.begin(); it != allFiles.end();) {
         const string &filePath = (*it)->filePath_;
         std::string newPath = BExcepUltils::Canonicalize(filePath);
@@ -791,7 +743,6 @@ ErrCode BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileI
             }
             abnormalfileNames.push_back(FileInfoToString(*it));
             errCodes.push_back(errCode);
-            ret = errCode;
         } else {
             fileNames.push_back(FileInfoToString(*it));
             normalfds.push_back(fdval);
@@ -799,9 +750,8 @@ ErrCode BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileI
         }
         it++;
     }
-    return ret;
 }
- 
+
 ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles)
 {
     HILOGD("ReportAppFileReadys enter filenameSize: %{public}zu", allFiles.size());
@@ -809,10 +759,8 @@ ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFil
     vector<int> normalfds = {};
     vector<string> abnormalfileNames = {};
     vector<int> errCodes = {};
-    ErrCode errCode = ProcessReadysInfo(allFiles, fileNames, normalfds, abnormalfileNames, errCodes);
-    if (errCode != ERR_OK) {
-        return errCode;
-    }
+    ProcessReadysInfo(allFiles, fileNames, normalfds, abnormalfileNames, errCodes);
+
     auto proxy = ServiceClient::GetInstance();
     if (proxy == nullptr) {
         HILOGE("ServiceClient is null");
@@ -821,12 +769,12 @@ ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFil
         }
         return static_cast<int32_t>(BError::Codes::EXT_CLIENT_IS_NULL);
     }
- 
+
     int reportRsWithoutFd = ERR_OK;
     if (!abnormalfileNames.empty()) {
         reportRsWithoutFd = proxy->AppFileReadysWithoutFd(abnormalfileNames, errCodes);
     }
- 
+
     vector<int> temp(normalfds.size(), ERR_OK);
     HILOGI("send get file Names length %{public}zu", fileNames.size());
     int reportRs = proxy->AppFileReadys(fileNames, normalfds, temp);

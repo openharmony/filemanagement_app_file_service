@@ -629,109 +629,30 @@ ErrCode Service::PublishSAIncrementalFile(const BFileInfo &fileInfo, UniqueFd fd
     return saConnection->CallRestoreSA(move(fd));
 }
 
-void Service::IncrementalRestoreOnFileReadys(const std::string &bundleName,
-    const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
-    const std::vector<UniqueFd> &manifestfdList, const std::vector<int32_t> &errCodes)
-{
-    std::vector<std::string> specialFileNames;
-    std::vector<int32_t> specialErrCodes;
-    std::vector<std::string> normalFileNames;
-    std::vector<int> normalFdList;
-    std::vector<int> normalManifestfdList;
-    std::vector<int32_t> normalErrCodes;
-    for (size_t i = 0; i < fileNames.size(); i++) {
-        if (fdList[i] >= 0) {
-            normalFileNames.push_back(fileNames[i]);
-            normalFdList.push_back(fdList[i]);
-            normalManifestfdList.push_back(manifestfdList[i]);
-            normalErrCodes.push_back(errCodes[i]);
-        } else {
-            specialFileNames.push_back(fileNames[i]);
-            specialErrCodes.push_back(errCodes[i]);
-        }
-    }
-    session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadysWithoutFd(
-        bundleName, specialFileNames, specialErrCodes);
-    session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadys(
-        bundleName, normalFileNames, normalFdList, normalManifestfdList, normalErrCodes);
-}
-
 ErrCode Service::AppIncrementalFileReadys(const std::string &bundleName,
                                           const std::vector<std::string> &fileNames,
-                                          const std::vector<UniqueFd> &fdList,
-                                          const std::vector<UniqueFd> &manifestfdList,
-                                          const std::vector<int32_t> &errCodes)
+                                          const std::vector<FileOpenResult> &openResults)
 {
     try {
-        HILOGI("%{public}zu,%{public}zu,%{public}zu,%{public}zu",
-            fileNames.size(), fdList.size(), manifestfdList.size(), errCodes.size());
-        BExcepUltils::BAssert(fileNames.size() == fdList.size(), BError::Codes::SA_INVAL_ARG, "size is not same");
-        BExcepUltils::BAssert(fileNames.size() == manifestfdList.size(),
-            BError::Codes::SA_INVAL_ARG, "size is not same");
-        BExcepUltils::BAssert(fileNames.size() == errCodes.size(), BError::Codes::SA_INVAL_ARG, "size is not same");
+        HILOGI("Processing bundle: %{public}s, file count: %{public}zu, open result count: %{public}zu",
+               bundleName.c_str(), fileNames.size(), openResults.size());
+        BExcepUltils::BAssert(fileNames.size() == openResults.size(), BError::Codes::SA_INVAL_ARG,
+                              "File names and open results size mismatch");
         if (session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->SetBatchSize((unsigned int)fileNames.size());
-            IncrementalRestoreOnFileReadys(bundleName, fileNames, fdList, manifestfdList, errCodes);
+            session_->GetServiceReverseProxy()->SetBatchSize(static_cast<unsigned int>(fileNames.size()));
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadys(bundleName, fileNames, openResults);
             OnAllBundlesFinished(BError(BError::Codes::OK));
             return BError(BError::Codes::OK);
         }
+        HILOGI("No RESTORE scenario detected for bundle: %{public}s", bundleName.c_str());
         OnAllBundlesFinished(BError(BError::Codes::OK));
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
-        HILOGE("AppIncrementalFileReadys exception");
+        HILOGE("Exception occurred during AppIncrementalFileReadys for bundle %{public}s: errCode:%{public}d",
+               bundleName.c_str(), e.GetCode());
         return e.GetCode(); // 任意异常产生，终止监听该任务
     } catch (...) {
-        HILOGE("Unexpected exception");
-        return EPERM;
-    }
-}
-
-void Service::IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
-    const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
-    const std::vector<int32_t> &errCodes)
-{
-    std::vector<std::string> specialFileNames;
-    std::vector<int32_t> specialErrCodes;
-    std::vector<std::string> normalFileNames;
-    std::vector<int> normalFdList;
-    std::vector<int32_t> normalErrCodes;
-    for (size_t i = 0; i < fileNames.size(); i++) {
-        if (fdList[i] >= 0) {
-            normalFileNames.push_back(fileNames[i]);
-            normalFdList.push_back(fdList[i]);
-            normalErrCodes.push_back(errCodes[i]);
-        } else {
-            specialFileNames.push_back(fileNames[i]);
-            specialErrCodes.push_back(errCodes[i]);
-        }
-    }
-    session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadysWithoutFd(
-        bundleName, specialFileNames, specialErrCodes);
-    session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadysWithoutRp(
-        bundleName, normalFileNames, normalFdList, normalErrCodes);
-}
-
-ErrCode Service::AppIncrementalFileReadysWithoutRp(const std::string &bundleName,
-    const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
-    const std::vector<int32_t> &errCodes)
-{
-    try {
-        HILOGI("%{public}zu,%{public}zu,%{public}zu",fileNames.size(), fdList.size(), errCodes.size());
-        BExcepUltils::BAssert(fileNames.size() == fdList.size(), BError::Codes::SA_INVAL_ARG, "size is not same");
-        BExcepUltils::BAssert(fileNames.size() == errCodes.size(), BError::Codes::SA_INVAL_ARG, "size is not same");
-        if (session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
-            session_->GetServiceReverseProxy()->SetBatchSize((unsigned int)fileNames.size());
-            IncrementalRestoreOnFileReadysWithoutRp(bundleName, fileNames, fdList, errCodes);
-            OnAllBundlesFinished(BError(BError::Codes::OK));
-            return BError(BError::Codes::OK);
-        }
-        OnAllBundlesFinished(BError(BError::Codes::OK));
-        return BError(BError::Codes::OK);
-    } catch (const BError &e) {
-        HILOGE("AppIncrementalFileReadysWithoutRp exception");
-        return e.GetCode();  // 任意异常产生，终止监听该任务
-    } catch (...) {
-        HILOGE("Unexpected exception");
+        HILOGE("Unexpected exception occurred for bundle %{public}s", bundleName.c_str());
         return EPERM;
     }
 }
@@ -1044,51 +965,53 @@ ErrCode Service::SendIncrementalFileHandles(const std::string &bundleName, const
         }
     }
 
+    std::vector<std::string> finalFileNames;
+    std::vector<FileOpenResult> openResults;
     ErrCode finalErr = ERR_OK;
     if (!saFileNames.empty()) {
-        auto err = SendIncrementalFileHandlesByEnhance(bundleName, saFileNames);
+        auto err = SendIncrementalFileHandlesByEnhance(bundleName, saFileNames, openResults);
+        finalFileNames = std::move(saFileNames);
         finalErr = err == ERR_OK ? finalErr : err;
     }
     if (!extFileNames.empty()) {
-        std::vector<int> fdLists;
-        std::vector<int32_t> extErrCodes;
-        proxy->GetIncrementalFileHandles(extFileNames, fdLists, extErrCodes);
-        std::vector<UniqueFd> extFdLists(fdLists.begin(), fdLists.end());
-        auto err = AppIncrementalFileReadysWithoutRp(bundleName, extFileNames, extFdLists, extErrCodes);
-        finalErr = err == ERR_OK ? finalErr : err;
+        std::vector<FileOpenResult> extOpenResults;
+        proxy->GetIncrementalFileHandles(extFileNames, extOpenResults);
+        finalFileNames.insert(finalFileNames.end(), extFileNames.begin(), extFileNames.end());
+        openResults.insert(openResults.end(), extOpenResults.begin(), extOpenResults.end());
     }
+
+    auto err = AppIncrementalFileReadys(bundleName, finalFileNames, openResults);
+    finalErr = err == ERR_OK ? finalErr : err;
+
     if (finalErr != ERR_OK) {
-        AppRadar::Info info (bundleName, "", "");
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandles",
-            GetUserIdDefault(), BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, finalErr);
+        AppRadar::Info info(bundleName, "", "");
+        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandles", GetUserIdDefault(),
+                                                     BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, finalErr);
     }
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::SendIncrementalFileHandlesByEnhance(
-    const std::string &bundleName, const vector<std::string> &fileNames)
+ErrCode Service::SendIncrementalFileHandlesByEnhance(const std::string &bundleName,
+                                                     const vector<std::string> &fileNames,
+                                                     std::vector<FileOpenResult> &openResults)
 {
     std::vector<int32_t> errCodes;
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
-        HILOGE("SendIncrementalFileHandles, enhance service is not loaded");
-        errCodes.resize(fileNames.size(), BError(BError::Codes::SA_ENHANCE_SERVICE_UNAVAILABLE).GetCode());
-        return session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadysWithoutFd(
-            bundleName, fileNames, errCodes);
+        HILOGE("SendIncrementalFileHandle, enhance service is not loaded");
+        auto errCode = BError(BError::Codes::SA_ENHANCE_SERVICE_UNAVAILABLE).GetCode();
+        openResults.insert(openResults.end(), fileNames.size(), FileOpenResult(errCode));
+        return errCode;
     }
 
-    std::vector<UniqueFd> fdLists;
-    std::vector<UniqueFd> manifestfdLists;
     for (const auto &fileName : fileNames) {
         int fdVal = BConstants::INVALID_FD_NUM;
         int reportFdVal = BConstants::INVALID_FD_NUM;
         int errCode = BConstants::INVALID_FD_NUM;
         enhanceService->GetIncrementalAncoFileHandle(bundleName, fileName, fdVal, reportFdVal, errCode);
-        fdLists.push_back(UniqueFd(fdVal));
-        manifestfdLists.push_back(UniqueFd(reportFdVal));
-        errCodes.push_back(errCode);
+        openResults.push_back(FileOpenResult(errCode, UniqueFd(fdVal), UniqueFd(reportFdVal)));
     }
-    return AppIncrementalFileReadys(bundleName, fileNames, fdLists, manifestfdLists, errCodes);
+    return BError(BError::Codes::OK).GetCode();
 }
 
 bool Service::IncrementalBackup(const string &bundleName)
