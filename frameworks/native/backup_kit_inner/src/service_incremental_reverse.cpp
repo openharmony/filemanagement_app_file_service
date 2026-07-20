@@ -26,52 +26,36 @@ using namespace std;
 
 void ServiceReverse::FlushPendingIncrementalFiles()
 {
-    HILOGI("FlushPendingIncrementalFiles %{public}zu ok", pendingFiles_.size());
-    std::vector<BackupFile> filesToFlush;
-    std::vector<BackupFile> errfilesToFlush;
+    std::vector<BackupFile> files;
     {
         std::lock_guard<std::mutex> lock(addIncrementalBatchLock_);
-        if (pendingIncrementalFiles_.empty()) {
-            return;
-        }
-        for (const auto &file : pendingIncrementalFiles_) {
-            if (SUCCEEDED(file.errCode)) {
-                filesToFlush.push_back(file);
-            } else {
-                errfilesToFlush.push_back(file);
-            }
-        }
-        pendingIncrementalFiles_.clear();
+        files = std::move(pendingIncrementalFiles_);
+        HILOGI("FlushPendingIncrementalFiles %{public}zu ok", files.size());
     }
-    if (!callbacksIncrementalRestore_.onFileReadyBatch) {
-        HILOGE("callback is nullptr");
-        return;
-    }
-    if (!filesToFlush.empty()) {
-        callbacksIncrementalRestore_.onFileReadyBatch(filesToFlush);
-    }
-    if (!errfilesToFlush.empty()) {
-        callbacksIncrementalRestore_.onFileReadyBatch(errfilesToFlush);
+    if (!files.empty() && callbacksIncrementalRestore_.onFileReadyBatch) {
+        callbacksIncrementalRestore_.onFileReadyBatch(files);
     }
 }
  
-void ServiceReverse::AddIncrementalFileToBatch(const std::string &bundleName, const std::vector<std::string> &fileNames,
-                                               const std::vector<int> &fds, const std::vector<int> &manifestFds,
-                                               const std::vector<int32_t> &errCodes)
+void ServiceReverse::AddIncrementalFileToBatch(const std::string &bundleName,
+                                               const std::vector<std::string> &fileNames,
+                                               const std::vector<FileOpenResult> &openResults)
 {
     bool needFlush = false;
     {
         std::lock_guard<std::mutex> lock(addIncrementalBatchLock_);
-        for (size_t i = 0; i < fileNames.size(); ++i) {
+        for (size_t i = 0; i < openResults.size(); ++i) {
             BackupFile file;
             file.bundleName = bundleName;
             file.uri = fileNames[i];
-            file.fd = fds[i];
-            file.manifestFd = manifestFds[i];
-            file.errCode = errCodes[i];
+            file.fd = openResults[i].GetReleasedFd();
+            file.manifestFd = openResults[i].GetReleasedManifestFd();
+            file.errCode = openResults[i].errCode;
             pendingIncrementalFiles_.push_back(file);
         }
         needFlush = (pendingIncrementalFiles_.size() >= batchSize_);
+        HILOGI("Current pending files: %{public}zu, batchSize: %{public}u, needFlush: %{public}d",
+               pendingIncrementalFiles_.size(), batchSize_, needFlush);
     }
     if (needFlush) {
         FlushPendingIncrementalFiles();
@@ -245,42 +229,15 @@ ErrCode ServiceReverse::IncrementalRestoreOnFileReadyWithoutFd(const std::string
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceReverse::IncrementalRestoreOnFileReadysWithoutFd(const std::string &bundleName,
-                                                                const std::vector<std::string> &fileNames,
-                                                                const std::vector<int32_t> &errCodes)
-{
-    if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onFileReadyBatch) {
-        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return BError(BError::Codes::OK);
-    }
-    const std::vector<int> invalidFds(fileNames.size(), INVALID_FD);
-    AddIncrementalFileToBatch(bundleName, fileNames, invalidFds, invalidFds, errCodes);
-    return BError(BError::Codes::OK);
-}
-
 ErrCode ServiceReverse::IncrementalRestoreOnFileReadys(const std::string &bundleName,
                                                        const std::vector<std::string> &fileNames,
-                                                       const std::vector<int> &fdList,
-                                                       const std::vector<int> &manifestfdList,
-                                                       const std::vector<int32_t> &errCodes)
+                                                       const std::vector<FileOpenResult> &openResults)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onFileReadyBatch) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return BError(BError::Codes::OK);
     }
-    AddIncrementalFileToBatch(bundleName, fileNames, fdList, manifestfdList, errCodes);
-    return BError(BError::Codes::OK);
-}
-
-ErrCode ServiceReverse::IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
-    const std::vector<std::string> &fileNames, const std::vector<int> &fdList, const std::vector<int32_t> &errCodes)
-{
-    if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onFileReadyBatch) {
-        HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
-        return BError(BError::Codes::OK);
-    }
-    const std::vector<int> invalidFds(fileNames.size(), INVALID_FD);
-    AddIncrementalFileToBatch(bundleName, fileNames, fdList, invalidFds, errCodes);
+    AddIncrementalFileToBatch(bundleName, fileNames, openResults);
     return BError(BError::Codes::OK);
 }
 

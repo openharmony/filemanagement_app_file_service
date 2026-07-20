@@ -94,5 +94,11 @@ public:
     virtual ~Parcelable() = default;
     virtual bool Marshalling(Parcel &parcel) const = 0;
 };
+
+class MessageParcel : public Parcel {
+public:
+    bool WriteFileDescriptor(int fd);
+    int ReadFileDescriptor();
+};
 } // namespace OHOS::FileManagement::Backup
 #endif

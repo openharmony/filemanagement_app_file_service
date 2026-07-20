@@ -142,21 +142,9 @@ public:
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);
     void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
-    void IncrementalRestoreOnFileReadys(const std::string &bundleName,
-        const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
-        const std::vector<UniqueFd> &manifestfdList, const std::vector<int32_t> &errCodes);
-    void IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
-        const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
-        const std::vector<int32_t> &errCodes);
     ErrCode AppIncrementalFileReadys(const std::string &bundleName,
                                      const std::vector<std::string> &fileNames,
-                                     const std::vector<UniqueFd> &fdList,
-                                     const std::vector<UniqueFd> &manifestfdList,
-                                     const std::vector<int32_t> &errCodes);
-    ErrCode AppIncrementalFileReadysWithoutRp(const std::string &bundleName,
-                                     const std::vector<std::string> &fileNames,
-                                     const std::vector<UniqueFd> &fdList,
-                                     const std::vector<int32_t> &errCodes);
+                                     const std::vector<FileOpenResult> &openResults);
     ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
     ErrCode CleanBundleTempDir(const std::string &bundleName) override;
     ErrCode HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppResultReport, ErrCode errCode) override;
@@ -884,7 +872,9 @@ private:
     ErrCode ProcessReadyFiles(const std::vector<std::string> &fileNames,
                               const std::vector<int> &errCodes,
                               const std::string &callerName);
-    ErrCode SendIncrementalFileHandlesByEnhance(const std::string &bundleName, const vector<std::string> &fileNames);
+    ErrCode SendIncrementalFileHandlesByEnhance(const std::string &bundleName,
+                                                const vector<std::string> &fileNames,
+                                                std::vector<FileOpenResult> &openResults);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;

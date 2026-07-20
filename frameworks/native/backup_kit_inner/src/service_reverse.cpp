@@ -24,37 +24,21 @@ using namespace std;
 
 void ServiceReverse::FlushPendingFiles()
 {
-    HILOGI("FlushPendingFiles %{public}zu ok", pendingFiles_.size());
-    std::vector<BackupFile> filesToFlush;
-    std::vector<BackupFile> errfilesToFlush;
+    std::vector<BackupFile> files;
     {
         std::lock_guard<std::mutex> lock(addBatchLock_);
-        if (pendingFiles_.empty()) {
-            return;
-        }
-        for (const auto &file : pendingFiles_) {
-            if (SUCCEEDED(file.errCode)) {
-                filesToFlush.push_back(file);
-            } else {
-                errfilesToFlush.push_back(file);
-            }
-        }
-        pendingFiles_.clear();
+        files = std::move(pendingFiles_);
+        HILOGI("FlushPendingFiles %{public}zu ok", files.size());
     }
-    if (!callbacksBackup_.onFileReadyBatch) {
-        HILOGE("callback is nullptr");
-        return;
-    }
-    if (!filesToFlush.empty()) {
-        callbacksBackup_.onFileReadyBatch(filesToFlush);
-    }
-    if (!errfilesToFlush.empty()) {
-        callbacksBackup_.onFileReadyBatch(errfilesToFlush);
+    if (!files.empty() && callbacksBackup_.onFileReadyBatch) {
+        callbacksBackup_.onFileReadyBatch(files);
     }
 }
  
-void ServiceReverse::AddFileToBatch(const std::string &bundleName, const std::vector<std::string> &fileNames,
-                                    const std::vector<int> &fds, const std::vector<int> &manifestFds,
+void ServiceReverse::AddFileToBatch(const std::string &bundleName,
+                                    const std::vector<std::string> &fileNames,
+                                    const std::vector<int> &fds,
+                                    const std::vector<int> &manifestFds,
                                     const std::vector<int32_t> &errCodes)
 {
     bool needFlush = false;
@@ -70,6 +54,8 @@ void ServiceReverse::AddFileToBatch(const std::string &bundleName, const std::ve
             pendingFiles_.push_back(file);
         }
         needFlush = (pendingFiles_.size() >= batchSize_);
+        HILOGI("Current pending files: %{public}zu, batchSize: %{public}u, needFlush: %{public}d", pendingFiles_.size(),
+               batchSize_, needFlush);
     }
     if (needFlush) {
         FlushPendingFiles();
