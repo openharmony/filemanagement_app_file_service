@@ -21,6 +21,7 @@
 #include <sstream>
 #include "cJSON.h"
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
@@ -199,6 +200,9 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
             return;
         }
         bundleDetailInfo.detail = std::string(detailInfos);
+        HILOGI("bundleName:%{public}s, type:%{public}s, detail:%{public}s, detail size:%{public}zu",
+            bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.type.c_str(),
+            GetAnonyString(bundleDetailInfo.detail).c_str(), bundleDetailInfo.detail.size());
         if (bundleDetailInfo.type.compare(BConstants::BROADCAST_TYPE) == 0) {
             ParseBroadcastInfo(bundleDetailInfo, infoItem);
         }

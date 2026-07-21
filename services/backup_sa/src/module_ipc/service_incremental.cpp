@@ -545,8 +545,8 @@ void Service::HandleCurGroupIncBackupInfos(vector<BJsonEntityCaps::BundleInfo> &
         }
         BJsonUtil::BundleDetailInfo uniCastInfo;
         if (BJsonUtil::FindBundleInfoByName(bundleNameDetailMap, bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
-            HILOGI("current bundle:%{public}s, unicast info:%{public}s", bundleNameIndexInfo.c_str(),
-                GetAnonyString(uniCastInfo.detail).c_str());
+            HILOGI("current bundle:%{public}s, unicast info:%{public}s, unicast info size:%{public}zu",
+                bundleNameIndexInfo.c_str(), GetAnonyString(uniCastInfo.detail).c_str(), uniCastInfo.detail.size());
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
         session_->SetBackupExtName(bundleNameIndexInfo, info.extensionName);
@@ -1150,8 +1150,8 @@ void Service::SendUserIdToApp(string &bundleName, int32_t userId)
         return;
     }
     session_->SetBackupExtInfo(bundleName, detailInfo);
-    HILOGI("End, bundleName:%{public}s, unicast info:%{public}s", bundleName.c_str(),
-        GetAnonyString(detailInfo).c_str());
+    HILOGI("End, bundleName:%{public}s, unicast info:%{public}s, unicast info size:%{public}zu", bundleName.c_str(),
+        GetAnonyString(detailInfo).c_str(), detailInfo.size());
 }
 
 void Service::SetCurrentBackupSessProperties(const vector<string> &bundleNames, int32_t userId,

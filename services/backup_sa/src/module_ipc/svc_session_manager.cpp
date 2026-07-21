@@ -642,6 +642,8 @@ void SvcSessionManager::SetBackupExtInfo(const string &bundleName, const string 
         return;
     }
     it->second.extInfo = extInfo;
+    HILOGI("bundleName:%{public}s, extInfo:%{public}s, extInfo size:%{public}zu", bundleName.c_str(),
+        GetAnonyString(extInfo).c_str(), extInfo.size());
 }
 
 std::string SvcSessionManager::GetBackupExtInfo(const string &bundleName)
