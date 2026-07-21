@@ -18,8 +18,10 @@
 
 #include "parcel.h"
 #include <string>
+#include <unique_fd.h>
 #include <vector>
 #include <map>
+#include <memory>
 
 namespace OHOS::FileManagement::Backup {
 using ErrCode = int;
@@ -27,6 +29,7 @@ struct AncoRestoreResult : public Parcelable {
     int64_t successCount{0};
     int64_t duplicateCount{0};
     int64_t failedCount{0};
+    std::shared_ptr<UniqueFd> dbFd;
     std::map<std::string, int64_t> endFileInfos;
     std::map<std::string, std::vector<ErrCode>> errFileInfos;
     off_t bigFileSize = 0;
@@ -38,6 +41,12 @@ struct AncoRestoreResult : public Parcelable {
     AncoRestoreResult() = default;
     AncoRestoreResult(int64_t successCount_, int64_t duplicateCount_, int64_t failedCount_)
         : successCount(successCount_), duplicateCount(duplicateCount_), failedCount(failedCount_)
+    {}
+    AncoRestoreResult(int64_t successCount_, int64_t duplicateCount_, int64_t failedCount_, UniqueFd dbFd)
+        : successCount(successCount_),
+          duplicateCount(duplicateCount_),
+          failedCount(failedCount_),
+          dbFd(std::make_shared<UniqueFd>(std::move(dbFd)))
     {}
     ~AncoRestoreResult() override = default;
 

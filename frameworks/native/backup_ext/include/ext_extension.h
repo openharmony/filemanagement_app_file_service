@@ -98,7 +98,7 @@ public:
     static ErrCode StartAncoUnPacket(const std::string &tempPath);
     static ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats);
-    static AncoRestoreResult StartAncoMove(UniqueFd &fd);
+    static AncoRestoreResult StartAncoMove();
 };
 class BackupExtExtension : public ExtensionStub {
     friend class AncoBackupCallback;
