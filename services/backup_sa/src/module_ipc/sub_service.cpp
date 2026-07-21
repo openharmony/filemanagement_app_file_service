@@ -589,7 +589,8 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     int64_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
     RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
     string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
-    HILOGI("BundleExtInfo is:%{public}s", GetAnonyString(bundleExtInfo).c_str());
+    HILOGI("BundleExtInfo is:%{public}s, BundleExtInfo size:%{public}zu", GetAnonyString(bundleExtInfo).c_str(),
+        bundleExtInfo.size());
     string oldBackupVersion = session_->GetOldBackupVersion(); /* old device backup version */
     if (oldBackupVersion.empty()) {
         HILOGE("Failed to get backupVersion of old device");
