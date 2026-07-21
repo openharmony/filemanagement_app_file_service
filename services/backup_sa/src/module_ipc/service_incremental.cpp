@@ -991,17 +991,17 @@ std::function<void()> Service::CreateIncrementalFileHandlesTask(const std::strin
         std::vector<FileOpenResult> openResults;
         ErrCode finalErr = ERR_OK;
         if (!saFileNames.empty()) {
-            auto err = SendIncrementalFileHandlesByEnhance(bundleName, saFileNames, openResults);
+            auto err = ptr->SendIncrementalFileHandlesByEnhance(bundleName, saFileNames, openResults);
             finalFileNames = std::move(saFileNames);
             finalErr = err == ERR_OK ? finalErr : err;
         }
         if (!extFileNames.empty()) {
             std::vector<FileOpenResult> extOpenResults;
-            proxy->GetIncrementalFileHandles(extFileNames, extOpenResults);
+            proxyPtr->GetIncrementalFileHandles(extFileNames, extOpenResults);
             finalFileNames.insert(finalFileNames.end(), extFileNames.begin(), extFileNames.end());
             openResults.insert(openResults.end(), extOpenResults.begin(), extOpenResults.end());
         }
-        auto err = AppIncrementalFileReadys(bundleName, finalFileNames, openResults);
+        auto err = ptr->AppIncrementalFileReadys(bundleName, finalFileNames, openResults);
         finalErr = err == ERR_OK ? finalErr : err;
         if (finalErr != ERR_OK) {
             AppRadar::Info info(bundleName, "", "");
