@@ -1005,7 +1005,8 @@ std::function<void()> Service::CreateIncrementalFileHandlesTask(const std::strin
         finalErr = err == ERR_OK ? finalErr : err;
         if (finalErr != ERR_OK) {
             AppRadar::Info info(bundleName, "", "");
-            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandles", GetUserIdDefault(),
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandles",
+                                                         ptr->GetUserIdDefault(),
                                                          BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, finalErr);
         }
     };
