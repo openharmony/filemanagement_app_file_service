@@ -2023,8 +2023,7 @@ HWTEST_F(ServiceTest, SUB_Service_GetPresumablySize_0000, TestSize.Level1)
         EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(false));
         EXPECT_CALL(*bms, GetBundleDataSize(_, _)).WillOnce(Return(1));
         EXPECT_CALL(*param, GetBackupDebugOverrideAccount())
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)))
-            .WillOnce(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
+            .WillRepeatedly(Return(make_pair<bool, int32_t>(true, DEBUG_ID + 1)));
         service->GetPresumablySize(bundleNameList, scanning);
         EXPECT_EQ(service->bundleDataSizeList_.size(), 1);
         service->bundleDataSizeList_.clear();

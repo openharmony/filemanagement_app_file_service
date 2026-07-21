@@ -720,9 +720,11 @@ HWTEST_F(ExtBackupJsSubTest, SUB_backup_ext_js_InitTempPath_0100, testing::ext::
     GTEST_LOG_(INFO) << "ExtBackupJsSubTest-begin SUB_backup_ext_js_InitTempPath_0100";
     try {
         std::string el2BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME);
+        ForceRemoveDirectoryBMS(el2BackupDir);
         int ret = access(el2BackupDir.c_str(), F_OK);
         EXPECT_TRUE(ret != F_OK);
         std::string el1BackupDir(BConstants::PATH_BUNDLE_BACKUP_HOME_EL1);
+        ForceRemoveDirectoryBMS(el1BackupDir);
         ret = access(el1BackupDir.c_str(), F_OK);
         EXPECT_TRUE(ret != F_OK);
         std::string bundleName = "testBundleName";
