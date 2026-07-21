@@ -954,41 +954,61 @@ ErrCode Service::SendIncrementalFileHandles(const std::string &bundleName, const
         HILOGE("SendIncrementalFileHandles failed, bundleName:%{public}s", bundleName.c_str());
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-
-    std::vector<std::string> saFileNames;
-    std::vector<std::string> extFileNames;
-    for (const auto &fileName : fileNames) {
-        if (StringUtils::IsAncoFile(fileName)) {
-            saFileNames.push_back(fileName);
-        } else {
-            extFileNames.push_back(fileName);
+    auto task = CreateIncrementalFileHandlesTask(bundleName, fileNames, proxy);
+    getFileHandlesThreadPool_.AddTask([task]() {
+        try {
+            task();
+        } catch (...) {
+            HILOGE("Failed to add task to thread pool");
         }
-    }
-
-    std::vector<std::string> finalFileNames;
-    std::vector<FileOpenResult> openResults;
-    ErrCode finalErr = ERR_OK;
-    if (!saFileNames.empty()) {
-        auto err = SendIncrementalFileHandlesByEnhance(bundleName, saFileNames, openResults);
-        finalFileNames = std::move(saFileNames);
-        finalErr = err == ERR_OK ? finalErr : err;
-    }
-    if (!extFileNames.empty()) {
-        std::vector<FileOpenResult> extOpenResults;
-        proxy->GetIncrementalFileHandles(extFileNames, extOpenResults);
-        finalFileNames.insert(finalFileNames.end(), extFileNames.begin(), extFileNames.end());
-        openResults.insert(openResults.end(), extOpenResults.begin(), extOpenResults.end());
-    }
-
-    auto err = AppIncrementalFileReadys(bundleName, finalFileNames, openResults);
-    finalErr = err == ERR_OK ? finalErr : err;
-
-    if (finalErr != ERR_OK) {
-        AppRadar::Info info(bundleName, "", "");
-        AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandles", GetUserIdDefault(),
-                                                     BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, finalErr);
-    }
+    });
     return BError(BError::Codes::OK);
+}
+
+std::function<void()> Service::CreateIncrementalFileHandlesTask(const std::string &bundleName,
+                                                                const std::vector<std::string> &fileNames,
+                                                                sptr<IExtension> proxy)
+{
+    return [obj {wptr<Service>(this)}, bundleName, fileNames, proxyObj {wptr<IExtension>(proxy)}]() {
+        HILOGI("Start GetIncrementalFileHandles Task, bundleName:%{public}s, size:%{public}zu", bundleName.c_str(),
+               fileNames.size());
+        auto ptr = obj.promote();
+        auto proxyPtr = proxyObj.promote();
+        if (ptr == nullptr || proxyPtr == nullptr) {
+            HILOGE("ptr is nullptr");
+            return;
+        }
+        std::vector<std::string> saFileNames;
+        std::vector<std::string> extFileNames;
+        for (const auto &fileName : fileNames) {
+            if (StringUtils::IsAncoFile(fileName)) {
+                saFileNames.push_back(fileName);
+            } else {
+                extFileNames.push_back(fileName);
+            }
+        }
+        std::vector<std::string> finalFileNames;
+        std::vector<FileOpenResult> openResults;
+        ErrCode finalErr = ERR_OK;
+        if (!saFileNames.empty()) {
+            auto err = SendIncrementalFileHandlesByEnhance(bundleName, saFileNames, openResults);
+            finalFileNames = std::move(saFileNames);
+            finalErr = err == ERR_OK ? finalErr : err;
+        }
+        if (!extFileNames.empty()) {
+            std::vector<FileOpenResult> extOpenResults;
+            proxy->GetIncrementalFileHandles(extFileNames, extOpenResults);
+            finalFileNames.insert(finalFileNames.end(), extFileNames.begin(), extFileNames.end());
+            openResults.insert(openResults.end(), extOpenResults.begin(), extOpenResults.end());
+        }
+        auto err = AppIncrementalFileReadys(bundleName, finalFileNames, openResults);
+        finalErr = err == ERR_OK ? finalErr : err;
+        if (finalErr != ERR_OK) {
+            AppRadar::Info info(bundleName, "", "");
+            AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandles", GetUserIdDefault(),
+                                                         BizStageRestore::BIZ_STAGE_GET_FILE_HANDLE_FAIL, finalErr);
+        }
+    };
 }
 
 ErrCode Service::SendIncrementalFileHandlesByEnhance(const std::string &bundleName,
