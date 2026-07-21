@@ -724,17 +724,16 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoIncrementalRestoreHelper_StartAncoMove_000
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoIncrementalRestoreHelper_StartAncoMove_0000";
 
     ServiceClient::serviceProxy_ = nullptr;
-    UniqueFd fd(-1);
-    auto res = AncoIncrementalRestoreHelper::StartAncoMove(fd);
+    auto res = AncoIncrementalRestoreHelper::StartAncoMove();
     EXPECT_EQ(res.successCount, 0);
 
     ServiceClient::serviceProxy_ = proxy;
-    EXPECT_CALL(*proxy, StartAncoMove(_, _)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
-    res = AncoIncrementalRestoreHelper::StartAncoMove(fd);
+    EXPECT_CALL(*proxy, StartAncoMove(_)).WillOnce(Return(BError(BError::Codes::SDK_INVAL_ARG)));
+    res = AncoIncrementalRestoreHelper::StartAncoMove();
     EXPECT_EQ(res.successCount, 0);
 
-    EXPECT_CALL(*proxy, StartAncoMove(_, _)).WillOnce(Return(BError(BError::Codes::OK)));
-    res = AncoIncrementalRestoreHelper::StartAncoMove(fd);
+    EXPECT_CALL(*proxy, StartAncoMove(_)).WillOnce(Return(BError(BError::Codes::OK)));
+    res = AncoIncrementalRestoreHelper::StartAncoMove();
     EXPECT_EQ(res.successCount, 0);
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_AncoIncrementalRestoreHelper_StartAncoMove_0000";
 }

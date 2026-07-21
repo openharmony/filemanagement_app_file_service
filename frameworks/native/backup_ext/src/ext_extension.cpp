@@ -1588,31 +1588,35 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
 }
 
 void BackupExtExtension::ExecuteAncoMove(const std::vector<std::string> &ancoSourcePath,
-    const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats)
+                                         const std::vector<std::string> &ancoTargetPath,
+                                         const std::vector<StatInfo> &ancoStats)
 {
     if (!BConstants::CheckBundlePermissions(bundleName_)) {
         return;
     }
-    
+
     AncoIncrementalRestoreHelper::AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
-    
-    UniqueFd cloneFileInfoFd(-1);
+
     HILOGI("RestoreBigFiles bundleName_: %{public}s", bundleName_.c_str());
-    ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove(cloneFileInfoFd);
-    
-    if (cloneFileInfoFd <= 0) {
+    ancoRestoreRes_ = AncoIncrementalRestoreHelper::StartAncoMove();
+
+    UniqueFd cloneFileInfoFd;
+    if (ancoRestoreRes_.dbFd != nullptr) {
+        cloneFileInfoFd = std::move(*ancoRestoreRes_.dbFd);
+    }
+    if (cloneFileInfoFd < 0) {
         HILOGE("cloneFileInfoFd invalid, fd = %{public}d", cloneFileInfoFd.Get());
         return;
     }
-    
+
     if (bundleName_ != MEDIA_LIBRARY_BUNDLE_NAME) {
         HILOGI("Skip db copy for non-media app");
         return;
     }
-    
+
     std::string mediaPath = "/storage/media/local/files/.backup/restore/clone_file_info_restore.db";
     UniqueFd mediaFd(open(mediaPath.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR));
-    if (mediaFd <= 0) {
+    if (mediaFd < 0) {
         HILOGE("Failed to open mediaPath, fd = %{public}d", mediaFd.Get());
         return;
     }

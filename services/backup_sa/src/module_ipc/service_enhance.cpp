@@ -171,10 +171,10 @@ ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath
     return ret;
 }
 
-ErrCode Service::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
+ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
 {
     auto func = [&](IEnhanceService *enhanceService, const std::string &callerName) {
-        return enhanceService->StartAncoMove(callerName, fd, ancoRestoreRes);
+        return enhanceService->StartAncoMove(callerName, ancoRestoreRes);
     };
     auto ret = ExecuteEnhanceServiceOperationWithAuth(func);
     if (ret != ERR_OK) {
