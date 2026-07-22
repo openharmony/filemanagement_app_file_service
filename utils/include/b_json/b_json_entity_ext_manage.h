@@ -32,6 +32,7 @@ struct ExtManageInfo {
     struct stat sta {};
     bool isUserTar {false};
     bool isBigFile {false};
+    bool isLongPath {false};
 };
 class BJsonEntityExtManage : public BJsonEntity {
 public:

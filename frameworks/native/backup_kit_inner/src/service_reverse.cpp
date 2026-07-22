@@ -218,7 +218,7 @@ ErrCode ServiceReverse::RestoreOnFileReadyWithoutFd(const std::string &bundleNam
 }
 
 ErrCode ServiceReverse::BackupOnFileReadys(const std::string &bundleName,
-                                           const std::vector<std::string> &fileNames,
+                                           const BStringRawData &fileNamesRD,
                                            const std::vector<int> &fds,
                                            const std::vector<int> &errCodes)
 {
@@ -226,19 +226,25 @@ ErrCode ServiceReverse::BackupOnFileReadys(const std::string &bundleName,
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return BError(BError::Codes::OK);
     }
+    std::string serializedData;
+    fileNamesRD.Unmarshalling(serializedData);
+    auto fileNames = StringUtils::StringVectorDeserialize(serializedData);
     std::vector<int> manifestFds(fileNames.size(), INVALID_FD);
     AddFileToBatch(bundleName, fileNames, fds, manifestFds, errCodes);
     return BError(BError::Codes::OK);
 }
  
 ErrCode ServiceReverse::BackupOnFileReadysWithoutFd(const std::string &bundleName,
-                                                    const std::vector<std::string> &fileNames,
+                                                    const BStringRawData &fileNamesRD,
                                                     const std::vector<int> &errCodes)
 {
     if (scenario_ != Scenario::BACKUP || !callbacksBackup_.onFileReadyBatch) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return BError(BError::Codes::OK);
     }
+    std::string serializedData;
+    fileNamesRD.Unmarshalling(serializedData);
+    auto fileNames = StringUtils::StringVectorDeserialize(serializedData);
     std::vector<int> fds(fileNames.size(), INVALID_FD);
     std::vector<int> manifestFds(fileNames.size(), INVALID_FD);
     AddFileToBatch(bundleName, fileNames, fds, manifestFds, errCodes);

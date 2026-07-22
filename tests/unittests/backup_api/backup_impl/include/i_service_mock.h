@@ -290,18 +290,18 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
+    ErrCode AppFileReadys(const BStringRawData &fileNames, const std::vector<int> &fds,
         const std::vector<int> &errCodes)
     {
         return BError(BError::Codes::OK);
     }
  
-    ErrCode AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames, const std::vector<int> &errCodes)
+    ErrCode AppFileReadysWithoutFd(const BStringRawData &abnormalfileNames, const std::vector<int> &errCodes)
     {
         return BError(BError::Codes::OK);
     }
  
-    ErrCode GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+    ErrCode GetIncrementalFileHandles(const std::string &bundleName, const BStringRawData &fileNames)
     {
         return BError(BError::Codes::OK);
     }

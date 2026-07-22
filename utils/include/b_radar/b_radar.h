@@ -17,7 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_B_RADAR_H
 #include <chrono>
 #include <string>
-#include "iservice_reverse.h"
+#include "service_reverse_type.h"
 
 namespace OHOS::FileManagement::Backup {
 enum class BizStageBackup : int32_t {

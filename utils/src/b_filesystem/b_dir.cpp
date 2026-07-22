@@ -150,7 +150,15 @@ static void ProcessFile(const ProcessInfo &info, int64_t &bigFileSize, int64_t &
     struct stat sta = {};
     size_t restoreTempPathLen = option.enableBatch ? option.restoreTempPath.size() : 0;
     if (StringUtils::CheckOverLongPath(info.backupPath_) + restoreTempPathLen >= BConstants::MAX_PATH_LEN) {
+        HILOGE("path is too long: %{public}zu, %{public}s", info.backupPath_.size(),
+               GetAnonyPath(info.backupPath_).c_str());
         return;
+    }
+    bool isLongPath = false;
+    if (option.enableBatch &&
+        StringUtils::CheckOverLongPath(info.backupPath_) + restoreTempPathLen + BConstants::PATH_LEN_SAFE_THRESHOLD >=
+            BConstants::MAX_PATH_LEN) {
+        isLongPath = true;
     }
     if (stat(info.backupPath_.data(), &sta) == -1) {
         HILOGE("stat file fail, errno=%{public}d", errno);
@@ -161,7 +169,7 @@ static void ProcessFile(const ProcessInfo &info, int64_t &bigFileSize, int64_t &
             option.resultManager->AddSmallFile(info.backupPath_, sta.st_size, info.restorePath_);
             smallFileSize += sta.st_size;
         } else {
-            option.resultManager->AddBigFile(info.backupPath_, sta, info.restorePath_);
+            option.resultManager->AddBigFile(info.backupPath_, sta, isLongPath, info.restorePath_);
             bigFileSize += sta.st_size;
         }
         return;
@@ -170,7 +178,7 @@ static void ProcessFile(const ProcessInfo &info, int64_t &bigFileSize, int64_t &
         ScanFileSingleton::GetInstance().AddSmallFile(info.backupPath_, sta.st_size, info.restorePath_);
         smallFileSize += sta.st_size;
     } else {
-        ScanFileSingleton::GetInstance().AddBigFile(info.backupPath_, sta, info.restorePath_);
+        ScanFileSingleton::GetInstance().AddBigFile(info.backupPath_, sta, isLongPath, info.restorePath_);
         bigFileSize += sta.st_size;
     }
 }

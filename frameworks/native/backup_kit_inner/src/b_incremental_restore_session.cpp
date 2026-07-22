@@ -148,7 +148,9 @@ ErrCode BIncrementalRestoreSession::GetFileHandles(const string &bundleName, con
     }
     HILOGI("Begin getFileHandles, bundle:%{public}s, fileNameSize:%{public}zu", bundleName.c_str(),
         fileNames.size());
-    return proxy->GetIncrementalFileHandles(bundleName, fileNames);
+    BStringRawData fileNamesRD;
+    fileNamesRD.Marshalling(StringUtils::StringVectorSerialize(fileNames));
+    return proxy->GetIncrementalFileHandles(bundleName, fileNamesRD);
 }
 
 ErrCode BIncrementalRestoreSession::AppendBundles(UniqueFd remoteCap, vector<BundleName> bundlesToRestore)

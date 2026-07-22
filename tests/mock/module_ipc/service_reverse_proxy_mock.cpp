@@ -206,7 +206,7 @@ ErrCode ServiceReverseProxy::IncrementalRestoreOnMigrateResult(int32_t errCode, 
 }
 
 ErrCode ServiceReverseProxy::IncrementalRestoreOnFileReadys(const std::string &bundleName,
-    const std::vector<std::string> &fileNames, const std::vector<FileOpenResult> &openResults)
+    const BStringRawData &fileNames, const std::vector<FileOpenResult> &openResults)
 {
     return BError(BError::Codes::OK);
 }
@@ -217,13 +217,13 @@ ErrCode ServiceReverseProxy::SetBatchSize(uint32_t size)
 }
  
 ErrCode ServiceReverseProxy::BackupOnFileReadysWithoutFd(
-    const std::string &bundleName, const std::vector<std::string> &fileNames, const std::vector<int> &errCodes)
+    const std::string &bundleName, const BStringRawData &fileNames, const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
  
 ErrCode ServiceReverseProxy::BackupOnFileReadys(const std::string &bundleName,
-    const std::vector<std::string> &fileNames, const std::vector<int> &fds, const std::vector<int> &errCodes)
+    const BStringRawData &fileNames, const std::vector<int> &fds, const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);
 }

@@ -126,7 +126,7 @@ public:
     ErrCode HandleOnRelease(int32_t scenario) override;
     ErrCode HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario, bool isExist,
         string &compatibilityInfo) override;
-    ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+    ErrCode GetIncrementalFileHandles(const BStringRawData &fileNamesRD,
                                       std::vector<FileOpenResult> &openResults) override;
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,

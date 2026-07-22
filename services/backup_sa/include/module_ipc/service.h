@@ -71,7 +71,7 @@ public:
         const std::string &filePath, UniqueFd fd, int32_t errCode);
     ErrCode AppFileReadyWithoutFd(const std::string &fileName, int32_t errCode) override;
     ErrCode DefaultAppFileReadyWithoutFd(const std::string &fileName, const std::string &filePath, int32_t errCode);
-    ErrCode AppFileReadys(const std::vector<std::string> &fileNames,
+    ErrCode AppFileReadys(const BStringRawData &fileNamesRD,
         const std::vector<int> &fds, const std::vector<int> &errCodes) override;
     ErrCode AppFileReadyWithoutFd(const std::string &fileName, const std::string &filePath,
         UniqueFd fd, int32_t errCode);
@@ -87,7 +87,7 @@ public:
         BizScene &scene);
     
     ErrCode AppAncoFileReady(const std::string &fileName, const std::string &filePath, bool needDelete) override;
-    ErrCode AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
+    ErrCode AppFileReadysWithoutFd(const BStringRawData &abnormalfileNamesRD,
                                    const std::vector<int> &errCodes) override;
     ErrCode AppDone(ErrCode errCode) override;
     ErrCode AppDone(ErrCode errCode, const std::string &bundleName);
@@ -129,7 +129,7 @@ public:
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetIncrementalFileHandles(const std::string &bundleName,
-                                      const std::vector<std::string> &fileNames) override;
+                                      const BStringRawData &fileNamesRD) override;
     ErrCode GetBackupInfo(const BundleName &bundleName, std::string &result) override;
     ErrCode UpdateTimer(const BundleName &bundleName, uint32_t timeout, bool &result) override;
     ErrCode UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result) override;

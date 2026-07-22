@@ -230,7 +230,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode IncrementalRestoreOnFileReadys(const std::string &bundleName, const std::vector<std::string> &fileNames,
+    ErrCode IncrementalRestoreOnFileReadys(const std::string &bundleName, const BStringRawData &fileNames,
                                            const std::vector<FileOpenResult> &openResults) override
     {
         return BError(BError::Codes::OK);
@@ -241,13 +241,13 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode BackupOnFileReadysWithoutFd(const std::string &bundleName, const std::vector<std::string> &fileNames,
+    ErrCode BackupOnFileReadysWithoutFd(const std::string &bundleName, const BStringRawData &fileNames,
                                         const std::vector<int> &errCodes) override
     {
         return BError(BError::Codes::OK);
     }
 
-    ErrCode BackupOnFileReadys(const std::string &bundleName, const std::vector<std::string> &fileNames,
+    ErrCode BackupOnFileReadys(const std::string &bundleName, const BStringRawData &fileNames,
                                const std::vector<int> &fds, const std::vector<int> &errCodes) override
     {
         return BError(BError::Codes::OK);

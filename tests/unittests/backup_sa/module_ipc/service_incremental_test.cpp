@@ -686,13 +686,13 @@ ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fi
     return BService::serviceMock->GetApkFileHandle(path, fileName, fd);
 }
 
-ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
+ErrCode Service::AppFileReadys(const BStringRawData &fileNames, const std::vector<int> &fds,
     const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
  
-ErrCode Service::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
+ErrCode Service::AppFileReadysWithoutFd(const BStringRawData &abnormalfileNames,
     const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);

@@ -659,4 +659,335 @@ HWTEST_F(StringUtilsTest, STRINGUTILS_IS_PATH_WITH_DIRECTORY_TEST_001, testing::
     EXPECT_TRUE(StringUtils::IsPathWithDirectory("\\"));
     EXPECT_TRUE(StringUtils::IsPathWithDirectory("////"));
 }
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_001
+* @tc.name: StringVectorSerialize_Deserialize_Normal
+* @tc.desc: Test normal serialize and deserialize roundtrip
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_001, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_001";
+    std::vector<std::string> input = {"hello", "world", "/storage/Users/currentUser"};
+    std::string serialized = StringUtils::StringVectorSerialize(input);
+    EXPECT_FALSE(serialized.empty());
+    std::vector<std::string> output = StringUtils::StringVectorDeserialize(serialized);
+    EXPECT_EQ(output.size(), input.size());
+    for (size_t i = 0; i < input.size(); ++i) {
+        EXPECT_EQ(output[i], input[i]);
+    }
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_001";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_002
+* @tc.name: StringVectorSerialize_Deserialize_EmptyVector
+* @tc.desc: Test serialize and deserialize with empty vector
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_002";
+    std::vector<std::string> input;
+    std::string serialized = StringUtils::StringVectorSerialize(input);
+    EXPECT_FALSE(serialized.empty());
+    EXPECT_EQ(serialized.size(), sizeof(uint64_t));
+    std::vector<std::string> output = StringUtils::StringVectorDeserialize(serialized);
+    EXPECT_TRUE(output.empty());
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_002";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_003
+* @tc.name: StringVectorSerialize_Deserialize_SingleEmptyString
+* @tc.desc: Test serialize and deserialize with vector containing empty string
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_003, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_003";
+    std::vector<std::string> input = {""};
+    std::string serialized = StringUtils::StringVectorSerialize(input);
+    EXPECT_FALSE(serialized.empty());
+    std::vector<std::string> output = StringUtils::StringVectorDeserialize(serialized);
+    EXPECT_EQ(output.size(), 1);
+    EXPECT_EQ(output[0], "");
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_003";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_004
+* @tc.name: StringVectorSerialize_Deserialize_SpecialChars
+* @tc.desc: Test serialize and deserialize with strings containing special characters
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_004, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_004";
+    std::vector<std::string> input = {"hello\nworld", "tab\there", "with\"quote", "back\\slash"};
+    std::string serialized = StringUtils::StringVectorSerialize(input);
+    EXPECT_FALSE(serialized.empty());
+    std::vector<std::string> output = StringUtils::StringVectorDeserialize(serialized);
+    EXPECT_EQ(output.size(), input.size());
+    for (size_t i = 0; i < input.size(); ++i) {
+        EXPECT_EQ(output[i], input[i]);
+    }
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_004";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_005
+* @tc.name: StringVectorDeserialize_InvalidData
+* @tc.desc: Test deserialize with invalid data (too short, truncated)
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_005, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_DESERIALIZE_TEST_005";
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize("").empty());
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize("abc").empty());
+    std::string sevenBytes(7, 'X');
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(sevenBytes).empty());
+    std::string truncated;
+    uint64_t count = 1;
+    truncated.append(reinterpret_cast<const char*>(&count), sizeof(uint64_t));
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(truncated).empty());
+    truncated.clear();
+    truncated.append(reinterpret_cast<const char*>(&count), sizeof(uint64_t));
+    uint64_t len = 5;
+    truncated.append(reinterpret_cast<const char*>(&len), sizeof(uint64_t));
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(truncated).empty());
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_DESERIALIZE_TEST_005";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_006
+* @tc.name: StringVectorDeserialize_TrailingGarbageData
+* @tc.desc: Test deserialize rejects data with trailing garbage after valid content
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_006, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_DESERIALIZE_TEST_006";
+    std::vector<std::string> input = {"hello"};
+    std::string serialized = StringUtils::StringVectorSerialize(input);
+    // append trailing garbage data
+    serialized.append("GARBAGE");
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(serialized).empty());
+    // append single trailing byte
+    serialized = StringUtils::StringVectorSerialize(input);
+    serialized.append(1, '\0');
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(serialized).empty());
+    // count=0 with trailing garbage
+    std::string zeroCount;
+    uint64_t zero = 0;
+    zeroCount.append(reinterpret_cast<const char*>(&zero), sizeof(uint64_t));
+    zeroCount.append("trash");
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(zeroCount).empty());
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_DESERIALIZE_TEST_006";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_007
+* @tc.name: StringVectorDeserialize_MaliciousLargeCount
+* @tc.desc: Test deserialize rejects data with extremely large count value
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_007, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_DESERIALIZE_TEST_007";
+    std::string malicious;
+    uint64_t hugeCount = UINT64_MAX;
+    malicious.append(reinterpret_cast<const char*>(&hugeCount), sizeof(uint64_t));
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(malicious).empty());
+    malicious.append(16, 'X');
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(malicious).empty());
+    uint64_t boundaryCount = 2;
+    uint64_t bigLen = 100;
+    std::string boundaryData;
+    boundaryData.append(reinterpret_cast<const char*>(&boundaryCount), sizeof(uint64_t));
+    boundaryData.append(reinterpret_cast<const char*>(&bigLen), sizeof(uint64_t));
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(boundaryData).empty());
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_DESERIALIZE_TEST_007";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_008
+* @tc.name: StringVectorDeserialize_MaliciousLargeLen
+* @tc.desc: Test deserialize rejects data with extremely large string length
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_008, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_DESERIALIZE_TEST_008";
+    std::string malicious;
+    uint64_t count = 1;
+    uint64_t hugeLen = UINT64_MAX;
+    malicious.append(reinterpret_cast<const char*>(&count), sizeof(uint64_t));
+    malicious.append(reinterpret_cast<const char*>(&hugeLen), sizeof(uint64_t));
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(malicious).empty());
+    malicious.append(4, 'X');
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(malicious).empty());
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_DESERIALIZE_TEST_008";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_013
+* @tc.name: StringVectorSerialize_ExceedsMaxSize
+* @tc.desc: Test serialize rejects data when total size exceeds 16MB limit and accepts at boundary
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_013, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_013";
+    std::string bigStr(16 * 1024 * 1024, 'A');
+    EXPECT_TRUE(StringUtils::StringVectorSerialize({bigStr}).empty());
+    EXPECT_TRUE(StringUtils::StringVectorSerialize({"hello", bigStr}).empty());
+    std::string nearLimit(16 * 1024 * 1024 - 2 * sizeof(uint64_t), 'A');
+    std::string serialized = StringUtils::StringVectorSerialize({nearLimit});
+    EXPECT_FALSE(serialized.empty());
+    EXPECT_EQ(serialized.size(), static_cast<size_t>(16 * 1024 * 1024));
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_013";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_014
+* @tc.name: StringVectorDeserialize_ExceedsMaxSize
+* @tc.desc: Test deserialize rejects data exceeding 16MB limit and accepts at boundary
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_014, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_DESERIALIZE_TEST_014";
+    std::string hugeData(16 * 1024 * 1024 + 1, 'X');
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(hugeData).empty());
+    std::string nearLimit(16 * 1024 * 1024 - 2 * sizeof(uint64_t), 'A');
+    std::string serialized = StringUtils::StringVectorSerialize({nearLimit});
+    EXPECT_EQ(serialized.size(), static_cast<size_t>(16 * 1024 * 1024));
+    std::vector<std::string> output = StringUtils::StringVectorDeserialize(serialized);
+    EXPECT_EQ(output.size(), 1);
+    EXPECT_EQ(output[0], nearLimit);
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_DESERIALIZE_TEST_014";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_009
+* @tc.name: StringVectorDeserialize_PartialValidThenTruncated
+* @tc.desc: Test deserialize rejects data where first string valid but second truncated
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_009, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_DESERIALIZE_TEST_009";
+    std::vector<std::string> input = {"first", "second"};
+    std::string serialized = StringUtils::StringVectorSerialize(input);
+    // truncate: remove last few bytes so second string is incomplete
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(serialized.substr(0, serialized.size() - 3)).empty());
+    // truncate: remove len field of second string
+    size_t firstStrEnd = sizeof(uint64_t) + sizeof(uint64_t) + 5;
+    EXPECT_TRUE(StringUtils::StringVectorDeserialize(serialized.substr(0, firstStrEnd)).empty());
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_DESERIALIZE_TEST_009";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_010
+* @tc.name: StringVectorSerialize_Deserialize_EmptyStringsMixed
+* @tc.desc: Test serialize and deserialize with mixed empty and non-empty strings
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_010, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_010";
+    std::vector<std::string> input = {"", "hello", "", "world", ""};
+    std::string serialized = StringUtils::StringVectorSerialize(input);
+    EXPECT_FALSE(serialized.empty());
+    std::vector<std::string> output = StringUtils::StringVectorDeserialize(serialized);
+    EXPECT_EQ(output.size(), input.size());
+    for (size_t i = 0; i < input.size(); ++i) {
+        EXPECT_EQ(output[i], input[i]);
+    }
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_010";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_011
+* @tc.name: StringVectorSerialize_Deserialize_BinaryContentWithNull
+* @tc.desc: Test serialize and deserialize with strings containing embedded null bytes
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_011, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_011";
+    std::string withNull = "hello\0world";
+    withNull.resize(11);
+    std::vector<std::string> input = {withNull, "normal"};
+    std::string serialized = StringUtils::StringVectorSerialize(input);
+    EXPECT_FALSE(serialized.empty());
+    std::vector<std::string> output = StringUtils::StringVectorDeserialize(serialized);
+    EXPECT_EQ(output.size(), input.size());
+    EXPECT_EQ(output[0].size(), 11);
+    EXPECT_EQ(output[0], withNull);
+    EXPECT_EQ(output[1], "normal");
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_SERIALIZE_DESERIALIZE_TEST_011";
+}
+
+/**
+* @tc.number: STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_012
+* @tc.name: StringVectorDeserialize_CountZeroExactSize
+* @tc.desc: Test deserialize with count=0 and exact data size (no trailing data)
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_012, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StringUtilsTest-begin STRING_VECTOR_DESERIALIZE_TEST_012";
+    std::string zeroData;
+    uint64_t zero = 0;
+    zeroData.append(reinterpret_cast<const char*>(&zero), sizeof(uint64_t));
+    std::vector<std::string> output = StringUtils::StringVectorDeserialize(zeroData);
+    EXPECT_TRUE(output.empty());
+    GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_DESERIALIZE_TEST_012";
+}
 } // namespace OHOS::FileManagement::Backup

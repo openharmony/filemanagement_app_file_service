@@ -110,7 +110,7 @@ ErrCode ExtensionProxy::GetIncrementalRpFileHandle(const std::string &fileName, 
     return 0;
 }
 
-ErrCode ExtensionProxy::GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+ErrCode ExtensionProxy::GetIncrementalFileHandles(const BStringRawData &fileNames,
                                                   std::vector<FileOpenResult> &openResults)
 {
     return 0;

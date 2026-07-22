@@ -27,6 +27,8 @@ public:
     static bool EndsWith(const std::string& str, const std::string& suffix);
     static std::vector<std::string> Split(const std::string& str, const std::string& delimiter);
     static std::string Concat(const std::vector<std::string>& strs, const std::string& connector);
+    static std::string StringVectorSerialize(const std::vector<std::string>& vec);
+    static std::vector<std::string> StringVectorDeserialize(const std::string& data);
 
     static std::string PathAddDelimiter(const std::string& path);
     static std::string GenMappingDir(const std::string& backupDir, const std::string& restoreDir);
