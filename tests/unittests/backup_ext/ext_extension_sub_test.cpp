@@ -334,7 +334,6 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_CheckRstoreFileInfos_Test_0100, 
         EXPECT_EQ(std::get<0>(result), true);
 
         auto [err, fileInfos, errInfos] = UntarFile::GetInstance().UnPacket(tarName, untarPath);
-        extExtension->endFileInfos_[tarName] = 1;
         extExtension->endFileInfos_.merge(fileInfos);
 
         result = extExtension->CheckRestoreFileInfos();

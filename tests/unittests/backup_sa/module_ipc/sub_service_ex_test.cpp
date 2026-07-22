@@ -1534,7 +1534,7 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0007, testing::ext::TestSize.Level
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
-        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(EIO, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(_, _)).WillRepeatedly(Return(ERR_OK));
         ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
         EXPECT_EQ(ret, ERR_OK);
         service->session_ = nullptr;
@@ -1580,7 +1580,7 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0008, testing::ext::TestSize.Level
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
-        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(ENOMEM, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(_, _)).WillRepeatedly(Return(ERR_OK));
         ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
         EXPECT_EQ(ret, ERR_OK);
         service->session_ = nullptr;
@@ -1626,7 +1626,7 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0009, testing::ext::TestSize.Level
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
-        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(ENOSPC, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(_, _)).WillRepeatedly(Return(ERR_OK));
         ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
         EXPECT_EQ(ret, ERR_OK);
         service->session_ = nullptr;
@@ -1760,7 +1760,7 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFile_0012, testing::ext::TestSize.Level
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
         EXPECT_CALL(*svcProxy, GetIncrementalRpFileHandle(_, _)).WillOnce(Return(ERR_OK));
-        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(EPERM, _)).WillOnce(Return(ERR_OK));
+        EXPECT_CALL(*srProxy, IncrementalRestoreOnMigrateResult(_, _)).WillRepeatedly(Return(ERR_OK));
         ErrCode ret = service->MigrateFile(path, "bundleName", "fileName");
         EXPECT_EQ(ret, ERR_OK);
         service->session_ = nullptr;
