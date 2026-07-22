@@ -382,6 +382,9 @@ public:
     ErrCode SendFileHandle(const std::string &bundleName, const std::string &fileName);
     ErrCode SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
     ErrCode SendIncrementalFileHandles(const std::string &bundleName, const vector<std::string> &fileNames);
+    std::function<void()> CreateIncrementalFileHandlesTask(const std::string &bundleName,
+                                                           const std::vector<std::string> &fileNames,
+                                                           sptr<IExtension> proxy);
     void SetExtOnRelease(const BundleName &bundleName, bool isOnRelease);
     void RemoveExtOnRelease(const BundleName &bundleName);
     void ClearAndNoticeClient(const std::string &bundleName, ErrCode errCode, bool checkRestoreEnd = true);
@@ -484,6 +487,8 @@ public:
         logElapsed("getDataSizeThreadPool_.Start");
         callbackScannedInfoThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
         logElapsed("callbackScannedInfoThreadPool_.Start");
+        getFileHandlesThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
+        logElapsed("getFileHandlesThreadPool_.Start");
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
         logElapsed("SvcSessionManager construct");
         disposal_ = make_shared<BJsonDisposalConfig>();
@@ -505,6 +510,7 @@ public:
         sendScannendResultThreadPool_.Stop();
         getDataSizeThreadPool_.Stop();
         callbackScannedInfoThreadPool_.Stop();
+        getFileHandlesThreadPool_.Stop();
     };
 
 private:
@@ -938,6 +944,7 @@ public:
     std::unique_ptr<DefaultAppManager> defaultAppManager_;
     RestoreTypeEnum restoreType_ = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
     std::string oldBackupVersion_ = "";
+    OHOS::ThreadPool getFileHandlesThreadPool_;
 };
 } // namespace OHOS::FileManagement::Backup
 
