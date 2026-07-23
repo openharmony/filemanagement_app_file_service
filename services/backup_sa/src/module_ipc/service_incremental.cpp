@@ -1004,7 +1004,7 @@ std::function<void()> Service::CreateIncrementalFileHandlesTask(const std::strin
             std::vector<FileOpenResult> extOpenResults;
             BStringRawData extFileNamesRD;
             extFileNamesRD.Marshalling(StringUtils::StringVectorSerialize(extFileNames));
-            auto err = proxyPtr->GetIncrementalFileHandles(extFileNames, extOpenResults);
+            auto err = proxyPtr->GetIncrementalFileHandles(extFileNamesRD, extOpenResults);
             finalErr = err == ERR_OK ? finalErr : err;
             finalFileNames.insert(finalFileNames.end(), extFileNames.begin(), extFileNames.end());
             openResults.insert(openResults.end(), extOpenResults.begin(), extOpenResults.end());
