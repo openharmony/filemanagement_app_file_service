@@ -151,7 +151,7 @@ static void ProcessFile(const ProcessInfo &info, int64_t &bigFileSize, int64_t &
     size_t restoreTempPathLen = option.enableBatch ? option.restoreTempPath.size() : 0;
     if (StringUtils::CheckOverLongPath(info.backupPath_) + restoreTempPathLen >= BConstants::MAX_PATH_LEN) {
         HILOGE("path is too long: %{public}zu, %{public}s", info.backupPath_.size(),
-                GetAnonyPath(info.backupPath_).c_str());
+               GetAnonyPath(info.backupPath_).c_str());
         return;
     }
     bool isLongPath = false;
