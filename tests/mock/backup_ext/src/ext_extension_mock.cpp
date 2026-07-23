@@ -159,7 +159,7 @@ void BackupExtExtension::ReportAppStatistic(const std::string &func, ErrCode err
     BExtExtension::extExtension->ReportAppStatistic(func, errCode);
 }
  
-ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+ErrCode BackupExtExtension::GetIncrementalFileHandles(const BStringRawData &fileNames,
     std::vector<FileOpenResult> &openResults)
 {
     return BExtExtension::extExtension->GetIncrementalFileHandles(fileNames, openResults);

@@ -555,19 +555,19 @@ ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fi
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
+ErrCode Service::AppFileReadys(const BStringRawData &fileNames, const std::vector<int> &fds,
     const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
  
-ErrCode Service::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
+ErrCode Service::AppFileReadysWithoutFd(const BStringRawData &abnormalfileNames,
     const std::vector<int> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
  
-ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const BStringRawData &fileNames)
 {
     return BError(BError::Codes::OK);
 }

@@ -230,13 +230,16 @@ ErrCode ServiceReverse::IncrementalRestoreOnFileReadyWithoutFd(const std::string
 }
 
 ErrCode ServiceReverse::IncrementalRestoreOnFileReadys(const std::string &bundleName,
-                                                       const std::vector<std::string> &fileNames,
+                                                       const BStringRawData &fileNamesRD,
                                                        const std::vector<FileOpenResult> &openResults)
 {
     if (scenario_ != Scenario::RESTORE || !callbacksIncrementalRestore_.onFileReadyBatch) {
         HILOGE("Error scenario or callback is nullptr, scenario = %{public}d", scenario_);
         return BError(BError::Codes::OK);
     }
+    std::string serializedData;
+    fileNamesRD.Unmarshalling(serializedData);
+    auto fileNames = StringUtils::StringVectorDeserialize(serializedData);
     AddIncrementalFileToBatch(bundleName, fileNames, openResults);
     return BError(BError::Codes::OK);
 }

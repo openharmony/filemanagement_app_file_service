@@ -1692,7 +1692,7 @@ void BackupExtExtension::DoBackupTaskCore(
             continue;
         }
         bool isWithoutTarFile = supportWithoutTar && !fileInfo->isAncoFile_;
-        if (isWithoutTarFile) {
+        if (isWithoutTarFile && !fileInfo->isLongPath_) {
             std::string restorePath = fileInfo->GetRestorePath();
             fileInfo->filename_ = restorePath.empty() ? fileInfo->filePath_ : restorePath;
         }
@@ -2090,7 +2090,7 @@ void BackupExtExtension::ClearPublicTempFiles()
 std::string BackupExtExtension::FileInfoToString(std::shared_ptr<IFileInfo> fileInfo)
 {
     Json::Value value;
-    if (fileInfo->isAncoFile_) {
+    if (fileInfo->isAncoFile_ || fileInfo->isLongPath_) {
         value["path"] = fileInfo->filename_;
     } else {
         std::string restorePath = fileInfo->GetRestorePath();
@@ -2178,7 +2178,8 @@ void BackupExtExtension::DoAppendFiles(const std::vector<std::shared_ptr<IFileIn
                 item->isBigFile_ &&
                 BJsonEntityExtManage::CheckUserTar(item->filePath_, item->sta_, item->isAncoFile_, isSupportWithoutTar);
             value["isBigFile"] = item->isBigFile_;
-            if (isSupportWithoutTar) {
+            value["isLongPath"] = item->isLongPath_;
+            if (isSupportWithoutTar && !item->isLongPath_) {
                 value["information"]["stat"]["st_size"] = static_cast<int64_t>(item->sta_.st_size);
                 value["information"]["stat"]["st_mode"] = static_cast<int32_t>(item->sta_.st_mode);
             } else {

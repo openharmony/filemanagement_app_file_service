@@ -14,6 +14,7 @@
  */
 
 #include "b_utils/string_utils.h"
+#include "securec.h"
 #include <directory_ex.h>
 #include <iomanip>
 #include <sstream>
@@ -22,6 +23,7 @@
 
 namespace OHOS::FileManagement::Backup {
 constexpr size_t CLOUD_HASH_LENGTH = 33;
+constexpr size_t MAX_SERIALIZED_SIZE = 16 * 1024 * 1024;
 
 bool StringUtils::EndsWith(const std::string& str, const std::string& suffix)
 {
@@ -55,6 +57,99 @@ std::string StringUtils::Concat(const std::vector<std::string>& strs, const std:
     for (auto &str : strs) {
         result.append(str);
         result.append(connector);
+    }
+    return result;
+}
+
+std::string StringUtils::StringVectorSerialize(const std::vector<std::string>& vec)
+{
+    size_t total = sizeof(uint64_t);
+    for (const auto& str : vec) {
+        total += sizeof(uint64_t) + str.size();
+    }
+    if (total > MAX_SERIALIZED_SIZE) {
+        HILOGE("StringVectorSerialize total size %{public}zu exceeds limit %{public}zu", total, MAX_SERIALIZED_SIZE);
+        return {};
+    }
+    std::string result;
+    result.resize(total);
+    size_t pos = 0;
+    uint64_t count = static_cast<uint64_t>(vec.size());
+    if (memcpy_s(&result[pos], result.size() - pos, &count, sizeof(uint64_t)) != EOK) {
+        HILOGE("StringVectorSerialize write count failed");
+        result.clear();
+        return result;
+    }
+    pos += sizeof(uint64_t);
+    for (const auto& str : vec) {
+        uint64_t len = static_cast<uint64_t>(str.size());
+        if (memcpy_s(&result[pos], result.size() - pos, &len, sizeof(uint64_t)) != EOK) {
+            HILOGE("StringVectorSerialize write len failed");
+            result.clear();
+            return result;
+        }
+        pos += sizeof(uint64_t);
+        if (len > 0 && memcpy_s(&result[pos], result.size() - pos, str.data(), static_cast<size_t>(len)) != EOK) {
+            HILOGE("StringVectorSerialize write str failed");
+            result.clear();
+            return result;
+        }
+        pos += static_cast<size_t>(len);
+    }
+    return result;
+}
+
+static bool ReadOneString(const std::string& data, size_t& pos, std::string& out)
+{
+    if (pos + sizeof(uint64_t) > data.size()) {
+        HILOGE("StringVectorDeserialize unexpected end of data at string length");
+        return false;
+    }
+    uint64_t len = 0;
+    if (memcpy_s(&len, sizeof(uint64_t), data.data() + pos, sizeof(uint64_t)) != EOK) {
+        HILOGE("StringVectorDeserialize read len failed");
+        return false;
+    }
+    pos += sizeof(uint64_t);
+    if (len > data.size() - pos) {
+        HILOGE("StringVectorDeserialize unexpected end of data at string content");
+        return false;
+    }
+    out.assign(data.data() + pos, static_cast<size_t>(len));
+    pos += static_cast<size_t>(len);
+    return true;
+}
+
+std::vector<std::string> StringUtils::StringVectorDeserialize(const std::string& data)
+{
+    std::vector<std::string> result;
+    if (data.size() < sizeof(uint64_t) || data.size() > MAX_SERIALIZED_SIZE) {
+        HILOGE("StringVectorDeserialize data size %{public}zu invalid", data.size());
+        return result;
+    }
+    size_t pos = 0;
+    uint64_t count = 0;
+    if (memcpy_s(&count, sizeof(uint64_t), data.data() + pos, sizeof(uint64_t)) != EOK) {
+        HILOGE("StringVectorDeserialize read count failed");
+        return result;
+    }
+    pos += sizeof(uint64_t);
+    if (count > data.size() / sizeof(uint64_t)) {
+        HILOGE("StringVectorDeserialize count %{public}llu too large", static_cast<unsigned long long>(count));
+        return result;
+    }
+    result.reserve(static_cast<size_t>(count));
+    for (uint64_t i = 0; i < count; ++i) {
+        std::string item;
+        if (!ReadOneString(data, pos, item)) {
+            return {};
+        }
+        result.emplace_back(std::move(item));
+    }
+    if (pos != data.size()) {
+        HILOGE("StringVectorDeserialize trailing data detected, pos=%{public}zu, dataSize=%{public}zu",
+            pos, data.size());
+        return {};
     }
     return result;
 }

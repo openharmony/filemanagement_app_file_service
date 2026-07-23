@@ -190,7 +190,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+    ErrCode GetIncrementalFileHandles(const BStringRawData &fileNames,
                                       std::vector<FileOpenResult> &openResults) override
     {
         return BError(BError::Codes::OK);

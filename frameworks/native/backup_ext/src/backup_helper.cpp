@@ -25,7 +25,7 @@
 #include "service_client.h"
 
 namespace OHOS::FileManagement::Backup {
-constexpr size_t MAX_IPC_SEND_DATA_SIZE = static_cast<size_t>(1024 * 1024);
+constexpr size_t MAX_IPC_SEND_DATA_SIZE = static_cast<size_t>(100 * 1024);
 constexpr double IPC_SEND_DATA_SCALE_FACTOR = 0.75;
 constexpr size_t SAFE_IPC_SEND_DATA_SIZE = static_cast<size_t>(MAX_IPC_SEND_DATA_SIZE * IPC_SEND_DATA_SCALE_FACTOR);
 constexpr size_t VECTOR_MAX_SIZE = 102400;

@@ -425,8 +425,8 @@ FileOpenResult BackupExtExtension::GetIncreFileHandleForUntarNormalVersion(const
         fd = UniqueFd(open(realDir.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             errCode = errno;
-            HILOGE("Failed to open file, path:%{public}s, errno:%{public}d", GetAnonyPath(realDir).c_str(),
-                   errCode);
+            HILOGE("Failed to open file, errno:%{public}d, path len:%{public}zu, path:%{public}s", errCode,
+                   realDir.size(), GetAnonyPath(realDir).c_str());
             break;
         }
     } while (0);
@@ -444,10 +444,13 @@ ErrCode BackupExtExtension::GetIncrementalFileHandle(const std::string &fileName
     return ERR_OK;
 }
 
-ErrCode BackupExtExtension::GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+ErrCode BackupExtExtension::GetIncrementalFileHandles(const BStringRawData &fileNamesRD,
                                                       std::vector<FileOpenResult> &openResults)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    std::string serializedData;
+    fileNamesRD.Unmarshalling(serializedData);
+    auto fileNames = StringUtils::StringVectorDeserialize(serializedData);
     HILOGI("Enter GetIncrementalFileHandles, input file count: %{public}zu, output container size: %{public}zu",
            fileNames.size(), openResults.size());
     try {
@@ -772,12 +775,16 @@ ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFil
 
     int reportRsWithoutFd = ERR_OK;
     if (!abnormalfileNames.empty()) {
-        reportRsWithoutFd = proxy->AppFileReadysWithoutFd(abnormalfileNames, errCodes);
+        BStringRawData abnormalfileNamesRD;
+        abnormalfileNamesRD.Marshalling(StringUtils::StringVectorSerialize(abnormalfileNames));
+        reportRsWithoutFd = proxy->AppFileReadysWithoutFd(abnormalfileNamesRD, errCodes);
     }
 
     vector<int> temp(normalfds.size(), ERR_OK);
     HILOGI("send get file Names length %{public}zu", fileNames.size());
-    int reportRs = proxy->AppFileReadys(fileNames, normalfds, temp);
+    BStringRawData fileNamesRD;
+    fileNamesRD.Marshalling(StringUtils::StringVectorSerialize(fileNames));
+    int reportRs = proxy->AppFileReadys(fileNamesRD, normalfds, temp);
     for (auto fdval : normalfds) {
         CloseFileWithFDSan(fdval);
     }
@@ -1513,16 +1520,18 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path, const ExtMan
 {
     string itemHashName = item.hashName;
     string itemFileName = item.fileName;
-    // check if item.hasName and fileName need decode by report item attribute
-    string reportPath = GetReportFileName(path + item.hashName);
-    UniqueFd fd(open(reportPath.data(), O_RDONLY | O_UNCACHE));
-    if (fd < 0) {
-        HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportPath.c_str(), errno);
-        errFileInfos_[item.hashName].emplace_back(errno);
-        throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+    if (!item.isLongPath) {
+        // check if item.hasName and fileName need decode by report item attribute
+        string reportPath = GetReportFileName(path + item.hashName);
+        UniqueFd fd(open(reportPath.data(), O_RDONLY | O_UNCACHE));
+        if (fd < 0) {
+            HILOGE("Failed to open report file = %{public}s, err = %{public}d", reportPath.c_str(), errno);
+            errFileInfos_[item.hashName].emplace_back(errno);
+            throw BError(BError::Codes::EXT_INVAL_ARG, string("open report file failed"));
+        }
+        BReportEntity rp(move(fd));
+        rp.CheckAndUpdateIfReportLineEncoded(itemFileName);
     }
-    BReportEntity rp(move(fd));
-    rp.CheckAndUpdateIfReportLineEncoded(itemFileName);
 
     string fileName = path + itemHashName;
     string filePath = appendTargetPath ? (path + itemFileName) : itemFileName;
@@ -1576,7 +1585,7 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
             ancoStats.push_back(item.sta);
             continue;
         }
-        if (GetSupportWithoutTar() && !StringUtils::IsAncoFile(item.hashName)) {
+        if (!item.isLongPath && (GetSupportWithoutTar() && !StringUtils::IsAncoFile(item.hashName))) {
             continue;
         }
         RestoreOneBigFile(path, item, appendTargetPath);

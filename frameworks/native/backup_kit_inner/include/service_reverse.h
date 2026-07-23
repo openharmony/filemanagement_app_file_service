@@ -94,16 +94,16 @@ public:
     ErrCode IncrementalRestoreOnMigrateResult(int32_t errCode, const std::string &bundleName) override;
 
     ErrCode IncrementalRestoreOnFileReadys(const std::string &bundleName,
-                                           const std::vector<std::string> &fileNames,
+                                           const BStringRawData &fileNamesRD,
                                            const std::vector<FileOpenResult> &openResults) override;
  
     ErrCode SetBatchSize(uint32_t size) override;
  
     ErrCode BackupOnFileReadysWithoutFd(const std::string &bundleName,
-                                        const std::vector<std::string> &fileNames,
+                                        const BStringRawData &fileNamesRD,
                                         const std::vector<int> &errCodes) override;
     ErrCode BackupOnFileReadys(const std::string &bundleName,
-                               const std::vector<std::string> &fileNames,
+                               const BStringRawData &fileNamesRD,
                                const std::vector<int> &fds,
                                const std::vector<int> &errCodes) override;
 

@@ -69,7 +69,7 @@ public:
     virtual ErrCode HandleOnRelease(int32_t scenario) = 0;
     virtual ErrCode HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario, bool isExist,
         std::string &compatibilityInfo) = 0;
-    virtual ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
+    virtual ErrCode GetIncrementalFileHandles(const BStringRawData &fileNames,
                                               std::vector<FileOpenResult> &openResults) = 0;
 public:
     BExtExtension() = default;
@@ -115,7 +115,7 @@ public:
     MOCK_METHOD((std::tuple<ErrCode, UniqueFd, UniqueFd>), GetIncrementalFileHandle,
         (const string &));
     MOCK_METHOD(ErrCode, GetFileHandleWithUniqueFd, (const std::string &, int32_t &, int&));
-    MOCK_METHOD(ErrCode, GetIncrementalFileHandles, (const std::vector<std::string> &, std::vector<FileOpenResult> &));
+    MOCK_METHOD(ErrCode, GetIncrementalFileHandles, (const BStringRawData &, std::vector<FileOpenResult> &));
     MOCK_METHOD(std::string, GetBackupInfo, ());
     MOCK_METHOD(void, UpdateOnStartTime, ());
     MOCK_METHOD(ErrCode, IncrementalTarFileReady, (const TarMap &, const vector<struct ReportFileInfo> &,

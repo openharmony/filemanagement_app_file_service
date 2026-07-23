@@ -86,7 +86,10 @@ uint64_t ScanResultManager::GetMaxTarSize()
     return maxTarSize_.load();
 }
 
-void ScanResultManager::AddBigFile(const std::string& filePath, const struct stat& sta, const std::string& restorePath)
+void ScanResultManager::AddBigFile(const std::string &filePath,
+                                   const struct stat &sta,
+                                   bool isLongPath,
+                                   const std::string &restorePath)
 {
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
     std::string hashName = StringUtils::GenHashName(filePath);
@@ -100,9 +103,13 @@ void ScanResultManager::AddBigFile(const std::string& filePath, const struct sta
         hashName += "." + ext;
     }
     if (restorePath.empty()) {
-        pendingFileQueue_.push(std::make_shared<FileInfo>(hashName, filePath, sta, true));
+        auto file = std::make_shared<FileInfo>(hashName, filePath, sta, true);
+        file->isLongPath_ = isLongPath;
+        pendingFileQueue_.push(file);
     } else {
-        pendingFileQueue_.push(std::make_shared<CompatibleFileInfo>(hashName, filePath, sta, true, restorePath));
+        auto file = std::make_shared<CompatibleFileInfo>(hashName, filePath, sta, true, restorePath);
+        file->isLongPath_ = isLongPath;
+        pendingFileQueue_.push(file);
     }
     waitFilesReady_.notify_all();
 }

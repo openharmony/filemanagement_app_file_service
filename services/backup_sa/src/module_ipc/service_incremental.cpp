@@ -640,7 +640,9 @@ ErrCode Service::AppIncrementalFileReadys(const std::string &bundleName,
                               "File names and open results size mismatch");
         if (session_->GetScenario() == IServiceReverseType::Scenario::RESTORE) {
             session_->GetServiceReverseProxy()->SetBatchSize(static_cast<unsigned int>(fileNames.size()));
-            session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadys(bundleName, fileNames, openResults);
+            BStringRawData fileNamesRD;
+            fileNamesRD.Marshalling(StringUtils::StringVectorSerialize(fileNames));
+            session_->GetServiceReverseProxy()->IncrementalRestoreOnFileReadys(bundleName, fileNamesRD, openResults);
             OnAllBundlesFinished(BError(BError::Codes::OK));
             return BError(BError::Codes::OK);
         }
@@ -877,7 +879,7 @@ ErrCode Service::ProcessFileHandlesByAction(const std::string &bundleName,
     return BError(BError::Codes::OK);
 }
  
-ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const BStringRawData &fileNamesRD)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
@@ -896,6 +898,9 @@ ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const 
             HILOGE("action is unknown, bundleName:%{public}s", bundleName.c_str());
             return BError(BError::Codes::SA_INVAL_ARG);
         }
+        std::string serializedData;
+        fileNamesRD.Unmarshalling(serializedData);
+        auto fileNames = StringUtils::StringVectorDeserialize(serializedData);
         return ProcessFileHandlesByAction(bundleName, fileNames, action);
     } catch (const BError &e) {
         HILOGE("GetIncrementalFileHandles exception, bundleName:%{public}s", bundleName.c_str());
@@ -997,13 +1002,19 @@ std::function<void()> Service::CreateIncrementalFileHandlesTask(const std::strin
         }
         if (!extFileNames.empty()) {
             std::vector<FileOpenResult> extOpenResults;
-            proxyPtr->GetIncrementalFileHandles(extFileNames, extOpenResults);
+            BStringRawData extFileNamesRD;
+            extFileNamesRD.Marshalling(StringUtils::StringVectorSerialize(extFileNames));
+            auto err = proxyPtr->GetIncrementalFileHandles(extFileNamesRD, extOpenResults);
+            finalErr = err == ERR_OK ? finalErr : err;
             finalFileNames.insert(finalFileNames.end(), extFileNames.begin(), extFileNames.end());
             openResults.insert(openResults.end(), extOpenResults.begin(), extOpenResults.end());
         }
         auto err = ptr->AppIncrementalFileReadys(bundleName, finalFileNames, openResults);
         finalErr = err == ERR_OK ? finalErr : err;
         if (finalErr != ERR_OK) {
+            HILOGE(
+                "GetIncrementalFileHandles failed, bundleName:%{public}s, errCode:%{public}d, totalFiles:%{public}zu",
+                bundleName.c_str(), static_cast<int>(finalErr), fileNames.size());
             AppRadar::Info info(bundleName, "", "");
             AppRadar::GetInstance().RecordRestoreFuncRes(info, "Service::GetIncrementalFileHandles",
                                                          ptr->GetUserIdDefault(),

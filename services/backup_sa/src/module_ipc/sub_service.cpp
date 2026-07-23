@@ -423,19 +423,37 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
     }
 }
 
-ErrCode Service::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames, const vector<int> &errCodes)
+ErrCode Service::AppFileReadysWithoutFd(const BStringRawData &abnormalfileNamesRD, const vector<int> &errCodes)
 {
-    if (session_ == nullptr) {
-        HILOGE("AppFileReady error, session is empty");
-        return BError(BError::Codes::SA_INVAL_ARG);
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        if (session_ == nullptr) {
+            HILOGE("AppFileReadysWithoutFd error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        string callerName;
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("AppFileReadysWithoutFd error, Get bundle name failed, ret:%{public}d", ret);
+            return ret;
+        }
+        std::string serializedData;
+        abnormalfileNamesRD.Unmarshalling(serializedData);
+        auto abnormalfileNames = StringUtils::StringVectorDeserialize(serializedData);
+        HILOGI("AppFileReadysWithoutFd filenames size is, %{public}zu", abnormalfileNames.size());
+        session_->GetServiceReverseProxy()->BackupOnFileReadysWithoutFd(callerName, abnormalfileNamesRD, errCodes);
+        ret = ProcessReadyFiles(abnormalfileNames, errCodes, callerName);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode(); // 任意异常产生，终止监听该任务
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
     }
-    string callerName;
-    ErrCode ret = VerifyCallerAndGetCallerName(callerName);
-    if (ret != ERR_OK) {
-        HILOGE("AppFileReady error, Get bundle name failed, ret:%{public}d", ret);
-        return ret;
-    }
-    return session_->GetServiceReverseProxy()->BackupOnFileReadysWithoutFd(callerName, abnormalfileNames, errCodes);
 }
 
 ErrCode Service::ProcessReadyFiles(
@@ -462,7 +480,7 @@ ErrCode Service::ProcessReadyFiles(
     return ERR_OK;
 }
 
-ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames,
+ErrCode Service::AppFileReadys(const BStringRawData &fileNamesRD,
                                const vector<int> &fds,
                                const vector<int> &errCodes)
 {
@@ -479,8 +497,11 @@ ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames,
             HILOGE("AppFileReady error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
         }
+        std::string serializedData;
+        fileNamesRD.Unmarshalling(serializedData);
+        auto fileNames = StringUtils::StringVectorDeserialize(serializedData);
         HILOGI("AppfileReadys filenames size is, %{public}zu", fileNames.size());
-        session_->GetServiceReverseProxy()->BackupOnFileReadys(callerName, fileNames, fds, errCodes);
+        session_->GetServiceReverseProxy()->BackupOnFileReadys(callerName, fileNamesRD, fds, errCodes);
         ret = ProcessReadyFiles(fileNames, errCodes, callerName);
         if (ret != ERR_OK) {
             return ret;
