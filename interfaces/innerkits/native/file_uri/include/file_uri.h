@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,32 +13,41 @@
  * limitations under the License.
  */
 
-#ifndef APP_FILE_SERVICE_FILE_URI_FILE_URI_H
-#define APP_FILE_SERVICE_FILE_URI_FILE_URI_H
+#ifndef OHOS_FILE_FILEURI_URI_FFI_H
+#define OHOS_FILE_FILEURI_URI_FFI_H
 
 #include <string>
 
 #include "uri.h"
+#include "native/ffi_remote_data.h"
+#include "cj_ffi/cj_common_ffi.h"
+
 namespace OHOS {
-namespace AppFileService {
-namespace ModuleFileUri {
-class FileUri {
+namespace CJSystemapi {
+namespace FileUri {
+
+class FileUriImpl : public OHOS::FFI::FFIData {
 public:
+    explicit FileUriImpl(const std::string &uriOrPath);
+
     std::string GetName();
     std::string GetPath();
-    std::string GetRealPath();
-    std::string GetRealPathBySA(const std::string &targetBundleName = "");
     std::string ToString();
-    std::string GetFullDirectoryUri();
-    bool IsRemoteUri();
 
-    bool CheckUriFormat(const std::string &uri);
-    explicit FileUri(const std::string &uriOrPath);
-    ~FileUri() = default;
-
+    OHOS::FFI::RuntimeType* GetRuntimeType() override { return GetClassType(); }
+private:
     Uri uri_;
+
+    friend class OHOS::FFI::RuntimeType;
+    friend class OHOS::FFI::TypeBase;
+    static OHOS::FFI::RuntimeType* GetClassType()
+    {
+        static OHOS::FFI::RuntimeType runtimeType = OHOS::FFI::RuntimeType::Create<OHOS::FFI::FFIData>("FileUriImpl");
+        return &runtimeType;
+    }
 };
-}  // ModuleFileUri
-}  // namespace AppFileService
+
+}
+}  // namespace CJSystemapi
 }  // namespace OHOS
-#endif  // APP_FILE_SERVICE_FILE_URI_FILE_URI_H
+#endif  // OHOS_FILE_FILEURI_URI_FFI_H

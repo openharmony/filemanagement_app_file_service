@@ -229,7 +229,7 @@ void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
             HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(newPath).c_str(),
                 errno);
             errFiles[newPath].emplace_back(errno);
-        } else if (it.second != attr.st_size) {
+        } else if (it.second != attr.st_size && (!S_ISDIR(attr.st_mode))) {
             HILOGE("(Debug) RecFile:%{public}s size err, recSize: %{public}" PRId64 ", idxSize: %{public}" PRId64 "",
                 GetAnonyPath(newPath).c_str(), attr.st_size, it.second);
             errFiles[newPath] = std::vector<int>();
@@ -264,7 +264,7 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
             HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
             errFiles.emplace_back(it.first);
             errFileInfos_[it.first].emplace_back(errno);
-        } else if (curFileStat.st_size != it.second) {
+        } else if (curFileStat.st_size != it.second && (!S_ISDIR(curFileStat.st_mode))) {
             HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
                 GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
             errFiles.emplace_back(it.first);
@@ -1679,8 +1679,7 @@ void BackupExtExtension::DoBackupTaskCore(
     int fdNum = 0;
     auto startTime = std::chrono::system_clock::now();
     std::vector<std::shared_ptr<IFileInfo>> tmpFiles;
-    bool initRet = InitManageJsonFd();
-    if (!initRet) {
+    if (!InitManageJsonFd()) {
         ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
         return;
     }
@@ -1693,8 +1692,9 @@ void BackupExtExtension::DoBackupTaskCore(
             continue;
         }
         bool isWithoutTarFile = supportWithoutTar && !fileInfo->isAncoFile_;
-        if (isWithoutTarFile) {
-            fileInfo->filename_ = fileInfo->filePath_;
+        if (isWithoutTarFile && !fileInfo->isLongPath_) {
+            std::string restorePath = fileInfo->GetRestorePath();
+            fileInfo->filename_ = restorePath.empty() ? fileInfo->filePath_ : restorePath;
         }
         WaitToSendFd(startTime, fdNum);
         if (isWithoutTarFile) {
@@ -1783,7 +1783,6 @@ ErrCode BackupExtExtension::CleanBundleTempDir()
         return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
 }
-
 std::function<void(ErrCode, const std::string)> BackupExtExtension::OnReleaseCallback(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get HandleOnReleaseCallback");
@@ -1999,17 +1998,13 @@ void BackupExtExtension::GetScanDirList(vector<string>& pathInclude, string type
     if (extension_->ancoFileListClone_ == "1" && type == BConstants::INCLUDES) {
         HILOGI("GetScanDirList ancoFileListClone_ is 1");
         vector<std::string> ancoMediaFilePaths =
-            CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryAncoMediaFile();
+        CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryAncoMediaFile();
         pathInclude.insert(pathInclude.end(), std::make_move_iterator(ancoMediaFilePaths.begin()),
             std::make_move_iterator(ancoMediaFilePaths.end()));
     }
-    if (extension_->fileManagerFileListClone_ == "1" && type == BConstants::INCLUDES) {
-        HILOGI("GetScanDirList fileManagerFileListClone_ is 1");
-        vector<std::string> fileManagerFilePaths =
-            CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryFileManagerFile();
-        fileManagerFilePaths = StringUtils::ConvertMediaSandboxPaths(fileManagerFilePaths);
-        pathInclude.insert(pathInclude.end(), std::make_move_iterator(fileManagerFilePaths.begin()),
-            std::make_move_iterator(fileManagerFilePaths.end()));
+    if (type == BConstants::EXCLUDES) {
+        auto excludeInfos = extension_->GetExcludeInfos();
+        pathInclude.insert(pathInclude.end(), excludeInfos.begin(), excludeInfos.end());
     }
 }
 
@@ -2073,23 +2068,14 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
     }
 }
 
-void BackupExtExtension::ClearPublicTempFiles()
-{
-    if (bundleName_ != BConstants::BUNDLE_FILE_MANAGER) {
-        return;
-    }
-    std::string tempPath = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)
-        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE).append(BConstants::PATH_PUBLIC_HOME_NO_SLASH);
-    BDir::ClearDirectory(tempPath);
-}
-
 std::string BackupExtExtension::FileInfoToString(std::shared_ptr<IFileInfo> fileInfo)
 {
     Json::Value value;
-    if (fileInfo->isAncoFile_) {
+    if (fileInfo->isAncoFile_ || fileInfo->isLongPath_) {
         value["path"] = fileInfo->filename_;
     } else {
-        value["path"] = fileInfo->filePath_;
+        std::string restorePath = fileInfo->GetRestorePath();
+        value["path"] = restorePath.empty() ? fileInfo->filePath_ : restorePath;
     }
  
     value["st_mode"] = static_cast<uint64_t>(fileInfo->sta_.st_mode);
@@ -2115,12 +2101,12 @@ bool BackupExtExtension::InitManageJsonFd()
         }
     }
     (void)unlink(INDEX_FILE_BACKUP.data());
-    int rawFd = open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    int rawFd = open(INDEX_FILE_BACKUP.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR);
     if (rawFd < 0) {
         HILOGE("InitManageJsonFd: Failed to open file, err=%{public}d", errno);
         return false;
     }
- 
+
     manageJsonFd_ = UniqueFd(rawFd);
     ssize_t writeLen = write(manageJsonFd_.Get(), "[", 1);
     if (writeLen < 0 || writeLen != 1) {
@@ -2131,7 +2117,7 @@ bool BackupExtExtension::InitManageJsonFd()
     HILOGI("InitManageJsonFd: successfully opened fd=%{public}d", rawFd);
     return true;
 }
- 
+
 void BackupExtExtension::CloseManageJsonFd()
 {
     std::lock_guard<std::mutex> lock(manageJsonFdLock_);
@@ -2146,7 +2132,7 @@ void BackupExtExtension::CloseManageJsonFd()
         HILOGW("CloseManageJsonFd: file not find");
     }
 }
- 
+
 void BackupExtExtension::DoAppendFiles(const std::vector<std::shared_ptr<IFileInfo>> &tmpFiles, int &ret,
                                        bool isSupportWithoutTar)
 {
@@ -2173,12 +2159,8 @@ void BackupExtExtension::DoAppendFiles(const std::vector<std::shared_ptr<IFileIn
                 item->isBigFile_ &&
                 BJsonEntityExtManage::CheckUserTar(item->filePath_, item->sta_, item->isAncoFile_, isSupportWithoutTar);
             value["isBigFile"] = item->isBigFile_;
-            if (isSupportWithoutTar) {
-                value["information"]["stat"]["st_size"] = static_cast<int64_t>(item->sta_.st_size);
-                value["information"]["stat"]["st_mode"] = static_cast<int32_t>(item->sta_.st_mode);
-            } else {
-                value["information"]["stat"] = BJsonEntityExtManage::Stat2JsonValue(item->sta_);
-            }
+            value["isLongPath"] = item->isLongPath_;
+            value["information"]["stat"] = BJsonEntityExtManage::Stat2JsonValue(item->sta_);
             Json::StreamWriterBuilder builder;
             builder["commentStyle"] = "None";
             builder["indentation"] = "";
@@ -2206,7 +2188,7 @@ void BackupExtExtension::DoAppendFiles(const std::vector<std::shared_ptr<IFileIn
         }
     });
 }
- 
+
 void BackupExtExtension::WaitforFdAppendComplete(std::vector<std::shared_ptr<IFileInfo>> &files)
 {
     std::unique_lock<std::mutex> lock {appendManageJsonLock_};

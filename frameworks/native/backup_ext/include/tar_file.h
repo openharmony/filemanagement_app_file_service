@@ -185,6 +185,21 @@ private:
     bool WriteLongName(std::string &name, char type);
 
     /**
+     * @brief write PAX extended time header (atime + mtime)
+     *
+     * @param st 文件信息结构体
+     */
+    bool WritePaxExtTime(const struct stat &st);
+
+    /**
+     * @brief write PAX block data (header + content + padding)
+     *
+     * @param data  PAX record data内容
+     * @param typeFlag  PAX块类型标志
+     */
+    bool WritePaxBlockData(const std::string &data, char typeFlag);
+
+    /**
      * @brief read files
      *
      * @param fd 文件描述符
@@ -222,7 +237,7 @@ private:
      * @param st   文件信息结构体
      * @param hdr  tar包文件头
      */
-    bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName);
+    bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName, long &mtimeNsec, long &atimeNsec);
 
     bool ToAddFile(std::string &path, int &err, const std::string &restorePath = "");
 

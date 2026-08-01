@@ -115,6 +115,8 @@ private:
         deque<struct PolicyErrorResult> &errorResults, bool checkAccess = true);
     static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
                                                                  vector<bool> &errorResults);
+    static vector<PolicyInfo> GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+        const std::string &targetBundleName, deque<struct PolicyErrorResult> &errorResults);
     static vector<PolicyInfo> GetSandboxPolicyInfo(const vector<PathPolicyInfo> &pathPolicies);
 #endif
 };
