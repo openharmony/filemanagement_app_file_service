@@ -24,6 +24,7 @@ sequenceable OHOS.FileManagement.Backup.StatInfo;
 sequenceable OHOS.FileManagement.Backup.AncoScanResult;
 sequenceable OHOS.FileManagement.Backup.AncoRestoreResult;
 sequenceable BackupPathInfo..OHOS.FileManagement.Backup.BPathInfo;
+rawdata OHOS.FileManagement.Backup.BStringRawData;
 interface OHOS.FileManagement.Backup.IService{
     [ipccode 39] void InitRestoreSession([in] IServiceReverse reverseIpcRemoteObject);
     [ipccode 1] void InitRestoreSessionWithErrMsg([in] IServiceReverse reverseIpcRemoteObject,
@@ -96,13 +97,13 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 54] void StartAncoUnPacket([in] String rootPath);
     [ipccode 55, ipcincapacity 1024] void AddAncoMovePaths([in] String[] ancoSourcePath, [in] String[] ancoTargetPath,
         [in] StatInfo[] ancoStats);
-    [ipccode 56] void StartAncoMove([out] FileDescriptor fd, [out] AncoRestoreResult ancoRestoreRes);
+    [ipccode 56] void StartAncoMove([out] AncoRestoreResult ancoRestoreRes);
     [ipccode 57] void AppAncoFileReady([in] String fileName, [in] String filePath, [in] boolean needDelete);
     [ipccode 58, ipcincapacity 1024] void AddAncoTars([in] String[] tarFiles, [in] long[] tarFileSizes,
         [in] String[] tarFileNames);
     [ipccode 59] void MigrateFile([in] BPathInfo path, [in] String bundleName, [in] String fileName);
     [ipccode 60] void GetApkFileHandle([in] String path, [in] String fileName, [out] FileDescriptor fd);
-    [ipccode 61, ipcincapacity 131071] void GetIncrementalFileHandles([in] String bundleName, [in] String[] fileNames);
-    [ipccode 62, ipcincapacity 131071] void AppFileReadysWithoutFd([in] String[] fileNames, [in] int[] errCodes);
-    [ipccode 63, ipcincapacity 131071] void AppFileReadys([in] String[] fileNames, [in] FileDescriptor[] fds, [in] int[] errCodes);
+    [ipccode 61, ipcincapacity 131071] void GetIncrementalFileHandles([in] String bundleName, [in] BStringRawData fileNames);
+    [ipccode 62, ipcincapacity 131071] void AppFileReadysWithoutFd([in] BStringRawData fileNames, [in] int[] errCodes);
+    [ipccode 63, ipcincapacity 131071] void AppFileReadys([in] BStringRawData fileNames, [in] FileDescriptor[] fds, [in] int[] errCodes);
  }

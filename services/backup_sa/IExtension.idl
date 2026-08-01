@@ -14,7 +14,8 @@
  */
 
 package OHOS.FileManagement.Backup;
-option_stub_hooks on;
+sequenceable BackupFileInfo..OHOS.FileManagement.Backup.FileOpenResult;
+rawdata OHOS.FileManagement.Backup.BStringRawData;
 interface OHOS.FileManagement.Backup.IExtension{
     [ipccode 1] void GetFileHandleWithUniqueFd([in] String fileName, [out] int getFileHandleErrCode, [out] FileDescriptor fd);
     [ipccode 2] void HandleClear();
@@ -36,6 +37,5 @@ interface OHOS.FileManagement.Backup.IExtension{
     [ipccode 17] void HandleGetCompatibilityInfo([in] String extInfo, [in] int scenario, [in] boolean isExist,
                                                  [out] String compatibilityInfo);
     [ipccode 18] void GetIncrementalRpFileHandle([in] String fileName, [out] int fdErrCode);
-    [ipccode 19, ipcincapacity 131071] void GetIncrementalFileHandles([in] String[] fileNames, [out] FileDescriptor[] fdList, [out] int[] errs);
-
+    [ipccode 19, ipcincapacity 131071] void GetIncrementalFileHandles([in] BStringRawData fileNames, [out] FileOpenResult[] openResults);
 }

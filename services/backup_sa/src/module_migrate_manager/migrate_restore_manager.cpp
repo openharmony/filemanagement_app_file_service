@@ -195,6 +195,10 @@ int MigrateManager::DealIncreRestoreBigAndTarFile()
     auto startTime = std::chrono::system_clock::now();
     // 解压
     int ret = CreateDefaultTask(bundleName_);
+    if (ret != ERR_OK) {
+        HILOGE("CreateDefaultTask failed, err:%{public}d", ret);
+        return ret;
+    }
     ret = DoIncrementalRestore();
     if (ret != ERR_OK) {
         HILOGE("Do incremental restore err");
@@ -401,6 +405,10 @@ ErrCode MigrateManager::HandleExtOnDisconnect(BackupType scenario, bool isAppRes
     try {
         HILOGI("Begin, scenario:%{public}d, isAppResultReport:%{public}d, errCode:%{public}d", scenario,
             isAppResultReport, errCode);
+        if (servicePtr_ == nullptr) {
+            HILOGE("servicePtr_ is null");
+            return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
+        }
         std::string callerName;
         auto ret = VerifyCallerAndGetCallerName(callerName);
         if (ret != ERR_OK) {

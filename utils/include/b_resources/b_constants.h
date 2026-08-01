@@ -16,6 +16,10 @@
 #ifndef OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H
 #define OHOS_FILEMGMT_BACKUP_B_CONSTANTS_H
 
+#ifndef O_UNCACHE
+#define O_UNCACHE 0x40000000
+#endif
+
 #include <array>
 #include <cstdint>
 #include <string>
@@ -34,6 +38,7 @@ static inline const char *EXTENSION_APP_CLONE_INDEX_PARA = "ohos.extra.param.key
 static inline const char *EXTENSION_OLD_BACKUP_VERSION_PARA = "oldBackupVersion";
 static inline const char *EXTENSION_BACKUP_SCENE_PARA = "backupScene";
 static inline const char *EXTENSION_SUPPORT_WITHOUT_TAR_PARA = "supportWithoutTar";
+static inline const char *EXTENSION_EXCLUDE_INFOS_PARA = "excludeInfos";
 static inline const char *EXTENSION_BATCH_SIZE_PARA = "batchSize";
 
 enum class ExtensionAction {
@@ -86,7 +91,7 @@ constexpr char FILE_SEPARATOR_CHAR = '/';
 // 分片打包常量
 const uint64_t DEFAULT_SLICE_SIZE = 100 * 1024 * 1024; // 分片文件大小为100M
 const uint32_t MAX_FILE_COUNT = 6000; // 单个tar包最多包含6000个文件
-const uint64_t DEFAULT_APP_SLICE_SIZE = 50 * 1024 * 1024; // default打包大小为50M
+const uint64_t DEFAULT_APP_SLICE_SIZE = 50 * 1024 * 1024; // default打包大小为100M
 const uint32_t MAX_DEFAULT_APP_FILE_COUNT = 400; // 单个default tar包最多包含400个文件
 const int FILE_AND_MANIFEST_FD_COUNT = 2; // 每组文件和简报数量统计
 
@@ -104,6 +109,7 @@ constexpr uint32_t MAX_UPDATE_TIMER = 4 * H2MS;
 constexpr uint32_t DEFAULT_TIMEOUT = 15 * 60 * 1000;
 constexpr uint32_t TIMEOUT_INVALID = UINT32_MAX;
 constexpr int LONG_FILE_NAME_BOUNDARY_VAL = 255;
+constexpr int PATH_LEN_SAFE_THRESHOLD = 500;
 
 constexpr int CALL_APP_ON_PROCESS_TIME_INTERVAL = 5; // 框架每隔5s去调用应用的onProcess
 constexpr int APP_ON_PROCESS_MAX_TIMEOUT = 1000; // 应用的onProcess接口最大超时时间为1秒
@@ -146,7 +152,6 @@ static inline std::string_view SA_BUNDLE_BACKUP_RESTORE_TAR = "/restore";
 static inline std::string_view BACKUP_TOOL_RECEIVE_DIR = "/data/backup/received/";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME_EL1 = "/data/storage/el1/base/.backup";
 static inline std::string_view PATH_BUNDLE_BACKUP_HOME = "/data/storage/el2/base/.backup";
-static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME = "/storage/Users/currentUser/.backup";
 static inline std::string_view PATH_BACKUP_HOME = ".backup";
 static inline std::string_view PATH_RELETIVE_HOME_EL1 = "data/storage/el1";
 static inline std::string_view PATH_RELETIVE_HOME_EL2 = "data/storage/el2";
@@ -157,9 +162,8 @@ static inline std::string_view PATH_DATABASE = "database";
 static inline std::string_view PATH_DISTRIBUTE = "database";
 static inline std::string_view PATH_INCLUDE = "include";
 static inline std::string_view PATH_EXCLUDE = "exclude";
+static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME = "/storage/Users/currentUser/.backup";
 static inline std::string_view PATH_FILEMANAGE_BACKUP_HOME_ANCO = "/storage/Users/currentUser/HO_DATA_EXT_MISC/.backup";
-static inline std::string_view PATH_MEDIALDATA_PUBLIC_HOME = "/storage/media/local/files/";
-static inline std::string_view PATH_MEDIALDATA_FILEMANAGER_PUBLIC_HOME = "/storage/media/local/files/Docs/";
 static inline std::string_view PATH_MEDIALDATA_HOME_ANCO = "/storage/media/local/files/Docs/HO_DATA_EXT_MISC";
 static inline std::string_view PATH_MEDIALDATA_BACKUP_HOME = "/storage/media/local/files/.backup";
 static inline std::string_view BACKUP_TOOL_LINK_DIR = "/data/backup";
@@ -171,12 +175,10 @@ static inline std::string CONTEXT_ELS[] = {"el1", "el2"};
 static inline std::string BACKUP_DIR_END = "/base/.backup/";
 static inline std::string BUNDLE_BASE_DIR = "/data/storage/el2/base";
 static inline std::string PATH_PUBLIC_HOME = "/storage/Users/currentUser/";
-static inline std::string PATH_PUBLIC_HOME_NO_SLASH = "storage/Users/currentUser/";
 static inline std::string PATH_APP_DATA = "appdata";
 static inline std::string BACKSLASH = "/";
 static inline std::string FUSE_ANCO_DIR = "HO_DATA_EXT_MISC";
 static inline std::string ANCO_TAG = "_anco";
-static inline std::string PUBLIC_TAG = "Docs/";
 constexpr int FIRST = 0;
 constexpr int SECOND = 1;
 constexpr int THIRD = 2;
@@ -184,9 +186,7 @@ constexpr int THIRD = 2;
 // backup process name
 static inline std::string BACKUP_SA_NAME = "backup_sa";
 // 文管bundleName
-static inline std::string BUNDLE_FILE_MANAGER = ".filemanager";
-// 文管bundleNameSize
-constexpr size_t FM_LEN = 27;
+static inline std::string BUNDLE_FILE_MANAGER = "com.huawei.hmos.filemanager";
 // 媒体库数据bundleName
 static inline std::string BUNDLE_MEDIAL_DATA = "com.ohos.medialibrary.medialibrarydata";
 // SA Ext
@@ -224,6 +224,16 @@ static inline std::string GetSaBundleBackupToolDir(int32_t userId)
     return str;
 }
 
+static inline std::string GetAncoRestoreDir(const std::string &bundleName)
+{
+    std::string str;
+    str.append(PATH_FILEMANAGE_BACKUP_HOME_ANCO);
+    str.append(BACKSLASH);
+    str.append(bundleName);
+    str.append(SA_BUNDLE_BACKUP_RESTORE);
+    return str;
+}
+
 static inline std::string GetBundleBackupDir(int32_t userId, std::string bundleName)
 {
     std::string str;
@@ -232,16 +242,6 @@ static inline std::string GetBundleBackupDir(int32_t userId, std::string bundleN
     str.append("/base/");
     str.append(bundleName);
     str.append("/.backup");
-    return str;
-}
-
-static inline std::string GetAncoRestoreDir(const std::string &bundleName)
-{
-    std::string str;
-    str.append(PATH_FILEMANAGE_BACKUP_HOME_ANCO);
-    str.append(BACKSLASH);
-    str.append(bundleName);
-    str.append(SA_BUNDLE_BACKUP_RESTORE);
     return str;
 }
 
@@ -339,15 +339,13 @@ constexpr int GC_DEVICE_INCOMPATIBLE = -7;
 constexpr int GC_TASK_TIMEOUT = -16;
 constexpr int GC_MAX_WAIT_TIME_S = 200;
 // 克隆应用bundleName
-static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
+
+static inline std::string BUNDLE_DATA_CLONE = "com.huawei.hmos.dataclone";
 
 // 迁移文件路径标识
 static inline std::string MIGRATE_ANCO_INSTALL_PATH = "app_clone_install";
 static inline std::string MIGRATE_ANCO_DATA_PATH = "anco_hmos_data";
 constexpr int32_t SYSTEM_UID_GID = 1000;
-
-const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
-
 
 //FdSan
 const uint64_t FDSAN_EXT_TAG = 0xD004303;

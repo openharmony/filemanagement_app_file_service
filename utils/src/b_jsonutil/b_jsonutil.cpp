@@ -21,6 +21,7 @@
 #include <sstream>
 #include "cJSON.h"
 
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_resources/b_constants.h"
 #include "filemgmt_libhilog.h"
@@ -199,6 +200,9 @@ static void InsertBundleDetailInfo(cJSON *infos, int infosCount,
             return;
         }
         bundleDetailInfo.detail = std::string(detailInfos);
+        HILOGI("bundleName:%{public}s, type:%{public}s, detail:%{public}s, detail size:%{public}zu",
+            bundleDetailInfo.bundleName.c_str(), bundleDetailInfo.type.c_str(),
+            GetAnonyString(bundleDetailInfo.detail).c_str(), bundleDetailInfo.detail.size());
         if (bundleDetailInfo.type.compare(BConstants::BROADCAST_TYPE) == 0) {
             ParseBroadcastInfo(bundleDetailInfo, infoItem);
         }
@@ -257,6 +261,22 @@ static void ParseSupportWithoutTar(cJSON *root, BJsonUtil::BundleSettingInfo &bu
     }
 }
 
+static void ParseExcludeInfos(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
+{
+    cJSON *excludeInfos = cJSON_GetObjectItem(root, "excludeInfos");
+    if (excludeInfos == nullptr || !cJSON_IsArray(excludeInfos)) {
+        return;
+    }
+    int excludeInfosCount = cJSON_GetArraySize(excludeInfos);
+    for (int i = 0; i < excludeInfosCount; i++) {
+        cJSON *excludeInfo = cJSON_GetArrayItem(excludeInfos, i);
+        if (cJSON_IsString(excludeInfo) && excludeInfo->valuestring != nullptr) {
+            bundleSettingInfo.excludeInfos.emplace_back(excludeInfo->valuestring);
+        }
+    }
+    HILOGI("Parse excludeInfos success, size is %{public}zu", bundleSettingInfo.excludeInfos.size());
+}
+
 static void ParseBatchSize(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
 {
     cJSON *batchSize = cJSON_GetObjectItem(root, "batchSize");
@@ -301,6 +321,7 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
     ParseDelayTime(root, bundleSettingInfo);
     ParseBackupScene(root, bundleDetailInfo);
     ParseSupportWithoutTar(root, bundleSettingInfo);
+    ParseExcludeInfos(root, bundleSettingInfo);
     ParseBatchSize(root, bundleSettingInfo);
     if (!ParseBundleInfos(root, bundleDetails, bundleDetailInfo, userId)) {
         cJSON_Delete(root);

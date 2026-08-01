@@ -423,19 +423,37 @@ ErrCode Service::AppFileReady(const string &fileName, UniqueFd fd, int32_t errCo
     }
 }
 
-ErrCode Service::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames, const vector<int> &errCodes)
+ErrCode Service::AppFileReadysWithoutFd(const BStringRawData &abnormalfileNamesRD, const vector<int> &errCodes)
 {
-    if (session_ == nullptr) {
-        HILOGE("AppFileReady error, session is empty");
-        return BError(BError::Codes::SA_INVAL_ARG);
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    try {
+        if (session_ == nullptr) {
+            HILOGE("AppFileReadysWithoutFd error, session is empty");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        string callerName;
+        ErrCode ret = VerifyCallerAndGetCallerName(callerName);
+        if (ret != ERR_OK) {
+            HILOGE("AppFileReadysWithoutFd error, Get bundle name failed, ret:%{public}d", ret);
+            return ret;
+        }
+        std::string serializedData;
+        abnormalfileNamesRD.Unmarshalling(serializedData);
+        auto abnormalfileNames = StringUtils::StringVectorDeserialize(serializedData);
+        HILOGI("AppFileReadysWithoutFd filenames size is, %{public}zu", abnormalfileNames.size());
+        session_->GetServiceReverseProxy()->BackupOnFileReadysWithoutFd(callerName, abnormalfileNamesRD, errCodes);
+        ret = ProcessReadyFiles(abnormalfileNames, errCodes, callerName);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        OnAllBundlesFinished(BError(BError::Codes::OK));
+        return BError(BError::Codes::OK);
+    } catch (const BError &e) {
+        return e.GetCode(); // 任意异常产生，终止监听该任务
+    } catch (...) {
+        HILOGE("Unexpected exception");
+        return EPERM;
     }
-    string callerName;
-    ErrCode ret = VerifyCallerAndGetCallerName(callerName);
-    if (ret != ERR_OK) {
-        HILOGE("AppFileReady error, Get bundle name failed, ret:%{public}d", ret);
-        return ret;
-    }
-    return session_->GetServiceReverseProxy()->BackupOnFileReadysWithoutFd(callerName, abnormalfileNames, errCodes);
 }
 
 ErrCode Service::ProcessReadyFiles(
@@ -462,7 +480,7 @@ ErrCode Service::ProcessReadyFiles(
     return ERR_OK;
 }
 
-ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames,
+ErrCode Service::AppFileReadys(const BStringRawData &fileNamesRD,
                                const vector<int> &fds,
                                const vector<int> &errCodes)
 {
@@ -479,8 +497,11 @@ ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames,
             HILOGE("AppFileReady error, Get bundle name failed, ret:%{public}d", ret);
             return ret;
         }
+        std::string serializedData;
+        fileNamesRD.Unmarshalling(serializedData);
+        auto fileNames = StringUtils::StringVectorDeserialize(serializedData);
         HILOGI("AppfileReadys filenames size is, %{public}zu", fileNames.size());
-        session_->GetServiceReverseProxy()->BackupOnFileReadys(callerName, fileNames, fds, errCodes);
+        session_->GetServiceReverseProxy()->BackupOnFileReadys(callerName, fileNamesRD, fds, errCodes);
         ret = ProcessReadyFiles(fileNames, errCodes, callerName);
         if (ret != ERR_OK) {
             return ret;
@@ -589,7 +610,8 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     int64_t versionCode = session_->GetBundleVersionCode(bundleName); /* old device app version code */
     RestoreTypeEnum restoreType = session_->GetBundleRestoreType(bundleName); /* app restore type */
     string bundleExtInfo = session_->GetBackupExtInfo(bundleName);
-    HILOGI("BundleExtInfo is:%{public}s", GetAnonyString(bundleExtInfo).c_str());
+    HILOGI("BundleExtInfo is:%{public}s, BundleExtInfo size:%{public}zu", GetAnonyString(bundleExtInfo).c_str(),
+        bundleExtInfo.size());
     string oldBackupVersion = session_->GetOldBackupVersion(); /* old device backup version */
     if (oldBackupVersion.empty()) {
         HILOGE("Failed to get backupVersion of old device");
@@ -606,6 +628,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_OLD_BACKUP_VERSION_PARA, oldBackupVersion);
     want.SetParam(BConstants::EXTENSION_BACKUP_SCENE_PARA, bundleDetail.backupScene);
     want.SetParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, session_->GetSupportWithoutTar(bundleName));
+    want.SetParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA, session_->GetExcludeInfos(bundleName));
     want.SetParam(BConstants::EXTENSION_BATCH_SIZE_PARA, session_->GetBatchSize(bundleName));
 }
 
@@ -1967,7 +1990,7 @@ ErrCode Service::DoEnhanceMove(const std::string &srcFile, const std::string &de
         return BError(BError::Codes::SA_INVAL_ARG, "enhance service is not loaded").GetCode();
     }
 
-    FileBackupParam param = {};
+    FileBackupParam param;
     if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), srcFile.c_str(), srcFile.length()) != EOK ||
         strncpy_s(param.dstFilePath, sizeof(param.dstFilePath), destFile.c_str(), destFile.length()) != EOK ||
         snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
@@ -1978,6 +2001,7 @@ ErrCode Service::DoEnhanceMove(const std::string &srcFile, const std::string &de
 
     std::vector<FileBackupParam> fileInfos = {param};
     FileBackupResultMsg resultMsg = {};
+    
     int32_t moveRet = ERR_OK;
     if (isDir) {
         moveRet = enhanceService->MoveDirectory(fileInfos, resultMsg);
@@ -2086,7 +2110,7 @@ ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleNam
             return ret;
         }
 
-        ret = OpenIncrementalRpFile(bundleName, destFile);
+        ret = OpenIncrementalRpFile(bundleName, fileName);
         if (ret != ERR_OK) {
             NotifyMigrateResult(ret, bundleName);
             return ret;
@@ -2118,7 +2142,7 @@ ErrCode Service::DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid
         return BError(BError::Codes::SA_INVAL_ARG, "enhance service is not loaded").GetCode();
     }
 
-    FileBackupParam param = {};
+    FileBackupParam param;
     if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), filePath.c_str(), filePath.length()) != EOK ||
         snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
         snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%d", gid) < 0) {
@@ -2128,7 +2152,6 @@ ErrCode Service::DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid
 
     std::vector<FileBackupParam> fileInfos = {param};
     FileBackupResultMsg resultMsg = {};
-
     int32_t openRet = enhanceService->GetApkFileHandle(fileInfos, resultMsg);
     if (openRet != ERR_OK) {
         HILOGE("OpenFiles failed, ret=%{public}d, errorCode=%{public}d", openRet, resultMsg.errorCode);

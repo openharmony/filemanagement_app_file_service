@@ -52,6 +52,7 @@ public:
         bool isClearData {true};
         int32_t delayTime {0};
         bool isSupportWithoutTar {false};
+        std::vector<std::string> excludeInfos;
         int32_t batchSize {500};
     }BundleSettingInfo;
 
@@ -139,17 +140,7 @@ public:
      */
     static bool BuildExtensionErrInfo(std::string &jsonStr, int errCode, std::string errMsg);
 
-    /**
-     * @brief 拼接包名和分身对应的索引
-     *
-     * @param bundleName 包名
-     * @param bundleIndex 索引
-     *
-     * @return 拼接结果
-     */
-    static std::string BuildBundleNameIndexInfo(const std::string &bundleName, int bundleIndex);
-
-    /**
+    /* *
      * @brief 组建恢复文件错误信息的json
      *
      * @param jsonStr 组建结果
@@ -160,7 +151,7 @@ public:
      */
     static bool BuildExtensionErrInfo(std::string &jsonStr, std::map<std::string, std::vector<int>> errFileInfo);
 
-    /**
+    /* *
      * @brief 添加东湖文件恢复结果
      *
      * @param jsonStr 组建结果
@@ -173,7 +164,6 @@ public:
 
     /**
      * @brief 组建App进度返回的信息
-     *
      * @param jsonStr 组建结果
      * @param onProcessRet onProcess接口返回值
      *
@@ -182,6 +172,15 @@ public:
      */
     static bool BuildOnProcessRetInfo(std::string &jsonStr, std::string onProcessRet);
 
+    /* *
+     * @brief 拼接包名和分身对应的索引
+     *
+     * @param bundleName 包名
+     * @param bundleIndex 索引
+     *
+     * @return 拼接结果
+     */
+    static std::string BuildBundleNameIndexInfo(const std::string &bundleName, int bundleIndex);
     /**
      * @brief 组建App进度返回的信息
      *

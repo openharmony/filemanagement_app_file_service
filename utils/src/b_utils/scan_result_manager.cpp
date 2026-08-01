@@ -18,7 +18,6 @@
 #include "b_error/b_error.h"
 #include "b_utils/storage_manager_helper.h"
 #include <filemgmt_libhilog.h>
-#include <directory_ex.h>
 
 namespace OHOS::FileManagement::Backup {
 
@@ -86,7 +85,10 @@ uint64_t ScanResultManager::GetMaxTarSize()
     return maxTarSize_.load();
 }
 
-void ScanResultManager::AddBigFile(const std::string& filePath, const struct stat& sta, const std::string& restorePath)
+void ScanResultManager::AddBigFile(const std::string &filePath,
+                                   const struct stat &sta,
+                                   bool isLongPath,
+                                   const std::string &restorePath)
 {
     std::lock_guard<std::mutex> lock(pendingFileMutex_);
     std::string hashName = StringUtils::GenHashName(filePath);
@@ -94,14 +96,14 @@ void ScanResultManager::AddBigFile(const std::string& filePath, const struct sta
         hashName = StringUtils::GenHashName(filePath + std::to_string(i));
     }
     hashNameSet_.emplace(hashName);
-    std::string ext = ExtractFileExt(filePath);
-    if (!ext.empty()) {
-        hashName += "." + ext;
-    }
     if (restorePath.empty()) {
-        pendingFileQueue_.push(std::make_shared<FileInfo>(hashName, filePath, sta, true));
+        auto file = std::make_shared<FileInfo>(hashName, filePath, sta, true);
+        file->isLongPath_ = isLongPath;
+        pendingFileQueue_.push(file);
     } else {
-        pendingFileQueue_.push(std::make_shared<CompatibleFileInfo>(hashName, filePath, sta, true, restorePath));
+        auto file = std::make_shared<CompatibleFileInfo>(hashName, filePath, sta, true, restorePath);
+        file->isLongPath_ = isLongPath;
+        pendingFileQueue_.push(file);
     }
     waitFilesReady_.notify_all();
 }
@@ -133,10 +135,6 @@ void ScanResultManager::AddAncoBigFile(
     }
     hashNameSet_.emplace(hashName);
     hashName += BConstants::ANCO_TAG;
-    std::string ext = ExtractFileExt(filePath);
-    if (!ext.empty()) {
-        hashName += "." + ext;
-    }
     if (restorePath.empty()) {
         pendingFileQueue_.push(std::make_shared<AncoFileInfo>(hashName, filePath, sta, true));
     } else {

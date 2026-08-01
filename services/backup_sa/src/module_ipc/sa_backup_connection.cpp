@@ -14,6 +14,7 @@
  */
 
 #include "module_ipc/sa_backup_connection.h"
+#include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
 #include "b_error/b_excep_utils.h"
 #include "filemgmt_libhilog.h"
@@ -139,6 +140,8 @@ ErrCode SABackupConnection::LoadBackupSAExtInner()
 
 bool SABackupConnection::InputParaSet(MessageParcel &data)
 {
+    HILOGI("SA:%{public}d, extInfo:%{public}s, extInfo size:%{public}zu", saId_,
+        GetAnonyString(extInfo_).c_str(), extInfo_.size());
     if (extension_ == BConstants::EXTENSION_BACKUP) {
         if (!data.WriteString(extInfo_)) {
             HILOGE("InputParaSet WriteString failed sa: %{public}d, extInfo: %{public}s, extension: %{public}s",

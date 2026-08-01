@@ -44,6 +44,7 @@ public:
     struct stat sta_;
     bool isBigFile_ = false;
     bool isAncoFile_ = false;
+    bool isLongPath_ = false;
 };
 
 struct FileInfo : public IFileInfo {
@@ -112,7 +113,10 @@ public:
     std::vector<std::shared_ptr<IFileInfo>> GetAllFiles();
     void AddAllFile(std::shared_ptr<IFileInfo> &fileInfo);
 
-    void AddBigFile(const std::string& filePath, const struct stat& sta, const std::string& restorePath = "");
+    void AddBigFile(const std::string &filePath,
+                    const struct stat &sta,
+                    bool isLongPath,
+                    const std::string &restorePath = "");
     void AddTarFile(const std::string& filename, const std::string& filePath, const struct stat& sta);
     void AddAncoBigFile(const std::string &filePath, const std::string &restorePath, const struct stat &sta);
     void AddAncoTarFile(const std::string &filename, const std::string &filePath, const struct stat &sta);
