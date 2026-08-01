@@ -22,7 +22,9 @@
 #include "filemgmt_libhilog.h"
 
 namespace OHOS::FileManagement::Backup {
+constexpr size_t TAR_SUFFIX_LEN = 4;
 constexpr size_t CLOUD_HASH_LENGTH = 33;
+constexpr size_t MAX_SERIALIZED_SIZE = 16 * 1024 * 1024;
 
 bool StringUtils::EndsWith(const std::string& str, const std::string& suffix)
 {
@@ -56,6 +58,99 @@ std::string StringUtils::Concat(const std::vector<std::string>& strs, const std:
     for (auto &str : strs) {
         result.append(str);
         result.append(connector);
+    }
+    return result;
+}
+
+std::string StringUtils::StringVectorSerialize(const std::vector<std::string>& vec)
+{
+    size_t total = sizeof(uint64_t);
+    for (const auto& str : vec) {
+        total += sizeof(uint64_t) + str.size();
+    }
+    if (total > MAX_SERIALIZED_SIZE) {
+        HILOGE("StringVectorSerialize total size %{public}zu exceeds limit %{public}zu", total, MAX_SERIALIZED_SIZE);
+        return {};
+    }
+    std::string result;
+    result.resize(total);
+    size_t pos = 0;
+    uint64_t count = static_cast<uint64_t>(vec.size());
+    if (memcpy_s(&result[pos], result.size() - pos, &count, sizeof(uint64_t)) != EOK) {
+        HILOGE("StringVectorSerialize write count failed");
+        result.clear();
+        return result;
+    }
+    pos += sizeof(uint64_t);
+    for (const auto& str : vec) {
+        uint64_t len = static_cast<uint64_t>(str.size());
+        if (memcpy_s(&result[pos], result.size() - pos, &len, sizeof(uint64_t)) != EOK) {
+            HILOGE("StringVectorSerialize write len failed");
+            result.clear();
+            return result;
+        }
+        pos += sizeof(uint64_t);
+        if (len > 0 && memcpy_s(&result[pos], result.size() - pos, str.data(), static_cast<size_t>(len)) != EOK) {
+            HILOGE("StringVectorSerialize write str failed");
+            result.clear();
+            return result;
+        }
+        pos += static_cast<size_t>(len);
+    }
+    return result;
+}
+
+static bool ReadOneString(const std::string& data, size_t& pos, std::string& out)
+{
+    if (pos + sizeof(uint64_t) > data.size()) {
+        HILOGE("StringVectorDeserialize unexpected end of data at string length");
+        return false;
+    }
+    uint64_t len = 0;
+    if (memcpy_s(&len, sizeof(uint64_t), data.data() + pos, sizeof(uint64_t)) != EOK) {
+        HILOGE("StringVectorDeserialize read len failed");
+        return false;
+    }
+    pos += sizeof(uint64_t);
+    if (len > data.size() - pos) {
+        HILOGE("StringVectorDeserialize unexpected end of data at string content");
+        return false;
+    }
+    out.assign(data.data() + pos, static_cast<size_t>(len));
+    pos += static_cast<size_t>(len);
+    return true;
+}
+
+std::vector<std::string> StringUtils::StringVectorDeserialize(const std::string& data)
+{
+    std::vector<std::string> result;
+    if (data.size() < sizeof(uint64_t) || data.size() > MAX_SERIALIZED_SIZE) {
+        HILOGE("StringVectorDeserialize data size %{public}zu invalid", data.size());
+        return result;
+    }
+    size_t pos = 0;
+    uint64_t count = 0;
+    if (memcpy_s(&count, sizeof(uint64_t), data.data() + pos, sizeof(uint64_t)) != EOK) {
+        HILOGE("StringVectorDeserialize read count failed");
+        return result;
+    }
+    pos += sizeof(uint64_t);
+    if (count > data.size() / sizeof(uint64_t)) {
+        HILOGE("StringVectorDeserialize count %{public}llu too large", static_cast<unsigned long long>(count));
+        return result;
+    }
+    result.reserve(static_cast<size_t>(count));
+    for (uint64_t i = 0; i < count; ++i) {
+        std::string item;
+        if (!ReadOneString(data, pos, item)) {
+            return {};
+        }
+        result.emplace_back(std::move(item));
+    }
+    if (pos != data.size()) {
+        HILOGE("StringVectorDeserialize trailing data detected, pos=%{public}zu, dataSize=%{public}zu",
+            pos, data.size());
+        return {};
     }
     return result;
 }
@@ -109,53 +204,11 @@ bool StringUtils::IsSubdirectory(const std::string &parent, const std::string &c
     return newChild.size() >= newParent.size() && newChild.substr(0, newParent.size()) == newParent;
 }
 
-bool StringUtils::IsPathPrefix(const std::string &path, const std::string &prefix)
-{
-    if (path.empty() || prefix.empty()) {
-        return false;
-    }
-    std::string modifiedPath = path;
-    if (path.front() != '/') {
-        modifiedPath = "/" + modifiedPath;
-    }
-    if (prefix.back() == '/' && modifiedPath.back() != '/') {
-        modifiedPath = modifiedPath + '/';
-    }
-    if (modifiedPath.length() < prefix.length()) {
-        return false;
-    }
-    return modifiedPath.compare(0, prefix.length(), prefix) == 0;
-}
-
-std::string StringUtils::ConvertMediaSandboxToPublic(const std::string &path)
-{
-    const auto mediaPublicSandboxPath = BConstants::PATH_MEDIALDATA_FILEMANAGER_PUBLIC_HOME;
-    if (IsPathPrefix(path, std::string(mediaPublicSandboxPath))) {
-        return BConstants::PATH_PUBLIC_HOME + path.substr(mediaPublicSandboxPath.size());
-    }
-    return path;
-}
- 
-std::vector<std::string> StringUtils::ConvertMediaSandboxPaths(const std::vector<std::string> &paths)
-{
-    std::vector<std::string> publicPaths;
-    for (const auto &path : paths) {
-        publicPaths.push_back(ConvertMediaSandboxToPublic(path));
-    }
-    return publicPaths;
-}
-
 bool StringUtils::IsSandboxAncoPath(const std::string &path)
 {
     const auto sbAncoPath = BConstants::PATH_PUBLIC_HOME + BConstants::FUSE_ANCO_DIR;
     return IsSubdirectory(sbAncoPath, path) ||
         IsSubdirectory(std::string(BConstants::PATH_MEDIALDATA_HOME_ANCO), path);
-}
-
-bool StringUtils::IsPublicFilePath(const std::string &path)
-{
-    const auto publicFilePath = BConstants::PATH_PUBLIC_HOME;
-    return IsPathPrefix(path, publicFilePath);
 }
 
 std::set<std::string> StringUtils::FilterAncoPaths(std::set<std::string> &paths)
@@ -187,27 +240,27 @@ uint32_t StringUtils::CheckOverLongPath(const std::string &path)
     return len;
 }
 
-std::string StringUtils::RemoveFileExtension(const std::string &fileName)
-{
-    size_t pos = fileName.rfind('.');
-    if (pos == std::string::npos) {
-        return fileName;
-    }
-    return fileName.substr(0, pos);
-}
-
-bool StringUtils::IsAncoFile(const std::string &fileName)
+bool StringUtils::IsAncoFile(const std::string &filePath)
 {
     auto hasUppercase = [](const std::string &str) -> bool {
         return std::any_of(str.begin(), str.end(), [](char c) {
             return std::isupper(c);
         });
     };
-    std::string fileNameWithoutExt = RemoveFileExtension(fileName);
+    if (IsPathWithDirectory(filePath)) {
+        return false;
+    }
+    std::string fileName = GetFileName(filePath);
+    std::string fileNameWithoutExt;
+    if (ExtractFileExt(fileName) == "tar") {
+        fileNameWithoutExt = fileName.substr(0, fileName.size() - TAR_SUFFIX_LEN);
+    } else {
+        fileNameWithoutExt = fileName;
+    }
     if (hasUppercase(fileNameWithoutExt) && fileNameWithoutExt.size() == CLOUD_HASH_LENGTH) {
         return false;
     } else {
-        return fileNameWithoutExt.find(BConstants::ANCO_TAG) != std::string::npos;
+        return fileName.find(BConstants::ANCO_TAG) != std::string::npos;
     }
 }
 
@@ -233,5 +286,20 @@ std::string StringUtils::RemoveTrailingSlash(const std::string &path)
         result.pop_back();
     }
     return result;
+}
+
+std::string StringUtils::GetFileName(const std::string& filePath)
+{
+    size_t lastSlashPos = filePath.find_last_of("/\\");
+    if (lastSlashPos == std::string::npos) {
+        return filePath;
+    }
+    return filePath.substr(lastSlashPos + 1);
+}
+
+bool StringUtils::IsPathWithDirectory(const std::string& filePath)
+{
+    size_t lastSlashPos = filePath.find_last_of("/\\");
+    return (lastSlashPos != std::string::npos);
 }
 } // namespace OHOS::FileManagement::Backup
