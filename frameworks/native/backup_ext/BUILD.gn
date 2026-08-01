@@ -28,7 +28,6 @@ ohos_shared_library("backup_extension_ability_native") {
 
   sources = [
     "src/backup_helper.cpp",
-    "src/clone_file_info_backup_rdbstore.cpp",
     "src/ext_backup.cpp",
     "src/ext_backup_ani.cpp",
     "src/ext_backup_context.cpp",
@@ -41,6 +40,7 @@ ohos_shared_library("backup_extension_ability_native") {
     "src/sub_ext_extension.cpp",
     "src/tar_file.cpp",
     "src/untar_file.cpp",
+    "src/clone_file_info_backup_rdbstore.cpp",
   ]
 
   defines = [
