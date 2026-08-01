@@ -14,6 +14,7 @@
  */
 
 #include "b_utils/string_utils.h"
+#include "securec.h"
 #include <directory_ex.h>
 #include <iomanip>
 #include <sstream>
