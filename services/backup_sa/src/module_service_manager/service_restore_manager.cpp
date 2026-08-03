@@ -42,6 +42,10 @@ static bool SpecialDefaultVersion(const string &versionName)
 ErrCode Service::SetSessPropertiesRestore(const std::vector<std::string> &restoreBundleNames,
     vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos)
 {
+    if (session_ == nullptr) {
+        HILOGE("session_ is nullptr");
+        return BError(BError::Codes::SA_INVAL_ARG);
+    }
     session_->SetOldBackupVersion(oldBackupVersion_);
     std::vector<std::string> strategies = {
         "RestoreBasePropertyStrategy",
