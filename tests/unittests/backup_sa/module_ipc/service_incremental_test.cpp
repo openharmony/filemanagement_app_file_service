@@ -1687,7 +1687,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle
  * @tc.desc: 测试 GetIncrementalFileHandle 的正常/异常分支
  * @tc.size: MEDIUM
  * @tc.type: FUNC
- * @tc.level Level 1
+ *service_incremental_test.cpp @tc.level Level 1
  * @tc.require: issueIAKC3I
  */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle_0100, TestSize.Level1)
@@ -1705,7 +1705,7 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetIncrementalFileHandle
         EXPECT_CALL(*session, GetServiceReverseProxy()).WillRepeatedly(Return(srProxy));
         EXPECT_CALL(*session, OnBundleFileReady(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*srvMock, HandleCurBundleFileReady(_, _, _))
-            .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
+            .WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         auto ret = service->GetIncrementalFileHandle(bundleName, fileName);
             EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
