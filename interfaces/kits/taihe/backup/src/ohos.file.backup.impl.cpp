@@ -103,6 +103,10 @@ public:
     {
         if (callbackRef_) {
             ani_env *env = taihe::get_env();
+            if (env == nullptr) {
+                HILOGE("ani_env is nullptr");
+                return;
+            }
             ani_status status = ANI_OK;
             status = env->GlobalReference_Delete(callbackRef_);
             if (ANI_OK != status) {
@@ -125,6 +129,11 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return data;
         }
+        if (!bSessionBackup) {
+            HILOGE("bSessionBackup is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG), "bSessionBackup is nullptr");
+            return data;
+        }
         auto fd = std::make_shared<UniqueFd>();
         *fd = bSessionBackup->GetLocalCapabilities();
         data.fd = fd->Release();
@@ -141,6 +150,11 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return;
+        }
+        if (!bSessionBackup) {
+            HILOGE("bSessionBackup is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG), "bSessionBackup is nullptr");
             return;
         }
         std::vector<BIncrementalData> bundleNames;
@@ -165,6 +179,11 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return;
+        }
+        if (!bSessionBackup) {
+            HILOGE("bSessionBackup is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG), "bSessionBackup is nullptr");
             return;
         }
         std::vector<std::string> bundleNames;
@@ -196,6 +215,11 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return;
         }
+        if (!bSessionBackup) {
+            HILOGE("bSessionBackup is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG), "bSessionBackup is nullptr");
+            return;
+        }
 
         std::vector<std::string> bundleNames;
         ::taihe::array<::taihe::string> bundles(bundlesToBackup);
@@ -218,6 +242,11 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return;
         }
+        if (!bSessionBackup) {
+            HILOGE("bSessionBackup is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG), "bSessionBackup is nullptr");
+            return;
+        }
         bSessionBackup->Release();
     }
 
@@ -232,6 +261,11 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return result;
+        }
+        if (!bSessionBackup) {
+            HILOGE("bSessionBackup is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG), "bSessionBackup is nullptr");
             return result;
         }
         result = bSessionBackup->Cancel(std::string(bundleName));
@@ -249,6 +283,11 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return result;
+        }
+        if (!bSessionBackup) {
+            HILOGE("bSessionBackup is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG), "bSessionBackup is nullptr");
             return result;
         }
         ErrCode code = bSessionBackup->CleanBundleTempDir(std::string(bundleName));
@@ -270,6 +309,11 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return ::taihe::string("");
+        }
+        if (!bSessionBackup) {
+            HILOGE("bSessionBackup is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG), "bSessionBackup is nullptr");
             return ::taihe::string("");
         }
         std::string bundleNameTemp(bundleName);
@@ -342,6 +386,10 @@ public:
     {
         if (callbackRef_) {
             ani_env *env = taihe::get_env();
+            if (env == nullptr) {
+                HILOGE("ani_env is nullptr");
+                return;
+            }
             ani_status status = ANI_OK;
             status = env->GlobalReference_Delete(callbackRef_);
             if (ANI_OK != status) {
@@ -364,6 +412,12 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return data;
         }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
+            return data;
+        }
         auto fd = make_shared<UniqueFd>();
         *fd = bIncrementalRestoreSession->GetLocalCapabilities();
         data.fd = fd->Release();
@@ -381,6 +435,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return;
+        }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
             return;
         }
 
@@ -414,6 +474,12 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return;
         }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
+            return;
+        }
 
         std::vector<std::string> bundleNames;
         ::taihe::array<::taihe::string> bundles(bundlesToBackup);
@@ -434,6 +500,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return;
+        }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
             return;
         }
 
@@ -457,6 +529,12 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return;
         }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
+            return;
+        }
 
         std::string bundleName(fileMeta.bundleName);
         std::string fileName(fileMeta.uri);
@@ -475,6 +553,12 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return;
         }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
+            return;
+        }
         bIncrementalRestoreSession->Release();
     }
 
@@ -489,6 +573,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return 0;
+        }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
             return 0;
         }
         result = bIncrementalRestoreSession->Cancel(std::string(bundleName));
@@ -506,6 +596,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return result;
+        }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
             return result;
         }
         ErrCode code = bIncrementalRestoreSession->CleanBundleTempDir(std::string(bundleName));
@@ -527,6 +623,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return ::taihe::string("");
+        }
+        if (!bIncrementalRestoreSession) {
+            HILOGE("bIncrementalRestoreSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalRestoreSession is nullptr");
             return ::taihe::string("");
         }
         std::string bundleNameTemp(bundleName);
@@ -610,6 +712,12 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return data;
         }
+        if (!bIncrementalBackupSession) {
+            HILOGE("bIncrementalBackupSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalBackupSession is nullptr");
+            return data;
+        }
         auto fd = make_shared<UniqueFd>();
         *fd = bIncrementalBackupSession->GetLocalCapabilities();
         HILOGE("UniqueFd.fd = %{public}d", fd->Get());
@@ -628,6 +736,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return;
+        }
+        if (!bIncrementalBackupSession) {
+            HILOGE("bIncrementalBackupSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalBackupSession is nullptr");
             return;
         }
         std::vector<BIncrementalData> bundleNames;
@@ -651,6 +765,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return;
+        }
+        if (!bIncrementalBackupSession) {
+            HILOGE("bIncrementalBackupSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalBackupSession is nullptr");
             return;
         }
         std::vector<BIncrementalData> backupBundles;
@@ -684,6 +804,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return;
+        }
+        if (!bIncrementalBackupSession) {
+            HILOGE("bIncrementalBackupSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalBackupSession is nullptr");
             return;
         }
         std::vector<BIncrementalData> backupBundles;
@@ -724,6 +850,12 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return;
         }
+        if (!bIncrementalBackupSession) {
+            HILOGE("bIncrementalBackupSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalBackupSession is nullptr");
+            return;
+        }
         bIncrementalBackupSession->Release();
     }
 
@@ -740,6 +872,12 @@ public:
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
             return SYSTEM_PERMISSION;
         }
+        if (!bIncrementalBackupSession) {
+            HILOGE("bIncrementalBackupSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalBackupSession is nullptr");
+            return BACKUP_PERMISSION;
+        }
         result = bIncrementalBackupSession->Cancel(std::string(bundleName));
         return result;
     }
@@ -755,6 +893,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return result;
+        }
+        if (!bIncrementalBackupSession) {
+            HILOGE("bIncrementalBackupSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalBackupSession is nullptr");
             return result;
         }
         ErrCode code = bIncrementalBackupSession->CleanBundleTempDir(std::string(bundleName));
@@ -777,6 +921,12 @@ public:
         if (!SAUtils::IsSystemApp()) {
             HILOGE("System App check fail!");
             ::taihe::set_business_error(SYSTEM_PERMISSION, "IsSystemApp error");
+            return ::taihe::string("");
+        }
+        if (!bIncrementalBackupSession) {
+            HILOGE("bIncrementalBackupSession is nullptr");
+            ::taihe::set_business_error(static_cast<int32_t>(BError::Codes::SA_INVAL_ARG),
+                                        "bIncrementalBackupSession is nullptr");
             return ::taihe::string("");
         }
         std::string bundleNameTemp(bundleName);
