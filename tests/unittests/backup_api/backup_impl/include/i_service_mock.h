@@ -60,7 +60,7 @@ public:
     MOCK_METHOD(ErrCode, StartAncoUnPacket, (const std::string &));
     MOCK_METHOD(ErrCode, AddAncoMovePaths, (const std::vector<std::string> &, const std::vector<std::string> &,
         const std::vector<StatInfo> &));
-    MOCK_METHOD(ErrCode, StartAncoMove, (int &, AncoRestoreResult &));
+    MOCK_METHOD(ErrCode, StartAncoMove, (AncoRestoreResult &));
 
     int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {
@@ -290,18 +290,18 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
-        const std::vector<int> &errCodes)
+    ErrCode AppFileReadys(const BStringRawData &fileNames, const std::vector<int> &fds,
+        const std::vector<int32_t> &errCodes) override
     {
         return BError(BError::Codes::OK);
     }
  
-    ErrCode AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames, const std::vector<int> &errCodes)
+    ErrCode AppFileReadysWithoutFd(const BStringRawData &fileNames, const std::vector<int32_t> &errCodes) override
     {
         return BError(BError::Codes::OK);
     }
  
-    ErrCode GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+    ErrCode GetIncrementalFileHandles(const std::string &bundleName, const BStringRawData &fileNames) override
     {
         return BError(BError::Codes::OK);
     }

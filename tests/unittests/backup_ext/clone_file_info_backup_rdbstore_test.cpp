@@ -347,6 +347,7 @@ HWTEST_F(CloneFileInfoBackupRdbstoreTest,
                       << "SUB_Clone_File_Info_Backup_Rdbstore_06_MultiInstance_0100";
 }
 
+#if 0 // QueryFileManagerFile and QueryFromRdbStore were removed from the production interface.
 /**
  * @tc.number: SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFileManagerFileNullptr_0100
  * @tc.name: SUB_Clone_File_Info_Backup_Rdbstore_07_QueryFileManagerFileNullptr_0100
@@ -576,4 +577,5 @@ HWTEST_F(CloneFileInfoBackupRdbstoreTest,
     }
     GTEST_LOG_(INFO) << "CloneFileInfoBackupRdbstoreTest-end SUB_Clone_File_Info_QueryFromRdbStore_TableNotExist_0100";
 }
+#endif
 } // namespace OHOS::FileManagement::Backup

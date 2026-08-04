@@ -409,7 +409,15 @@ bool SvcSessionManager::GetSupportWithoutTar(const std::string &bundleName)
 {
     return false;
 }
- 
+
+void SvcSessionManager::SetExcludeInfos(const std::string &bundleName,
+    const std::vector<std::string> &excludeInfos) {}
+
+std::vector<std::string> SvcSessionManager::GetExcludeInfos(const std::string &bundleName)
+{
+    return {};
+}
+
 void SvcSessionManager::SetBatchSize(const std::string &bundleName, int32_t batchSize) {}
  	 
 int32_t SvcSessionManager::GetBatchSize(const std::string &bundleName)

@@ -40,7 +40,10 @@ ohos_unittest("b_file_info_test") {
     "${path_backup}/utils:backup_utils",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 
   use_exceptions = true
 }
@@ -76,6 +79,7 @@ ohos_unittest("backup_ipc_struct_param_test") {
   external_deps = [
     "hilog:libhilog",
     "c_utils:utils",
+    "ipc:ipc_core",
   ]
 
   use_exceptions = true
@@ -162,7 +166,10 @@ ohos_unittest("b_file_info_sub_test") {
     "${path_backup}/utils:backup_utils",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 
   use_exceptions = true
 }

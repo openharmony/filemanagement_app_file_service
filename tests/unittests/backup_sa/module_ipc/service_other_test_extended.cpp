@@ -144,7 +144,7 @@ ErrCode Service::IncrementalBackupSA(std::string bundleName)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const BStringRawData &fileNames)
 {
     return BError(BError::Codes::OK);
 }
