@@ -27,7 +27,7 @@ public:
     std::string GetName();
     std::string GetPath();
     std::string GetRealPath();
-    std::string GetRealPathBySA(const std::string &targetBundleName = "");
+    std::string GetRealPathBySA(const std::string &targeBundleName = "");
     std::string ToString();
     std::string GetFullDirectoryUri();
     bool IsRemoteUri();
