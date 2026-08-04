@@ -756,7 +756,7 @@ void BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileInfo
 
 ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles)
 {
-    HILOGD("ReportAppFileReadys enter filenameSize: %{public}lu", allFiles.size());
+    HILOGD("ReportAppFileReadys enter filenameSize: %{public}zu", allFiles.size());
     vector<string> fileNames = {};
     vector<int> normalfds = {};
     vector<string> abnormalfileNames = {};
@@ -788,11 +788,11 @@ ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFil
         CloseFileWithFDSan(fdval);
     }
     if (SUCCEEDED(reportRs) && SUCCEEDED(reportRsWithoutFd)) {
-        HILOGI("Report app file ready success, filenameSize: %{public}lu", allFiles.size());
+        HILOGI("Report app file ready success, filenameSize: %{public}zu", allFiles.size());
     } else {
         HILOGW(
             "Report app file ready failed, reportRsWithoutFd: %{public}d, reportRs %{public}d, allfileSize: "
-            "%{public}lu",
+            "%{public}zu",
             reportRsWithoutFd, reportRs, normalfds.size());
     }
     return reportRs;
