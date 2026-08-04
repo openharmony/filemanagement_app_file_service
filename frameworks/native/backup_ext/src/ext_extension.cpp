@@ -71,7 +71,7 @@ const string INDEX_FILE_RESTORE = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
 const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                              append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
 const string MEDIA_LIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
-const string FILE_MANAGER_BUNDLE_NAME = "com.huawei.hmos.filemanager";
+const string FILE_MANAGER_BUNDLE_NAME = "com.ohos.filepicker";
 using namespace std;
 
 static void RecordDoRestoreRes(const std::string &bundleName, const std::string &func,

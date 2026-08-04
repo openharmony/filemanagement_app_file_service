@@ -85,8 +85,8 @@ void RestoreBasePropertyStrategy::Execute(StrategyContext &context)
 {
     auto ptr = context.session.promote();
     if (ptr == nullptr) {
-       HILOGE("session pointer is null");
-       return;
+        HILOGE("session pointer is null");
+        return;
     }
     ptr->SetBundleRestoreType(context.bundleNameIndexInfo, context.restoreType);
     ptr->SetBundleVersionCode(context.bundleNameIndexInfo, context.bundleInfo.versionCode);
@@ -130,7 +130,7 @@ void RestoreExtraPropertyStrategy::Execute(StrategyContext &context)
     if (ptr == nullptr || serviceptr == nullptr) {
         HILOGE("session or service pointer is null");
         return;
-   }
+    }
     if (BJsonUtil::FindBroadCastInfoByName(*context.bundleNameDetailMap, context.bundleNameIndexInfo,
         BROADCAST_TYPE, broadCastInfoMap)) {
         serviceptr->SetBroadCastInfoMap(context.bundleNameIndexInfo,
