@@ -45,6 +45,7 @@ const uint32_t WAIT_INDEX = 100000;
 const uint32_t WAIT_TIME = 5;
 const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
+const size_t SUFFIX_LENGTH = 2;
 } // namespace
 
 TarFile &TarFile::GetInstance()
@@ -638,13 +639,13 @@ static string FormatPaxTimeRecord(const string &key, time_t sec, long nsec)
         return "";
     }
     string valueStr = key + "=" + to_string(sec) + "." + string(nsecBuf);
-    size_t totalLen = valueStr.length() + 2;
+    size_t totalLen = valueStr.length() + SUFFIX_LENGTH;
     while (true) {
         size_t digits = to_string(totalLen).length();
-        if (digits + valueStr.length() + 2 == totalLen) {
+        if (digits + valueStr.length() + SUFFIX_LENGTH == totalLen) {
             break;
         }
-        totalLen = digits + valueStr.length() + 2;
+        totalLen = digits + valueStr.length() + SUFFIX_LENGTH;
     }
     return to_string(totalLen) + " " + valueStr + "\n";
 }
