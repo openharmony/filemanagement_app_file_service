@@ -60,7 +60,7 @@ struct BStringRawData {
         }
         out.resize(length);
         ss.read(&out[0], length);
-        if (ss.gcount() != length) {
+        if (ss.gcount() != static_cast<std::streamsize>(length)) {
             return EINVAL;
         }
         return 0;
