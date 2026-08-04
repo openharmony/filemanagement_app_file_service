@@ -574,6 +574,7 @@ ohos_unittest("ext_extension_new_test") {
   ]
 
   deps = [
+    "${path_backup}/interfaces/inner_api/native/backup_kit_inner:backup_kit_inner",
     "${path_backup}/frameworks/native/backup_ext:backup_extension_ability_native",
     "${path_backup}/services/backup_sa:backup_sa_ipc_stub",
     "${path_backup}/utils:backup_utils",

@@ -1358,7 +1358,6 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0200, testin
         extExtension->extension_ = extension;
         extension->backupScene_ = "";
         extension->ancoFileListClone_ = "1";
-        extension->fileManagerFileListClone_ = "1";
         
         TestManager tm("Ext_Extension_Sub_GetScanDirList_Test_0200");
         string root = tm.GetRootDirCurTest();
@@ -1376,13 +1375,11 @@ HWTEST_F(ExtExtensionSubTest, Ext_Extension_Sub_GetScanDirList_Test_0200, testin
         EXPECT_FALSE(includes.empty());
         
         extension->ancoFileListClone_ = "";
-        extension->fileManagerFileListClone_ = "";
         includes.clear();
         extExtension->GetScanDirList(includes, BConstants::INCLUDES, cachedEntity.Structuralize());
         EXPECT_FALSE(includes.empty());
         
         extension->ancoFileListClone_ = "1";
-        extension->fileManagerFileListClone_ = "1";
         includes.clear();
         extExtension->GetScanDirList(includes, BConstants::EXCLUDES, cachedEntity.Structuralize());
         EXPECT_TRUE(includes.empty());
@@ -1885,52 +1882,5 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_DoClearInner_0003, testing::ext:
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_DoClearInner_0003";
 }
 
-/**
- * @tc.number: SUB_Ext_Extension_ClearTempFile_0001
- * @tc.name: SUB_Ext_Extension_ClearTempFile_0001
- * @tc.desc: 测试 ClearTempFile bundleName_不为FILE_MANAGER_BUNDLE_NAME时直接返回
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0001, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0001";
-    try {
-        extExtension->bundleName_ = BUNDLE_NAME;
-        extExtension->ClearPublicTempFiles();
-        
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by ClearTempFile.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0001";
-}
- 
-/**
- * @tc.number: SUB_Ext_Extension_ClearTempFile_0002
- * @tc.name: SUB_Ext_Extension_ClearTempFile_0002
- * @tc.desc: 测试 ClearTempFile bundleName_为FILE_MANAGER_BUNDLE_NAME时清理临时文件
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: I6F3GV
- */
-HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ClearTempFile_0002, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_Ext_Extension_ClearTempFile_0002";
-    try {
-        extExtension->bundleName_ = BConstants::BUNDLE_FILE_MANAGER;
-        extExtension->ClearPublicTempFiles();
-        
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ExtExtensionSubTest-an exception occurred by ClearTempFile.";
-    }
-    GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_ClearTempFile_0002";
-}
 #include "ext_extension_sub_ext_test.cpp"
 } // namespace OHOS::FileManagement::Backup
