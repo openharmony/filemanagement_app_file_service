@@ -24,17 +24,19 @@
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 const int32_t OCTAL = 8;
+constexpr size_t NSEC_DIGITS = 9;
+constexpr int DECIMAL_RADIX = 10;
 
 static void ParsePaxTimeValue(const string &value, off_t &sec, long &nsec)
 {
     size_t dotPos = value.find('.');
     if (dotPos != string::npos) {
-        sec = std::strtoll(value.substr(0, dotPos).c_str(), nullptr, 10);
+        sec = std::strtoll(value.substr(0, dotPos).c_str(), nullptr, DECIMAL_RADIX);
         string nsecStr = value.substr(dotPos + 1);
-        nsecStr.resize(9, '0');
-        nsec = std::strtol(nsecStr.c_str(), nullptr, 10);
+        nsecStr.resize(NSEC_DIGITS, '0');
+        nsec = std::strtol(nsecStr.c_str(), nullptr, DECIMAL_RADIX);
     } else {
-        sec = std::strtoll(value.c_str(), nullptr, 10);
+        sec = std::strtoll(value.c_str(), nullptr, DECIMAL_RADIX);
         nsec = 0;
     }
 }
