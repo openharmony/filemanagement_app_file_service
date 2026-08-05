@@ -816,7 +816,7 @@ napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info)
         napi_status status = napi_create_array(env, &res);
         if (status != napi_ok) {
             LOGE("Failed to create array for GetSharedDirectoryInfo");
-            return NVal::CreateUndefined(env);
+            return NVal(env, NError(ENOMEM).GetNapiErr(env));
         }
 
         size_t index = 0;
@@ -829,7 +829,7 @@ napi_value GetSharedDirectoryInfo(napi_env env, napi_callback_info info)
             status = napi_set_element(env, res, index++, obj.val_);
             if (status != napi_ok) {
                 LOGE("Failed to set element on data for GetSharedDirectoryInfo");
-                return NVal::CreateUndefined(env);
+                return NVal(env, NError(ENOMEM).GetNapiErr(env));
             }
         }
         return NVal(env, res);
