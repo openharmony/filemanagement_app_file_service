@@ -81,7 +81,6 @@ constexpr int32_t DEBUG_ID = 100;
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
 const static string BROADCAST_TYPE = "broadcast";
-const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const static string UNICAST_TYPE = "unicast";
 const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.workstatus";
 const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
@@ -765,6 +764,7 @@ void Service::SetCurrentSessProperties(
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
         BJsonUtil::BundleDetailInfo broadCastInfo;
@@ -813,6 +813,7 @@ void Service::HandleCurGroupBackupInfos(
         auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
     }
@@ -1792,9 +1793,6 @@ void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerN
         std::stringstream strTime;
         strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
                 << (std::setw(INDEX)) << (ms.count() % MS_1000);
-        HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT, FILE_BACKUP_EVENTS,
-                        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "PROC_NAME", "ohos.appfileservice",
-                        "BUNDLENAME", callerName, "PID", getpid(), "TIME", strTime.str());
     } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
         session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);

@@ -32,6 +32,7 @@ struct ExtManageInfo {
     struct stat sta {};
     bool isUserTar {false};
     bool isBigFile {false};
+    bool isLongPath {false};
 };
 class BJsonEntityExtManage : public BJsonEntity {
 public:
@@ -78,7 +79,7 @@ public:
                              struct stat sta,
                              bool isAncoFile = false,
                              bool isSupportWithoutTar = false);
- 
+
     /**
      * @brief 将文件stat信息转换为json内容对象
      *

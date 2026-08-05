@@ -94,26 +94,16 @@ public:
     ErrCode IncrementalRestoreOnMigrateResult(int32_t errCode, const std::string &bundleName) override;
 
     ErrCode IncrementalRestoreOnFileReadys(const std::string &bundleName,
-                                           const std::vector<std::string> &fileNames,
-                                           const std::vector<int> &fdList,
-                                           const std::vector<int> &manifestfdList,
-                                           const std::vector<int32_t> &errCodes) override;
-    ErrCode IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
-                                           const std::vector<std::string> &fileNames,
-                                           const std::vector<int> &fdList,
-                                           const std::vector<int32_t> &errCodes) override;
- 
-    ErrCode IncrementalRestoreOnFileReadysWithoutFd(const std::string &bundleName,
-                                                    const std::vector<std::string> &fileListWithoutfd,
-                                                    const std::vector<int32_t> &errCodes) override;
+                                           const BStringRawData &fileNamesRD,
+                                           const std::vector<FileOpenResult> &openResults) override;
  
     ErrCode SetBatchSize(uint32_t size) override;
  
     ErrCode BackupOnFileReadysWithoutFd(const std::string &bundleName,
-                                        const std::vector<std::string> &fileNames,
+                                        const BStringRawData &fileNamesRD,
                                         const std::vector<int> &errCodes) override;
     ErrCode BackupOnFileReadys(const std::string &bundleName,
-                               const std::vector<std::string> &fileNames,
+                               const BStringRawData &fileNamesRD,
                                const std::vector<int> &fds,
                                const std::vector<int> &errCodes) override;
 
@@ -135,9 +125,7 @@ private:
                         const std::vector<int32_t> &errCodes);
     void AddIncrementalFileToBatch(const std::string &bundleName,
                                    const std::vector<std::string> &fileNames,
-                                   const std::vector<int> &fds,
-                                   const std::vector<int> &manifestFds,
-                                   const std::vector<int32_t> &errCodes);
+                                   const std::vector<FileOpenResult> &openResults);
 
     Scenario scenario_ {Scenario::UNDEFINED};
     BSessionBackup::Callbacks callbacksBackup_;

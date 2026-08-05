@@ -60,13 +60,15 @@ ohos_shared_library("fileshare_native") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "json:nlohmann_json_static",
     "napi:ace_napi",
+    "samgr:samgr_proxy",
+    "json:nlohmann_json_static",
   ]
   defines = []
   if (sandbox_manarer) {
@@ -163,11 +165,11 @@ ohos_shared_library("remote_file_share_native") {
     "ability_base:zuri",
     "c_utils:utils",
     "hilog:libhilog",
-    "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
   ]
 
   if (defined(global_parts_info) &&
@@ -210,8 +212,8 @@ ohos_shared_library("sandbox_helper_native") {
     "ability_base:zuri",
     "c_utils:utils",
     "hilog:libhilog",
-    "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
+    "json:nlohmann_json_static",
   ]
 
   innerapi_tags = [ "platformsdk_indirect" ]

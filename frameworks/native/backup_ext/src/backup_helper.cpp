@@ -25,7 +25,7 @@
 #include "service_client.h"
 
 namespace OHOS::FileManagement::Backup {
-constexpr size_t MAX_IPC_SEND_DATA_SIZE = static_cast<size_t>(1024 * 1024);
+constexpr size_t MAX_IPC_SEND_DATA_SIZE = static_cast<size_t>(100 * 1024);
 constexpr double IPC_SEND_DATA_SCALE_FACTOR = 0.75;
 constexpr size_t SAFE_IPC_SEND_DATA_SIZE = static_cast<size_t>(MAX_IPC_SEND_DATA_SIZE * IPC_SEND_DATA_SCALE_FACTOR);
 constexpr size_t VECTOR_MAX_SIZE = 102400;
@@ -438,7 +438,7 @@ ErrCode AncoIncrementalRestoreHelper::AddAncoMovePaths(const std::vector<std::st
     return BError(BError::Codes::OK);
 }
 
-AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove(UniqueFd& fd)
+AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove()
 {
     AncoRestoreResult ancoRestoreRes;
     auto proxy = ServiceClient::GetInstance();
@@ -446,9 +446,7 @@ AncoRestoreResult AncoIncrementalRestoreHelper::StartAncoMove(UniqueFd& fd)
         HILOGE("Failed to get backup service");
         return ancoRestoreRes;
     }
-    int tempfd = fd.Get();
-    auto ret = proxy->StartAncoMove(tempfd, ancoRestoreRes);
-    fd = UniqueFd(tempfd);
+    auto ret = proxy->StartAncoMove(ancoRestoreRes);
     if (ret != ERR_OK) {
         HILOGE("Failed to StartAncoMove. err = %{public}d", ret);
     }

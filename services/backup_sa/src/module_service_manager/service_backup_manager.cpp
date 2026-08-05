@@ -206,6 +206,7 @@ ErrCode Service::SetSessPropertiesWithDetailBackup(const std::vector<std::string
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleName, iterSet->second.isClearData);
             session_->SetSupportWithoutTar(bundleName, iterSet->second.isSupportWithoutTar);
+            session_->SetExcludeInfos(bundleName, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleName, iterSet->second.batchSize);
         }
 
@@ -387,6 +388,7 @@ ErrCode Service::InitSession(const sptr<IServiceReverse>& remote,
     StopAll(nullptr, true);
     return ret;
 }
+
 ErrCode Service::InitSessionWithErrMsg(const sptr<IServiceReverse>& remote, IServiceReverseType::Scenario &scenario,
     BizScene &scene, int32_t &errCodeForMsg, std::string& errMsg)
 {
@@ -510,7 +512,7 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
     UniqueFd fd)
 {
     try {
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         std::vector<std::string> bundleNamesOnly;
         std::map<std::string, BJsonUtil::BundleSettingInfo> bundleSettingInfos;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap =
@@ -528,17 +530,14 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
         CallSetSessPropertiesWithDetail(supportBundleNames, bundleInfos,
             bundleNameDetailMap, bundleSettingInfos, scene);
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }

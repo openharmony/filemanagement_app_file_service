@@ -668,17 +668,15 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoMove_0000, testing::ext::TestSize.Lev
     retAncoRestoreRes.successCount = 100;
     retAncoRestoreRes.duplicateCount = 200;
     retAncoRestoreRes.failedCount = 300;
-    int fd = -1;
-    EXPECT_CALL(*mockEnhanceService, StartAncoMove(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<1>(fd), SetArgReferee<2>(retAncoRestoreRes), Return(BError(BError::Codes::OK))));
+    EXPECT_CALL(*mockEnhanceService, StartAncoMove(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(retAncoRestoreRes), Return(BError(BError::Codes::OK))));
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*token, GetHapTokenInfo(_, _)).WillOnce(Return(0));
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
     AncoRestoreResult ancoRestoreRes;
-    int dbFd = -1;
-    EXPECT_EQ(service->StartAncoMove(dbFd, ancoRestoreRes), BError(BError::Codes::OK));
+    EXPECT_EQ(service->StartAncoMove(ancoRestoreRes), BError(BError::Codes::OK));
     EXPECT_EQ(ancoRestoreRes.successCount, retAncoRestoreRes.successCount);
     EXPECT_EQ(ancoRestoreRes.duplicateCount, retAncoRestoreRes.duplicateCount);
     EXPECT_EQ(ancoRestoreRes.failedCount, retAncoRestoreRes.failedCount);
@@ -701,9 +699,8 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoMove_0001, testing::ext::TestSize.Lev
     retAncoRestoreRes.successCount = 100;
     retAncoRestoreRes.duplicateCount = 200;
     retAncoRestoreRes.failedCount = 300;
-    int fd = -1;
-    EXPECT_CALL(*mockEnhanceService, StartAncoMove(_, _, _))
-        .WillOnce(DoAll(SetArgReferee<1>(fd), SetArgReferee<2>(retAncoRestoreRes),
+    EXPECT_CALL(*mockEnhanceService, StartAncoMove(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(retAncoRestoreRes),
         Return(BError(BError::Codes::SA_INVAL_ARG))));
     EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_HAP));
@@ -711,8 +708,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoMove_0001, testing::ext::TestSize.Lev
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
     AncoRestoreResult ancoRestoreRes;
-    int dbFd = -1;
-    EXPECT_NE(service->StartAncoMove(dbFd, ancoRestoreRes), BError(BError::Codes::OK));
+    EXPECT_NE(service->StartAncoMove(ancoRestoreRes), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoMove_0001";
 }
  
@@ -732,8 +728,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoMove_0002, testing::ext::TestSize.Lev
     EXPECT_CALL(*token, GetTokenType(_)).WillOnce(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL));
  
     AncoRestoreResult ancoRestoreRes;
-    int fd = -1;
-    EXPECT_NE(service->StartAncoMove(fd, ancoRestoreRes), BError(BError::Codes::OK));
+    EXPECT_NE(service->StartAncoMove(ancoRestoreRes), BError(BError::Codes::OK));
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoMove_0002";
 }
  
@@ -757,8 +752,7 @@ HWTEST_F(ServiceTest, SUB_Service_StartAncoMove_0003, testing::ext::TestSize.Lev
     EXPECT_CALL(*jsonUtil, BuildBundleNameIndexInfo(_, _)).WillOnce(Return("bundleName"));
  
     AncoRestoreResult ancoRestoreRes;
-    int fd = -1;
-    EXPECT_EQ(service->StartAncoMove(fd, ancoRestoreRes), BError(BError::Codes::OK));
+    EXPECT_EQ(service->StartAncoMove(ancoRestoreRes), BError(BError::Codes::OK));
     EnhanceServiceManager().GetInstance().service_ = backupService;
     GTEST_LOG_(INFO) << "ServiceTest-end SUB_Service_StartAncoMove_0003";
 }

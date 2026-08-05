@@ -17,6 +17,8 @@
 
 #include "b_error/b_error.h"
 #include "filemgmt_libhilog.h"
+#include "message_parcel.h"
+
 #include <cstdint>
 
 namespace OHOS::FileManagement::Backup {
@@ -24,9 +26,28 @@ using namespace std;
 
 bool AncoRestoreResult::Marshalling(Parcel &parcel) const
 {
-    if (!parcel.WriteInt64(successCount) || !parcel.WriteInt64(duplicateCount) || !parcel.WriteInt64(failedCount)) {
+    auto messageParcel = static_cast<MessageParcel *>(&parcel);
+    if (!messageParcel) {
+        HILOGE("Failed to cast parcel to MessageParcel");
+        return false;
+    }
+
+    if (!messageParcel->WriteInt64(successCount) || !messageParcel->WriteInt64(duplicateCount) ||
+        !messageParcel->WriteInt64(failedCount)) {
         HILOGE("Failed to write count");
         return false;
+    }
+
+    int isDbFdValid = (dbFd != nullptr && dbFd->Get() >= 0) ? 1 : 0;
+    if (!messageParcel->WriteInt32(isDbFdValid)) {
+        HILOGE("Failed to write main file descriptor validity");
+        return false;
+    }
+    if (isDbFdValid) {
+        if (!messageParcel->WriteFileDescriptor(dbFd->Get())) {
+            HILOGE("Failed to write db file descriptor: fd=%d", dbFd->Get());
+            return false;
+        }
     }
 
     return true;
@@ -34,9 +55,33 @@ bool AncoRestoreResult::Marshalling(Parcel &parcel) const
 
 bool AncoRestoreResult::ReadFromParcel(Parcel &parcel)
 {
-    if (!parcel.ReadInt64(successCount) || !parcel.ReadInt64(duplicateCount) || !parcel.ReadInt64(failedCount)) {
+    auto messageParcel = static_cast<MessageParcel *>(&parcel);
+    if (!messageParcel) {
+        HILOGE("Failed to cast parcel to MessageParcel");
+        return false;
+    }
+
+    if (!messageParcel->ReadInt64(successCount) || !messageParcel->ReadInt64(duplicateCount) ||
+        !messageParcel->ReadInt64(failedCount)) {
         HILOGE("Failed to read count");
         return false;
+    }
+
+    int dbFdVal = -1;
+    int isDbFdValid = 0;
+    if (!messageParcel->ReadInt32(isDbFdValid)) {
+        HILOGE("Failed to read main file descriptor validity");
+        return false;
+    }
+    if (isDbFdValid) {
+        dbFdVal = messageParcel->ReadFileDescriptor();
+        if (dbFdVal < 0) {
+            HILOGE("Failed to read db file descriptor from parcel");
+            return false;
+        }
+        dbFd = std::make_shared<UniqueFd>(dbFdVal);
+    } else {
+        dbFd = nullptr;
     }
 
     return true;

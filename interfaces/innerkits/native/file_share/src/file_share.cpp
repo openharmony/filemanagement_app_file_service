@@ -14,6 +14,7 @@
  */
 #include "file_share.h"
 
+#include <cstdio>
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
@@ -37,6 +38,7 @@ namespace AppFileService {
 #define READ_URI_PERMISSION OHOS::AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION
 #define WRITE_URI_PERMISSION OHOS::AAFwk::Want::FLAG_AUTH_WRITE_URI_PERMISSION
 #define PERSISTABLE_URI_PERMISSION OHOS::AAFwk::Want::FLAG_AUTH_PERSISTABLE_URI_PERMISSION
+#define FDSAN_TAG 1
 
 enum ShareFileType {
     DIR_TYPE = 0,
@@ -101,8 +103,7 @@ static void GetProviderInfo(string uriStr, FileShareInfo &info)
     Uri uri(uriStr);
     info.providerBundleName_ = uri.GetAuthority();
     info.providerSandboxPath_ = SandboxHelper::Decode(uri.GetPath());
-    if (info.providerBundleName_ == DOCS_TYPE
-        && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) != string::npos) {
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_ == FILE_MANAGER_BUNDLE_NAME) {
         info.providerSandboxPath_ = FILE_DEFAULT_PATH + BACKSLASH;
     }
 }
@@ -162,7 +163,7 @@ static void DelSharePath(const string &delPath)
             LOGE("DelSharePath, umount failed with %{public}d", errno);
             return;
         }
-        LOGI("DelSharePath, umount2 success. begin to remove path.");
+        LOGI("DelSharePath, umount2 success. begin to remove mount path.");
         if (remove(delPath.c_str()) != 0) {
             LOGE("DelSharePath, remove failed with %{public}d", errno);
         }
@@ -257,8 +258,7 @@ static int32_t GetFileShareInfo(const string &uri, uint32_t tokenId, uint32_t fl
         return ret;
     }
 
-    if (info.providerBundleName_ == DOCS_TYPE
-        && info.targetBundleName_.find(FILE_MANAGER_BUNDLE_NAME) != string::npos) {
+    if (info.providerBundleName_ == DOCS_TYPE && info.targetBundleName_ == FILE_MANAGER_BUNDLE_NAME) {
         ret = GetDocsDir(uri, info);
         if (ret != 0) {
             LOGE("Failed to get docs dir, errno: %{public}d", ret);
@@ -325,17 +325,13 @@ static void UmountDelUris(vector<string> sharePathList, string currentUid, strin
         Uri uri(sharePathList[i]);
         string path = SandboxHelper::Decode(uri.GetPath());
         string bundleName = uri.GetAuthority();
-        string networkId = "";
-        if (bundleName == DOCS_TYPE && bundleNameSelf.find(FILE_MANAGER_BUNDLE_NAME) != string::npos) {
+        if (bundleName == DOCS_TYPE && bundleNameSelf == FILE_MANAGER_BUNDLE_NAME) {
             path = FILE_DEFAULT_PATH;
         }
+        string networkId = "";
         SandboxHelper::GetNetworkIdFromUri(sharePathList[i], networkId);
-        string delRPath = delPathPrefix + SHARE_R_PATH + bundleName + path;
-        string delRWPath = delPathPrefix + SHARE_RW_PATH + bundleName + path;
-        if (!networkId.empty()) {
-            delRPath = delPathPrefix + SHARE_R_PATH + networkId + BACKSLASH + bundleName + path;
-            delRWPath = delPathPrefix + SHARE_RW_PATH + networkId + BACKSLASH + bundleName + path;
-        }
+        string delRPath = delPathPrefix + SHARE_R_PATH + networkId + BACKSLASH + bundleName + path;
+        string  delRWPath = delPathPrefix + SHARE_RW_PATH + networkId + BACKSLASH + bundleName + path;
         DelSharePath(delRPath);
         DelSharePath(delRWPath);
     }
@@ -372,13 +368,15 @@ static int32_t StartShareFile(const FileShareInfo &info)
 {
     for (size_t i = 0; i < info.sharePath_.size(); i++) {
         if (info.type_ == ShareFileType::FILE_TYPE) {
+            uint64_t newTag = static_cast<uint64_t>(LOG_DOMAIN) << 32 | FDSAN_TAG;
             int fd = open(info.sharePath_[i].c_str(), O_RDONLY | O_CREAT,
                           S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
             if (fd < 0) {
                 LOGE("Create file failed with %{public}d", errno);
                 return -errno;
             }
-            close(fd);
+            fdsan_exchange_owner_tag(fd, 0, newTag);
+            fdsan_close_with_tag(fd, newTag);
         } else {
             if (access(info.sharePath_[i].c_str(), 0) != 0 &&
                 mkdir(info.sharePath_[i].c_str(), DIR_MODE) != 0) {

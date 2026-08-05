@@ -13,18 +13,48 @@
  * limitations under the License.
  */
 
+#include "untar_file.h"
 
 #include "b_anony/b_anony.h"
 #include "b_filesystem/b_dir.h"
-#include "b_utils/string_utils.h"
 #include "directory_ex.h"
 #include "filemgmt_libhilog.h"
 #include "securec.h"
-#include "untar_file.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 const int32_t OCTAL = 8;
+constexpr size_t NSEC_DIGITS = 9;
+constexpr int DECIMAL_RADIX = 10;
+
+static void ParsePaxTimeValue(const string &value, off_t &sec, long &nsec)
+{
+    size_t dotPos = value.find('.');
+    if (dotPos != string::npos) {
+        sec = std::strtoll(value.substr(0, dotPos).c_str(), nullptr, DECIMAL_RADIX);
+        string nsecStr = value.substr(dotPos + 1);
+        nsecStr.resize(NSEC_DIGITS, '0');
+        nsec = std::strtol(nsecStr.c_str(), nullptr, DECIMAL_RADIX);
+    } else {
+        sec = std::strtoll(value.c_str(), nullptr, DECIMAL_RADIX);
+        nsec = 0;
+    }
+}
+
+static void HandlePaxKvPair(const string &key, const string &value,
+    FileStatInfo &info, string &longName, int &err)
+{
+    if (key == "path") {
+        longName = value;
+        err = ERR_OK;
+    } else if (key == "mtime") {
+        ParsePaxTimeValue(value, info.mtime, info.mtimeNsec);
+        err = ERR_OK;
+    } else if (key == "atime") {
+        ParsePaxTimeValue(value, info.atime, info.atimeNsec);
+        err = ERR_OK;
+    }
+}
 
 static bool IsEmptyBlock(const char *p)
 {
@@ -136,9 +166,15 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::IncrementalUnPacket(
     const string &tarFile, const string &rootPath, const unordered_map<string, struct ReportFileInfo> &includes)
 {
     includes_ = includes;
-    tarFilePtr_ = fopen(tarFile.c_str(), "rb");
-    if (tarFilePtr_ == nullptr) {
+    int fd = open(tarFile.c_str(), O_RDONLY | O_UNCACHE);
+    if (fd < 0) {
         HILOGE("Failed to open tar file %{public}s, err = %{public}d", tarFile.c_str(), errno);
+        return {errno, {}, {}};
+    }
+    tarFilePtr_ = fdopen(fd, "rb");
+    if (tarFilePtr_ == nullptr) {
+        HILOGE("Failed to fdopen , err = %{public}d", errno);
+        close(fd);
         return {errno, {}, {}};
     }
 
@@ -151,11 +187,6 @@ std::tuple<int, EndFileInfo, ErrFileInfo> UntarFile::IncrementalUnPacket(
     tarFilePtr_ = nullptr;
 
     return {0, fileInfos, errFileInfos};
-}
-
-std::vector<std::tuple<std::string, std::string, struct stat>> UntarFile::GetPublicFileInfos()
-{
-    return publicFileInfos_;
 }
 
 off_t UntarFile::HandleTarBuffer(const string &buff, const string &name, FileStatInfo &info)
@@ -369,7 +400,7 @@ void UntarFile::MatchGnuTypeLongName(bool &isRightRes, FileStatInfo &info, ErrFi
 
 void UntarFile::MatchExtHeader(bool &isRightRes, FileStatInfo &info, bool &isFilter)
 {
-    auto [err, LongName] = ParsePaxBlock();
+    auto [err, LongName] = ParsePaxBlock(info);
     if (err != ERR_OK) {
         isRightRes = false;
         return;
@@ -429,7 +460,6 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
         isFilter = true;
         return true;
     }
-    const std::string targetFullPath = info.fullPath;
     info.fullPath = GenRealPath(rootPath_, info.fullPath);
     if (!BDir::IsFilePathValid(info.fullPath)) {
         HILOGE("Check file path : %{public}s err, path is forbidden", GetAnonyPath(info.fullPath).c_str());
@@ -440,12 +470,6 @@ bool UntarFile::DealFileTag(ErrFileInfo &errFileInfo,
     if (errFileInfo.find(info.fullPath) != errFileInfo.end() && errFileInfo[info.fullPath].size() > 0 &&
         errFileInfo[info.fullPath][0] == ERR_INVALID_TAR) {
         return false;
-    }
-    if (StringUtils::IsPublicFilePath(targetFullPath)) {
-        struct stat sta;
-        if (stat(info.fullPath.c_str(), &sta) == 0) {
-            publicFileInfos_.emplace_back(info.fullPath, targetFullPath, sta);
-        }
     }
     isFilter = false;
     return true;
@@ -483,7 +507,7 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::MatchIncrementalScenario(bool isFi
             break;
         }
         case EXTENSION_HEADER: { // pax x header
-            auto [err, LongName] = ParsePaxBlock();
+            auto [err, LongName] = ParsePaxBlock(info);
             if (err == ERR_OK) {
                 CheckLongName(LongName, info);
                 return {err, true, errFileInfo};
@@ -512,6 +536,37 @@ std::tuple<int, bool, ErrFileInfo> UntarFile::ParseIncrementalFileByTypeFlag(cha
     return MatchIncrementalScenario(isFilter, errFileInfo, tmpFullPath, typeFlag, info);
 }
 
+void UntarFile::SetFileTime(int fd, FileStatInfo &info, ErrFileInfo &errFileInfo)
+{
+    if (info.mtime == 0) {
+        return;
+    }
+    struct timespec ts[2];
+    if (info.atime != 0) {
+        ts[0].tv_sec = info.atime;
+        ts[0].tv_nsec = info.atimeNsec;
+    } else {
+        struct stat attr;
+        if (fstat(fd, &attr) != 0) {
+            errFileInfo[info.fullPath].emplace_back(errno);
+            HILOGE("Failed to get stat of %{public}s, err = %{public}d",
+                GetAnonyPath(info.fullPath).c_str(), errno);
+            ts[0].tv_sec = info.mtime;
+            ts[0].tv_nsec = info.mtimeNsec;
+        } else {
+            ts[0].tv_sec = attr.st_atime;
+            ts[0].tv_nsec = 0;
+        }
+    }
+    ts[1].tv_sec = info.mtime;
+    ts[1].tv_nsec = info.mtimeNsec;
+    if (futimens(fd, ts) != 0) {
+        errFileInfo[info.fullPath].emplace_back(errno);
+        HILOGE("Failed to set mtime of %{public}s, err = %{public}d",
+            GetAnonyPath(info.fullPath).c_str(), errno);
+    }
+}
+
 ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
 {
     ErrFileInfo errFileInfo;
@@ -520,29 +575,23 @@ ErrFileInfo UntarFile::ParseRegularFile(FileStatInfo &info)
         if (!UnTarFileInner(destFile)) {
             errFileInfo[info.fullPath].emplace_back(ERR_INVALID_TAR);
             HILOGE("UnTarFileInner fail path:%{public}s", GetAnonyPath(info.fullPath).c_str());
-            // 报错说明tar包有问题，直接fseeko跳转结束流程
+            (void)fclose(destFile);
             fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
             return errFileInfo;
         }
-        if (chmod(info.fullPath.data(), info.mode) != 0) {
-            HILOGE("Failed to chmod of %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
+        int fd = fileno(destFile);
+        if (fd < 0) {
+            HILOGE("Failed to get fd of %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
             errFileInfo[info.fullPath].emplace_back(errno);
-        }
-        struct utimbuf times;
-        struct stat attr;
-        if (stat(info.fullPath.c_str(), &attr) != 0) {
-            errFileInfo[info.fullPath].emplace_back(errno);
-            HILOGE("Failed to get stat of %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
-            times.actime = info.mtime;
         } else {
-            times.actime = attr.st_atime;
+            if (fchmod(fd, info.mode) != 0) {
+                HILOGE("Failed to chmod of %{public}s, err = %{public}d",
+                    GetAnonyPath(info.fullPath).c_str(), errno);
+                errFileInfo[info.fullPath].emplace_back(errno);
+            }
+            SetFileTime(fd, info, errFileInfo);
         }
-        times.modtime = info.mtime;
-        if (info.mtime != 0 && utime(info.fullPath.c_str(), &times) != 0) {
-            errFileInfo[info.fullPath].emplace_back(errno);
-            HILOGE("Failed to set mtime of %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
-        }
-        // anyway, go to correct
+        (void)fclose(destFile);
         fseeko(tarFilePtr_, pos_ + tarFileBlockCnt_ * BLOCK_SIZE, SEEK_SET);
     } else {
         HILOGE("Failed to create file %{public}s, err = %{public}d", GetAnonyPath(info.fullPath).c_str(), errno);
@@ -566,7 +615,6 @@ bool UntarFile::UnTarFileInner(FILE *destFile)
         auto readSize = fread(&destStr[0], sizeof(char), readBuffSize, tarFilePtr_);
         if (readSize == 0 && readBuffSize > 0) {
             HILOGE("Failed to fread");
-            (void)fclose(destFile);
             return false;
         }
         if (readSize != readBuffSize) {
@@ -580,7 +628,6 @@ bool UntarFile::UnTarFileInner(FILE *destFile)
         } while (writeSize < readBuffSize && fwriteSize > 0);
         remainSize -= writeSize;
     }
-    (void)fclose(destFile);
     if (remainSize > 0) {
         return false;
     }
@@ -688,7 +735,7 @@ FILE *UntarFile::CreateFile(string &filePath)
     return f;
 }
 
-std::tuple<int, std::string> UntarFile::ParsePaxBlock()
+std::tuple<int, std::string> UntarFile::ParsePaxBlock(FileStatInfo &info)
 {
     int err = DEFAULT_ERR;
     char block[BLOCK_SIZE] = {0};
@@ -723,15 +770,12 @@ std::tuple<int, std::string> UntarFile::ParsePaxBlock()
         }
         string key = kvPair.substr(0, eqPos);
         string value = kvPair.substr(eqPos + 1);
-        if (key == "path") {
-            longName = value;
-            err = ERR_OK;
-        }
+        HandlePaxKvPair(key, value, info, longName, err);
         pos += recLen;
     }
     if (isLongName) {
         HILOGI("is long name");
-        return GetLongName(recLen, allLen);
+        return GetLongName(recLen, allLen, info);
     }
     return {err, longName};
 }
@@ -744,7 +788,7 @@ void UntarFile::CheckLongName(std::string longName, FileStatInfo &info)
     }
 }
 
-std::tuple<int, std::string> UntarFile::GetLongName(uint32_t recLen, uint32_t allLen)
+std::tuple<int, std::string> UntarFile::GetLongName(uint32_t recLen, uint32_t allLen, FileStatInfo &info)
 {
     int err = DEFAULT_ERR;
     off_t curPos = ftello(tarFilePtr_);
@@ -784,10 +828,7 @@ std::tuple<int, std::string> UntarFile::GetLongName(uint32_t recLen, uint32_t al
         }
         string key = KvPair.substr(0, eqPos);
         string value = KvPair.substr(eqPos + 1);
-        if (key == "path") {
-            longName = value;
-            err = ERR_OK;
-        }
+        HandlePaxKvPair(key, value, info, longName, err);
         pos += recLen;
     }
     delete[] block;

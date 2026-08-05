@@ -98,14 +98,12 @@ public:
     static ErrCode StartAncoUnPacket(const std::string &tempPath);
     static ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats);
-    static AncoRestoreResult StartAncoMove(UniqueFd &fd);
+    static AncoRestoreResult StartAncoMove();
 };
 class BackupExtExtension : public ExtensionStub {
     friend class AncoBackupCallback;
     friend class AncoRestoreCallback;
 public:
-    int32_t CallbackEnter([[maybe_unused]] uint32_t code) override;
-    int32_t CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result) override;
     ErrCode GetFileHandleWithUniqueFd(const std::string &fileName, int32_t &errCode, int &fd) override;
     ErrCode HandleClear() override;
     ErrCode PublishFile(const std::string &fileName) override;
@@ -114,8 +112,6 @@ public:
     ErrCode GetIncrementalFileHandle(const std::string &fileName, int &fd, int &reportFd, int32_t &fdErrCode) override;
     ErrCode GetIncrementalRpFileHandle(const std::string &fileName, int32_t &fdErrCode) override;
     ErrCode PublishIncrementalFile(const std::string &fileName) override;
-    void GetIncrementalFileHandlesInner(const std::vector<std::string> &fileNames, std::vector<int> &fdList,
-                                        std::vector<int32_t> &errCodes);
     ErrCode HandleIncrementalBackup(int incrementalFd, int manifestFd) override;
     ErrCode IncrementalOnBackup(bool isClearData) override;
     ErrCode GetIncrementalBackupFileHandle(int &fd, int &reportFd) override;
@@ -130,9 +126,8 @@ public:
     ErrCode HandleOnRelease(int32_t scenario) override;
     ErrCode HandleGetCompatibilityInfo(const string &extInfo, int32_t scenario, bool isExist,
         string &compatibilityInfo) override;
-    ErrCode GetIncrementalFileHandles(const std::vector<std::string> &fileNames,
-                                      std::vector<int> &fdList,
-                                      std::vector<int32_t> &errCodes) override;
+    ErrCode GetIncrementalFileHandles(const BStringRawData &fileNamesRD,
+                                      std::vector<FileOpenResult> &openResults) override;
 public:
     explicit BackupExtExtension(const std::shared_ptr<Backup::ExtBackup> &extension,
         const std::string &bundleName) : extension_(extension)
@@ -424,7 +419,7 @@ private:
     std::function<void(std::string, int)> ReportErrFileByProc(wptr<BackupExtExtension> obj,
         BackupRestoreScenario scenario);
     std::tuple<ErrCode, UniqueFd, UniqueFd> GetIncreFileHandleForNormalVersion(const std::string &fileName);
-    std::tuple<ErrCode, UniqueFd> GetIncreFileHandleForUntarNormalVersion(const std::string &fileName);
+    FileOpenResult GetIncreFileHandleForUntarNormalVersion(const std::string &fileName);
     void RestoreOneBigFile(const std::string &path, const ExtManageInfo &item, const bool appendTargetPath);
     int DealIncreRestoreBigAndTarFile();
     ErrCode IncrementalTarFileReady(const TarMap &bigFileInfo, const vector<struct ReportFileInfo> &srcFiles,
@@ -461,7 +456,6 @@ private:
     void ScanAllDirsTask(const string &config);
     void AsyncDoBackup();
     void DoBackupTask();
-    void ClearPublicTempFiles();
     void DoBackupTaskCore(bool supportWithoutTar, std::vector<std::shared_ptr<IFileInfo>> &allFiles, int &ret);
 
     void HandleExtDisconnect(bool isAppResultReport, ErrCode errCode);
@@ -474,11 +468,11 @@ private:
     set<string> DivideIncludesByCompatInfo(vector<string> &pathInclude,
         const BJsonEntityExtensionConfig &usrConfig);
     void PathHasEl3OrEl4(const set<string> &includes, const vector<string> &excludes);
-    ErrCode ProcessReadysInfo(std::vector<std::shared_ptr<IFileInfo>> &allFiles,
-                              std::vector<std::string> &fileNames,
-                              std::vector<int> &normalfds,
-                              std::vector<std::string> &abnormalfileNames,
-                              std::vector<int> &errCodes);
+    void ProcessReadysInfo(std::vector<std::shared_ptr<IFileInfo>> &allFiles,
+                           std::vector<std::string> &fileNames,
+                           std::vector<int> &normalfds,
+                           std::vector<std::string> &abnormalfileNames,
+                           std::vector<int> &errCodes);
 private:
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
@@ -564,8 +558,6 @@ private:
     std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并发
     std::mutex updateFileStatLock_;
     AncoRestoreResult ancoRestoreRes_;
-    std::map<pid_t, std::vector<UniqueFd>> fdLists_;
-    std::mutex fdListsLock_;
     std::mutex fileOpenLock_;
     std::condition_variable initManageJsonCon_;
     std::mutex appendManageJsonLock_;

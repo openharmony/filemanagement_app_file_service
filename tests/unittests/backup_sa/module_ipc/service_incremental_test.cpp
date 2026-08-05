@@ -675,7 +675,7 @@ ErrCode Service::AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath
     return BService::serviceMock->AddAncoMovePaths(ancoSourcePath, ancoTargetPath, ancoStats);
 }
 
-ErrCode Service::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
+ErrCode Service::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
 {
     return BService::serviceMock->StartAncoMove(ancoRestoreRes);
 }
@@ -690,14 +690,13 @@ ErrCode Service::GetApkFileHandle(const std::string &path, const std::string &fi
     return BService::serviceMock->GetApkFileHandle(path, fileName, fd);
 }
 
-ErrCode Service::AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
-    const std::vector<int> &errCodes)
+ErrCode Service::AppFileReadys(const BStringRawData &fileNames, const std::vector<int> &fds,
+    const std::vector<int32_t> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
  
-ErrCode Service::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
-    const std::vector<int> &errCodes)
+ErrCode Service::AppFileReadysWithoutFd(const BStringRawData &fileNames, const std::vector<int32_t> &errCodes)
 {
     return BError(BError::Codes::OK);
 }

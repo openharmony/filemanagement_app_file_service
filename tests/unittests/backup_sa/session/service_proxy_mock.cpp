@@ -330,7 +330,7 @@ ErrCode ServiceProxy::AddAncoMovePaths(const std::vector<std::string> &ancoSourc
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes)
+ErrCode ServiceProxy::StartAncoMove(AncoRestoreResult &ancoRestoreRes)
 {
     ancoRestoreRes.duplicateCount = 0;
     ancoRestoreRes.failedCount = 0;
@@ -348,20 +348,19 @@ ErrCode ServiceProxy::GetApkFileHandle(const std::string &path, const std::strin
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::AppFileReadys(const std::vector<std::string> &fileNames, const std::vector<int> &fds,
-    const std::vector<int> &errCodes)
+ErrCode ServiceProxy::AppFileReadys(const BStringRawData &fileNames, const std::vector<int> &fds,
+    const std::vector<int32_t> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
  
-ErrCode ServiceProxy::AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
-    const std::vector<int> &errCodes)
+ErrCode ServiceProxy::AppFileReadysWithoutFd(const BStringRawData &fileNames, const std::vector<int32_t> &errCodes)
 {
     return BError(BError::Codes::OK);
 }
  
 ErrCode ServiceProxy::GetIncrementalFileHandles(
-    const std::string &bundleName, const std::vector<std::string> &fileNames)
+    const std::string &bundleName, const BStringRawData &fileNames)
 {
     return BError(BError::Codes::OK);
 }

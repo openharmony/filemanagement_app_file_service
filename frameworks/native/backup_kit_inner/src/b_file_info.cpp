@@ -16,6 +16,8 @@
 #include "backup_file_info.h"
 
 #include "filemgmt_libhilog.h"
+#include "message_parcel.h"
+#include <sstream>
 
 namespace OHOS {
 namespace FileManagement {
@@ -50,6 +52,130 @@ BFileInfo *BFileInfo::Unmarshalling(Parcel &parcel)
         return result.release();
     } catch (const bad_alloc &e) {
         HILOGE("Failed to unmarshall BFileInfo because of %{public}s", e.what());
+    }
+    return nullptr;
+}
+
+int FileOpenResult::GetReleasedFd() const
+{
+    return fd ? fd->Release() : -1;
+}
+
+int FileOpenResult::GetReleasedManifestFd() const
+{
+    return manifestFd ? manifestFd->Release() : -1;
+}
+
+std::string FileOpenResult::ToString()
+{
+    std::ostringstream oss;
+    oss << "FileOpenResult { "
+        << "errCode=" << errCode << ", "
+        << "fd=" << (fd ? fd->Get() : -1) << ", "
+        << "manifestFd=" << (manifestFd ? manifestFd->Get() : -1) << " }";
+    return oss.str();
+}
+
+bool FileOpenResult::Marshalling(Parcel &parcel) const
+{
+    auto messageParcel = static_cast<MessageParcel *>(&parcel);
+    if (!messageParcel) {
+        HILOGE("Failed to cast parcel to MessageParcel");
+        return false;
+    }
+
+    if (!messageParcel->WriteInt32(errCode)) {
+        HILOGE("Failed to write error code: %d", errCode);
+        return false;
+    }
+
+    int isMainFdValid = (fd != nullptr && fd->Get() >= 0) ? 1 : 0;
+    if (!messageParcel->WriteInt32(isMainFdValid)) {
+        HILOGE("Failed to write main file descriptor validity");
+        return false;
+    }
+    if (isMainFdValid) {
+        if (!messageParcel->WriteFileDescriptor(fd->Get())) {
+            HILOGE("Failed to write main file descriptor: fd=%d", fd->Get());
+            return false;
+        }
+    }
+
+    int isManifestFdValid = (manifestFd != nullptr && manifestFd->Get() >= 0) ? 1 : 0;
+    if (!messageParcel->WriteInt32(isManifestFdValid)) {
+        HILOGE("Failed to write manifest file descriptor validity");
+        return false;
+    }
+    if (isManifestFdValid) {
+        if (!messageParcel->WriteFileDescriptor(manifestFd->Get())) {
+            HILOGE("Failed to write manifest file descriptor: fd=%d", manifestFd->Get());
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool FileOpenResult::ReadFromParcel(Parcel &parcel)
+{
+    auto messageParcel = static_cast<MessageParcel *>(&parcel);
+    if (!messageParcel) {
+        HILOGE("Failed to cast parcel to MessageParcel");
+        return false;
+    }
+
+    if (!messageParcel->ReadInt32(errCode)) {
+        HILOGE("Failed to read error code from parcel");
+        return false;
+    }
+
+    int mainFdVal = -1;
+    int isMainFdValid = 0;
+    if (!messageParcel->ReadInt32(isMainFdValid)) {
+        HILOGE("Failed to read main file descriptor validity");
+        return false;
+    }
+    if (isMainFdValid) {
+        mainFdVal = messageParcel->ReadFileDescriptor();
+        if (mainFdVal < 0) {
+            HILOGE("Failed to read main file descriptor from parcel");
+            return false;
+        }
+        fd = std::make_shared<UniqueFd>(mainFdVal);
+    } else {
+        fd = nullptr;
+    }
+
+    int manifestFdVal = -1;
+    int isManifestFdValid = 0;
+    if (!messageParcel->ReadInt32(isManifestFdValid)) {
+        HILOGE("Failed to read manifest file descriptor validity");
+        return false;
+    }
+    if (isManifestFdValid) {
+        manifestFdVal = messageParcel->ReadFileDescriptor();
+        if (manifestFdVal < 0) {
+            HILOGE("Failed to read manifest file descriptor from parcel");
+            return false;
+        }
+        manifestFd = std::make_shared<UniqueFd>(manifestFdVal);
+    } else {
+        manifestFd = nullptr;
+    }
+
+    return true;
+}
+
+FileOpenResult *FileOpenResult::Unmarshalling(Parcel &parcel)
+{
+    try {
+        auto result = make_unique<FileOpenResult>();
+        if (!result->ReadFromParcel(parcel)) {
+            return nullptr;
+        }
+        return result.release();
+    } catch (const bad_alloc &e) {
+        HILOGE("Failed to unmarshall FileOpenResult because of %{public}s", e.what());
     }
     return nullptr;
 }

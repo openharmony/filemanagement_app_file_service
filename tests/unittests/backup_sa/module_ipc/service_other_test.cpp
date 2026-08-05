@@ -159,7 +159,7 @@ ErrCode Service::IncrementalBackupSA(std::string bundleName)
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const std::vector<std::string> &fileNames)
+ErrCode Service::GetIncrementalFileHandles(const std::string &bundleName, const BStringRawData &fileNames)
 {
     return BError(BError::Codes::OK);
 }
@@ -995,7 +995,7 @@ HWTEST_F(ServiceTest, SUB_Service_SetCurrentSessProperties_0100, TestSize.Level1
         service->SetCurrentSessProperties(info, bundleSettingInfos, bundleNameIndexInfo);
 
         info = BJsonEntityCaps::BundleInfo {BUNDLE_NAME, 0, {}, {}, 0, 0, true, false, false, BUNDLE_NAME};
-        bundleSettingInfos = {{BUNDLE_NAME, {true, 0, false, 500}}};
+        bundleSettingInfos = {{BUNDLE_NAME, {true, 0, false, {}, 500}}};
         service->SetCurrentSessProperties(info, bundleSettingInfos, bundleNameIndexInfo);
     } catch (...) {
         EXPECT_TRUE(false);

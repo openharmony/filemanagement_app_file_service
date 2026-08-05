@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <unique_fd.h>
 
 #include "parcel.h"
 
@@ -38,6 +39,34 @@ struct BFileInfo : public Parcelable {
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
     static BFileInfo *Unmarshalling(Parcel &parcel);
+};
+
+struct FileOpenResult : public Parcelable {
+    int32_t errCode = 0;
+    std::shared_ptr<UniqueFd> fd;
+    std::shared_ptr<UniqueFd> manifestFd;
+
+    FileOpenResult() : errCode(0), fd(nullptr), manifestFd(nullptr) {}
+    explicit FileOpenResult(int32_t errCode) : errCode(errCode), fd(nullptr), manifestFd(nullptr) {}
+    FileOpenResult(int32_t errCode, UniqueFd fd)
+        : errCode(errCode), fd(std::make_shared<UniqueFd>(std::move(fd))), manifestFd(nullptr)
+    {
+    }
+    FileOpenResult(int32_t errCode, UniqueFd fd, UniqueFd manifestFd)
+        : errCode(errCode),
+          fd(std::make_shared<UniqueFd>(std::move(fd))),
+          manifestFd(std::make_shared<UniqueFd>(std::move(manifestFd)))
+    {
+    }
+    ~FileOpenResult() override = default;
+
+    int GetReleasedFd() const;
+    int GetReleasedManifestFd() const;
+    std::string ToString();
+
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static FileOpenResult *Unmarshalling(Parcel &parcel);
 };
 } // namespace OHOS::FileManagement::Backup
 

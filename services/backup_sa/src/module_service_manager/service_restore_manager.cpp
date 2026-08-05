@@ -135,6 +135,7 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
         if (iterSet != bundleSettingInfos.end()) {
             session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+            session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
         }
         StrategyContext context;
@@ -236,7 +237,7 @@ ErrCode Service::PublishDefaultIncrementalFile(const BFileInfo &fileInfo)
     HILOGI("Start Default publish, bundleName:%{public}s", fileInfo.owner.c_str());
     if (!fileInfo.fileName.empty()) {
         HILOGE("Forbid to use PublishIncrementalFile with fileName for App");
-        return EPERM;
+        return BError(BError::Codes::SA_INVAL_ARG);
     }
     if (session_ == nullptr) {
         HILOGE("session is empty, bundleName:%{public}s", fileInfo.owner.c_str());

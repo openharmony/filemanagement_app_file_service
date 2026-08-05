@@ -673,7 +673,8 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_ParsePaxBlock_0100, testing::ext::TestSiz
         if (readCnt < BLOCK_SIZE) {
             throw BError(errno);
         }
-        auto res = UntarFile::GetInstance().ParsePaxBlock();
+        FileStatInfo info;
+        auto res = UntarFile::GetInstance().ParsePaxBlock(info);
         fclose(UntarFile::GetInstance().tarFilePtr_);
         UntarFile::GetInstance().tarFilePtr_ =nullptr;
         EXPECT_EQ(std::get<FIRST_PARAM>(res), 0);
@@ -712,7 +713,8 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_ParsePaxBlock_0200, testing::ext::TestSiz
         if (readCnt < BLOCK_SIZE) {
             throw BError(errno);
         }
-        auto [res, longName] = UntarFile::GetInstance().ParsePaxBlock();
+        FileStatInfo info;
+        auto [res, longName] = UntarFile::GetInstance().ParsePaxBlock(info);
         fclose(UntarFile::GetInstance().tarFilePtr_);
         UntarFile::GetInstance().tarFilePtr_ =nullptr;
         EXPECT_EQ(res, 0);
@@ -751,7 +753,8 @@ HWTEST_F(UntarFileTest, SUB_Untar_File_ParsePaxBlock_0300, testing::ext::TestSiz
         if (readCnt < BLOCK_SIZE) {
             throw BError(errno);
         }
-        auto [res, longName] = UntarFile::GetInstance().ParsePaxBlock();
+        FileStatInfo info;
+        auto [res, longName] = UntarFile::GetInstance().ParsePaxBlock(info);
         fclose(UntarFile::GetInstance().tarFilePtr_);
         UntarFile::GetInstance().tarFilePtr_ =nullptr;
         EXPECT_EQ(res, 0);

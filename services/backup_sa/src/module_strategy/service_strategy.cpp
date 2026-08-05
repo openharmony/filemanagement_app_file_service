@@ -25,6 +25,7 @@
 
 namespace OHOS::FileManagement::Backup {
 
+static StrategyRegistrar g_strategyRegistrar;
 namespace {
 const std::string BROADCAST_TYPE = "broadcast";
 const std::string UNICAST_TYPE = "unicast";
@@ -144,8 +145,8 @@ void RestoreExtraPropertyStrategy::Execute(StrategyContext &context)
     BJsonUtil::BundleDetailInfo uniCastInfo;
     if (BJsonUtil::FindBundleInfoByName(*context.bundleNameDetailMap,
         context.bundleNameIndexInfo, UNICAST_TYPE, uniCastInfo)) {
-        HILOGI("current bundle:%{public}s, unicast info:%{public}s",
-            context.bundleNameIndexInfo.c_str(), GetAnonyString(uniCastInfo.detail).c_str());
+        HILOGI("current bundle:%{public}s, unicast info:%{public}s, unicast info size:%{public}zu",
+            context.bundleNameIndexInfo.c_str(), GetAnonyString(uniCastInfo.detail).c_str(), uniCastInfo.detail.size());
         ptr->SetBackupExtInfo(context.bundleNameIndexInfo, uniCastInfo.detail);
     }
 }

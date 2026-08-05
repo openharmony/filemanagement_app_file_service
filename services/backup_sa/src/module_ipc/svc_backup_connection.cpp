@@ -28,7 +28,6 @@
 namespace OHOS::FileManagement::Backup {
 constexpr int WAIT_TIME = 3;
 constexpr int32_t INDEX = 3;
-const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 using namespace std;
 
 void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &element,
@@ -56,15 +55,6 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
     std::stringstream strTime;
     strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
         << (std::setw(INDEX)) << (ms.count() % SECOND_TO_MS);
-    HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-        FILE_BACKUP_EVENTS,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        "PROC_NAME", "ohos.appfileservice",
-        "BUNDLENAME", bundleName,
-        "PID", getpid(),
-        "TIME", strTime.str()
-    );
     if (bundleNameIndexInfo_.find(bundleName) == string::npos) {
         HILOGE("Current bundle name is wrong, bundleNameIndexInfo:%{public}s, bundleName:%{public}s",
             bundleNameIndexInfo_.c_str(), bundleName.c_str());

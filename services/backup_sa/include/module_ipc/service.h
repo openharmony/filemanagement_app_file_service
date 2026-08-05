@@ -70,7 +70,7 @@ public:
         const std::string &filePath, UniqueFd fd, int32_t errCode);
     ErrCode AppFileReadyWithoutFd(const std::string &fileName, int32_t errCode) override;
     ErrCode DefaultAppFileReadyWithoutFd(const std::string &fileName, const std::string &filePath, int32_t errCode);
-    ErrCode AppFileReadys(const std::vector<std::string> &fileNames,
+    ErrCode AppFileReadys(const BStringRawData &fileNamesRD,
         const std::vector<int> &fds, const std::vector<int> &errCodes) override;
     ErrCode AppFileReadyWithoutFd(const std::string &fileName, const std::string &filePath,
         UniqueFd fd, int32_t errCode);
@@ -86,7 +86,7 @@ public:
         BizScene &scene);
     
     ErrCode AppAncoFileReady(const std::string &fileName, const std::string &filePath, bool needDelete) override;
-    ErrCode AppFileReadysWithoutFd(const std::vector<std::string> &abnormalfileNames,
+    ErrCode AppFileReadysWithoutFd(const BStringRawData &abnormalfileNamesRD,
                                    const std::vector<int> &errCodes) override;
     ErrCode AppDone(ErrCode errCode) override;
     ErrCode AppDone(ErrCode errCode, const std::string &bundleName);
@@ -128,7 +128,7 @@ public:
     ErrCode AppIncrementalDone(ErrCode errCode) override;
     ErrCode GetIncrementalFileHandle(const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetIncrementalFileHandles(const std::string &bundleName,
-                                      const std::vector<std::string> &fileNames) override;
+                                      const BStringRawData &fileNamesRD) override;
     ErrCode GetBackupInfo(const BundleName &bundleName, std::string &result) override;
     ErrCode UpdateTimer(const BundleName &bundleName, uint32_t timeout, bool &result) override;
     ErrCode UpdateSendRate(const std::string &bundleName, int32_t sendRate, bool &result) override;
@@ -141,21 +141,9 @@ public:
     ErrCode SAResultReport(const std::string bundleName, const std::string resultInfo,
                            const ErrCode errCode, const BackupRestoreScenario sennario);
     void StartGetFdTask(std::string bundleName, wptr<Service> ptr);
-    void IncrementalRestoreOnFileReadys(const std::string &bundleName,
-        const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
-        const std::vector<UniqueFd> &manifestfdList, const std::vector<int32_t> &errCodes);
-    void IncrementalRestoreOnFileReadysWithoutRp(const std::string &bundleName,
-        const std::vector<std::string> &fileNames, const std::vector<UniqueFd> &fdList,
-        const std::vector<int32_t> &errCodes);
     ErrCode AppIncrementalFileReadys(const std::string &bundleName,
                                      const std::vector<std::string> &fileNames,
-                                     const std::vector<UniqueFd> &fdList,
-                                     const std::vector<UniqueFd> &manifestfdList,
-                                     const std::vector<int32_t> &errCodes);
-    ErrCode AppIncrementalFileReadysWithoutRp(const std::string &bundleName,
-                                     const std::vector<std::string> &fileNames,
-                                     const std::vector<UniqueFd> &fdList,
-                                     const std::vector<int32_t> &errCodes);
+                                     const std::vector<FileOpenResult> &openResults);
     ErrCode GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrementalData>& bundleNameList) override;
     ErrCode CleanBundleTempDir(const std::string &bundleName) override;
     ErrCode HandleExtDisconnect(BackupRestoreScenario scenario, bool isAppResultReport, ErrCode errCode) override;
@@ -176,9 +164,9 @@ public:
     ErrCode StartAncoUnPacket(const std::string &rootPath) override;
     ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) override;
-    ErrCode StartAncoMove(int &fd, AncoRestoreResult &ancoRestoreRes) override;
     ErrCode MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd) override;
+    ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) override;
     // 以下都是非IPC接口
 public:
     void OnStart() override;
@@ -393,6 +381,9 @@ public:
     ErrCode SendFileHandle(const std::string &bundleName, const std::string &fileName);
     ErrCode SendIncrementalFileHandle(const std::string &bundleName, const std::string &fileName);
     ErrCode SendIncrementalFileHandles(const std::string &bundleName, const vector<std::string> &fileNames);
+    std::function<void()> CreateIncrementalFileHandlesTask(const std::string &bundleName,
+                                                           const std::vector<std::string> &fileNames,
+                                                           sptr<IExtension> proxy);
     void SetExtOnRelease(const BundleName &bundleName, bool isOnRelease);
     void RemoveExtOnRelease(const BundleName &bundleName);
     void ClearAndNoticeClient(const std::string &bundleName, ErrCode errCode, bool checkRestoreEnd = true);
@@ -488,6 +479,7 @@ public:
         sendScannendResultThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
         getDataSizeThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
         callbackScannedInfoThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
+        getFileHandlesThreadPool_.Start(BConstants::SA_THREAD_POOL_COUNT);
         session_ = sptr<SvcSessionManager>(new SvcSessionManager(wptr(this)));
         disposal_ = make_shared<BJsonDisposalConfig>();
         clearRecorder_ = make_shared<BJsonClearDataConfig>();
@@ -502,6 +494,7 @@ public:
         sendScannendResultThreadPool_.Stop();
         getDataSizeThreadPool_.Stop();
         callbackScannedInfoThreadPool_.Stop();
+        getFileHandlesThreadPool_.Stop();
     };
 
 private:
@@ -866,7 +859,9 @@ private:
     ErrCode ProcessReadyFiles(const std::vector<std::string> &fileNames,
                               const std::vector<int> &errCodes,
                               const std::string &callerName);
-    ErrCode SendIncrementalFileHandlesByEnhance(const std::string &bundleName, const vector<std::string> &fileNames);
+    ErrCode SendIncrementalFileHandlesByEnhance(const std::string &bundleName,
+                                                const vector<std::string> &fileNames,
+                                                std::vector<FileOpenResult> &openResults);
 private:
     static sptr<Service> instance_;
     static std::mutex instanceLock_;
@@ -932,6 +927,7 @@ public:
     std::mutex migrateInstanceLock_;
     RestoreTypeEnum restoreType_ = RestoreTypeEnum::RESTORE_DATA_WAIT_SEND;
     std::string oldBackupVersion_ = "";
+    OHOS::ThreadPool getFileHandlesThreadPool_;
 };
 } // namespace OHOS::FileManagement::Backup
 

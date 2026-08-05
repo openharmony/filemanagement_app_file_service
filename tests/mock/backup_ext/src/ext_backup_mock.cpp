@@ -165,6 +165,11 @@ bool ExtBackup::GetSupportWithoutTar() const
 {
     return BExtBackup::extBackup->GetSupportWithoutTar();
 }
+
+std::vector<std::string> ExtBackup::GetExcludeInfos() const
+{
+    return BExtBackup::extBackup->GetExcludeInfos();
+}
  
 int32_t ExtBackup::GetBatchSize() const
 {

@@ -286,6 +286,8 @@ std::vector<ExtManageInfo> BJsonEntityExtManage::GetExtManageInfo() const
         string fileName = item.isMember("fileName") && item["fileName"].isString() ? item["fileName"].asString() : "";
         bool isUserTar = item.isMember("isUserTar") && item["isUserTar"].isBool() ? item["isUserTar"].asBool() : false;
         bool isBigFile = item.isMember("isBigFile") && item["isBigFile"].isBool() ? item["isBigFile"].asBool() : false;
+        bool isLongPath =
+            item.isMember("isLongPath") && item["isLongPath"].isBool() ? item["isLongPath"].asBool() : false;
         // 兼容旧版本没有isBigFile属性时,增加判断是否为bigFile
         if (!item.isMember("isBigFile") && fileName != "" && ExtractFileExt(fileName) != "tar") {
             isBigFile = true;
@@ -294,7 +296,8 @@ std::vector<ExtManageInfo> BJsonEntityExtManage::GetExtManageInfo() const
                isUserTar, isBigFile);
         if (!fileName.empty()) {
             ExtManageInfo info = {
-                .hashName = fileName, .fileName = path, .sta = sta, .isUserTar = isUserTar, .isBigFile = isBigFile};
+                .hashName = fileName, .fileName = path, .sta = sta, .isUserTar = isUserTar, .isBigFile = isBigFile,
+                .isLongPath = isLongPath};
             infos.emplace_back(info);
         }
     }
