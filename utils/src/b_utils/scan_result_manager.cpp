@@ -245,6 +245,11 @@ void ScanResultManager::SetCompletedFlag(bool isCompleted)
     }
 }
 
+void ScanResultManager::SetCallerBundleName(const std::string& callerBundleName)
+{
+    callerBundleName_ = callerBundleName;
+}
+
 void ScanResultManager::WaitForFiles()
 {
     std::unique_lock<std::mutex> lock(mutexLock_);

@@ -130,6 +130,8 @@ public:
 
     void SetCompletedFlag(bool value);
 
+    void SetCallerBundleName(const std::string& callerBundleName);
+
     void WaitForFiles();
     void WaitForCompleted();
 
@@ -155,6 +157,7 @@ public:
     std::mutex mutexPacket_;
     std::condition_variable waitPacketFlag_;
     std::mutex allFileMutex_;
+    std::string callerBundleName_;
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SCAN_RESULT_MANAGER_H

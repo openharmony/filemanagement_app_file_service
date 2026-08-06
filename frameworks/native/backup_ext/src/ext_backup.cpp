@@ -196,10 +196,6 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         supportWithoutTar_ = want.GetBoolParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, false);
         excludeInfos_ = want.GetStringArrayParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA);
         batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, DEFAULT_BATCH_SIZE);
-        HILOGI(
-            "backupExtInfo_ is %{public}s, backupScene_ is %{public}s, supportWithoutTar_ is %{public}d, batchSize_ is "
-            "%{public}d",
-            backupExtInfo_.c_str(), backupScene_.c_str(), supportWithoutTar_, batchSize_);
         nlohmann::json j = nlohmann::json::parse(backupExtInfo_, nullptr, false);
         if (j.is_discarded()) {
             HILOGE("Parse json file path failed, backupExtInfo_ is %{public}s, backupScene_ is %{public}s,"
@@ -221,8 +217,10 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
             backupExtInfo_.c_str(), backupScene_.c_str(), ancoFileListClone_.c_str(),
             fileManagerFileListClone_.c_str());
     }
+    callerBundleName_ = want.GetStringParam(BConstants::EXTENSION_CALLER_BUNDLE_NAME_PARA);
     /* backup don't need parament. */
-    HILOGI("supportWithoutTar_ is %{public}d batchSize_ is %{public}d", supportWithoutTar_, batchSize_);
+    HILOGI("supportWithoutTar_ is %{public}d, batchSize_ is %{public}d, callerBundleName is %{public}s",
+        supportWithoutTar_, batchSize_, callerBundleName_.c_str());
     return ERR_OK;
 }
 
@@ -398,5 +396,10 @@ std::vector<std::string> ExtBackup::GetExcludeInfos() const
 int32_t ExtBackup::GetBatchSize() const
 {
     return batchSize_;
+}
+
+std::string ExtBackup::GetCallerBundleName() const
+{
+    return callerBundleName_;
 }
 } // namespace OHOS::FileManagement::Backup
