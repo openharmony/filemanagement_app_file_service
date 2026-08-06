@@ -46,5 +46,6 @@ ohos_fuzztest("FileShareFuzzTest") {
     "access_token:libnativetoken",
     "access_token:libnativetoken_shared",
     "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_static"
   ]
 }
