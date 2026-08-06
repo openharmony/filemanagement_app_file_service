@@ -383,7 +383,7 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         }
         RefreshBundleIncrementalData(installedBundle.name, bundleNames, extraIncreData);
     }
-    HILOGI("Incremental bundle scan finished, scanned count:%{public}lu, skipped count:%{public}lu",
+    HILOGI("Incremental bundle scan finished, scanned count:%{public}zu, skipped count:%{public}zu",
         installedBundles.size(), skippedBundleCount);
     auto bundleInfosNew = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, userId);
     auto bundleInfosSA = BundleMgrAdapter::GetBundleInfosForSA();
