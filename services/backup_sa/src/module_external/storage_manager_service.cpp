@@ -491,8 +491,13 @@ std::tuple<bool, bool> StorageManagerService::CheckIfDirForIncludes(const std::s
     }
     // check whether the path exists
     struct stat fileStatInfo = {0};
-    if (stat(path.c_str(), &fileStatInfo) != 0) {
-        HILOGD("call stat error %{private}s, errno:%{public}d", GetAnonyPath(path).c_str(), errno);
+    if (lstat(path.c_str(), &fileStatInfo) != 0) {
+        HILOGD("call lstat error %{private}s, errno:%{public}d", GetAnonyPath(path).c_str(), errno);
+        return {false, false};
+    }
+    // exclude links file
+    if (S_ISLNK(fileStatInfo.st_mode)) {
+        HILOGI("Skip symbolic link %{private}s", GetAnonyPath(path).c_str());
         return {false, false};
     }
     if (S_ISDIR(fileStatInfo.st_mode)) {
@@ -558,9 +563,13 @@ bool StorageManagerService::GetIncludesFileStats(const std::string &dir, BundleS
             }
             std::string path = filePath + entry->d_name;
             struct stat fileInfo = {0};
-            if (stat(path.c_str(), &fileInfo) != 0) {
-                HILOGE("call stat error %{private}s, errno:%{public}d", GetAnonyPath(path).c_str(), errno);
-                fileInfo.st_size = 0;
+            if (lstat(path.c_str(), &fileInfo) != 0) {
+                HILOGE("call lstat error %{private}s, errno:%{public}d", GetAnonyPath(path).c_str(), errno);
+                continue;
+            }
+            if (S_ISLNK(fileInfo.st_mode)) {
+                HILOGI("Skip symbolic link %{private}s", GetAnonyPath(path).c_str());
+                continue;
             }
             struct FileStat fileStat = {};
             fileStat.filePath = PhysicalToSandboxPath(dir, sandboxDir, path);
@@ -571,7 +580,7 @@ bool StorageManagerService::GetIncludesFileStats(const std::string &dir, BundleS
             int64_t lastUpdateTime = static_cast<int64_t>(fileInfo.st_mtime);
             fileStat.lastUpdateTime = lastUpdateTime;
             fileStat.isIncre = (paras.lastBackupTime == 0 || lastUpdateTime > paras.lastBackupTime) ? true : false;
-            if (entry->d_type == DT_DIR) {
+            if (S_ISDIR(fileInfo.st_mode)) {
                 fileStat.isDir = true;
                 folderStack.push(path);
             }
