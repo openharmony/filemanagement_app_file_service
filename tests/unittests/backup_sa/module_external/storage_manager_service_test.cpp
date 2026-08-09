@@ -546,7 +546,8 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPat
     struct stat rootStat = {0};
     ASSERT_EQ(lstat(testRoot.c_str(), &rootStat), 0);
 
-    BundleStatsParas paras = {.userId = 100, .bundleName = MMS_BUNDLENAME,
+    std::string bundleName = MMS_BUNDLENAME;
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
         .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
     std::vector<std::string> includes = {testRoot.string()};
     std::vector<std::string> excludes;

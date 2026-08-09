@@ -528,15 +528,30 @@ std::tuple<bool, bool> StorageManagerService::CheckIfDirForIncludes(const std::s
     }
 }
 
+static bool GetFileInfoWithoutLink(const std::string &path, struct stat &fileInfo)
+{
+    if (lstat(path.c_str(), &fileInfo) != 0) {
+        HILOGE("call lstat error %{private}s, errno:%{public}d", GetAnonyPath(path).c_str(), errno);
+        return false;
+    }
+    if (S_ISLNK(fileInfo.st_mode)) {
+        HILOGI("Skip symbolic link %{private}s", GetAnonyPath(path).c_str());
+        return false;
+    }
+    return true;
+}
+
+static std::string GetSandboxDir(const std::string &dir, const std::map<std::string, std::string> &pathMap)
+{
+    auto it = pathMap.find(dir);
+    return it == pathMap.end() ? dir : it->second;
+}
+
 bool StorageManagerService::GetIncludesFileStats(const std::string &dir, BundleStatsParas &paras,
     std::map<std::string, std::string> &pathMap,
     std::ofstream &statFile, std::map<std::string, bool> &excludesMap)
 {
-    std::string sandboxDir = dir;
-    auto it = pathMap.find(dir);
-    if (it != pathMap.end()) {
-        sandboxDir = it->second;
-    }
+    std::string sandboxDir = GetSandboxDir(dir, pathMap);
     // stat current directory info
     AddOuterDirIntoFileStat(dir, paras, sandboxDir, statFile, excludesMap);
 
@@ -563,12 +578,7 @@ bool StorageManagerService::GetIncludesFileStats(const std::string &dir, BundleS
             }
             std::string path = filePath + entry->d_name;
             struct stat fileInfo = {0};
-            if (lstat(path.c_str(), &fileInfo) != 0) {
-                HILOGE("call lstat error %{private}s, errno:%{public}d", GetAnonyPath(path).c_str(), errno);
-                continue;
-            }
-            if (S_ISLNK(fileInfo.st_mode)) {
-                HILOGI("Skip symbolic link %{private}s", GetAnonyPath(path).c_str());
+            if (!GetFileInfoWithoutLink(path, fileInfo)) {
                 continue;
             }
             struct FileStat fileStat = {};
