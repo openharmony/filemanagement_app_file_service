@@ -178,6 +178,7 @@ BConstants::ExtensionAction ExtBackup::VerifyAndGetAction(const AAFwk::Want &wan
 
 ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
 {
+    callerBundleName_ = want.GetStringParam(BConstants::EXTENSION_CALLER_BUNDLE_NAME_PARA);
     if (extAction_ == BConstants::ExtensionAction::RESTORE) {
         appVersionStr_ = want.GetStringParam(BConstants::EXTENSION_VERSION_NAME_PARA);
         appVersionCode_ = want.GetLongParam(BConstants::EXTENSION_VERSION_CODE_PARA, 0);
@@ -217,9 +218,8 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
             backupExtInfo_.c_str(), backupScene_.c_str(), ancoFileListClone_.c_str(),
             fileManagerFileListClone_.c_str());
     }
-    callerBundleName_ = want.GetStringParam(BConstants::EXTENSION_CALLER_BUNDLE_NAME_PARA);
     /* backup don't need parament. */
-    HILOGI("supportWithoutTar_ is %{public}d, batchSize_ is %{public}d, callerBundleName is %{public}s",
+    HILOGI("supportWithoutTar_ is %{public}d, batchSize_ is %{public}d, callerBundleName_ is %{public}s",
         supportWithoutTar_, batchSize_, callerBundleName_.c_str());
     return ERR_OK;
 }
