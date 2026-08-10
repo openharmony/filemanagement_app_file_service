@@ -41,6 +41,7 @@ static inline const char *EXTENSION_BACKUP_SCENE_PARA = "backupScene";
 static inline const char *EXTENSION_SUPPORT_WITHOUT_TAR_PARA = "supportWithoutTar";
 static inline const char *EXTENSION_EXCLUDE_INFOS_PARA = "excludeInfos";
 static inline const char *EXTENSION_BATCH_SIZE_PARA = "batchSize";
+static inline const char *EXTENSION_CALLER_BUNDLE_NAME_PARA = "callerBundleName";
 
 enum class ExtensionAction {
     INVALID = 0,

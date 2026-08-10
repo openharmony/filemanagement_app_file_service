@@ -630,6 +630,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, session_->GetSupportWithoutTar(bundleName));
     want.SetParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA, session_->GetExcludeInfos(bundleName));
     want.SetParam(BConstants::EXTENSION_BATCH_SIZE_PARA, session_->GetBatchSize(bundleName));
+    want.SetParam(BConstants::EXTENSION_CALLER_BUNDLE_NAME_PARA, GetCallerName());
 }
 
 std::vector<std::string> Service::GetSupportBackupBundleNames(vector<BJsonEntityCaps::BundleInfo> &backupInfos,

@@ -882,6 +882,8 @@ ErrCode BackupExtExtension::HandleBackup(bool isClearData)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     SetClearDataFlag(isClearData);
+    std::string callerBundleName = extension_ ? extension_->GetCallerBundleName() : "";
+    SetCallerBundleName(callerBundleName);
     if (!IfAllowToBackupRestore()) {
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
@@ -2210,6 +2212,8 @@ ErrCode BackupExtExtension::HandleRestore(bool isClearData)
     try {
         VerifyCaller();
         SetClearDataFlag(isClearData);
+        std::string callerBundleName = extension_ ? extension_->GetCallerBundleName() : "";
+        SetCallerBundleName(callerBundleName);
         if (extension_ == nullptr) {
             HILOGE("Failed to handle restore, extension is nullptr");
             return BError(BError::Codes::EXT_INVAL_ARG, "Extension is nullptr").GetCode();

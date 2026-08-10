@@ -232,11 +232,13 @@ private:
     bool supportWithoutTar_ {false};
     std::vector<std::string> excludeInfos_;
     int32_t batchSize_ {500};
+    std::string callerBundleName_;
     
 public:
     bool GetSupportWithoutTar() const;
     std::vector<std::string> GetExcludeInfos() const;
     int32_t GetBatchSize() const;
+    std::string GetCallerBundleName() const;
 };
 } // namespace OHOS::FileManagement::Backup
 

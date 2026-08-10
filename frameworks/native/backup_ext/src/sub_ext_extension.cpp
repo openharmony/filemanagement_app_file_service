@@ -113,6 +113,8 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
     SetSupportWithoutTar(isSupportWithoutTar);
     int32_t batchSize = extension_ ? extension_->GetBatchSize() : 0;
     SetBatchSize(batchSize);
+    std::string callerBundleName = extension_ ? extension_->GetCallerBundleName() : "";
+    SetCallerBundleName(callerBundleName);
     if (!IfAllowToBackupRestore()) {
         return BError(BError::Codes::EXT_FORBID_BACKUP_RESTORE, "Application does not allow backup or restore")
             .GetCode();
@@ -190,7 +192,18 @@ int32_t BackupExtExtension::GetBatchSize() const
 {
     return batchSize_;
 }
+
+void BackupExtExtension::SetCallerBundleName(const std::string& callerBundleName)
+{
+    callerBundleName_ = callerBundleName;
+    ScanFileSingleton::GetInstance().SetCallerBundleName(callerBundleName);
+    HILOGI("set callerBundleName:%{public}s", callerBundleName.c_str());
+}
  
+std::string BackupExtExtension::GetCallerBundleName() const
+{
+    return callerBundleName_;
+}
 
 string BackupExtExtension::GetBundlePath()
 {

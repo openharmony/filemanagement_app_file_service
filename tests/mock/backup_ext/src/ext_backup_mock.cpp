@@ -175,4 +175,9 @@ int32_t ExtBackup::GetBatchSize() const
 {
     return BExtBackup::extBackup->GetBatchSize();
 }
+
+std::string ExtBackup::GetCallerBundleName() const
+{
+    return BExtBackup::extBackup->GetCallerBundleName();
+}
 } // namespace OHOS::FileManagement::Backup
