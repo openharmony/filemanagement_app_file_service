@@ -451,7 +451,9 @@ tuple<ErrCode, int64_t, int64_t> DefaultAppScanner::ScanDir(const string &backup
             continue;
         }
         if (IsEmptyDirectory(currentPath)) {
-            ctx.resultManager->AddSmallFile(StringUtils::PathAddDelimiter(currentPath), 0);
+            if (ctx.resultManager != nullptr) {
+                ctx.resultManager->AddSmallFile(StringUtils::PathAddDelimiter(currentPath), 0);
+            }
             continue;
         }
         unique_ptr<DIR, function<void(DIR *)>> dir = {opendir(currentPath.c_str()), closedir};
