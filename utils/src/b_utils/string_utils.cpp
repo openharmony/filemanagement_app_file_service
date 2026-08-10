@@ -335,7 +335,7 @@ std::string StringUtils::RemoveTrailingSlash(const std::string &path)
 
 std::string StringUtils::GetFileName(const std::string& filePath)
 {
-    size_t lastSlashPos = filePath.find_last_of("/\\");
+    size_t lastSlashPos = filePath.find_last_of("/");
     if (lastSlashPos == std::string::npos) {
         return filePath;
     }
@@ -344,7 +344,7 @@ std::string StringUtils::GetFileName(const std::string& filePath)
 
 bool StringUtils::IsPathWithDirectory(const std::string& filePath)
 {
-    size_t lastSlashPos = filePath.find_last_of("/\\");
+    size_t lastSlashPos = filePath.find_last_of("/");
     return (lastSlashPos != std::string::npos);
 }
 } // namespace OHOS::FileManagement::Backup

@@ -444,6 +444,10 @@ void MigrateManager::HandleCurBundleEndWork(std::string bundleName, const Backup
             scenario != BackupType::INCREMENTAL_RESTORE) {
             return;
         }
+        if (servicePtr_ == nullptr || servicePtr_->session_ == nullptr) {
+            HILOGE("servicePtr_ or session_ is null");
+            return;
+        }
         if (servicePtr_->session_->OnBundleFileReady(bundleName)) {
             std::lock_guard<std::mutex> lock(bundleEndLock_);
             servicePtr_->session_->StopFwkTimer(bundleName);

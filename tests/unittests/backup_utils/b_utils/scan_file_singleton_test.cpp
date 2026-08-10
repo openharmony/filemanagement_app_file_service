@@ -21,6 +21,7 @@
 #include <file_ex.h>
 #include <gtest/gtest.h>
 
+#include "b_resources/b_constants.h"
 #include "b_utils/scan_result_manager.h"
 #include "b_utils/scan_file_singleton.h"
 #include "test_manager.h"
@@ -180,6 +181,7 @@ HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_001, testing::ext::TestSize.Le
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_001";
     GTEST_LOG_(INFO) << "1. test restorePath empty";
+    manager_.SetCallerBundleName(BConstants::BUNDLE_DATA_CLONE);
     std::string filePath = "abc/aaa/test1";
     std::string restorePath = "";
     struct stat sta = {};
@@ -223,6 +225,7 @@ HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_002, testing::ext::TestSize.Le
 HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_003, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_003";
+    manager_.SetCallerBundleName(BConstants::BUNDLE_DATA_CLONE);
     std::string filePath = "abc/aaa/test3.txt";
     std::string restorePath = "";
     struct stat sta = {};
@@ -265,6 +268,7 @@ HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_004, testing::ext::TestSize.Le
 HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_005, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_005";
+    manager_.SetCallerBundleName(BConstants::BUNDLE_DATA_CLONE);
     std::string filePath = "abc/aaa/test5.txt_anco_aaa";
     std::string restorePath = "";
     struct stat sta = {};
@@ -549,6 +553,7 @@ HWTEST_F(ScanResultManagerTest, ADD_ANCO_BIGFILE_TEST_002, testing::ext::TestSiz
     std::string restorePath = "";
     struct stat sta = {};
 
+    manager_.SetCallerBundleName(BConstants::BUNDLE_DATA_CLONE);
     manager_.AddAncoBigFile(filePath, restorePath, sta);
 
     auto fileInfo = manager_.GetFileInfo();
@@ -573,6 +578,7 @@ HWTEST_F(ScanResultManagerTest, ADD_ANCO_BIGFILE_TEST_003, testing::ext::TestSiz
     std::string restorePath = "";
     struct stat sta = {};
 
+    manager_.SetCallerBundleName(BConstants::BUNDLE_DATA_CLONE);
     manager_.AddAncoBigFile(filePath, restorePath, sta);
 
     auto fileInfo = manager_.GetFileInfo();

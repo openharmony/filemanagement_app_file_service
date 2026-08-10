@@ -514,6 +514,7 @@ private:
     bool isClearData_ {true};
     bool isSupportWithoutTar_ {false};
     int32_t batchSize_ {500};
+    std::string callerBundleName_;
     bool isDebug_ {true};
     std::map<std::string, off_t> endFileInfos_;
     std::map<std::string, std::vector<ErrCode>> errFileInfos_;
@@ -571,6 +572,8 @@ public:
     bool GetSupportWithoutTar() const;
     void SetBatchSize(int32_t batchSize);
     int32_t GetBatchSize() const;
+    void SetCallerBundleName(const std::string& callerBundleName);
+    std::string GetCallerBundleName() const;
     std::string cloneFileInfoDbPath_;
     std::string dbPath_;
 };
