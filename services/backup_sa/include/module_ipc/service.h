@@ -535,6 +535,12 @@ private:
     int32_t GetUserIdDefault();
 
     /**
+     * @brief 清理用户沙箱残留数据
+     *
+     */
+    void ClearBackupSaSandbox();
+
+    /**
      * @brief 验证调用者
      *
      * @param scenario Scenario状态
