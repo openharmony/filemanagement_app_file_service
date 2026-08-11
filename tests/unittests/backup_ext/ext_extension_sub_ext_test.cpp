@@ -796,7 +796,7 @@ HWTEST_F(ExtExtensionSubTest, SUB_AncoBackupCallback_OnBigFileReadyCallback_0000
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin SUB_AncoBackupCallback_OnBigFileReadyCallback_0000";
     ScanFileSingleton::GetInstance().SetCompletedFlag(true);
     auto callback = sptr<AncoBackupCallback>::MakeSptr(extExtension);
-    std::string filePath = "";
+    std::string filePath = "/abc/ddd/1.txt";
     std::string restorePath = "";
     StatInfo statInfo;
 

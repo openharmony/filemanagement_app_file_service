@@ -180,9 +180,10 @@ HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_001, testing::ext::TestSize.Le
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_001";
     GTEST_LOG_(INFO) << "1. test restorePath empty";
-    std::string filePath = "test1";
+    std::string filePath = "abc/aaa/test1";
+    std::string restorePath = "";
     struct stat sta = {};
-    manager_.AddBigFile(filePath, sta, false);
+    manager_.AddBigFile(filePath, sta, false, restorePath);
     auto fileInfo = manager_.GetFileInfo();
     ASSERT_NE(fileInfo, nullptr);
     EXPECT_EQ(fileInfo->GetRestorePath(), "");
@@ -201,7 +202,7 @@ HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_002, testing::ext::TestSize.Le
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_002";
     GTEST_LOG_(INFO) << "2. test restorePath not empty";
-    std::string filePath = "test2";
+    std::string filePath = "abc/aaa/test2";
     std::string restorePath = "restore2";
     struct stat sta = {};
     manager_.AddBigFile(filePath, sta, false, restorePath);
@@ -426,7 +427,7 @@ HWTEST_F(ScanResultManagerTest, WAIT_FOR_FILES_TEST_001, testing::ext::TestSize.
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: WAIT_FOR_FILES_TEST_001";
     GTEST_LOG_(INFO) << "1. test wait for files";
-    std::string filePath = "test1";
+    std::string filePath = "abc/aaa/test1";
     struct stat sta = {};
     manager_.AddBigFile(filePath, sta, false);
     EXPECT_EQ(manager_.pendingFileQueue_.size(), 1);
@@ -451,7 +452,7 @@ HWTEST_F(ScanResultManagerTest, WAIT_FOR_PACKET_FLAG_TEST_001, testing::ext::Tes
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: WAIT_FOR_PACKET_FLAG_TEST_001";
     GTEST_LOG_(INFO) << "1. test wait for packet";
-    std::string filePath = "test1";
+    std::string filePath = "abc/aaa/test1";
     struct stat sta = {};
     manager_.AddBigFile(filePath, sta, false);
     EXPECT_EQ(manager_.pendingFileQueue_.size(), 1);

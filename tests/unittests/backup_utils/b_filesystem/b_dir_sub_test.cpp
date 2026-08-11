@@ -135,13 +135,14 @@ HWTEST_F(BDirSubTest, B_DIR_ProcessFile_003, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_ProcessFile_003";
     GTEST_LOG_(INFO) << "3. test add big file";
-    struct stat sta = {.st_size = 15};
+    struct stat sta = {};
+    sta.st_size = 15;
     EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Invoke([sta](const char *pathname, struct stat *statbuf) {
         *statbuf = sta;
         GTEST_LOG_(INFO) << "sta.size =" << statbuf->st_size;
         return 0;
     }));
-    std::string backupPath = "test3";
+    std::string backupPath = "abc/aaa/test3";
     std::string restorePath = "restore3";
     int64_t smallFileSize = 0;
     int64_t bigFileSize = 0;
@@ -196,7 +197,7 @@ HWTEST_F(BDirSubTest, B_DIR_ProcessSingleFile_001, testing::ext::TestSize.Level1
 {
     GTEST_LOG_(INFO) << "BDirSubTest-begin B_DIR_ProcessSingleFile_001";
     EXPECT_CALL(*funcMock_, stat(_, _)).WillOnce(Return(-1));
-    std::string backupPath = "test1";
+    std::string backupPath = "abc/aaa/test1";
     std::string restorePath = "restore1";
     off_t sizeBoundary = 10;
     auto [ret1, bigSize1, smallSize1] = ProcessSingleFile({}, backupPath, restorePath, sizeBoundary);
