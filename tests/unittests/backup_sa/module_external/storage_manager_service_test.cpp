@@ -525,6 +525,49 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPat
 }
 
 /**
+ * @tc.name: Storage_Manager_ServiceTest_ScanExtensionPath_002
+ * @tc.number: ScanExtensionPathTest_002
+ * @tc.desc: ScanExtensionPath 扫描时排除符号链接
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ScanExtensionPath_002,
+    testing::ext::TestSize.Level1)
+{
+    std::string testSuffix = std::to_string(getpid());
+    fs::path testRoot = fs::temp_directory_path() / ("backup_scan_link_" + testSuffix);
+    fs::path targetFile = fs::temp_directory_path() / ("backup_scan_target_" + testSuffix);
+    fs::path linkPath = testRoot / "file_link";
+    fs::path statPath = fs::temp_directory_path() / ("backup_scan_stat_" + testSuffix);
+    fs::create_directories(testRoot);
+    {
+        std::ofstream target(targetFile);
+        target << std::string(4096, 'a');
+    }
+    ASSERT_EQ(symlink(targetFile.c_str(), linkPath.c_str()), 0);
+    struct stat rootStat = {0};
+    ASSERT_EQ(lstat(testRoot.c_str(), &rootStat), 0);
+
+    std::string bundleName = MMS_BUNDLENAME;
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+        .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+    std::vector<std::string> includes = {testRoot.string()};
+    std::vector<std::string> excludes;
+    std::map<std::string, std::string> pathMap;
+    std::ofstream statFile(statPath);
+    StorageManagerService::GetInstance().ScanExtensionPath(paras, includes, excludes, pathMap, statFile);
+    statFile.close();
+
+    std::ifstream resultFile(statPath);
+    std::string result((std::istreambuf_iterator<char>(resultFile)), std::istreambuf_iterator<char>());
+    EXPECT_EQ(result.find("file_link"), std::string::npos);
+    EXPECT_EQ(paras.fileSizeSum, rootStat.st_size);
+    EXPECT_EQ(paras.incFileSizeSum, rootStat.st_size);
+
+    fs::remove_all(testRoot);
+    fs::remove(targetFile);
+    fs::remove(statPath);
+}
+
+/**
  * @tc.name: Storage_Manager_ServiceTest_AddOuterDirIntoFileStat_001
  * @tc.number: AddOuterDirIntoFileStat_001
  * @tc.desc: AddOuterDirIntoFileStat 调用时正常返回
