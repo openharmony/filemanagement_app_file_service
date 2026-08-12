@@ -353,11 +353,13 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
 
     vector<BIncrementalData> bundleNames;
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    size_t skippedBundleCount = 0;
     HILOGI("End get installedBundles count is:%{public}zu", installedBundles.size());
     for (const auto &installedBundle : installedBundles) {
         if (installedBundle.applicationInfo.codePath == HAP_CODE_PATH ||
             installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
             HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            skippedBundleCount++;
             continue;
         }
         if (installedBundle.appIndex > 0) {
@@ -371,6 +373,9 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         auto [allToBackup, fullBackupOnly, extName, restoreDeps, supportScene, extraInfo, requireCompatibility] =
             GetAllowAndExtName(installedBundle.extensionInfos);
         if (!allToBackup) {
+            HILOGI("Skip incremental bundle stats because backup is not allowed or no valid backup config was found, "
+                "bundleName:%{public}s", installedBundle.name.c_str());
+            skippedBundleCount++;
             bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {installedBundle.name, installedBundle.appIndex,
                 installedBundle.versionCode, installedBundle.versionName, 0, 0, allToBackup, fullBackupOnly,
                 requireCompatibility, extName, restoreDeps, supportScene, extraInfo});
@@ -378,6 +383,8 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         }
         RefreshBundleIncrementalData(installedBundle.name, bundleNames, extraIncreData);
     }
+    HILOGI("Incremental bundle scan finished, scanned count:%{public}zu, skipped count:%{public}zu",
+        installedBundles.size(), skippedBundleCount);
     auto bundleInfosNew = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, userId);
     auto bundleInfosSA = BundleMgrAdapter::GetBundleInfosForSA();
     copy(bundleInfosNew.begin(), bundleInfosNew.end(), back_inserter(bundleInfos));

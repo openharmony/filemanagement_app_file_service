@@ -248,6 +248,8 @@ void StorageManagerService::GetBundleStatsForIncreaseEach(uint32_t userId, std::
     // obtain includes, excludes in backup extension config
     auto [includes, excludes] = ReadIncludesExcludesPath(bundleName, lastBackupTime, userId);
     if (includes.empty()) {
+        HILOGW("Skip incremental bundle stats because include paths are empty, bundleName:%{public}s",
+            bundleName.c_str());
         pkgFileSizes.emplace_back(0);
         incPkgFileSizes.emplace_back(0);
         return;
