@@ -252,7 +252,27 @@ void Service::OnStart()
         SetOccupySession(false);
         StopAll(nullptr, true);
     }
+    ClearBackupSaSandbox();
     HILOGI("SA OnStart End, res = %{public}d", res);
+}
+
+void Service::ClearBackupSaSandbox()
+{
+    int32_t userId = GetCurrentActiveAccountUserId();
+    std::string path = BConstants::GetSaBundleBackupRootDir(userId);
+    try {
+        BExcepUltils::VerifyPath(path, false);
+        if (access(path.c_str(), F_OK) != ERR_OK) {
+            HILOGI("Backup SA sandbox does not exist, userId=%{public}d", userId);
+            return;
+        }
+        BDir::ClearDirectory(path);
+        HILOGI("Clear Backup SA sandbox finished, userId=%{public}d", userId);
+    } catch (const BError &e) {
+        HILOGE("Clear Backup SA sandbox failed, userId=%{public}d, errCode=%{public}d", userId, e.GetCode());
+    } catch (...) {
+        HILOGE("Clear Backup SA sandbox failed unexpectedly, userId=%{public}d", userId);
+    }
 }
 
 void Service::SetOccupySession(bool isOccupyingSession)
