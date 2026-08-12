@@ -2810,25 +2810,25 @@ HWTEST_F(EnhanceServiceManagerTest, EnhanceServiceManager_LoadService_0100, Test
 
     EnhanceServiceManager::GetInstance().service_ = nullptr;
     EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(service));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(nullptr));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillRepeatedly(Return(nullptr));
     EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
 
     EnhanceServiceManager::GetInstance().service_ = nullptr;
     EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(service));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillOnce(Return(reinterpret_cast<void*>(createFunc2)));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillOnce(Return(nullptr));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillRepeatedly(Return(reinterpret_cast<void*>(createFunc2)));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillRepeatedly(Return(nullptr));
     EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
 
     EnhanceServiceManager::GetInstance().service_ = nullptr;
     EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(service));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillOnce(Return(reinterpret_cast<void*>(createFunc2)));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillOnce(Return(reinterpret_cast<void*>(destoryFunc)));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillRepeatedly(Return(reinterpret_cast<void*>(createFunc2)));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillRepeatedly(Return(reinterpret_cast<void*>(destoryFunc)));
     EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
 
     EnhanceServiceManager::GetInstance().service_ = nullptr;
     EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(service));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillOnce(Return(reinterpret_cast<void*>(createFunc1)));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillOnce(Return(reinterpret_cast<void*>(destoryFunc)));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Create")).WillRepeatedly(Return(reinterpret_cast<void*>(createFunc1)));
+    EXPECT_CALL(*dlFuncMock, dlsym(_, "Destroy")).WillRepeatedly(Return(reinterpret_cast<void*>(destoryFunc)));
     EXPECT_NO_THROW(EnhanceServiceManager::GetInstance().LoadService());
 }
 }
