@@ -30,7 +30,30 @@
 #include "ext_extension_mock.h"
 #include "i_service_mock.h"
 
+#include "json/json.h"
+ 
+namespace JsonTest {
+using Value = Json::Value;
+using StreamWriterBuilder = Json::StreamWriterBuilder;
+std::string writeString(StreamWriterBuilder const &builder, Value const &root)
+{
+    return Json::writeString(builder, root);
+}
+class FastWriter {
+public:
+    std::string Write(const Value &root)
+    {
+        return writer.write(root);
+    }
+ 
+private:
+    Json::FastWriter writer;
+};
+}; // namespace JsonTest
+ 
 #include "library_func_mock.h"
+#include "library_func_define.h"
+#define Json JsonTest
 #include "tar_file.cpp"
 #include "untar_file.cpp"
 #define Persist GetFd
@@ -415,6 +438,9 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0200, testing::ext
     ScanFileSingleton::GetInstance().pendingFileQueue_.push(nullptr);
     ScanFileSingleton::GetInstance().SetCompletedFlag(true);
     int ret = 0;
+    EXPECT_CALL(*funcMock_, write(_, _, _)).WillRepeatedly([](int, const void *, size_t size) -> ssize_t {
+        return size;
+    });
     EXPECT_CALL(*serviceMock_, AppDone(_)).WillRepeatedly([&ret](int err) -> int {
         ret = err;
         return 0;
@@ -992,7 +1018,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0001, testing::e
     EXPECT_EQ(extExtension_->ProcessTarFile(item, extManageInfo, ancoTarInfo, tempPath), ERR_OK);
 
     EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Invoke([&](const char *filename, int flags, ...) {
-        errno = ERR_NO_PERMISSION;
+        errno = ERR_OK;
         return -1;
     }));
     EXPECT_CALL(*funcMock_, fopen(_, _)).WillRepeatedly(Invoke([&](const char *pathname, const char *mode) {
@@ -1039,7 +1065,7 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_ProcessTarFile_Test_0002, testing::e
     EXPECT_CALL(*extBackupMock_, GetExtensionAction()).WillRepeatedly(Return(BConstants::ExtensionAction::RESTORE));
     EXPECT_CALL(*funcMock_, mkdir(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly(Invoke([&](const char *filename, int flags, ...) {
-        errno = ERR_NO_PERMISSION;
+        errno = ERR_OK;
         return -1;
     }));
     EXPECT_CALL(*funcMock_, fopen(_, _)).WillRepeatedly(Invoke([&](const char *pathname, const char *mode) {

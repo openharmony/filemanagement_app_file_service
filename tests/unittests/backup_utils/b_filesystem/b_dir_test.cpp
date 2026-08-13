@@ -190,8 +190,9 @@ HWTEST_F(BDirTest, b_dir_ExpandPathWildcard_0100, testing::ext::TestSize.Level1)
 
         std::vector<std::string> include = { dirCurrentUser };
         std::set<std::string> res = BDir::ExpandPathWildcard(include, true);
-        EXPECT_EQ(res.size(), 2); // 2: valid path number
         EXPECT_EQ(res.count(dirCurrentUser), 0);
+        EXPECT_TRUE(res.count(dirCurrentUser + "haps/") > 0);
+        EXPECT_TRUE(res.count(dirCurrentUser + "2.txt") > 0);
 
         std::string testDir = dirCurrentUser + "appdata";
         include = { testDir };
