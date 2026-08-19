@@ -27,24 +27,15 @@ namespace CJSystemapi {
 namespace FileUri {
 
 class FileUriImpl : public OHOS::FFI::FFIData {
+    DECL_TYPE(FileUriImpl, OHOS::FFI::FFIData)
 public:
     explicit FileUriImpl(const std::string &uriOrPath);
 
     std::string GetName();
     std::string GetPath();
     std::string ToString();
-
-    OHOS::FFI::RuntimeType* GetRuntimeType() override { return GetClassType(); }
 private:
     Uri uri_;
-
-    friend class OHOS::FFI::RuntimeType;
-    friend class OHOS::FFI::TypeBase;
-    static OHOS::FFI::RuntimeType* GetClassType()
-    {
-        static OHOS::FFI::RuntimeType runtimeType = OHOS::FFI::RuntimeType::Create<OHOS::FFI::FFIData>("FileUriImpl");
-        return &runtimeType;
-    }
 };
 
 }
