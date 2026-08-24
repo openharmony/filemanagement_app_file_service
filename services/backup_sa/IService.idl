@@ -51,7 +51,7 @@ interface OHOS.FileManagement.Backup.IService{
     [ipccode 13] void Finish();
     [ipccode 14] void Release();
     [ipccode 15] void CancelForResult([in] String bundleName, [out] int cancelResult);
-    [ipccode 16] void GetAppLocalListAndDoIncrementalBackup();
+    [ipccode 16] void GetAppLocalListAndDoIncrementalBackup([in] BStringRawData compatibleDirs);
     [ipccode 17] void GetIncrementalFileHandle([in] String bundleName, [in] String fileName);
     [ipccode 18] void GetBackupInfo([in] String bundleName, [out] String getBackupInfoResult);
     [ipccode 19] void UpdateTimer([in] String bundleName, [in] unsigned int timeout, [out] boolean updateTimerResult);

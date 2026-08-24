@@ -64,6 +64,7 @@ private:
         TarFileInfo &tarFileInfo);
     bool FileReadAndWrite(char *destBuff, FILE *destF, size_t readBuffSize);
     void HandleRegularEUnpackFile(char *buff, ParseTarPath *parseTarPath, bool &isSkip, TarFileInfo &tarFileInfo);
+    void HandleSymType(ParseTarPath *parseTarPath, bool &isSkip, bool &isSoftLink, TarFileInfo &tarFileInfo);
     bool ProcessTarBlock(char *buff, EParseType type, ParseTarPath *parseTarPath, bool &isSkip, bool &isSoftLink);
     bool IsValidTarBlock(const TarHeader *tarHeader);
     bool VerifyChecksum(const TarHeader *tarHeader);

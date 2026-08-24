@@ -26,7 +26,8 @@ public:
     virtual std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfos(const std::vector<std::string>&, int32_t) = 0;
     virtual std::string GetAppGalleryBundleName() = 0;
     virtual std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(
-        const std::vector<BIncrementalData>&, int32_t) = 0;
+        const std::vector<BIncrementalData>&, int32_t,
+        const std::unordered_map<std::string, std::unordered_set<std::string>>&) = 0;
     virtual std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(int32_t,
         const std::vector<BIncrementalData>&) = 0;
     virtual std::string GetExtName(string, int32_t) = 0;
@@ -57,7 +58,8 @@ public:
         ((const std::vector<std::string>&), int32_t));
     MOCK_METHOD(std::string,  GetAppGalleryBundleName, ());
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForIncremental,
-        ((const std::vector<BIncrementalData>&), int32_t));
+        ((const std::vector<BIncrementalData>&), int32_t,
+        (const std::unordered_map<std::string, std::unordered_set<std::string>>&)));
     MOCK_METHOD((std::vector<BJsonEntityCaps::BundleInfo>), GetBundleInfosForIncremental, (int32_t,
         (const std::vector<BIncrementalData>&)));
     MOCK_METHOD(std::string, GetExtName, (std::string, int32_t));

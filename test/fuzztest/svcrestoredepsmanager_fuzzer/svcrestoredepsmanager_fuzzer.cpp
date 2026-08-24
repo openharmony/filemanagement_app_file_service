@@ -76,7 +76,6 @@ bool SvcRestoreDepsManagerFuzzTest(const uint8_t *data, size_t size)
     SvcRestoreDepsManager::GetInstance().restoredBundles_.clear();
     return true;
 }
-
 } // namespace OHOS
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)

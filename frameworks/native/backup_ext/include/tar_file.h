@@ -92,6 +92,17 @@ public:
                 const std::string &pkPath,
                 TarMap &tarMap,
                 std::function<void(std::string, int)> reportCb);
+    // 增量备份专用: 将 pair<物理路径, restorePath> 文件集合打包为 tar.
+    // pair.first  = 磁盘上实际存在的路径(用于 open/read)
+    // pair.second = 需要在 tar 内记录的逻辑路径(兼容目录映射)
+    // 内部调用 TraversalFile(rootPath, err, restorePath),
+    // 最终调用 AddFile → tar header 中写入 restorePath(非空时).
+    // 恢复时 untar 会按 tar 内的路径解压, 实现"写入到 restorePath".
+    bool Packet(const std::vector<std::pair<std::string, std::string>> &files,
+                const std::string &tarFileName,
+                const std::string &pkPath,
+                TarMap &tarMap,
+                std::function<void(std::string, int)> reportCb);
     bool Packet(const std::vector<std::shared_ptr<ISmallFileInfo>> &srcFiles,
                 const std::string &tarFileName,
                 const std::string &pkPath,
@@ -185,6 +196,21 @@ private:
     bool WriteLongName(std::string &name, char type);
 
     /**
+     * @brief write PAX extended time header (atime + mtime)
+     *
+     * @param st 文件信息结构体
+     */
+    bool WritePaxExtTime(const struct stat &st);
+
+    /**
+     * @brief write PAX block data (header + content + padding)
+     *
+     * @param data  PAX record data内容
+     * @param typeFlag  PAX块类型标志
+     */
+    bool WritePaxBlockData(const std::string &data, char typeFlag);
+
+    /**
      * @brief read files
      *
      * @param fd 文件描述符
@@ -222,7 +248,7 @@ private:
      * @param st   文件信息结构体
      * @param hdr  tar包文件头
      */
-    bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName);
+    bool I2OcsConvert(const struct stat &st, TarHeader &hdr, std::string &fileName, long &mtimeNsec, long &atimeNsec);
 
     bool ToAddFile(std::string &path, int &err, const std::string &restorePath = "");
 

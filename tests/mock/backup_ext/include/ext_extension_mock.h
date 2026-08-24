@@ -66,9 +66,6 @@ public:
     virtual void AsyncTaskIncreRestoreSpecialVersion() = 0;
     virtual void GetTarIncludes(const std::string &, std::unordered_map<std::string, struct ReportFileInfo> &) = 0;
     virtual ErrCode GetIncrementalRpFileHandle(const string &fileName, int32_t &fdErrCode) = 0;
-    virtual ErrCode HandleOnRelease(int32_t scenario) = 0;
-    virtual ErrCode HandleGetCompatibilityInfo(const std::string &extInfo, int32_t scenario, bool isExist,
-        std::string &compatibilityInfo) = 0;
     virtual ErrCode GetIncrementalFileHandles(const BStringRawData &fileNames,
                                               std::vector<FileOpenResult> &openResults) = 0;
 public:
@@ -130,8 +127,6 @@ public:
     MOCK_METHOD(void, StartFwkTimer, (bool &));
     MOCK_METHOD(void, GetTarIncludes, (const std::string &,
         (std::unordered_map<std::string, struct ReportFileInfo> &)));
-    MOCK_METHOD(ErrCode, HandleOnRelease, (int32_t));
-    MOCK_METHOD(ErrCode, HandleGetCompatibilityInfo, (const std::string &, int32_t, bool, std::string &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_EXT_EXTENSION_MOCK_H

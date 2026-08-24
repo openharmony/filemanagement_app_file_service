@@ -69,7 +69,7 @@ const std::string MEDIA_PATH_PREFIX_ONE = "/account/cloud_merge_view/files";
 const std::string MEDIA_PATH_PREFIX_TWO = "/account/merge_view/files";
 constexpr int32_t GET_CLIENT_RETRY_TIMES = 5;
 constexpr int32_t SLEEP_TIME = 1;
-} //namespace
+} // namespace
 
 
 struct HmdfsShareControl {

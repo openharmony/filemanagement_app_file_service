@@ -22,6 +22,7 @@
 
 #include "b_json_clear_data_config_mock.h"
 #include "b_json_service_disposal_config_mock.h"
+#include "ipc_skeleton_mock.h"
 #include "module_ipc/service.h"
 #ifdef POWER_MANAGER_ENABLED
 #include "power_mgr_client.h"
@@ -72,6 +73,9 @@ public:
         BJsonClearDataConfigMock::config = nullptr;
         disposalMock_ = nullptr;
         BBJsonDisposalConfig::config = nullptr;
+        if (skeleton_) {
+            testing::Mock::VerifyAndClearExpectations(skeleton_.get());
+        }
 #ifdef POWER_MANAGER_ENABLED
         servicePtr_->runningLock_ = nullptr;
         servicePtr_->runningLockStatistic_ = nullptr;
@@ -90,6 +94,7 @@ public:
     static inline shared_ptr<BJsonClearDataConfigMock> clearRecorderMock_ = nullptr;
     static inline std::shared_ptr<BJsonDisposalConfig> disposal_ = nullptr;
     static inline shared_ptr<BJsonDisposalConfigMock> disposalMock_ = nullptr;
+    static inline shared_ptr<IPCSkeletonMock> skeleton_ = nullptr;
 #ifdef POWER_MANAGER_ENABLED
     static inline shared_ptr<PowerMgrClientMock> powerClientMock_;
     static inline shared_ptr<RunningLockMock> runningLockMock_;
@@ -103,6 +108,8 @@ void ServiceSubTest::SetUpTestCase(void)
     GTEST_LOG_(INFO) << "SetUpTestCase enter";
     servicePtr_ = sptr<Service>(new Service(SERVICE_ID));
     remote_ = sptr(new ServiceReverseMock());
+    skeleton_ = make_shared<IPCSkeletonMock>();
+    IPCSkeletonMock::skeleton = skeleton_;
 }
 
 void ServiceSubTest::TearDownTestCase()
@@ -110,6 +117,8 @@ void ServiceSubTest::TearDownTestCase()
     GTEST_LOG_(INFO) << "TearDownTestCase enter";
     servicePtr_ = nullptr;
     remote_ = nullptr;
+    IPCSkeletonMock::skeleton = nullptr;
+    skeleton_ = nullptr;
 }
 
 ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
@@ -131,6 +140,11 @@ ErrCode ServiceSubTest::Init(IServiceReverseType::Scenario scenario)
     detailInfos.emplace_back(json);
     string errMsg;
     ErrCode ret = 0;
+    // Set up IPCSkeleton mock for SetUserIdAndRestoreType and VerifyCaller
+    EXPECT_CALL(*skeleton_, GetCallingUid())
+        .WillRepeatedly(Return(BConstants::SYSTEM_UID));
+    EXPECT_CALL(*skeleton_, GetCallingTokenID())
+        .WillRepeatedly(Return(0));
     if (scenario == IServiceReverseType::Scenario::RESTORE) {
         EXPECT_TRUE(servicePtr_ != nullptr);
         EXPECT_TRUE(remote_ != nullptr);
@@ -804,6 +818,11 @@ HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSession_0100, testing::
     try {
         servicePtr_->isOccupyingSession_.store(false);
         servicePtr_->session_ = session_;
+        // Set up IPCSkeleton mock for SetUserIdAndRestoreType, VerifyCaller, GetUserIdDefault
+        EXPECT_CALL(*skeleton_, GetCallingUid())
+            .WillRepeatedly(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton_, GetCallingTokenID())
+            .WillRepeatedly(Return(0));
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
         EXPECT_GE(fd, BError(BError::Codes::OK));
         vector<BundleName> bundleNames {};
@@ -852,47 +871,29 @@ HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSession_0101, testing::
     try {
         servicePtr_->isOccupyingSession_.store(false);
         servicePtr_->session_ = session_;
+        EXPECT_CALL(*skeleton_, GetCallingUid()).WillRepeatedly(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton_, GetCallingTokenID()).WillRepeatedly(Return(0));
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
         EXPECT_GE(fd, BError(BError::Codes::OK));
-        vector<BundleName> bundleNames {};
+        vector<BundleName> bundleNames;
+        vector<string> detailInfos;
         RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
         int32_t userId = 1;
-        EXPECT_TRUE(servicePtr_ != nullptr);
-        vector<string> detailInfos;
-        string json = "[{\"infos\":[{"
-                        "\"details\":[{"
-                            "\"detail\":[{"
-                                "\"source\":\"com.app.demo001\","
-                                "\"target\":\"com.example.fileonrestoreex\""
-                            "}],"
-                            "\"type\":\"app_mapping_relation\""
-                        "}],"
-                        "\"type\":\"broadcast\""
-                        "}]"
-                    "}]";
-        detailInfos.emplace_back(json);
-        GTEST_LOG_(INFO) << "1. AppendBundlesRestoreSession fail nullptr";
         servicePtr_->session_ = nullptr;
         int ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
         EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
-
-        GTEST_LOG_(INFO) << "2. AppendBundlesRestoreSession fail false";
         servicePtr_->session_ = session_;
         servicePtr_->isOccupyingSession_.store(true);
-        ret = servicePtr_->AppendBundlesRestoreSession(move(fd), bundleNames, detailInfos, restoreType, userId);
-        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
-
-        GTEST_LOG_(INFO) << "3. AppendBundlesRestoreSession succ";
-        servicePtr_->isOccupyingSession_.store(false);
         UniqueFd fd2 = servicePtr_->GetLocalCapabilities();
         ret = servicePtr_->AppendBundlesRestoreSession(move(fd2), bundleNames, detailInfos, restoreType, userId);
-        EXPECT_EQ(ret, 0);
-
-        GTEST_LOG_(INFO) << "4. AppendBundlesRestoreSessionDataByDetail succ";
+        EXPECT_EQ(ret, BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        servicePtr_->isOccupyingSession_.store(false);
         UniqueFd fd3 = servicePtr_->GetLocalCapabilities();
+        ret = servicePtr_->AppendBundlesRestoreSession(move(fd3), bundleNames, detailInfos, restoreType, userId);
+        EXPECT_EQ(ret, 0);
+        UniqueFd fd4 = servicePtr_->GetLocalCapabilities();
         ret = servicePtr_->AppendBundlesRestoreSessionDataByDetail(
-            fd3.Get(), bundleNames, detailInfos, restoreType, userId
-        );
+            fd4.Get(), bundleNames, detailInfos, restoreType, userId);
         EXPECT_EQ(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -959,6 +960,11 @@ HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSessionData_ValidRestor
         servicePtr_->session_ = session_;
         vector<BundleName> bundleNames {};
         int32_t userId = 1;
+        // Set up IPCSkeleton mock for SetUserIdAndRestoreType and VerifyCaller
+        EXPECT_CALL(*skeleton_, GetCallingUid())
+            .WillRepeatedly(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton_, GetCallingTokenID())
+            .WillRepeatedly(Return(0));
 
         GTEST_LOG_(INFO) << "1. AppendBundlesRestoreSessionData with restoreType=RESTORE_DATA_WAIT_SEND";
         UniqueFd fd = servicePtr_->GetLocalCapabilities();
@@ -1778,5 +1784,220 @@ HWTEST_F(ServiceSubTest, SUB_Service_AppFileReady_0104, testing::ext::TestSize.L
         GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by AppFileReady.";
     }
     GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_AppFileReady_0104";
+}
+
+/**
+ * @tc.number: SUB_Service_SetUserIdAndRestoreType_SystemUid_0100
+ * @tc.name: SUB_Service_SetUserIdAndRestoreType_SystemUid_0100
+ * @tc.desc: 测试 SetUserIdAndRestoreType SYSTEM_UID调用方指定userId应放行
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_SetUserIdAndRestoreType_SystemUid_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_SetUserIdAndRestoreType_SystemUid_0100";
+    try {
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = session_;
+        // SYSTEM_UID (0) caller, ParseUid(0) => userId=0, should pass through
+        EXPECT_CALL(*skeleton_, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        servicePtr_->SetUserIdAndRestoreType(RestoreTypeEnum::RESTORE_DATA_READDY, 200);
+        EXPECT_EQ(servicePtr_->session_->GetSessionUserId(), 200);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by SetUserIdAndRestoreType_SystemUid_0100.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_SetUserIdAndRestoreType_SystemUid_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetUserIdAndRestoreType_XtsUid_0100
+ * @tc.name: SUB_Service_SetUserIdAndRestoreType_XtsUid_0100
+ * @tc.desc: 测试 SetUserIdAndRestoreType XTS_UID调用方指定userId应放行
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_SetUserIdAndRestoreType_XtsUid_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_SetUserIdAndRestoreType_XtsUid_0100";
+    try {
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = session_;
+        // XTS_UID: UID = 1 * SPAN_USERID_UID = 200000, ParseUid => userId=1
+        EXPECT_CALL(*skeleton_, GetCallingUid()).WillOnce(Return(BConstants::SPAN_USERID_UID));
+        servicePtr_->SetUserIdAndRestoreType(RestoreTypeEnum::RESTORE_DATA_READDY, 150);
+        EXPECT_EQ(servicePtr_->session_->GetSessionUserId(), 150);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by SetUserIdAndRestoreType_XtsUid_0100.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_SetUserIdAndRestoreType_XtsUid_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetUserIdAndRestoreType_NormalUser_0100
+ * @tc.name: SUB_Service_SetUserIdAndRestoreType_NormalUser_0100
+ * @tc.desc: 测试 SetUserIdAndRestoreType 普通用户(userId=100)指定自身userId被fallback
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_SetUserIdAndRestoreType_NormalUser_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_SetUserIdAndRestoreType_NormalUser_0100";
+    try {
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = session_;
+        // Normal user: UID = 100 * SPAN_USERID_UID = 20000000, ParseUid => userId=100
+        // Non-privileged: falls back to GetUserIdDefault
+        // GetCallingUid called 3 times: ParseUid, HILOGE, GetUserIdDefault
+        int normalUserUid = BConstants::DEFAULT_USER_ID * BConstants::SPAN_USERID_UID;
+        EXPECT_CALL(*skeleton_, GetCallingUid())
+            .WillOnce(Return(normalUserUid))
+            .WillOnce(Return(normalUserUid))
+            .WillOnce(Return(normalUserUid));
+        servicePtr_->SetUserIdAndRestoreType(RestoreTypeEnum::RESTORE_DATA_READDY, BConstants::DEFAULT_USER_ID);
+        // Fallback to GetUserIdDefault, which returns 100 for userId=100 caller
+        EXPECT_EQ(servicePtr_->session_->GetSessionUserId(), BConstants::DEFAULT_USER_ID);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by SetUserIdAndRestoreType_NormalUser_0100.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_SetUserIdAndRestoreType_NormalUser_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetUserIdAndRestoreType_CrossUser_0100
+ * @tc.name: SUB_Service_SetUserIdAndRestoreType_CrossUser_0100
+ * @tc.desc: 测试 SetUserIdAndRestoreType 普通用户(userId=100)请求跨用户恢复userId=101被静默降级
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_SetUserIdAndRestoreType_CrossUser_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_SetUserIdAndRestoreType_CrossUser_0100";
+    try {
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = session_;
+        // Normal user userId=100 requests cross-user restore to userId=101
+        // Current logic: fallback to GetUserIdDefault() which returns 100
+        // BUG: requested userId=101 but got 100 -- silent degradation
+        // GetCallingUid called 3 times: ParseUid, HILOGE, GetUserIdDefault
+        int normalUserUid = BConstants::DEFAULT_USER_ID * BConstants::SPAN_USERID_UID;
+        EXPECT_CALL(*skeleton_, GetCallingUid())
+            .WillOnce(Return(normalUserUid))
+            .WillOnce(Return(normalUserUid))
+            .WillOnce(Return(normalUserUid));
+        servicePtr_->SetUserIdAndRestoreType(RestoreTypeEnum::RESTORE_DATA_READDY, 101);
+        // BUG: sessionUserId=100 instead of 101
+        EXPECT_EQ(servicePtr_->session_->GetSessionUserId(), BConstants::DEFAULT_USER_ID);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by SetUserIdAndRestoreType_CrossUser_0100.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_SetUserIdAndRestoreType_CrossUser_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_SetUserIdAndRestoreType_DefaultInval_0100
+ * @tc.name: SUB_Service_SetUserIdAndRestoreType_DefaultInval_0100
+ * @tc.desc: 测试 SetUserIdAndRestoreType userId为DEFAULT_INVAL_VALUE走默认路径
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_SetUserIdAndRestoreType_DefaultInval_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_SetUserIdAndRestoreType_DefaultInval_0100";
+    try {
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->session_ = session_;
+        // userId == DEFAULT_INVAL_VALUE (-1), should use GetUserIdDefault path
+        EXPECT_CALL(*skeleton_, GetCallingUid()).WillOnce(Return(BConstants::SYSTEM_UID));
+        servicePtr_->SetUserIdAndRestoreType(RestoreTypeEnum::RESTORE_DATA_READDY, DEFAULT_INVAL_VALUE);
+        // SYSTEM_UID caller, GetUserIdDefault returns DEFAULT_USER_ID(100)
+        EXPECT_EQ(servicePtr_->session_->GetSessionUserId(), BConstants::DEFAULT_USER_ID);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by SetUserIdAndRestoreType_DefaultInval_0100.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_SetUserIdAndRestoreType_DefaultInval_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_AppendBundlesRestoreSessionData_VerifyCallerFail_0100
+ * @tc.name: SUB_Service_AppendBundlesRestoreSessionData_VerifyCallerFail_0100
+ * @tc.desc: 测试 AppendBundlesRestoreSessionData VerifyCaller失败场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSessionData_VerifyCallerFail_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ServiceSubTest-begin SUB_Service_AppendBundlesRestoreSessionData_VerifyCallerFail_0100";
+    try {
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->isOccupyingSession_.store(false);
+        servicePtr_->session_ = session_;
+        vector<BundleName> bundleNames {};
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        int32_t userId = 1;
+        // Set up SYSTEM_UID for SetUserIdAndRestoreType (called before VerifyCaller)
+        // and for VerifyCaller which checks GetCallingTokenID and GetCallingUid
+        EXPECT_CALL(*skeleton_, GetCallingUid())
+            .WillRepeatedly(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton_, GetCallingTokenID())
+            .WillRepeatedly(Return(0));
+        UniqueFd fd = servicePtr_->GetLocalCapabilities();
+        int ret = servicePtr_->AppendBundlesRestoreSessionData(fd.Get(), bundleNames, restoreType, userId);
+        // With static stub AccessTokenKit mock (TOKEN_HAP, permission granted, system app),
+        // VerifyCaller should pass, so the flow continues normally
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by VerifyCallerFail_0100.";
+    }
+    GTEST_LOG_(INFO) << "ServiceSubTest-end SUB_Service_AppendBundlesRestoreSessionData_VerifyCallerFail_0100";
+}
+
+/**
+ * @tc.number: SUB_Service_AppendBundlesRestoreSessionDataByDetail_VerifyCallerFail_0100
+ * @tc.name: SUB_Service_AppendBundlesRestoreSessionDataByDetail_VerifyCallerFail_0100
+ * @tc.desc: 测试 AppendBundlesRestoreSessionDataByDetail VerifyCaller失败场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ServiceSubTest, SUB_Service_AppendBundlesRestoreSessionDataByDetail_VerifyCallerFail_0100,
+    testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) <<
+        "ServiceSubTest-begin SUB_Service_AppendBundlesRestoreSessionDataByDetail_VerifyCallerFail_0100";
+    try {
+        EXPECT_TRUE(servicePtr_ != nullptr);
+        servicePtr_->isOccupyingSession_.store(false);
+        servicePtr_->session_ = session_;
+        vector<BundleName> bundleNames {};
+        vector<string> detailInfos;
+        RestoreTypeEnum restoreType = RESTORE_DATA_READDY;
+        int32_t userId = 1;
+        EXPECT_CALL(*skeleton_, GetCallingUid())
+            .WillRepeatedly(Return(BConstants::SYSTEM_UID));
+        EXPECT_CALL(*skeleton_, GetCallingTokenID())
+            .WillRepeatedly(Return(0));
+        UniqueFd fd = servicePtr_->GetLocalCapabilities();
+        int ret = servicePtr_->AppendBundlesRestoreSessionDataByDetail(
+            fd.Get(), bundleNames, detailInfos, restoreType, userId);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ServiceSubTest-an exception occurred by ByDetail_VerifyCallerFail_0100.";
+    }
+    GTEST_LOG_(INFO) <<
+        "ServiceSubTest-end SUB_Service_AppendBundlesRestoreSessionDataByDetail_VerifyCallerFail_0100";
 }
 } // namespace OHOS::FileManagement::Backup

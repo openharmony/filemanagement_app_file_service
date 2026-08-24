@@ -424,4 +424,23 @@ int32_t SvcSessionManager::GetBatchSize(const std::string &bundleName)
 {
     return 0;
 }
+
+void SvcSessionManager::SetRestoreScene(const std::string &bundleName, BConstants::ExtensionRestoreScene restoreScene)
+{
+}
+
+BConstants::ExtensionRestoreScene SvcSessionManager::GetRestoreScene(const std::string &bundleName)
+{
+    return BConstants::ExtensionRestoreScene::NORMAL;
+}
+
+void SvcSessionManager::SetCompatibleDirs(const std::string &bundleName,
+    const std::unordered_set<std::string> &compatibleDirs)
+{
+}
+
+std::unordered_set<std::string> SvcSessionManager::GetCompatibleDirs(const std::string &bundleName)
+{
+    return {};
+}
 } // namespace OHOS::FileManagement::Backup

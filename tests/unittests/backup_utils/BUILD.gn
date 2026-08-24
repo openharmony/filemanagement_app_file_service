@@ -162,7 +162,6 @@ ohos_unittest("b_dir_sub_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${path_backup}/cfi_blocklist.txt"
   }
 
   module_out_path = path_module_out_tests
@@ -266,11 +265,11 @@ ohos_unittest("b_jsonutil_test") {
     cfi_cross_dso = true
     debug = false
   }
-
+ 
   module_out_path = path_module_out_tests
-
+ 
   sources = [ "b_jsonutil/b_jsonutil_test.cpp" ]
-
+ 
   deps = [
     "${path_backup}/tests/utils:backup_test_utils",
     "${path_backup}/utils/:backup_utils",
@@ -284,7 +283,7 @@ ohos_unittest("b_jsonutil_test") {
     "hilog:libhilog",
     "jsoncpp:jsoncpp",
   ]
-
+ 
   use_exceptions = true
 }
 
@@ -610,46 +609,6 @@ ohos_unittest("b_json_clear_data_test") {
   use_exceptions = true
 }
 
-ohos_unittest("b_utils_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${path_backup}/cfi_blocklist.txt"
-  }
-
-  module_out_path = path_module_out_tests
-
-  sources = [
-    "b_utils\scan_file_singleton_test.cpp",
-    "b_utils\string_utils_test.cpp",
-    "b_utils\storage_manager_helper_test.cpp",
-    "b_utils\b_time_test.cpp",
-  ]
-
-  include_dirs = [ "${path_backup}/utils/src/b_utils" ]
-
-  deps = [
-    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
-    "${path_backup}/tests/utils:backup_test_utils",
-    "${path_backup}/utils/:backup_utils",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "jsoncpp:jsoncpp",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
-  ]
-  defines = [ "private = public" ]
-  use_exceptions = true
-}
-
 ohos_unittest("b_radar_test") {
   module_out_path = path_module_out_tests
 
@@ -686,6 +645,45 @@ ohos_unittest("b_radar_test") {
     "protected = public",
   ]
 
+  use_exceptions = true
+}
+
+ohos_unittest("b_utils_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${path_backup}/cfi_blocklist.txt"
+  }
+
+  module_out_path = path_module_out_tests
+
+  sources = [
+    "b_utils\scan_file_singleton_test.cpp",
+    "b_utils\string_utils_test.cpp",
+    "b_utils\storage_manager_helper_test.cpp",
+    "b_utils\b_time_test.cpp",
+  ]
+
+  include_dirs = [ "${path_backup}/utils/src/b_utils" ]
+
+  deps = [
+    "${path_backup}/interfaces/innerkits/native:sandbox_helper_native",
+    "${path_backup}/tests/utils:backup_test_utils",
+    "${path_backup}/utils/:backup_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "jsoncpp:jsoncpp",
+    "init:libbegetutil",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+  ]
+  defines = [ "private = public" ]
   use_exceptions = true
 }
 

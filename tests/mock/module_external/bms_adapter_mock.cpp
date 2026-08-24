@@ -43,7 +43,8 @@ string BundleMgrAdapter::GetAppGalleryBundleName()
 }
 
 vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(
-    const vector<BIncrementalData> &incrementalDataList, int32_t userId)
+    const vector<BIncrementalData> &incrementalDataList, int32_t userId,
+    const unordered_map<string, unordered_set<string>> &compatibleDirsMap)
 {
     vector<BJsonEntityCaps::BundleInfo> bundleInfos;
     bundleInfos.emplace_back(

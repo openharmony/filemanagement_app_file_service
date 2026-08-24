@@ -27,7 +27,11 @@ ohos_static_library("backupextensionability_napi_fwk") {
 
   sources = [ "ext_backup_impl.cpp" ]
 
-  external_deps = [ "napi:ace_napi" ]
+  external_deps = [
+    "libuv:uv",
+    "napi:ace_napi",
+    "node:node_header_notice",
+  ]
 
   part_name = "app_file_service"
   subsystem_name = "filemanagement"

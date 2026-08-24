@@ -217,7 +217,7 @@ describe('FileShareJSTest', function () {
         }
         console.info(`revoke_permission_test_001 end`);
     })
-
+    
     /**
      * @tc.name:      revoke_permission_test_002
      * @tc.desc:      normal uris and have a uri is not exist test
@@ -243,7 +243,7 @@ describe('FileShareJSTest', function () {
         let policies = [policyInfoA, policyInfoB];
         try {
             fileShare.revokePermission(policies).then(() => {
-                expect(true).assertTrue();
+                expect(false).assertTrue();
                 done();
             }).catch((err) => {
                 console.info(`revoke_permission_test_002 err : ${err.code}`);
@@ -313,13 +313,8 @@ describe('FileShareJSTest', function () {
         let policyInfo = { uri: uri, operationMode: fileShare.OperationMode.READ_MODE };
         let policies = [policyInfo];
         try {
-            await fileShare.persistPermission(policies);
-        } catch (error) {
-            console.info(`revoke_permission_test_004 persistPermission error : ${error.code}`);
-        }
-        try {
             fileShare.revokePermission(policies).then(() => {
-                expect(true).assertTrue();
+                expect(false).assertTrue();
                 done();
             }).catch((err) => {
                 console.info(`revoke_permission_test_004 err : ${err.code}`);
@@ -367,11 +362,8 @@ describe('FileShareJSTest', function () {
                 expect(true).assertTrue();
                 done();
             }).catch((err) => {
-                if (err.code == OPERATION_NOT_PERMITTED) {
-                    expect(true).assertTrue();
-                } else {
-                    expect(false).assertTrue();
-                }
+                console.info(`activate_permission_test_001 err : ${err.code}`);
+                expect(false).assertTrue();
                 done();
             })
         } catch (error) {
@@ -385,7 +377,7 @@ describe('FileShareJSTest', function () {
         }
         console.info(`activate_permission_test_001 end`);
     })
-
+    
     /**
      * @tc.name:      activate_permission_test_002
      * @tc.desc:      normal uris and have a uri is not exist test
@@ -434,7 +426,7 @@ describe('FileShareJSTest', function () {
         }
         console.info(`activate_permission_test_002 end`);
     })
-
+    
     /**
      * @tc.name:      activate_permission_test_003
      * @tc.desc:      persist_permission with no param test
@@ -483,13 +475,8 @@ describe('FileShareJSTest', function () {
         let policyInfo = { uri: uri, operationMode: fileShare.OperationMode.WRITE_MODE };
         let policies = [policyInfo];
         try {
-            await fileShare.persistPermission(policies);
-        } catch (error) {
-            console.info(`activate_permission_test_004 persistPermission error : ${error.code}`);
-        }
-        try {
             fileShare.activatePermission(policies).then(() => {
-                expect(true).assertTrue();
+                expect(false).assertTrue();
                 done();
             }).catch((err) => {
                 console.info(`activate_permission_test_004 err : ${err.code}`);
@@ -557,7 +544,7 @@ describe('FileShareJSTest', function () {
         }
         console.info(`deactivate_permission_test_001 end`);
     })
-
+    
     /**
      * @tc.name:      deactivate_permission_test_002
      * @tc.desc:      normal uris and have a uri is not exist test
@@ -610,7 +597,7 @@ describe('FileShareJSTest', function () {
         }
         console.info(`deactivate_permission_test_002 end`);
     })
-
+    
     /**
      * @tc.name:      deactivate_permission_test_003
      * @tc.desc:      persist_permission with no param test
@@ -658,13 +645,8 @@ describe('FileShareJSTest', function () {
         let policyInfo = { uri: uri, operationMode: fileShare.OperationMode.WRITE_MODE };
         let policies = [policyInfo];
         try {
-            await fileShare.persistPermission(policies);
-        } catch (error) {
-            console.info(`deactivate_permission_test_004 persistPermission error : ${error.code}`);
-        }
-        try {
             fileShare.deactivatePermission(policies).then(() => {
-                expect(true).assertTrue();
+                expect(false).assertTrue();
                 done();
             }).catch((err) => {
                 console.info(`deactivate_permission_test_004 err : ${err.code}`);
@@ -707,9 +689,12 @@ describe('FileShareJSTest', function () {
         } catch (error) {
             console.info(`check_persistent_permission_test_001 persistPermission error : ${error.code}`);
         }
+        let policyInfoB = { uri: "/data/test_002.txt", operationMode: fileShare.OperationMode.WRITE_MODE };
+        let policies = [policyInfoA, policyInfoB];
         try {
-            fileShare.checkPersistentPermission(policiesA).then((result) => {
-                expect(true).assertTrue();
+            fileShare.checkPersistentPermission(policies).then((result) => {
+                expect(result[0]).assertTrue();
+                expect(result[1] == false).assertTrue();
                 done();
             }).catch((err) => {
                 console.info(`check_persistent_permission_test_001 err : ${err.code}`);

@@ -59,6 +59,7 @@ public:
     virtual bool GetSupportWithoutTar() const = 0;
     virtual std::vector<std::string> GetExcludeInfos() const = 0;
     virtual int32_t GetBatchSize() const = 0;
+    virtual BConstants::ExtensionRestoreScene GetRestoreScene() const;
     virtual std::string GetCallerBundleName() const = 0;
 public:
     virtual std::unique_ptr<NativeReference> LoadSystemModuleByEngine(napi_env, const std::string&, const napi_value*,
@@ -112,6 +113,7 @@ public:
     MOCK_METHOD(bool, GetSupportWithoutTar, (), (const));
     MOCK_METHOD((std::vector<std::string>), GetExcludeInfos, (), (const));
     MOCK_METHOD(int32_t, GetBatchSize, (), (const));
+    MOCK_METHOD(BConstants::ExtensionRestoreScene, GetRestoreScene, (), (const));
     MOCK_METHOD(std::string, GetCallerBundleName, (), (const));
 public:
     MOCK_METHOD((std::unique_ptr<NativeReference>), LoadSystemModuleByEngine, (napi_env, const std::string&,
