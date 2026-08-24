@@ -122,7 +122,7 @@ static void OnFileReadyBatch(weak_ptr<GeneralCallbacks> pCallbacks, const std::v
                 NVal::CreateInt32(env, file.fd).val_);
             napi_set_element(env, jsArray, i, jsFile);
         }
-        HILOGI("callback function backup OnFileReadyBatch end, fileSize: %{public}lu", files.size());
+        HILOGI("callback function backup OnFileReadyBatch end, fileSize: %{public}zu", files.size());
         return {env, jsArray};
     };
     callbacks->onFileReadyBatch.ThreadSafeSchedule(cbCompl);
