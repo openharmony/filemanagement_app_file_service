@@ -92,15 +92,15 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_SplitWriteAll_0100, testing::ext::TestSize
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(ioBuffer.size()));
         auto ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5, err);
         EXPECT_EQ(ret, ioBuffer.size());
-
+ 
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(ioBuffer.size()));
         ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5, err);
         EXPECT_EQ(ret, ioBuffer.size());
-
+ 
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
         ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 5, err);
         EXPECT_EQ(ret, 0);
-
+ 
         EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(4));
         ret = TarFile::GetInstance().SplitWriteAll(ioBuffer, 4, err);
         EXPECT_EQ(ret, 4);
@@ -363,7 +363,7 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0300, testing::ext::TestSize.Level
             "1234567890abcdefghijk";
         struct stat sta = {.st_size = 1};
         int err = 0;
-        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(-1)).WillOnce(Return(-1));
         EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_FALSE(TarFile::GetInstance().AddFile(fileName, sta, err));
 
@@ -393,7 +393,7 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0400, testing::ext::TestSize.Level
         string fileName = "1234567890abcdefghijk";
         struct stat sta = {.st_mode = 0x040000};
         int err = 0;
-        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(-1)).WillOnce(Return(-1));
         EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0)).WillOnce(Return(0));
         struct passwd pw;
         EXPECT_CALL(*funcMock, getpwuid(_)).WillRepeatedly(Return(&pw));
@@ -431,7 +431,7 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0500, testing::ext::TestSize.Level
         string fileName = "1234567890abcdefghijk";
         struct stat sta = {.st_mode = 0x100000};
         int err = 0;
-        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillOnce(Return(-1)).WillOnce(Return(-1));
         EXPECT_CALL(*funcMock, ferror(_)).WillOnce(Return(0)).WillOnce(Return(0));
         struct passwd pw;
         EXPECT_CALL(*funcMock, getpwuid(_)).WillRepeatedly(Return(&pw));
@@ -473,6 +473,7 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_AddFile_0600, testing::ext::TestSize.Level
         EXPECT_CALL(*funcMock, getgrgid(_)).WillRepeatedly(Return(&gr));
         EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(-1));
         EXPECT_CALL(*funcMock, close(_)).WillRepeatedly(Return(0));
+        GTEST_LOG_(INFO) << "S_ISREG(st.st_mode) :" << S_ISREG(0100000);
         EXPECT_FALSE(TarFile::GetInstance().AddFile(fileName, sta, err));
     } catch (...) {
         EXPECT_TRUE(false);
@@ -681,5 +682,175 @@ HWTEST_F(TarFileSubTest, SUB_Tar_File_Packet_0002, testing::ext::TestSize.Level1
         GTEST_LOG_(INFO) << "TarFileSubTest-exception exception occurred by TarFile.";
     }
     GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_Packet_0002";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_Packet_Pair_0100
+ * @tc.name: SUB_Tar_File_Packet_Pair_0100
+ * @tc.desc: 测试 Packet(pair) 接口 - 空文件列表
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_Packet_Pair_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_Packet_Pair_0100";
+    string tarFileName = "part";
+    string pkPath = "/tmp";
+    TarMap tarMap;
+    auto reportCb = [](std::string path, int err) {
+        return;
+    };
+    try {
+        vector<pair<string, string>> files;
+        bool ret = TarFile::GetInstance().Packet(files, tarFileName, pkPath, tarMap, reportCb);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-exception exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_Packet_Pair_0100";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_Packet_Pair_0200
+ * @tc.name: SUB_Tar_File_Packet_Pair_0200
+ * @tc.desc: 测试 Packet(pair) 接口 - InitBeforePacket失败
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_Packet_Pair_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_Packet_Pair_0200";
+    string tarFileName = "";
+    string pkPath = "/tmp";
+    TarMap tarMap;
+    auto reportCb = [](std::string path, int err) {
+        return;
+    };
+    try {
+        vector<pair<string, string>> files = {{"file1", "restore1"}};
+        bool ret = TarFile::GetInstance().Packet(files, tarFileName, pkPath, tarMap, reportCb);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-exception exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_Packet_Pair_0200";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_Packet_Pair_0300
+ * @tc.name: SUB_Tar_File_Packet_Pair_0300
+ * @tc.desc: 测试 Packet(pair) 接口 - 正常打包成功(含restorePath)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_Packet_Pair_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_Packet_Pair_0300";
+    string tarFileName = "part";
+    string pkPath = "/tmp";
+    TarMap tarMap;
+    auto reportCb = [](std::string path, int err) {
+        return;
+    };
+    FILE * tmpFile = tmpfile();
+    EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(tmpFile));
+    EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(1));
+    EXPECT_CALL(*funcMock, close(_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*funcMock, ferror(_)).WillRepeatedly(Return(0));
+    struct passwd pw;
+    EXPECT_CALL(*funcMock, getpwuid(_)).WillRepeatedly(Return(&pw));
+    struct group gr;
+    EXPECT_CALL(*funcMock, getgrgid(_)).WillRepeatedly(Return(&gr));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*funcMock, lstat(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*funcMock, read(_, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
+    EXPECT_CALL(*funcMock, fwrite(_, _, _, _)).WillRepeatedly(Return(BLOCK_SIZE));
+    try {
+        vector<pair<string, string>> files = {{"f1", "restore_f1"}};
+        TarFile::GetInstance().tarMap_.clear();
+        bool ret = TarFile::GetInstance().Packet(files, tarFileName, pkPath, tarMap, reportCb);
+        EXPECT_TRUE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-exception exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_Packet_Pair_0300";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_Packet_Pair_0400
+ * @tc.name: SUB_Tar_File_Packet_Pair_0400
+ * @tc.desc: 测试 Packet(pair) 接口 - TraversalFile失败(EACCES不回调)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_Packet_Pair_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_Packet_Pair_0400";
+    string tarFileName = "part";
+    string pkPath = "/tmp";
+    TarMap tarMap;
+    int reportCbCallCount = 0;
+    auto reportCb = [&reportCbCallCount](std::string path, int err) {
+        reportCbCallCount++;
+    };
+    FILE * tmpFile = tmpfile();
+    EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(tmpFile));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(-1));
+    try {
+        vector<pair<string, string>> files = {{"f1", ""}};
+        TarFile::GetInstance().tarMap_.clear();
+        errno = ERR_NO_PERMISSION;
+        bool ret = TarFile::GetInstance().Packet(files, tarFileName, pkPath, tarMap, reportCb);
+        EXPECT_TRUE(ret); // Packet本身返回true, 错误由reportCb报告
+        EXPECT_EQ(reportCbCallCount, 0); // EACCES不回调
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-exception exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_Packet_Pair_0400";
+}
+
+/**
+ * @tc.number: SUB_Tar_File_Packet_Pair_0500
+ * @tc.name: SUB_Tar_File_Packet_Pair_0500
+ * @tc.desc: 测试 Packet(pair) 接口 - TraversalFile失败(非EACCES回调)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(TarFileSubTest, SUB_Tar_File_Packet_Pair_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TarFileSubTest-begin SUB_Tar_File_Packet_Pair_0500";
+    string tarFileName = "part";
+    string pkPath = "/tmp";
+    TarMap tarMap;
+    int reportCbCallCount = 0;
+    auto reportCb = [&reportCbCallCount](std::string path, int err) {
+        reportCbCallCount++;
+    };
+    FILE * tmpFile = tmpfile();
+    EXPECT_CALL(*funcMock, fopen(_, _)).WillOnce(Return(tmpFile));
+    EXPECT_CALL(*funcMock, access(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*funcMock, open(_, _)).WillRepeatedly(Return(-1));
+    try {
+        vector<pair<string, string>> files = {{"f1", "restore_f1"}};
+        TarFile::GetInstance().tarMap_.clear();
+        errno = 128; // 非EACCES
+        bool ret = TarFile::GetInstance().Packet(files, tarFileName, pkPath, tarMap, reportCb);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(reportCbCallCount, 1); // 非EACCES应回调
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TarFileSubTest-exception exception occurred by TarFile.";
+    }
+    GTEST_LOG_(INFO) << "TarFileSubTest-end SUB_Tar_File_Packet_Pair_0500";
 }
 } // namespace OHOS::FileManagement::Backup

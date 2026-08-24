@@ -188,9 +188,12 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         supportWithoutTar_ = want.GetBoolParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, false);
         excludeInfos_ = want.GetStringArrayParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA);
         batchSize_ = want.GetIntParam(BConstants::EXTENSION_BATCH_SIZE_PARA, DEFAULT_BATCH_SIZE);
+        restoreScene_ = static_cast<BConstants::ExtensionRestoreScene>(
+            want.GetIntParam(BConstants::EXTENSION_RESTORE_SCENE_PARA, BConstants::DEFAULT_RESTORE_SCENE));
         HILOGI("restoreExtInfo_ is %{public}s", GetAnonyString(restoreExtInfo_).c_str());
         HILOGI("Get version %{public}s type %{public}d from want when restore.", appVersionStr_.c_str(), restoreType_);
         HILOGI("oldBackupVersion_ is %{public}s", oldBackupVersion_.c_str());
+        HILOGI("restoreScene_ is %{public}d", restoreScene_);
     } else if (extAction_ == BConstants::ExtensionAction::BACKUP) {
         backupExtInfo_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_EXT_INFO_PARA);
         backupScene_ = want.GetStringParam(BConstants::EXTENSION_BACKUP_SCENE_PARA);
@@ -207,19 +210,15 @@ ErrCode ExtBackup::GetParament(const AAFwk::Want &want)
         for (const auto &item : j) {
             if (item["type"] == "anco_file_list_clone") {
                 ancoFileListClone_ = item["detail"];
-            }
-            if (item["type"] == "file_manager_file_list_clone") {
-                fileManagerFileListClone_ = item["detail"];
+                break;
             }
         }
-        HILOGI(
-            "backupExtInfo_ is %{public}s, backupScene_ is %{public}s, ancoFileListClone_ is %{public}s, "
-            "fileManagerFileListClone_ is %{public}s",
-            backupExtInfo_.c_str(), backupScene_.c_str(), ancoFileListClone_.c_str(),
-            fileManagerFileListClone_.c_str());
+        HILOGI("backupExtInfo_ is %{public}s, backupScene_ is %{public}s, ancoFileListClone_ is %{public}s",
+               backupExtInfo_.c_str(), backupScene_.c_str(), ancoFileListClone_.c_str());
     }
+    callerBundleName_ = want.GetStringParam(BConstants::EXTENSION_CALLER_BUNDLE_NAME_PARA);
     /* backup don't need parament. */
-    HILOGI("supportWithoutTar_ is %{public}d, batchSize_ is %{public}d, callerBundleName_ is %{public}s",
+    HILOGI("supportWithoutTar_ is %{public}d, batchSize_ is %{public}d, callerBundleName is %{public}s",
         supportWithoutTar_, batchSize_, callerBundleName_.c_str());
     return ERR_OK;
 }
@@ -396,6 +395,11 @@ std::vector<std::string> ExtBackup::GetExcludeInfos() const
 int32_t ExtBackup::GetBatchSize() const
 {
     return batchSize_;
+}
+
+BConstants::ExtensionRestoreScene ExtBackup::GetRestoreScene() const
+{
+    return restoreScene_;
 }
 
 std::string ExtBackup::GetCallerBundleName() const

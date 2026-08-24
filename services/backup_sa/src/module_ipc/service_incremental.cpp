@@ -66,7 +66,6 @@
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
-const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 
 namespace {
 constexpr int32_t INDEX = 3;
@@ -181,12 +180,11 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
             HILOGE("Get LocalCapabilities Incremental Error, session is empty or cleaning up the service");
             return UniqueFd(-ENOENT);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         isCreatingIncreaseFile_.fetch_add(INCREMENTAL_COUNT);
         ErrCode errCode = VerifyCaller();
         if (errCode != ERR_OK) {
             HILOGE("Get local abilities info failed, Verify caller failed, errCode:%{public}d", errCode);
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
             return UniqueFd(-ENOENT);
         }
@@ -196,25 +194,49 @@ UniqueFd Service::GetLocalCapabilitiesIncremental(const std::vector<BIncremental
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("GetLocalCapabilitiesIncremental: open file failed, err = %{public}d", errno);
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
             return UniqueFd(-ENOENT);
         }
         vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity = CreateJsonEntity(fd, bundleInfos, bundleNames);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
         isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("GetLocalCapabilitiesIncremental failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (...) {
         isCreatingIncreaseFile_.fetch_sub(INCREMENTAL_COUNT);
         HILOGE("Unexpected exception");
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return UniqueFd(-EPERM);
     }
+}
+
+static std::unordered_set<std::string> DeserializeCompatDirs(const BStringRawData &compatibleDirsRD)
+{
+    std::string dirsData;
+    std::unordered_set<std::string> dirs;
+    if (compatibleDirsRD.Unmarshalling(dirsData) != 0 || dirsData.empty()) {
+        return dirs;
+    }
+    auto dirList = StringUtils::StringVectorDeserialize(dirsData);
+    for (const auto &dir : dirList) {
+        if (BDir::IsFilePathValid(dir)) {
+            dirs.insert(dir);
+        }
+    }
+    return dirs;
+}
+
+static vector<BJsonEntityCaps::BundleInfo> GetIncBundleInfos(
+    SvcSessionManager *session, const std::string &bundleName, int64_t lastTime)
+{
+    std::unordered_map<std::string, std::unordered_set<std::string>> compatDirsMap;
+    auto dirs = session->GetCompatibleDirs(bundleName);
+    if (!dirs.empty()) {
+        compatDirsMap[bundleName] = dirs;
+    }
+    return BundleMgrAdapter::GetBundleInfosForIncremental(
+        {{bundleName, lastTime}}, session->GetSessionUserId(), compatDirsMap);
 }
 
 void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
@@ -248,10 +270,7 @@ void Service::StartGetFdTask(std::string bundleName, wptr<Service> ptr)
         throw BError(BError::Codes::SA_INVAL_ARG, "StopExtTimer error");
     }
     int64_t lastTime = session->GetLastIncrementalTime(bundleName);
-    std::vector<BIncrementalData> bundleNames;
-    bundleNames.emplace_back(BIncrementalData {bundleName, lastTime});
-    auto newBundleInfos = BundleMgrAdapter::GetBundleInfosForIncremental(bundleNames, session->GetSessionUserId());
-    RefreshBundleDataSize(newBundleInfos, bundleName, ptr);
+    RefreshBundleDataSize(GetIncBundleInfos(session, bundleName, lastTime), bundleName, ptr);
     string path = BConstants::GetSaBundleBackupRootDir(session->GetSessionUserId()).
         append(BundleMgrAdapter::GetBundleIndexName(bundleName)).
         append("/").append(BConstants::BACKUP_STAT_SYMBOL).append(to_string(lastTime));
@@ -292,7 +311,7 @@ void Service::RefreshBundleDataSize(const vector<BJsonEntityCaps::BundleInfo> &n
     }
 }
 
-ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
+ErrCode Service::GetAppLocalListAndDoIncrementalBackup(const BStringRawData &compatibleDirsRD)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
@@ -300,15 +319,17 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
             HILOGE("session is nullptr");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         session_->SetSessionUserId(GetUserIdDefault());
         std::string bundleName;
         ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
         if (ret != ERR_OK) {
             HILOGE("Get AppLocalList failed, Get bundle failed, ret:%{public}d", ret);
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
+        auto dirs = DeserializeCompatDirs(compatibleDirsRD);
+        HILOGI("compatibleDirs size=%{public}zu, bundleName=%{public}s", dirs.size(), bundleName.c_str());
+        session_->SetCompatibleDirs(bundleName, dirs);
         auto task = [this, bundleName]() {
             StartGetFdTask(bundleName, wptr(this));
         };
@@ -321,15 +342,12 @@ ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
                 HILOGE("Unexpected exception");
             }
         });
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("GetAppLocalListAndDoIncrementalBackup failed, errCode = %{public}d", e.GetCode());
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -445,13 +463,12 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             HILOGE("Init Incremental backup session  error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         bundleNames = GetBundleNameByDetails(bundlesToBackup);
         ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::BACKUP);
         if (ret != ERR_OK) {
             HILOGE("Append bundles incremental session failed, verify caller failed, ret:%{public}d", ret);
             HandleExceptionOnAppendBundles(session_, bundleNames, {});
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
         auto backupInfos = BundleMgrAdapter::GetBundleInfosForAppendBundles(bundlesToBackup,
@@ -461,17 +478,14 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         SetCurrentBackupSessProperties(supportBackupNames, session_->GetSessionUserId(), backupInfos, true);
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -492,12 +506,11 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
             HILOGE("Init Incremental backup session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         bundleNames = GetBundleNameByDetails(bundlesToBackup);
         ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::BACKUP);
         if (ret != ERR_OK) {
             HILOGE("Append bundles incremental session with infos failed, verify caller failed, ret:%{public}d", ret);
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             HandleExceptionOnAppendBundles(session_, bundleNames, {});
             return ret;
         }
@@ -513,17 +526,14 @@ ErrCode Service::AppendBundlesIncrementalBackupSession(const std::vector<BIncrem
         SetBundleIncDataInfo(bundlesToBackup, supportBackupNames);
         HandleCurGroupIncBackupInfos(backupInfos, bundleNameDetailMap, bundleSettingInfos);
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -1030,7 +1040,7 @@ ErrCode Service::SendIncrementalFileHandlesByEnhance(const std::string &bundleNa
     std::vector<int32_t> errCodes;
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
-        HILOGE("SendIncrementalFileHandle, enhance service is not loaded");
+        HILOGE("SendIncrementalFileHandles, enhance service is not loaded");
         auto errCode = BError(BError::Codes::SA_ENHANCE_SERVICE_UNAVAILABLE).GetCode();
         openResults.insert(openResults.end(), fileNames.size(), FileOpenResult(errCode));
         return errCode;
@@ -1155,13 +1165,6 @@ void Service::NotifyCallerCurAppIncrementDone(ErrCode errCode, const std::string
         std::stringstream strTime;
         strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
             << (std::setw(INDEX)) << (ms.count() % MS_1000);
-        HiSysEventWrite(
-            OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
-            FILE_BACKUP_EVENTS,
-            OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-            "PROC_NAME", "ohos.appfileservice", "BUNDLENAME", callerName,
-            "PID", getpid(), "TIME", strTime.str()
-        );
     } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
         session_->GetServiceReverseProxy()->IncrementalRestoreOnBundleFinished(errCode, callerName);
@@ -1438,58 +1441,36 @@ ErrCode Service::StartCleanData(int triggerType, unsigned int writeSize, unsigne
         if (!VerifyDataClone()) {
             return static_cast<ErrCode> (BError::BackupErrorCode::E_PERM);
         }
-        
-        auto [handle, func] = LoadGcLibrary(triggerType);
-        if (handle == nullptr || func == nullptr) {
-            return static_cast<ErrCode> (BError::BackupErrorCode::E_INVAL);
+        if (triggerType != BConstants::DEVICE_GARBAGE_COLLECTION) {
+            HILOGI("Begin startIO");
+            return StartIO(triggerType, static_cast<int>(writeSize), static_cast<int>(waitTime));
+        } else {
+            HILOGI("Begin startGC");
+            return StartGC(triggerType, writeSize, waitTime);
         }
-
-        ErrCode errCode = ExecuteGcTask(handle, func, triggerType, writeSize, waitTime);
-        return errCode;
+        return ERROR_OK;
     } catch (const BError &e) {
         HILOGE("StartCleanData failed, errCode = %{public}d", e.GetCode());
-        return e.GetCode();
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     } catch (...) {
         HILOGE("Unexpected exception");
-        return EPERM;
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
 }
 
-std::pair<void*, CallDeviceTaskRequest> Service::LoadGcLibrary(int triggerType)
+ErrCode Service::StartGC(int triggerType, unsigned int writeSize, unsigned int waitTime)
 {
-    const char* libPath =  (triggerType == BConstants::DEVICE_GARBAGE_COLLECTION) ?
-        "/system/lib64/libioqos_service_client.z.so" :
-        "/system/lib64/libsmart_storage_service_client.z.so";
-    void *handle = dlopen(libPath, RTLD_LAZY);
+    void *handle = dlopen("/system/lib64/libioqos_service_client.z.so", RTLD_LAZY | RTLD_NODELETE);
     if (!handle) {
-        std::string error = dlerror();
-        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error.c_str());
-        AppRadar::Info info("", "", error);
-        AppRadar::GetInstance().RecordDefaultFuncRes(
-            info, "Service::LoadGcLibrary", AppRadar::GetInstance().GetUserId(),
-            BizStageBackup::BIZ_STAGE_DEFAULT, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
-        return {nullptr, nullptr};
+        HILOGE("Dlopen libioqos_service_client.z.so failed, errno = %{public}s", dlerror());
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
-
-    const char* symbolName = (triggerType == BConstants::DEVICE_GARBAGE_COLLECTION) ?
-        "CallDeviceTaskRequest" : "CallDirectTlc";
-    CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, symbolName));
+    CallDeviceTaskRequest func = reinterpret_cast<CallDeviceTaskRequest>(dlsym(handle, "CallDeviceTaskRequest"));
     if (func == nullptr) {
-        std::string error = dlerror();
-        HILOGE("Dlopen %{public}s failed, errno = %{public}s", libPath, error.c_str());
-        AppRadar::Info info("", "", error);
-        AppRadar::GetInstance().RecordDefaultFuncRes(
-            info, "Service::LoadGcLibrary", AppRadar::GetInstance().GetUserId(),
-            BizStageBackup::BIZ_STAGE_DEFAULT, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
+        HILOGE("CallDeviceTaskRequest dlsym failed, errno = %{public}s", dlerror());
         dlclose(handle);
-        return {nullptr, nullptr};
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
     }
-    return {handle, func};
-}
-
-ErrCode Service::ExecuteGcTask(void* handle, CallDeviceTaskRequest func,
-                               int triggerType, unsigned int writeSize, unsigned int waitTime)
-{
     std::unique_lock<std::mutex> lock(gcMtx_);
     if (gcProgress_ == nullptr) {
         gcProgress_ = std::make_shared<GcProgressInfo>();
@@ -1513,5 +1494,36 @@ ErrCode Service::ExecuteGcTask(void* handle, CallDeviceTaskRequest func,
         [this] { return isGcTaskDone_.load(std::memory_order_acquire); });
     dlclose(handle);
     return DealWithGcErrcode(isGcTaskDone_.load(std::memory_order_acquire), gcProgress_);
+}
+
+ErrCode Service::StartIO(int triggerType, int writeSize, int waitTime)
+{
+    void *handle = dlopen("/system/lib64/libsmart_storage_service_client.z.so", RTLD_LAZY);
+    if (!handle) {
+        std::string error = dlerror();
+        HILOGE("Dlopen libsmart_storage_service_client.z.so failed, errno = %{public}s", error.c_str());
+        AppRadar::Info info("", "", error);
+        AppRadar::GetInstance().RecordDefaultFuncRes(
+            info, "Service::StartIO", AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_DEFAULT, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+    }
+    CallDirectTlc func = reinterpret_cast<CallDirectTlc>(dlsym(handle, "CallDirectTlc"));
+    if (func == nullptr) {
+        std::string error = dlerror();
+        HILOGE("CallDirectTlc dlsym failed, errno = %{public}s", error.c_str());
+        AppRadar::Info info("", "", error);
+        AppRadar::GetInstance().RecordDefaultFuncRes(
+            info, "Service::StartIO", AppRadar::GetInstance().GetUserId(),
+            BizStageBackup::BIZ_STAGE_DEFAULT, BError(BError::Codes::EXT_BROKEN_IPC).GetCode());
+        dlclose(handle);
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_INVAL);
+    }
+    if (func(triggerType, writeSize, waitTime) != ERROR_OK) {
+        dlclose(handle);
+        return static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED);
+    }
+    dlclose(handle);
+    return ERROR_OK;
 }
 } // namespace OHOS::FileManagement::Backup

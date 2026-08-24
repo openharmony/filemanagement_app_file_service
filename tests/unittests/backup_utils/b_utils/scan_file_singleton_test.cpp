@@ -180,8 +180,8 @@ HWTEST_F(ScanResultManagerTest, SMALL_FILE_INFO_TEST_001, testing::ext::TestSize
 HWTEST_F(ScanResultManagerTest, ADD_BIG_FILE_TEST_001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ScanResultManagerTest-begin: ADD_BIG_FILE_TEST_001";
-    GTEST_LOG_(INFO) << "1. test restorePath empty";
     manager_.SetCallerBundleName(BConstants::BUNDLE_DATA_CLONE);
+    GTEST_LOG_(INFO) << "1. test restorePath empty";
     std::string filePath = "abc/aaa/test1";
     std::string restorePath = "";
     struct stat sta = {};

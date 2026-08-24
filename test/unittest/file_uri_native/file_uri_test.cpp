@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,9 +15,9 @@
 
 #include "file_uri.h"
 
+#include <fcntl.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <fcntl.h>
 
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
@@ -33,9 +33,9 @@ using namespace OHOS::Security::AccessToken;
 using namespace OHOS::AppFileService;
 
 namespace {
-    const string BUNDLE_A = "com.example.filesharea";
-    const string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
-}
+const string BUNDLE_A = "com.example.filesharea";
+const string FULL_MOUNT_ENABLE_PARAMETER = "const.filemanager.full_mount.enable";
+} // namespace
 
 string CommonFunc::GetSelfBundleName()
 {
@@ -43,7 +43,7 @@ string CommonFunc::GetSelfBundleName()
 }
 
 namespace OHOS::AppFileService::ModuleFileUri {
-    string filePath = "/data/app/el2/100/base/com.example.fileshareb/files/";
+string filePath = "/data/app/el2/100/base/com.example.fileshareb/files/";
 class FileUriTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -75,7 +75,7 @@ void FileUriTest::TearDownTestCase()
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I7LW57
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_ToString_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_ToString_0000";
@@ -97,7 +97,7 @@ HWTEST_F(FileUriTest, File_uri_ToString_0000, testing::ext::TestSize.Level1)
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I7LW57
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_GetName_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetName_0000";
@@ -122,7 +122,7 @@ HWTEST_F(FileUriTest, File_uri_GetName_0000, testing::ext::TestSize.Level1)
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I7LW57
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0000";
@@ -150,7 +150,7 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0000, testing::ext::TestSize.Level1)
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I7LW57
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0001";
@@ -177,7 +177,7 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0001, testing::ext::TestSize.Level1)
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I7LW57
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0002";
@@ -198,7 +198,7 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0002, testing::ext::TestSize.Level1)
  * @tc.type: FUNC
  * @tc.level Level 1
  * @tc.require: I7LW57
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0003, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0003";
@@ -215,13 +215,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0003, testing::ext::TestSize.Level1)
 }
 
 /**
-    * @tc.name: file_uri_test_0006
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0006
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0004, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0004";
@@ -235,13 +235,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0004, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0004";
 }
 /**
-    * @tc.name: file_uri_test_0007
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0007
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0005, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0005";
@@ -252,13 +252,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0005, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0005";
 }
 /**
-    * @tc.name: file_uri_test_0008
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0008
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0006, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0006";
@@ -270,13 +270,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0006, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0006";
 }
 /**
-    * @tc.name: file_uri_test_0009
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0009
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0007, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0007";
@@ -290,13 +290,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0007, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0007";
 }
 /**
-    * @tc.name: file_uri_test_00010
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_00010
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0008, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0008";
@@ -311,13 +311,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0008, testing::ext::TestSize.Level1)
 }
 
 /**
-    * @tc.name: file_uri_test_00011
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_00011
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0009, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0009";
@@ -328,13 +328,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0009, testing::ext::TestSize.Level1)
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0009";
 }
 /**
-    * @tc.name: file_uri_test_00012
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_00012
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0010, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0010";
@@ -346,13 +346,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0010, testing::ext::TestSize.Level1)
 }
 
 /**
-    * @tc.name: file_uri_test_0000
-    * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0000
+ * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0000";
@@ -365,15 +365,14 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0000, testing::ext::TestSize.Level1)
     EXPECT_EQ(path, rltStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0000";
 }
-
 /**
-    * @tc.name: file_uri_test_0001
-    * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0001
+ * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0001";
@@ -386,15 +385,14 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0001, testing::ext::TestSize.Level1)
     EXPECT_EQ(path, rltStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0001";
 }
-
 /**
-    * @tc.name: file_uri_test_0002
-    * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0002
+ * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0002, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0002";
@@ -407,15 +405,14 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0002, testing::ext::TestSize.Level1)
     EXPECT_EQ(path, rltStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0002";
 }
-    
 /**
-    * @tc.name: file_uri_test_0003
-    * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0003
+ * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0003, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0003";
@@ -428,15 +425,14 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0003, testing::ext::TestSize.Level1)
     EXPECT_EQ(path, rltStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0003";
 }
-    
 /**
-    * @tc.name: file_uri_test_0004
-    * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0004
+ * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0004, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0004";
@@ -449,15 +445,14 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0004, testing::ext::TestSize.Level1)
     EXPECT_EQ(path, rltStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0004";
 }
-
 /**
-    * @tc.name: file_uri_test_0005
-    * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0005
+ * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0005, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0005";
@@ -470,15 +465,14 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0005, testing::ext::TestSize.Level1)
     EXPECT_EQ(path, rltStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0005";
 }
-
 /**
-    * @tc.name: file_uri_test_0006
-    * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: file_uri_test_0006
+ * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0006, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0006";
@@ -493,13 +487,13 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0006, testing::ext::TestSize.Level1)
 }
 
 /**
-    * @tc.name: file_uri_GetPathBySA_0007
-    * @tc.desc: Test function of GetPath) interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: File_uri_GetPathBySA_0007
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0007, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0007";
@@ -509,14 +503,15 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0007, testing::ext::TestSize.Level1)
     EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0007";
 }
+
 /**
-    * @tc.name: file_uri_GetPathBySA_0008
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: File_uri_GetPathBySA_0008
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0008, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0008";
@@ -528,13 +523,13 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0008, testing::ext::TestSize.Level1)
 }
 
 /**
-    * @tc.name: file_uri_GetPathBySA_0009
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: File_uri_GetPathBySA_0009
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0009, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0009";
@@ -544,14 +539,15 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0009, testing::ext::TestSize.Level1)
     EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0009";
 }
+
 /**
-    * @tc.name: file_uri_GetPathBySA_0010
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+ * @tc.name: File_uri_GetPathBySA_0010
+ * @tc.desc: Test function of GetPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0010, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0010";
@@ -561,14 +557,15 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0010, testing::ext::TestSize.Level1)
     EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0010";
 }
+
 /**
-    * @tc.name: File_uri_GetFullDirectoryUri_0000
-    * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require:
-*/
+ * @tc.name: File_uri_GetFullDirectoryUri_0000
+ * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
 HWTEST_F(FileUriTest, File_uri_GetFullDirectoryUri_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0000";
@@ -584,13 +581,13 @@ HWTEST_F(FileUriTest, File_uri_GetFullDirectoryUri_0000, testing::ext::TestSize.
     GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
 }
 /**
-    * @tc.name: file_uri_test_0008
-    * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require:
-*/
+ * @tc.name: file_uri_test_0008
+ * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
 HWTEST_F(FileUriTest, File_uri_GetFullDirectoryUri_0001, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0001";
@@ -613,13 +610,13 @@ HWTEST_F(FileUriTest, File_uri_GetFullDirectoryUri_0001, testing::ext::TestSize.
 }
 
 /**
-    * @tc.name: file_uri_test_0009
-    * @tc.desc: Test function of CheckUriFormat() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require:
-*/
+ * @tc.name: file_uri_test_0009
+ * @tc.desc: Test function of CheckUriFormat() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
 HWTEST_F(FileUriTest, File_uri_CheckUriFormat_0000, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_CheckUriFormat_0000";
@@ -651,13 +648,13 @@ HWTEST_F(FileUriTest, File_uri_CheckUriFormat_0000, testing::ext::TestSize.Level
 }
 
 /**
-    * @tc.name: file_uri_test_0010
-    * @tc.desc: Test function of GetUriFromPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require:
-*/
+ * @tc.name: file_uri_test_0010
+ * @tc.desc: Test function of GetUriFromPath() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
 HWTEST_F(FileUriTest, File_uri_GetUriFromPath_0010, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_0010";
@@ -896,4 +893,4 @@ HWTEST_F(FileUriTest, File_uri_GetUriFromPath_CurrentUser_0007, testing::ext::Te
     EXPECT_EQ(fileUri.ToString(), expectedUri);
     GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_CurrentUser_0007";
 }
-}
+} // namespace OHOS::AppFileService::ModuleFileUri

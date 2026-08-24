@@ -25,6 +25,7 @@
 
 namespace OHOS::FileManagement::Backup {
 
+static StrategyRegistrar g_strategyRegistrar;
 namespace {
 const std::string BROADCAST_TYPE = "broadcast";
 const std::string UNICAST_TYPE = "unicast";

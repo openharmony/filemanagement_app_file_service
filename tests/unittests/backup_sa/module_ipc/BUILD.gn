@@ -812,6 +812,7 @@ ohos_unittest("backup_service_sub_test") {
     "${path_backup_mock}/timer/timer_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_json_clear_data_config_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_json_service_disposal_config_mock.cpp",
+    "${path_backup_mock}/module_ipc/src/ipc_skeleton_mock.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/sa_backup_connection.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/service_incremental.cpp",
     "${path_backup}/services/backup_sa/src/module_ipc/svc_restore_deps_manager.cpp",
@@ -844,6 +845,7 @@ ohos_unittest("backup_service_sub_test") {
     "${path_backup_mock}/module_ipc",
     "${path_backup_mock}/common/include",
     "${path_backup_mock}/utils_mock/include",
+    "${path_backup_mock}/accesstoken/include",
   ]
 
   deps = [

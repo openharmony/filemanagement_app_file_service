@@ -809,7 +809,7 @@ HWTEST_F(BJsonEntityExtManageTest, CheckUserTar_Test_1001, testing::ext::TestSiz
         EXPECT_FALSE(BJsonEntityExtManage::CheckUserTar("anco_file.txt", mockStat, true));
 
         EXPECT_TRUE(BJsonEntityExtManage::CheckUserTar("anco_file.tar", mockStat, true));
-        
+
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CheckUserTar_Test-an exception occurred.";

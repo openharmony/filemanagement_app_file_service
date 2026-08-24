@@ -65,7 +65,7 @@ public:
     MOCK_METHOD2(GetIncrementalFileHandle, ErrCode(const std::string &bundleName, const std::string &fileName));
     MOCK_METHOD2(GetBackupInfo, ErrCode(const BundleName &bundleName, std::string &result));
     MOCK_METHOD3(UpdateTimer, ErrCode(const BundleName &bundleName, uint32_t timeout, bool &result));
-    MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
+    MOCK_METHOD1(GetAppLocalListAndDoIncrementalBackup, ErrCode(const BStringRawData &));
     MOCK_METHOD1(StopExtTimer, ErrCode(bool &isExtStop));
     MOCK_METHOD1(RefreshDataSize, ErrCode(int64_t totalsize));
     MOCK_METHOD5(
@@ -93,9 +93,9 @@ public:
     MOCK_METHOD1(StartAncoUnPacket, ErrCode(const std::string &));
     MOCK_METHOD3(AddAncoMovePaths, ErrCode(const std::vector<std::string> &, const std::vector<std::string> &,
         const std::vector<StatInfo> &));
-    MOCK_METHOD1(StartAncoMove, ErrCode(AncoRestoreResult &));
     MOCK_METHOD3(MigrateFile, ErrCode(const BPathInfo &, const std::string &, const std::string &));
     MOCK_METHOD3(GetApkFileHandle, ErrCode(const std::string &, const std::string &, int &));
+    MOCK_METHOD1(StartAncoMove, ErrCode(AncoRestoreResult &));
 };
 } // End of namespace OHOS::FileManagement::Backup
 #endif // TEST_UNITTEST_SERVICE_PROXY_MOCK_H

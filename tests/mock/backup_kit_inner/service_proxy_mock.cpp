@@ -167,7 +167,7 @@ ErrCode ServiceProxy::GetLocalCapabilitiesIncremental(const std::vector<BIncreme
     return BError(BError::Codes::OK);
 }
 
-ErrCode ServiceProxy::GetAppLocalListAndDoIncrementalBackup()
+ErrCode ServiceProxy::GetAppLocalListAndDoIncrementalBackup(const BStringRawData &compatibleDirs)
 {
     return BError(BError::Codes::OK);
 }

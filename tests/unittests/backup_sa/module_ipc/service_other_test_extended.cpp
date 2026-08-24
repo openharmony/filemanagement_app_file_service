@@ -76,7 +76,7 @@ ErrCode Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalD
 
 void Service::StartGetFdTask(std::string, wptr<Service>) {}
 
-ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
+ErrCode Service::GetAppLocalListAndDoIncrementalBackup(const BStringRawData &compatibleDirs)
 {
     return BError(BError::Codes::OK);
 }

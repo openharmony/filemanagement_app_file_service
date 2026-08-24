@@ -1115,20 +1115,24 @@ HWTEST_F(ServiceTest, SUB_Service_DoEnhanceMove_0000, testing::ext::TestSize.Lev
         auto backupService = EnhanceServiceManager().GetInstance().service_;
         EnhanceServiceManager().GetInstance().service_ = nullptr;
         int32_t errCode = 0;
-        ErrCode ret = service->DoEnhanceMove("/src", "/dest", 1000, 1000, errCode, false);
+        MigrateFileParam param{"/src", "/dest", 1000, 1000, false, false};
+        ErrCode ret = service->DoEnhanceMove(param, errCode);
         EXPECT_NE(ret, ERR_OK);
         EnhanceServiceManager().GetInstance().service_ = backupService;
 
         EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(ERR_OK));
-        ret = service->DoEnhanceMove("/src", "/dest", 1000, 1000, errCode, false);
+        param.isDir = false;
+        ret = service->DoEnhanceMove(param, errCode);
         EXPECT_EQ(ret, ERR_OK);
 
         EXPECT_CALL(*mockEnhanceService, MoveDirectory(_, _)).WillOnce(Return(ERR_OK));
-        ret = service->DoEnhanceMove("/src", "/dest", 1000, 1000, errCode, true);
+        param.isDir = true;
+        ret = service->DoEnhanceMove(param, errCode);
         EXPECT_EQ(ret, ERR_OK);
 
         EXPECT_CALL(*mockEnhanceService, MoveFiles(_, _)).WillOnce(Return(1));
-        ret = service->DoEnhanceMove("/src", "/dest", 1000, 1000, errCode, false);
+        param.isDir = false;
+        ret = service->DoEnhanceMove(param, errCode);
         EXPECT_NE(ret, ERR_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1191,7 +1195,7 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFilePrecheck_0000, testing::ext::TestSi
     GTEST_LOG_(INFO) << "ServiceTest-begin SUB_Service_MigrateFilePrecheck_0000";
     try {
         BPathInfo path("/data/src", "/data/dest");
-        ErrCode ret = service->MigrateFilePrecheck("bundleName", path);
+        ErrCode ret = service->MigrateFilePrecheck("bundleName", path, "test_file.txt");
         EXPECT_NE(ret, ERR_OK);
 
         g_verifyDataCloneResult = true;
@@ -1201,7 +1205,7 @@ HWTEST_F(ServiceTest, SUB_Service_MigrateFilePrecheck_0000, testing::ext::TestSi
             .WillRepeatedly(Return(Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
         EXPECT_CALL(*token, VerifyAccessToken(_, _))
             .WillRepeatedly(Return(Security::AccessToken::PermissionState::PERMISSION_GRANTED));
-        ret = service->MigrateFilePrecheck("bundleName", path);
+        ret = service->MigrateFilePrecheck("bundleName", path, "test_file.txt");
         EXPECT_EQ(ret, ERR_OK);
         service->session_ = nullptr;
         g_verifyDataCloneResult = false;

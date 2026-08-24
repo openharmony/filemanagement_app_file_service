@@ -134,6 +134,7 @@ public:
     {
         if (extension_ != nullptr) {
             isSupportWithoutTar_ = extension_->GetSupportWithoutTar();
+            restoreScene_ = extension_->GetRestoreScene();
             extension_->SetBackupExtExtension(this);
         }
         bundleName_ = bundleName;
@@ -291,6 +292,9 @@ private:
                       vector<struct ReportFileInfo> &bigFiles,
                       const unordered_map<string, struct ReportFileInfo> &cloudFiles,
                       unordered_map<string, struct ReportFileInfo> &localFilesInfo);
+    void ApplyRestorePathMapping(unordered_map<string, struct ReportFileInfo> &localFilesInfo);
+    std::unordered_map<std::string, std::string> BuildCompatibleDirMapping();
+    std::string MapPathWithCompatDir(const std::string &filePath) const;
 
     void AsyncTaskDoIncrementalBackup(UniqueFd incrementalFd, UniqueFd manifestFd);
     void AsyncTaskOnIncrementalBackup();
@@ -304,7 +308,7 @@ private:
     void DoPacketOnce(const std::vector<std::shared_ptr<ISmallFileInfo>> &packFiles, const string &path,
         std::function<void(std::string, int)> reportCb, uint64_t &totalTarSpend);
     void CheckTmpDirFileInfos(bool isSpecialVersion = false);
-    std::map<std::string, off_t> GetIdxFileInfos(bool isSpecialVersion = false);
+    std::map<std::string, std::pair<off_t, bool>> GetIdxFileInfos(bool isSpecialVersion = false);
     tuple<bool, vector<string>> CheckRestoreFileInfos();
     void CheckAppIncrementalFileReadyResult(int32_t ret, std::string packageName, std::string file);
     /**
@@ -390,11 +394,13 @@ private:
     std::function<void(ErrCode, const std::string)> OnBackupCallback(wptr<BackupExtExtension> obj);
 
     void HandleSpecialVersionRestore();
+    void ReportOnBackupTimeCost(const std::string &callbackTag);
+    void HandleIncBackupExSuccess(const std::string &backupExRetInfo);
     void DeleteBackupIncrementalIdxFile();
     void DeleteBackupIdxFile();
     void DeleteBackupIncrementalTars(const string &tarName);
     void SetClearDataFlag(bool isClearData);
-    std::string GetBundlePath();
+    std::string GetBundlePath(const std::string &hashName = "");
     std::vector<ExtManageInfo> GetExtManageInfo(bool isSpecialVersion = false);
     ErrCode RestoreFilesForSpecialCloneCloud();
     void RestoreBigFilesForSpecialCloneCloud(const ExtManageInfo &item);
@@ -456,8 +462,7 @@ private:
     void ScanAllDirsTask(const string &config);
     void AsyncDoBackup();
     void DoBackupTask();
-    void ClearPublicTempFiles();
-    void DoBackupTaskCore(bool supportWithoutTar, std::vector<std::shared_ptr<IFileInfo>> &allFiles, int &ret);
+    int DoBackupTaskCore(std::vector<std::shared_ptr<IFileInfo>> &allFiles);
 
     void HandleExtDisconnect(bool isAppResultReport, ErrCode errCode);
     bool HandleGetExtOnRelease();
@@ -474,6 +479,11 @@ private:
                            std::vector<int> &normalfds,
                            std::vector<std::string> &abnormalfileNames,
                            std::vector<int> &errCodes);
+    bool ShouldRestoreToRootDir();
+    bool ShouldRenameToFullPathOnBackup(const std::shared_ptr<IFileInfo> &fileInfo);
+    bool ShouldUseRpFileOnRestore(bool isLongPath);
+    bool ShouldMoveBigFileOnRestore(const ExtManageInfo &item);
+    bool HasFileMigratedToRootDirViaClone(const ExtManageInfo &item);
 private:
     TarMap GetIncrmentBigInfos(const vector<struct ReportFileInfo> &files);
     void UpdateFileStat(std::string filePath, uint64_t fileSize);
@@ -515,6 +525,7 @@ private:
     bool isSupportWithoutTar_ {false};
     int32_t batchSize_ {500};
     std::string callerBundleName_;
+    BConstants::ExtensionRestoreScene restoreScene_ {BConstants::ExtensionRestoreScene::NORMAL};
     bool isDebug_ {true};
     std::map<std::string, off_t> endFileInfos_;
     std::map<std::string, std::vector<ErrCode>> errFileInfos_;
@@ -558,6 +569,7 @@ private:
     std::atomic<bool> stopGetComInfo_ {false};
     std::string compatibilityInfo_ {};
     std::unordered_set<std::string> compatibleDirs_; // 无条件竞争风险, 多处调用存在先后顺序不会并发
+    std::unordered_map<std::string, std::string> compatDirMapping_;
     std::mutex updateFileStatLock_;
     AncoRestoreResult ancoRestoreRes_;
     std::mutex fileOpenLock_;
@@ -565,13 +577,17 @@ private:
     std::mutex appendManageJsonLock_;
     UniqueFd manageJsonFd_;
     std::mutex manageJsonFdLock_;
-    std::atomic<int> pendingAppendCount_ { 0 };
+    std::atomic<size_t> pendingAppendCount_ { 0 };
     std::atomic<bool> isFirstWrite_ {true};
+    bool cachedRestoreToRootDir_ = false;
+    std::once_flag restoreToRootDirOnceFlag_;
 public:
     void SetSupportWithoutTar(bool isSupportWithoutTar);
     bool GetSupportWithoutTar() const;
     void SetBatchSize(int32_t batchSize);
     int32_t GetBatchSize() const;
+    void SetRestoreScene(BConstants::ExtensionRestoreScene restoreScene);
+    BConstants::ExtensionRestoreScene GetRestoreScene() const;
     void SetCallerBundleName(const std::string& callerBundleName);
     std::string GetCallerBundleName() const;
     std::string cloneFileInfoDbPath_;

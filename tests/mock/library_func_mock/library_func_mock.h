@@ -59,6 +59,8 @@ int Lseek(int fd, off_t offset, int whence);
 void FdsanExchangeOwnerTag(int fd, uint64_t expected_tag, uint64_t new_tag);
 int FdsanCloseWithTag(int fd, uint64_t tag);
 int Futimens(int fd, const struct timespec times[2]);
+int Fchmod(int fd, mode_t mode);
+int Fileno(FILE *stream);
 
 namespace OHOS {
 namespace AppFileService {
@@ -93,6 +95,8 @@ public:
     virtual void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag) = 0;
     virtual int fdsan_close_with_tag(int fd, uint64_t tag) = 0;
     virtual int futimens(int fd, const struct timespec times[2]) = 0;
+    virtual int fchmod(int fd, mode_t mode) = 0;
+    virtual int fileno(FILE *stream) = 0;
     virtual bool RemoveFile(const std::string &fileName) = 0;
 public:
     static inline std::shared_ptr<LibraryFunc> libraryFunc_ = nullptr;
@@ -128,6 +132,8 @@ public:
     MOCK_METHOD(void, fdsan_exchange_owner_tag, (int fd, uint64_t expected_tag, uint64_t new_tag));
     MOCK_METHOD(int, fdsan_close_with_tag, (int fd, uint64_t tag));
     MOCK_METHOD(int, futimens, (int, const struct timespec[2]));
+    MOCK_METHOD(int, fchmod, (int fd, mode_t mode));
+    MOCK_METHOD(int, fileno, (FILE *stream));
     MOCK_METHOD(bool, RemoveFile, (const std::string &));
 };
 } // namespace AppFileService

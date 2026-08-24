@@ -16,9 +16,12 @@
 #include "module_external/bms_adapter.h"
 #include "module_external/sms_adapter.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <refbase.h>
+#include <set>
+#include <unordered_map>
 
 #include "b_error/b_error.h"
 #include "b_file_info.h"
@@ -185,14 +188,55 @@ static bool GetBackupExtConfig(const vector<AppExecFwk::ExtensionAbilityInfo> &e
         backupPara.includes = cache.GetIncludes();
         backupPara.excludes = cache.GetExcludes();
         backupPara.requireCompatibility = cache.GetRequireCompatibility();
+        backupPara.compatibleDirMapping = cache.GetCompatibleDirMapping();
         return true;
     }
     return false;
 }
 
-static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, int64_t lastIncrementalTime,
-    const vector<string> &includes, const vector<string> &excludes)
+static void DivideIncludesByCompatInfo(BJsonEntityCaps::BundleBackupConfigPara &backupPara)
 {
+    auto &dirMapping = backupPara.compatibleDirMapping;
+    auto &compatibleDirs = backupPara.compatibleDirs;
+    HILOGI("dirMapping config size:%{public}zu", dirMapping.size());
+    if (dirMapping.empty() || compatibleDirs.empty() || backupPara.includes.empty()) {
+        return;
+    }
+    std::unordered_map<std::string, std::string> enabledCompatDirs;
+    for (const auto &[restoreDir, backupDir] : dirMapping) {
+        if (compatibleDirs.find(restoreDir) != compatibleDirs.end()) {
+            enabledCompatDirs[restoreDir] = backupDir;
+        }
+    }
+    if (enabledCompatDirs.empty()) {
+        HILOGW("no compatibleDir enabled");
+        return;
+    }
+    HILOGI("enabled compatDirs count=%{public}zu", enabledCompatDirs.size());
+    set<string> backupDirs;
+    backupPara.includes.erase(
+        std::remove_if(backupPara.includes.begin(), backupPara.includes.end(),
+            [&backupDirs, &enabledCompatDirs](const string &path) {
+                auto it = enabledCompatDirs.find(path);
+                if (it != enabledCompatDirs.end()) {
+                    backupDirs.emplace(it->second);
+                    return true;
+                }
+                return false;
+            }),
+        backupPara.includes.end());
+    for (const auto &backupDir : backupDirs) {
+        backupPara.includes.emplace_back(backupDir);
+    }
+}
+
+static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, int64_t lastIncrementalTime,
+    BJsonEntityCaps::BundleBackupConfigPara backupPara)
+{
+    // 增量备份的includes需要与全量备份保持一致的兼容路径处理:
+    // restoreDir从includes中移除, backupDir添加到includes中, 这样SA扫描才能找到backupDir下的文件
+    DivideIncludesByCompatInfo(backupPara);
+
     // backup_sa bundle path
     string backupSaBundleDir = BConstants::GetSaBundleBackupRootDir(userId).
         append(BundleMgrAdapter::GetBundleIndexName(bundleName)).append("/");
@@ -213,11 +257,11 @@ static bool CreateIPCInteractionFiles(int32_t userId, const string &bundleName, 
         return false;
     }
     incExcFile << BConstants::BACKUP_INCLUDE << endl;
-    for (const auto &include : includes) {
+    for (const auto &include : backupPara.includes) {
         incExcFile << include << endl;
     }
     incExcFile << BConstants::BACKUP_EXCLUDE << endl;
-    for (const auto &exclude : excludes) {
+    for (const auto &exclude : backupPara.excludes) {
         incExcFile << exclude << endl;
     }
     incExcFile.close();
@@ -273,13 +317,10 @@ static bool GenerateBundleStatsIncrease(int32_t userId, const vector<string> &bu
     return true;
 }
 
-vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(
-    const vector<BIncrementalData> &incrementalDataList, int32_t userId)
+void BundleMgrAdapter::ProcessIncBundleList(const vector<BIncrementalData> &incrementalDataList,
+    int32_t userId, const std::unordered_map<std::string, std::unordered_set<std::string>> &compatibleDirsMap,
+    IncBundleProcessResult &result)
 {
-    vector<std::string> bundleNames;
-    vector<int64_t> incrementalBackTimes;
-    vector<BJsonEntityCaps::BundleInfo> bundleInfos;
-    vector<BJsonEntityCaps::BundleInfo> noBackupBundleInfos;
     auto bms = GetBundleManager();
     for (const auto &bundleNameTime : incrementalDataList) {
         auto bundleName = bundleNameTime.bundleName;
@@ -292,33 +333,46 @@ vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncrement
         struct BJsonEntityCaps::BundleBackupConfigPara backupPara;
         if (!GetBackupExtConfig(bundleExtInfo.extensionInfos_, backupPara)) {
             HILOGE("No backup extension ability found, bundleName:%{public}s", bundleName.c_str());
-            noBackupBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleExtInfo.bundleInfo_.name,
+            result.noBackupBundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleExtInfo.bundleInfo_.name,
                 bundleExtInfo.bundleInfo_.appIndex, bundleExtInfo.bundleInfo_.versionCode,
                 bundleExtInfo.bundleInfo_.versionName, 0, 0, false, false, false, "", "", "", Json::Value()});
             continue;
         }
-        if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
-            backupPara.excludes)) {
+        auto dirsIt = compatibleDirsMap.find(bundleName);
+        if (dirsIt != compatibleDirsMap.end()) {
+            backupPara.compatibleDirs = dirsIt->second;
+        }
+        if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara)) {
             HILOGE("Create bundleInteraction dir failed, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
-        bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleExtInfo.bundleInfo_.name,
+        result.bundleInfos.emplace_back(BJsonEntityCaps::BundleInfo {bundleExtInfo.bundleInfo_.name,
             bundleExtInfo.bundleInfo_.appIndex, bundleExtInfo.bundleInfo_.versionCode,
             bundleExtInfo.bundleInfo_.versionName, 0, 0, backupPara.allToBackup, backupPara.fullBackupOnly,
             backupPara.requireCompatibility, backupPara.extensionName, backupPara.restoreDeps, backupPara.supportScene,
             backupPara.extraInfo});
         if (bundleExtInfo.bundleInfo_.appIndex > 0) {
-            std::string bundleNameIndex  = "+clone-" + std::to_string(bundleExtInfo.bundleInfo_.appIndex) + "+" +
+            std::string bundleNameIndex = "+clone-" + std::to_string(bundleExtInfo.bundleInfo_.appIndex) + "+" +
                 bundleExtInfo.bundleInfo_.name;
-            bundleNames.emplace_back(bundleNameIndex);
+            result.bundleNames.emplace_back(bundleNameIndex);
         } else {
-            bundleNames.emplace_back(bundleName);
+            result.bundleNames.emplace_back(bundleName);
         }
-        incrementalBackTimes.emplace_back(bundleNameTime.lastIncrementalTime);
+        result.incrementalBackTimes.emplace_back(bundleNameTime.lastIncrementalTime);
     }
+}
+
+vector<BJsonEntityCaps::BundleInfo> BundleMgrAdapter::GetBundleInfosForIncremental(
+    const vector<BIncrementalData> &incrementalDataList, int32_t userId,
+    const std::unordered_map<std::string, std::unordered_set<std::string>> &compatibleDirsMap)
+{
+    IncBundleProcessResult result;
+    ProcessIncBundleList(incrementalDataList, userId, compatibleDirsMap, result);
     vector<BJsonEntityCaps::BundleInfo> newBundleInfos {};
-    newBundleInfos.insert(newBundleInfos.end(), noBackupBundleInfos.begin(), noBackupBundleInfos.end());
-    if (!GenerateBundleStatsIncrease(userId, bundleNames, incrementalBackTimes, bundleInfos, newBundleInfos)) {
+    newBundleInfos.insert(newBundleInfos.end(), result.noBackupBundleInfos.begin(),
+        result.noBackupBundleInfos.end());
+    if (!GenerateBundleStatsIncrease(userId, result.bundleNames, result.incrementalBackTimes, result.bundleInfos,
+        newBundleInfos)) {
         HILOGE("Failed to get bundleStats result");
         return newBundleInfos;
     }
@@ -687,8 +741,7 @@ void BundleMgrAdapter::CreatBackupEnv(const std::vector<BIncrementalData> &bundl
             HILOGE("No backup extension ability found, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
-        if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara.includes,
-            backupPara.excludes)) {
+        if (!CreateIPCInteractionFiles(userId, bundleName, bundleNameTime.lastIncrementalTime, backupPara)) {
             HILOGE("Create bundleInteraction dir failed, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
@@ -760,7 +813,7 @@ bool BundleMgrAdapter::GetUidGidForBundleName(const std::string &bundleName, int
         return false;
     }
     uid = bundleInfo.uid;
-    gid = static_cast<gid_t>(bundleInfo.gid);
+    gid = bundleInfo.gid;
     HILOGI("End GetUidGidForBundleName, bundleName:%{public}s, uid:%{public}d, gid:%{public}d",
         bundleName.c_str(), uid, gid);
     return true;

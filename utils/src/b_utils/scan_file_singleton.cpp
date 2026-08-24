@@ -21,5 +21,4 @@ ScanFileSingleton& ScanFileSingleton::GetInstance()
     static ScanFileSingleton instance;
     return instance;
 }
-
 } // namespace OHOS::FileManagement::Backup

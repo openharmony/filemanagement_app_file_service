@@ -277,10 +277,6 @@ ErrCode MigrateManager::DealIncrementalDone(ErrCode errCode)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     try {
-        if (servicePtr_ == nullptr) {
-            HILOGE("servicePtr_ is null");
-            return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
-        }
         if (servicePtr_->session_ == nullptr) {
             HILOGE("AppIncrementalDone error, session is null");
             return BError(BError::Codes::SA_INVAL_ARG);
@@ -442,10 +438,6 @@ void MigrateManager::HandleCurBundleEndWork(std::string bundleName, const Backup
     try {
         if (scenario != BackupType::FULL_RESTORE &&
             scenario != BackupType::INCREMENTAL_RESTORE) {
-            return;
-        }
-        if (servicePtr_ == nullptr || servicePtr_->session_ == nullptr) {
-            HILOGE("servicePtr_ or session_ is null");
             return;
         }
         if (servicePtr_->session_->OnBundleFileReady(bundleName)) {

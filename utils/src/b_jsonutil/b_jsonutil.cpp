@@ -31,7 +31,7 @@ namespace OHOS::FileManagement::Backup {
 using namespace std;
 namespace {
     const static int BUNDLE_INDEX_DEFAULT_VAL = 0;
-    const static std::string BUNDLE_INDEX_SPLICE = ":";
+    const static char BUNDLE_INDEX_SPLICE = ':';
     const int32_t DEFAULT_BATCH_SIZE = 500;
 }
 
@@ -45,7 +45,7 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
         return bundleDetailInfo;
     }
     std::string bundleName = bundleNameStr.substr(0, hasPos);
-    if (to_string(bundleNameStr.back()) != BUNDLE_INDEX_SPLICE) {
+    if (bundleNameStr.back() != BUNDLE_INDEX_SPLICE) {
         std::string indexStr = bundleNameStr.substr(hasPos + 1);
         int index = std::atoi(indexStr.c_str());
         bundleDetailInfo.bundleIndex = index;
@@ -303,6 +303,21 @@ static bool ParseBundleInfos(cJSON *root, std::vector<BJsonUtil::BundleDetailInf
     return true;
 }
 
+static void ParseRestoreScene(cJSON *root, BJsonUtil::BundleSettingInfo &bundleSettingInfo)
+{
+    cJSON *restoreScene = cJSON_GetObjectItem(root, BConstants::EXTENSION_RESTORE_SCENE_PARA);
+    if (restoreScene != nullptr && cJSON_IsNumber(restoreScene)) {
+        if (restoreScene->valueint < 0 &&
+            restoreScene->valueint >= BConstants::ExtensionRestoreScene::EXTENSION_RESTORE_SCENE_COUNT) {
+            HILOGW("restoreScene is invalid: %{public}d", restoreScene->valueint);
+            bundleSettingInfo.restoreScene = BConstants::ExtensionRestoreScene::NORMAL;
+        } else {
+            bundleSettingInfo.restoreScene = static_cast<BConstants::ExtensionRestoreScene>(restoreScene->valueint);
+        }
+        HILOGI("Parse restoreScene success, restoreScene is %{public}d", bundleSettingInfo.restoreScene);
+    }
+}
+
 void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<BundleDetailInfo> &bundleDetails,
     BJsonUtil::BundleDetailInfo bundleDetailInfo, BJsonUtil::BundleSettingInfo &bundleSettingInfo, int32_t userId)
 {
@@ -323,6 +338,7 @@ void BJsonUtil::ParseBundleInfoJson(const std::string &bundleInfo, std::vector<B
     ParseSupportWithoutTar(root, bundleSettingInfo);
     ParseExcludeInfos(root, bundleSettingInfo);
     ParseBatchSize(root, bundleSettingInfo);
+    ParseRestoreScene(root, bundleSettingInfo);
     if (!ParseBundleInfos(root, bundleDetails, bundleDetailInfo, userId)) {
         cJSON_Delete(root);
         return;
@@ -758,7 +774,7 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             bundleNamesOnly.emplace_back(bundleName);
         } else {
             std::string bundleNameSplit = bundleName.substr(0, pos);
-            if (to_string(bundleName.back()) != BUNDLE_INDEX_SPLICE) {
+            if (bundleName.back() != BUNDLE_INDEX_SPLICE) {
                 std::string indexSplit = bundleName.substr(pos + 1);
                 int index = std::atoi(indexSplit.c_str());
                 bundleIndex = index;

@@ -441,6 +441,10 @@ ErrCode Service::AppFileReadysWithoutFd(const BStringRawData &abnormalfileNamesR
         abnormalfileNamesRD.Unmarshalling(serializedData);
         auto abnormalfileNames = StringUtils::StringVectorDeserialize(serializedData);
         HILOGI("AppFileReadysWithoutFd filenames size is, %{public}zu", abnormalfileNames.size());
+        if (abnormalfileNames.size() != errCodes.size()) {
+            HILOGE("AppFileReady error, Inconsistent array lengths. errCodes size: %{public}zu", errCodes.size());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         session_->GetServiceReverseProxy()->BackupOnFileReadysWithoutFd(callerName, abnormalfileNamesRD, errCodes);
         ret = ProcessReadyFiles(abnormalfileNames, errCodes, callerName);
         if (ret != ERR_OK) {
@@ -501,6 +505,11 @@ ErrCode Service::AppFileReadys(const BStringRawData &fileNamesRD,
         fileNamesRD.Unmarshalling(serializedData);
         auto fileNames = StringUtils::StringVectorDeserialize(serializedData);
         HILOGI("AppfileReadys filenames size is, %{public}zu", fileNames.size());
+        if (fileNames.size() != fds.size() || fileNames.size() != errCodes.size()) {
+            HILOGE("AppFileReady error, Inconsistent array lengths. fds size: %{public}zu, errCodes size: %{public}zu",
+                   fds.size(), errCodes.size());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
         session_->GetServiceReverseProxy()->BackupOnFileReadys(callerName, fileNamesRD, fds, errCodes);
         ret = ProcessReadyFiles(fileNames, errCodes, callerName);
         if (ret != ERR_OK) {
@@ -630,6 +639,7 @@ void Service::SetWant(AAFwk::Want &want, const BundleName &bundleName, const BCo
     want.SetParam(BConstants::EXTENSION_SUPPORT_WITHOUT_TAR_PARA, session_->GetSupportWithoutTar(bundleName));
     want.SetParam(BConstants::EXTENSION_EXCLUDE_INFOS_PARA, session_->GetExcludeInfos(bundleName));
     want.SetParam(BConstants::EXTENSION_BATCH_SIZE_PARA, session_->GetBatchSize(bundleName));
+    want.SetParam(BConstants::EXTENSION_RESTORE_SCENE_PARA, session_->GetRestoreScene(bundleName));
     want.SetParam(BConstants::EXTENSION_CALLER_BUNDLE_NAME_PARA, session_->GetSessionCallerName());
 }
 
@@ -731,22 +741,19 @@ ErrCode Service::StopExtTimer(bool &isExtStop)
             isExtStop = false;
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         string bundleName;
         ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
         if (ret != ERR_OK) {
             HILOGE("Stop extension error, ret:%{public}d", ret);
             isExtStop = false;
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
         isExtStop = session_->StopExtTimer(bundleName);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (...) {
         HILOGE("Unexpected exception");
         isExtStop = false;
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -1116,14 +1123,13 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
             HILOGE("GetLocalCapabilitiesForBundleInfos failed, verify caller failed");
             return UniqueFd(-EPERM);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         string path = BConstants::GetSaBundleBackupRootDir(GetUserIdDefault());
         BExcepUltils::VerifyPath(path, false);
         CreateDirIfNotExist(path);
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open config file = %{private}s, err = %{public}d", path.c_str(), errno);
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return UniqueFd(-EPERM);
         }
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
@@ -1134,20 +1140,16 @@ UniqueFd Service::GetLocalCapabilitiesForBundleInfos()
         auto bundleInfos = BundleMgrAdapter::GetBundleInfosForLocalCapabilities(GetUserIdDefault());
         if (bundleInfos.size() == 0) {
             HILOGE("getBundleInfos failed, size = 0");
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return UniqueFd(-EPERM);
         }
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("End");
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("GetLocalCapabilitiesForBundleInfos failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (...) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("Unexpected exception");
         return UniqueFd(-EPERM);
     }
@@ -1161,31 +1163,31 @@ ErrCode Service::GetBackupDataSize(bool isPreciseScan, const std::vector<BIncrem
             HILOGE("GetBackupDataSize error 1.session is nullptr 2.onScanning_ = %{public}d", onScanning_.load());
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         onScanning_.store(true);
         ErrCode ret = VerifyCaller();
         if (ret != ERR_OK) {
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return BError(BError::Codes::SA_INVAL_ARG, "verify caller failed");
         }
         const int userId = GetUserIdDefault();
         BundleMgrAdapter::CreatBackupEnv(bundleNameList, userId);
-        CyclicSendScannedInfo(isPreciseScan, bundleNameList);
+        CyclicSendScannedInfo(isPreciseScan, bundleNameList, std::move(counterHelper));
         return BError(BError::Codes::OK);
     } catch (...) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
 }
 
-void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList)
+void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList,
+    CounterHelper counterHelper)
 {
+    auto counterHelperPtr = std::make_shared<CounterHelper>(std::move(counterHelper));
     auto task = [isPreciseScan {isPreciseScan}, bundleNameList {move(bundleNameList)},
-        obj {wptr<Service>(this)}, session {session_}]() {
+        obj {wptr<Service>(this)}, session {session_},
+        counterHelperPtr {counterHelperPtr}]() {
         auto ptr = obj.promote();
         if (ptr == nullptr) {
             HILOGE("ptr is nullptr");
-            session->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return;
         }
         size_t listSize = bundleNameList.size();
@@ -1211,14 +1213,12 @@ void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData>
         for (const auto &bundleIncrementalData : bundleNameList) {
             ptr->ClearIncrementalStatFile(ptr->GetUserIdDefault(), bundleIncrementalData.bundleName);
         }
-        session->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     };
 
-    callbackScannedInfoThreadPool_.AddTask([task, session {session_}]() {
+    callbackScannedInfoThreadPool_.AddTask([task]() {
         try {
             task();
         } catch (...) {
-            session->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             HILOGE("Failed to add task to thread pool");
         }
     });
@@ -1397,24 +1397,21 @@ ErrCode Service::StartExtTimer(bool &isExtStart)
             isExtStart = false;
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         string bundleName;
         ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
         if (ret != ERR_OK) {
             HILOGE("Start extension timer fail, get bundleName failed, ret:%{public}d", ret);
             isExtStart = false;
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
         auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
         session_->StopFwkTimer(bundleName);
         isExtStart = session_->StartExtTimer(bundleName, timeoutCallback);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (...) {
         HILOGE("Unexpected exception");
         isExtStart = false;
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -1428,24 +1425,21 @@ ErrCode Service::StartFwkTimer(bool &isFwkStart)
             isFwkStart = false;
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         std::string bundleName;
         ErrCode ret = VerifyCallerAndGetCallerName(bundleName);
         if (ret != ERR_OK) {
             HILOGE("Start fwk timer fail, get bundleName failed, ret:%{public}d", ret);
             isFwkStart = false;
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
         auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
         session_->StopExtTimer(bundleName);
         isFwkStart = session_->StartFwkTimer(bundleName, timeoutCallback);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (...) {
         HILOGE("Unexpected exception");
         isFwkStart = false;
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -1506,10 +1500,9 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
         return BError(BError::Codes::EXT_ABILITY_DIED);
     }
 
-    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
     if (backupConnection == nullptr) {
         HILOGE("backupConnection is empty.");
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
@@ -1519,7 +1512,6 @@ ErrCode Service::CleanBundleTempDir(const string &bundleName)
     }
     enhanceService->RemoveAncoTempDir(bundleName);
     backupConnection->DisconnectBackupExtAbility();
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return BError(BError::Codes::OK);
 }
 
@@ -1666,12 +1658,11 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
         isConnectDied_.store(false);
         return BError(BError::Codes::EXT_ABILITY_DIED);
     }
-    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
     auto proxy = backupConnection->GetBackupExtProxy();
     if (!proxy) {
         HILOGE("Extension backup Proxy is empty.");
         backupConnection->DisconnectBackupExtAbility();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     err = proxy->HandleGetCompatibilityInfo(extInfo, static_cast<int32_t>(session_->GetScenario()),
@@ -1680,7 +1671,6 @@ ErrCode Service::GetCompatibilityInfo(const std::string &bundleName, const std::
         HILOGE("HandleGetCompatibilityInfo failed");
     }
     backupConnection->DisconnectBackupExtAbility();
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return err;
 }
 
@@ -1982,8 +1972,7 @@ ErrCode Service::GetMigrateUidGid(const std::string &destPath, const std::string
     return ERR_OK;
 }
 
-ErrCode Service::DoEnhanceMove(const std::string &srcFile, const std::string &destFile, uid_t uid, gid_t gid,
-    int32_t &errCode, bool isDir)
+ErrCode Service::DoEnhanceMove(const MigrateFileParam &param, int32_t &errCode)
 {
     auto enhanceService = EnhanceServiceManager::GetInstance().GetServiceInstance();
     if (!enhanceService) {
@@ -1991,19 +1980,23 @@ ErrCode Service::DoEnhanceMove(const std::string &srcFile, const std::string &de
         return BError(BError::Codes::SA_INVAL_ARG, "enhance service is not loaded").GetCode();
     }
 
-    FileBackupParam param = {};
-    if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), srcFile.c_str(), srcFile.length()) != EOK ||
-        strncpy_s(param.dstFilePath, sizeof(param.dstFilePath), destFile.c_str(), destFile.length()) != EOK ||
-        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%u", uid) < 0 ||
-        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%u", gid) < 0) {
-        HILOGE("Dassemble param error");
+    FileBackupParam fileParam = {};
+    fileParam.isSupportWithoutTar = param.isSupportWithoutTar;
+    if (strncpy_s(fileParam.srcFilePath, sizeof(fileParam.srcFilePath), param.srcPath.c_str(),
+        param.srcPath.length()) != EOK ||
+        strncpy_s(fileParam.dstFilePath, sizeof(fileParam.dstFilePath), param.destPath.c_str(),
+        param.destPath.length()) != EOK ||
+        snprintf_s(fileParam.uid, sizeof(fileParam.uid), sizeof(fileParam.uid) - 1, "%d", param.uid) < 0 ||
+        snprintf_s(fileParam.gid, sizeof(fileParam.gid), sizeof(fileParam.gid) - 1, "%d", param.gid) < 0) {
+        HILOGE("assemble param error");
         return BError(BError::Codes::SA_INVAL_ARG, "assemble param error").GetCode();
     }
 
-    std::vector<FileBackupParam> fileInfos = {param};
+    std::vector<FileBackupParam> fileInfos = {fileParam};
     FileBackupResultMsg resultMsg = {};
+    
     int32_t moveRet = ERR_OK;
-    if (isDir) {
+    if (param.isDir) {
         moveRet = enhanceService->MoveDirectory(fileInfos, resultMsg);
     } else {
         moveRet = enhanceService->MoveFiles(fileInfos, resultMsg);
@@ -2039,20 +2032,20 @@ ErrCode Service::OpenIncrementalRpFile(const std::string &bundleName, const std:
 }
 
 static void GetMigrateFilePaths(const BPathInfo &pathInfo, const std::string &fileName,
-    std::string &srcFile, std::string &destFile, bool &isDir)
+    MigrateFileParam &param)
 {
     if (fileName.empty()) {
-        srcFile = pathInfo.srcPath;
-        destFile = pathInfo.destPath;
-        isDir = true;
+        param.srcPath = pathInfo.srcPath;
+        param.destPath = pathInfo.destPath;
+        param.isDir = true;
     } else {
-        srcFile = pathInfo.srcPath + "/" + fileName;
-        destFile = pathInfo.destPath + "/" + fileName;
-        isDir = false;
+        param.srcPath = pathInfo.srcPath + "/" + fileName;
+        param.destPath = pathInfo.destPath + "/" + fileName;
+        param.isDir = false;
     }
 }
 
-ErrCode Service::MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path)
+ErrCode Service::MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path, const std::string &fileName)
 {
     if (session_ == nullptr) {
         HILOGE("MigrateFile error, session is empty");
@@ -2067,9 +2060,11 @@ ErrCode Service::MigrateFilePrecheck(const std::string &bundleName, const BPathI
         HILOGE("VerifyDataClone failed, bundleName:%{public}s", bundleName.c_str());
         return BError(BError::Codes::SA_REFUSED_ACT);
     }
-    if (!BDir::IsFilePathValid(path.srcPath) || !BDir::IsFilePathValid(path.destPath)) {
+    MigrateFileParam moveParam;
+    GetMigrateFilePaths(path, fileName, moveParam);
+    if (!BDir::IsFilePathValid(moveParam.srcPath) || !BDir::IsFilePathValid(moveParam.destPath)) {
         HILOGE("migrate files forbidden, srcPath:%{public}s, destPath:%{public}s",
-            GetAnonyPath(path.srcPath).c_str(), GetAnonyPath(path.destPath).c_str());
+            GetAnonyPath(moveParam.srcPath).c_str(), GetAnonyPath(moveParam.destPath).c_str());
         return BError(BError::Codes::SA_INVAL_ARG);
     }
     return ERR_OK;
@@ -2084,40 +2079,41 @@ ErrCode Service::MigrateFile(const BPathInfo &path, const std::string &bundleNam
         GetAnonyPath(fileName).c_str());
 
     try {
-        ErrCode ret = MigrateFilePrecheck(bundleName, path);
+        ErrCode ret = MigrateFilePrecheck(bundleName, path, fileName);
         if (ret != ERR_OK) {
             return ret;
         }
 
-        std::string srcFile;
-        std::string destFile;
-        bool isDir = false;
-        GetMigrateFilePaths(path, fileName, srcFile, destFile, isDir);
+        MigrateFileParam moveParam;
+        GetMigrateFilePaths(path, fileName, moveParam);
 
-        uid_t uid = UINT32_MAX;
-        gid_t gid = UINT32_MAX;
         int32_t userId = session_->GetSessionUserId();
-        ret = GetMigrateUidGid(path.destPath, bundleName, userId, uid, gid);
+        ret = GetMigrateUidGid(path.destPath, bundleName, userId, moveParam.uid, moveParam.gid);
         if (ret != ERR_OK) {
             NotifyMigrateResult(ret, bundleName);
             return ret;
         }
+
+        moveParam.isSupportWithoutTar = session_->GetSupportWithoutTar(bundleName);
 
         int32_t moveErrCode = ERR_OK;
-        ret = DoEnhanceMove(srcFile, destFile, uid, gid, moveErrCode, isDir);
+        ret = DoEnhanceMove(moveParam, moveErrCode);
         if (ret != ERR_OK) {
             NotifyMigrateResult(ret, bundleName);
             return ret;
         }
 
-        ret = OpenIncrementalRpFile(bundleName, destFile);
-        if (ret != ERR_OK) {
-            NotifyMigrateResult(ret, bundleName);
-            return ret;
+        if (session_->GetRestoreScene(bundleName) == BConstants::ExtensionRestoreScene::NORMAL) {
+            ret = OpenIncrementalRpFile(bundleName, moveParam.destPath);
+            if (ret != ERR_OK) {
+                NotifyMigrateResult(ret, bundleName);
+                return ret;
+            }
         }
-        NotifyMigrateResult(moveErrCode, bundleName);
-        HILOGI("MigrateFile end, srcFile=%{public}s, destFile=%{public}s, errCode=%{public}d",
-            GetAnonyPath(srcFile).c_str(), GetAnonyPath(destFile).c_str(), moveErrCode);
+        int32_t notifyCode = BError::GetCodeByErrno(moveErrCode);
+        NotifyMigrateResult(notifyCode, bundleName);
+        HILOGI("MigrateFile end, srcFile=%{public}s, destFile=%{public}s, moveErrCode=%{public}d",
+            GetAnonyPath(moveParam.srcPath).c_str(), GetAnonyPath(moveParam.destPath).c_str(), moveErrCode);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("MigrateFile exception, errCode=%{public}d", e.GetCode());
@@ -2142,17 +2138,16 @@ ErrCode Service::DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid
         return BError(BError::Codes::SA_INVAL_ARG, "enhance service is not loaded").GetCode();
     }
 
-    FileBackupParam param = {};
+    FileBackupParam param;
     if (strncpy_s(param.srcFilePath, sizeof(param.srcFilePath), filePath.c_str(), filePath.length()) != EOK ||
-        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%u", uid) < 0 ||
-        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%u", gid) < 0) {
+        snprintf_s(param.uid, sizeof(param.uid), sizeof(param.uid) - 1, "%d", uid) < 0 ||
+        snprintf_s(param.gid, sizeof(param.gid), sizeof(param.gid) - 1, "%d", gid) < 0) {
         HILOGE("assemble param error");
         return BError(BError::Codes::SA_INVAL_ARG, "assemble param error").GetCode();
     }
 
     std::vector<FileBackupParam> fileInfos = {param};
     FileBackupResultMsg resultMsg = {};
-
     int32_t openRet = enhanceService->GetApkFileHandle(fileInfos, resultMsg);
     if (openRet != ERR_OK) {
         HILOGE("OpenFiles failed, ret=%{public}d, errorCode=%{public}d", openRet, resultMsg.errorCode);

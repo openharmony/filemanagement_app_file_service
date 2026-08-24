@@ -45,6 +45,7 @@ const uint32_t WAIT_INDEX = 100000;
 const uint32_t WAIT_TIME = 5;
 const string VERSION = "1.0";
 const string LONG_LINK_SYMBOL = "longLinkSymbol";
+const size_t SUFFIX_LENGTH = 2;
 } // namespace
 
 TarFile &TarFile::GetInstance()
@@ -68,6 +69,46 @@ bool TarFile::InitBeforePacket(const string &tarFileName, const string &pkPath)
     }
     HILOGI("Start Create  SplitTar files");
     CreateSplitTarFile();
+    return true;
+}
+
+bool TarFile::Packet(const vector<pair<string, string>> &files,
+                     const string &tarFileName,
+                     const string &pkPath,
+                     TarMap &tarMap,
+                     std::function<void(std::string, int)> reportCb)
+{
+    if (files.empty() || !InitBeforePacket(tarFileName, pkPath)) {
+        return false;
+    }
+
+    size_t index = 0;
+    for (const auto &item : files) {
+        int err = BError::E_PACKET;
+        // item.first  = 物理路径, 用于 open/fstat/read 实际文件内容
+        // item.second = restorePath, 传给 TraversalFile → AddFile,
+        //   AddFile 中 writeFileName = restorePath.empty() ? fileName : restorePath;
+        //   即: 若 restorePath 非空, tar 包内文件条目名用 restorePath,
+        //   恢复侧 untar 时会按 restorePath 写入文件.
+        rootPath_ = item.first;
+        if (!TraversalFile(rootPath_, err, item.second)) {
+            HILOGE("ReportErr Failed to traversal file, file path is:%{public}s, err = %{public}d",
+                   GetAnonyPath(rootPath_).c_str(), err);
+            if (err != EACCES) {
+                reportCb(GetAnonyPath(rootPath_), err);
+            }
+        }
+        index++;
+        if (index >= WAIT_INDEX) {
+            HILOGD("Sleep to wait");
+            sleep(WAIT_TIME);
+            index = 0;
+        }
+    }
+
+    FillSplitTailBlocks();
+    tarMap = tarMap_;
+    HILOGI("End Packet files, pkPath is:%{public}s", pkPath.c_str());
     return true;
 }
 
@@ -248,7 +289,7 @@ static bool CopyData(TarHeader &hdr, const string &mode, const string &uid, cons
     return true;
 }
 
-bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileName)
+bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileName, long &mtimeNsec, long &atimeNsec)
 {
     auto ret = memset_s(&hdr, sizeof(hdr), 0, sizeof(hdr));
     if (ret != EOK) {
@@ -270,6 +311,8 @@ bool TarFile::I2OcsConvert(const struct stat &st, TarHeader &hdr, string &fileNa
         HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
         return false;
     }
+    mtimeNsec = st.st_mtim.tv_nsec;
+    atimeNsec = st.st_atim.tv_nsec;
     ret = memset_s(hdr.chksum, sizeof(hdr.chksum), BLANK_SPACE, sizeof(hdr.chksum));
     if (ret != EOK) {
         HILOGE("Failed to call memset_s, err = %{public}d", ret);
@@ -339,12 +382,19 @@ bool TarFile::AddFile(string &fileName, const struct stat &st, int &err, const s
 
     TarHeader hdr;
     string writeFileName = restorePath.empty() ? fileName : restorePath;
-    if (!I2OcsConvert(st, hdr, writeFileName)) {
+    long mtimeNsec = 0;
+    long atimeNsec = 0;
+    if (!I2OcsConvert(st, hdr, writeFileName, mtimeNsec, atimeNsec)) {
         HILOGE("Failed to I2OcsConvert");
         return false;
     }
     if (!ReadyHeader(hdr, writeFileName)) {
         return false;
+    }
+    if (hdr.typeFlag == REGTYPE && (mtimeNsec > 0 || atimeNsec > 0)) {
+        if (!WritePaxExtTime(st)) {
+            return false;
+        }
     }
     if (writeFileName.length() >= TNAME_LEN) {
         if (!WriteLongName(writeFileName, GNUTYPE_LONGNAME)) {
@@ -621,6 +671,25 @@ string TarFile::I2Ocs(int len, off_t val)
     return string(tmp);
 }
 
+static string FormatPaxTimeRecord(const string &key, time_t sec, long nsec)
+{
+    char nsecBuf[16] = {0};
+    if (snprintf_s(nsecBuf, sizeof(nsecBuf), sizeof(nsecBuf) - 1, "%09ld", nsec) < 0) {
+        HILOGE("Failed to format nsec for %s", key.c_str());
+        return "";
+    }
+    string valueStr = key + "=" + to_string(sec) + "." + string(nsecBuf);
+    size_t totalLen = valueStr.length() + SUFFIX_LENGTH;
+    while (true) {
+        size_t digits = to_string(totalLen).length();
+        if (digits + valueStr.length() + SUFFIX_LENGTH == totalLen) {
+            break;
+        }
+        totalLen = digits + valueStr.length() + SUFFIX_LENGTH;
+    }
+    return to_string(totalLen) + " " + valueStr + "\n";
+}
+
 static bool WriteNormalData(TarHeader& tmp)
 {
     const string FORMAT = "%0*d";
@@ -647,6 +716,46 @@ static bool WriteNormalData(TarHeader& tmp)
         return false;
     }
     return true;
+}
+
+bool TarFile::WritePaxBlockData(const string &data, char typeFlag)
+{
+    TarHeader tmp;
+    errno_t ret = memset_s(&tmp, sizeof(tmp), 0, sizeof(tmp));
+    if (ret != EOK) {
+        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+        return false;
+    }
+    if (!WriteNormalData(tmp)) {
+        return false;
+    }
+    string size = I2Ocs(sizeof(tmp.size), static_cast<off_t>(data.length()));
+    ret = memcpy_s(tmp.size, sizeof(tmp.size), size.c_str(), min(sizeof(tmp.size) - 1, size.length()));
+    if (ret != EOK) {
+        HILOGE("Failed to call memcpy_s, err = %{public}d", ret);
+        return false;
+    }
+    tmp.typeFlag = typeFlag;
+    ret = memset_s(tmp.chksum, sizeof(tmp.chksum), BLANK_SPACE, sizeof(tmp.chksum));
+    if (ret != EOK) {
+        HILOGE("Failed to call memset_s, err = %{public}d", ret);
+        return false;
+    }
+    strlcpy(tmp.magic, TMAGIC.c_str(), sizeof(tmp.magic));
+    strlcpy(tmp.version, VERSION.c_str(), sizeof(tmp.version));
+    SetCheckSum(tmp);
+    if (WriteTarHeader(tmp) != BLOCK_SIZE) {
+        HILOGE("Failed to write pax block header");
+        return false;
+    }
+    vector<uint8_t> buffer {};
+    buffer.resize(data.length());
+    buffer.assign(data.begin(), data.end());
+    if (static_cast<size_t>(WriteAll(buffer, data.length())) != data.length()) {
+        HILOGE("Failed to write pax block data");
+        return false;
+    }
+    return CompleteBlock(static_cast<off_t>(data.length()));
 }
 
 bool TarFile::WriteLongName(string &name, char type)
@@ -697,6 +806,24 @@ bool TarFile::WriteLongName(string &name, char type)
     }
 
     return CompleteBlock(static_cast<off_t>(sz));
+}
+
+bool TarFile::WritePaxExtTime(const struct stat &st)
+{
+    string mtimeRecord = FormatPaxTimeRecord("mtime", st.st_mtim.tv_sec, st.st_mtim.tv_nsec);
+    if (mtimeRecord.empty()) {
+        return false;
+    }
+    string atimeRecord = FormatPaxTimeRecord("atime", st.st_atim.tv_sec, st.st_atim.tv_nsec);
+    if (atimeRecord.empty()) {
+        return false;
+    }
+    string paxData = mtimeRecord + atimeRecord;
+    if (!WritePaxBlockData(paxData, EXTENSION_HEADER)) {
+        HILOGE("Failed to write pax ext time block");
+        return false;
+    }
+    return true;
 }
 
 void TarFile::SetPacketMode(bool isReset)

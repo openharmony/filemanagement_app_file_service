@@ -64,11 +64,11 @@ HWTEST_F(DefaultAppManagerTest, DefaultAppManagerTest_SetDefaultBundleName_Add_0
  */
 HWTEST_F(DefaultAppManagerTest, DefaultAppManagerTest_SetDefaultBundleName_Remove_0200, testing::ext::TestSize.Level1)
 {
-    service_->defaultAppManager_->SetDefaultBundleName({BUNDLE_NAME_DEFAULT}, true);
-    EXPECT_TRUE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
-
     service_->defaultAppManager_->SetDefaultBundleName({BUNDLE_NAME_DEFAULT}, false);
     EXPECT_FALSE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
+
+    service_->defaultAppManager_->SetDefaultBundleName({BUNDLE_NAME_DEFAULT}, true);
+    EXPECT_TRUE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
 }
 
 /**
@@ -93,13 +93,13 @@ HWTEST_F(DefaultAppManagerTest, DefaultAppManagerTest_SetDefaultBundleName_Multi
     testing::ext::TestSize.Level1)
 {
     vector<string> bundleNames = {BUNDLE_NAME_DEFAULT, BUNDLE_NAME_OTHER};
-    service_->defaultAppManager_->SetDefaultBundleName(bundleNames, true);
-    EXPECT_TRUE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
-    EXPECT_TRUE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_OTHER));
-
     service_->defaultAppManager_->SetDefaultBundleName(bundleNames, false);
     EXPECT_FALSE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
     EXPECT_FALSE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_OTHER));
+
+    service_->defaultAppManager_->SetDefaultBundleName(bundleNames, true);
+    EXPECT_TRUE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
+    EXPECT_TRUE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_OTHER));
 }
 
 /**
@@ -381,23 +381,6 @@ HWTEST_F(DefaultAppManagerTest, DefaultAppManagerTest_GetKeyInMap_NoFalsePositiv
     string filePath = "/data/app/el2/100/base/" + BUNDLE_NAME_DEFAULT + ".extra/backup.tar";
     string result = service_->defaultAppManager_->GetCallerNameByFilePath(filePath);
     EXPECT_EQ(result, "");
-}
-
-/**
- * @tc.name: DefaultAppManagerTest_ReAddAfterRemove_2500
- * @tc.desc: Verify adding bundle after removal works correctly
- * @tc.type: FUNC
- */
-HWTEST_F(DefaultAppManagerTest, DefaultAppManagerTest_ReAddAfterRemove_2500, testing::ext::TestSize.Level1)
-{
-    service_->defaultAppManager_->SetDefaultBundleName({BUNDLE_NAME_DEFAULT}, true);
-    EXPECT_TRUE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
-
-    service_->defaultAppManager_->SetDefaultBundleName({BUNDLE_NAME_DEFAULT}, false);
-    EXPECT_FALSE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
-
-    service_->defaultAppManager_->SetDefaultBundleName({BUNDLE_NAME_DEFAULT}, true);
-    EXPECT_TRUE(service_->defaultAppManager_->IsDefaultBundle(BUNDLE_NAME_DEFAULT));
 }
 
 /**

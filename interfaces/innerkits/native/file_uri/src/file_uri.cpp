@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "uri.h"
 
@@ -230,8 +231,13 @@ string FileUri::GetFullDirectoryUri()
         LOGE("uri is ValidUri, The uri contains '../' characters");
         return "";
     }
+    string realPath = GetRealPath();
+    if (realPath.empty() || !SandboxHelper::IsValidPath(realPath)) {
+        LOGE("realPath is invalid, path contains '../' characters");
+        return "";
+    }
     struct stat fileInfo;
-    if (stat(GetRealPath().c_str(), &fileInfo) != 0) {
+    if (stat(realPath.c_str(), &fileInfo) != 0) {
         LOGE("fileInfo is error,%{public}s", strerror(errno));
         return "";
     }

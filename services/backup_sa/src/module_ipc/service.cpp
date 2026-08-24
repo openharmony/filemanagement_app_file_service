@@ -81,7 +81,6 @@ constexpr int32_t DEBUG_ID = 100;
 constexpr int32_t INDEX = 3;
 constexpr int32_t MS_1000 = 1000;
 const static string BROADCAST_TYPE = "broadcast";
-const std::string FILE_BACKUP_EVENTS = "FILE_BACKUP_EVENTS";
 const static string UNICAST_TYPE = "unicast";
 const std::string BACKUPSERVICE_WORK_STATUS_KEY = "persist.backupservice.workstatus";
 const std::string BACKUPSERVICE_WORK_STATUS_ON = "true";
@@ -313,11 +312,10 @@ UniqueFd Service::GetLocalCapabilities()
             HILOGE("GetLocalCapabilities error, session is empty.");
             return UniqueFd(-EPERM);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         ErrCode errCode = VerifyCaller();
         if (errCode != ERR_OK) {
             HILOGE("Get local abilities failed, Verify caller failed, errCode:%{public}d", errCode);
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return UniqueFd(-EPERM);
         }
         std::unique_lock<std::mutex> lock(getLocalLock_);
@@ -328,7 +326,6 @@ UniqueFd Service::GetLocalCapabilities()
         UniqueFd fd(open(path.data(), O_TMPFILE | O_RDWR, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             HILOGE("Failed to open config file = %{public}s, err = %{public}d", GetAnonyPath(path).c_str(), errno);
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return UniqueFd(-EPERM);
         }
         BJsonCachedEntity<BJsonEntityCaps> cachedEntity(std::move(fd));
@@ -342,16 +339,13 @@ UniqueFd Service::GetLocalCapabilities()
         auto bundleInfos = BundleMgrAdapter::GetFullBundleInfos(GetUserIdDefault());
         cache.SetBundleInfos(bundleInfos);
         cachedEntity.Persist();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGI("End");
         return move(cachedEntity.GetFd());
     } catch (const BError &e) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGE("GetLocalCapabilities failed, errCode = %{public}d", e.GetCode());
         return UniqueFd(-e.GetCode());
     } catch (...) {
         HILOGE("Unexpected exception");
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return UniqueFd(-EPERM);
     }
 }
@@ -715,13 +709,12 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
             HILOGE("AppendBundles restore session error, session is empty");
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         SetUserIdAndRestoreType(restoreType, userId);
         ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
         if (ret != ERR_OK) {
             HILOGE("AppendBundles restore session with infos error, verify caller failed, ret:%{public}d", ret);
             HandleExceptionOnAppendBundles(session_, bundleNames, {});
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
         std::string oldBackupVersion;
@@ -729,24 +722,20 @@ ErrCode Service::AppendBundlesRestoreSession(UniqueFd fd,
         auto restoreBundleNames = SvcRestoreDepsManager::GetInstance().GetRestoreBundleNames(restoreInfos, restoreType);
         HandleExceptionOnAppendBundles(session_, bundleNames, restoreBundleNames);
         if (restoreBundleNames.empty()) {
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             HILOGW("RestoreBundleNames is empty.");
             return BError(BError::Codes::OK);
         }
         AppendBundles(restoreBundleNames);
         SetCurrentSessProperties(restoreInfos, restoreBundleNames, restoreType, oldBackupVersion);
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -781,13 +770,7 @@ void Service::SetCurrentSessProperties(
             continue;
         }
         SetBundleParam(restoreInfo, bundleNameIndexInfo, restoreType);
-        auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
-        if (iterSet != bundleSettingInfos.end()) {
-            session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
-            session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
-            session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
-            session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
-        }
+        ApplyBundleSettings(bundleNameIndexInfo, bundleSettingInfos);
         BJsonUtil::BundleDetailInfo broadCastInfo;
         BJsonUtil::BundleDetailInfo uniCastInfo;
         std::map<std::string, std::string> broadCastInfoMap;
@@ -805,6 +788,19 @@ void Service::SetCurrentSessProperties(
             HILOGI("current bundle, unicast info:%{public}s", GetAnonyString(uniCastInfo.detail).c_str());
             session_->SetBackupExtInfo(bundleNameIndexInfo, uniCastInfo.detail);
         }
+    }
+}
+
+void Service::ApplyBundleSettings(const std::string &bundleNameIndexInfo,
+                                  const std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos)
+{
+    auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
+    if (iterSet != bundleSettingInfos.end()) {
+        session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
+        session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
+        session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
+        session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
+        session_->SetRestoreScene(bundleNameIndexInfo, iterSet->second.restoreScene);
     }
 }
 
@@ -836,6 +832,7 @@ void Service::HandleCurGroupBackupInfos(
             session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
             session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
             session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
+            session_->SetRestoreScene(bundleNameIndexInfo, iterSet->second.restoreScene);
         }
     }
 }
@@ -1523,14 +1520,12 @@ ErrCode Service::GetBackupInfo(const BundleName &bundleName, std::string &result
         if (session_->GetImpl().clientToken) {
             HILOGI("Already have an active session, bundleName:%{public}s", bundleName.c_str());
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         auto ret = GetBackupInfoCmdHandle(bundleName, result);
         HILOGI("Service::GetBackupInfo end. result: %{public}s", result.c_str());
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return ret;
     } catch (...) {
         HILOGE("Unexpected exception");
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -1543,14 +1538,13 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
             HILOGE("AppendBundles clear session error, session is empty");
             return EPERM;
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__); // BundleMgrAdapter::GetBundleInfos可能耗时
         auto backupInfos = BundleMgrAdapter::GetBundleInfos(bundleNames, session_->GetSessionUserId());
         if (backupInfos.empty()) {
             if (clearRecorder_ != nullptr) {
                 clearRecorder_->DeleteConfigFile();
             }
             HILOGE("AppendBundles clear session error, backupInfos is empty");
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return EPERM;
         }
         std::vector<std::string> supportBundleNames;
@@ -1565,17 +1559,14 @@ ErrCode Service::AppendBundlesClearSession(const std::vector<BundleName> &bundle
             session_->SetIsReadyLaunch(bundleNameIndexInfo);
         }
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Failed, errCode = %{public}d", e.GetCode());
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -1589,22 +1580,19 @@ ErrCode Service::UpdateTimer(const BundleName &bundleName, uint32_t timeout, boo
             result = false;
             return BError(BError::Codes::SA_INVAL_ARG);
         }
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         ErrCode ret = VerifyCaller();
         if (ret != ERR_OK) {
             HILOGE("Update timer failed, verify caller failed, bundleName:%{public}s", bundleName.c_str());
             result = false;
-            session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
             return ret;
         }
         auto timeoutCallback = TimeOutCallback(wptr<Service>(this), bundleName);
         result = session_->UpdateTimer(bundleName, timeout, timeoutCallback);
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (...) {
         HILOGE("Unexpected exception");
         result = false;
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -1621,7 +1609,6 @@ ErrCode Service::UpdateDefaultAppSendRate(const std::string &bundleName, int32_t
             ret = BError(BError::Codes::EXT_BROKEN_IPC);
         }
     }
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     return ret;
 }
 
@@ -1631,13 +1618,11 @@ ErrCode Service::UpdateNormalAppSendRate(const std::string &bundleName, int32_t 
     if (ret != ERR_OK) {
         HILOGE("Verify sendRate param failed, bundleName:%{public}s", bundleName.c_str());
         result = false;
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return ret;
     }
     std::shared_ptr<ExtensionMutexInfo> mutexPtr = GetExtensionMutex(bundleName);
     if (mutexPtr == nullptr) {
         result = false;
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::SA_INVAL_ARG, "Extension mutex ptr is null.");
     }
     do {
@@ -1666,7 +1651,6 @@ ErrCode Service::UpdateNormalAppSendRate(const std::string &bundleName, int32_t 
             break;
         }
     } while (0);
-    session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
     RemoveExtensionMutex(bundleName);
     return ret;
 }
@@ -1678,7 +1662,7 @@ ErrCode Service::UpdateSendRate(const std::string &bundleName, int32_t sendRate,
         result = false;
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+    CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
     if (defaultAppManager_->IsDefaultBundle(bundleName)) {
         return UpdateDefaultAppSendRate(bundleName, sendRate, result);
     }
@@ -1817,9 +1801,6 @@ void Service::NotifyCallerCurAppDone(ErrCode errCode, const std::string &callerN
         std::stringstream strTime;
         strTime << (std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S:")) << (std::setfill('0'))
                 << (std::setw(INDEX)) << (ms.count() % MS_1000);
-        HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT, FILE_BACKUP_EVENTS,
-                        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "PROC_NAME", "ohos.appfileservice",
-                        "BUNDLENAME", callerName, "PID", getpid(), "TIME", strTime.str());
     } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
         HILOGI("will notify clone data, scenario is Restore");
         session_->GetServiceReverseProxy()->RestoreOnBundleFinished(errCode, callerName);
@@ -1958,8 +1939,17 @@ void Service::ReleaseOnException()
 void Service::SetUserIdAndRestoreType(RestoreTypeEnum restoreType, int32_t userId)
 {
     session_->SetImplRestoreType(restoreType);
-    if (userId != DEFAULT_INVAL_VALUE) { /* multi user scenario */
-        session_->SetSessionUserId(userId);
+    if (userId != DEFAULT_INVAL_VALUE) {
+        auto multiuser = BMultiuser::ParseUid(IPCSkeleton::GetCallingUid());
+        if (multiuser.userId == BConstants::SYSTEM_UID || multiuser.userId == BConstants::XTS_UID) {
+            session_->SetSessionUserId(userId);
+        } else {
+            HILOGE(
+                "Non-privileged caller, callingUid=%{public}d, parsed userId=%{public}d, requested userId=%{public}d, "
+                "fallback to default",
+                IPCSkeleton::GetCallingUid(), multiuser.userId, userId);
+            session_->SetSessionUserId(GetUserIdDefault());
+        }
     } else {
         session_->SetSessionUserId(GetUserIdDefault());
     }

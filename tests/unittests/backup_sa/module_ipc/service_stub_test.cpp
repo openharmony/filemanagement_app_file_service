@@ -68,7 +68,7 @@ public:
     MOCK_METHOD0(Release, ErrCode());
     MOCK_METHOD2(Cancel, ErrCode(std::string bundleName, int32_t &result));
     MOCK_METHOD1(GetLocalCapabilitiesIncremental, UniqueFd(const std::vector<BIncrementalData> &bundleNames));
-    MOCK_METHOD0(GetAppLocalListAndDoIncrementalBackup, ErrCode());
+    MOCK_METHOD1(GetAppLocalListAndDoIncrementalBackup, ErrCode(const BStringRawData &));
     MOCK_METHOD1(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote));
     MOCK_METHOD2(InitIncrementalBackupSession, ErrCode(sptr<IServiceReverse> remote, std::string &errMsg));
     MOCK_METHOD1(AppendBundlesIncrementalBackupSession, ErrCode(const std::vector<BIncrementalData> &bundlesToBackup));
@@ -1639,12 +1639,12 @@ HWTEST_F(ServiceStubTest, SUB_backup_sa_ServiceStub_CmdGetAppLocalListAndDoIncre
         MessageParcel data;
         MessageParcel reply;
         EXPECT_TRUE(service != nullptr);
-        EXPECT_CALL(*service, GetAppLocalListAndDoIncrementalBackup()).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*service, GetAppLocalListAndDoIncrementalBackup(_)).WillOnce(Return(BError(BError::Codes::OK)));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(false));
         auto err = service->CmdGetAppLocalListAndDoIncrementalBackup(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::SA_BROKEN_IPC));
 
-        EXPECT_CALL(*service, GetAppLocalListAndDoIncrementalBackup()).WillOnce(Return(BError(BError::Codes::OK)));
+        EXPECT_CALL(*service, GetAppLocalListAndDoIncrementalBackup(_)).WillOnce(Return(BError(BError::Codes::OK)));
         EXPECT_CALL(*messageParcelMock, WriteInt32(_)).WillOnce(Return(true));
         err = service->CmdGetAppLocalListAndDoIncrementalBackup(data, reply);
         EXPECT_EQ(err, BError(BError::Codes::OK));

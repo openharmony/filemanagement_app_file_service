@@ -25,6 +25,7 @@
 #include "securec.h"
 
 #include <hilog/log.h>
+#include "b_filesystem/b_dir.h"
 
 namespace installd {
 const uid_t OCTAL = 8;
@@ -107,6 +108,10 @@ static int GenRealPath(const char *rootPath, const char *pathName, char* &realPa
         return ERR_PARAM;
     }
     realPath[allLen] = '\0';
+    if (!OHOS::FileManagement::Backup::BDir::IsFilePathValid(std::string(realPath))) {
+        LOGE("GenRealPath path contains forbidden traversal");
+        return ERR_PARAM;
+    }
     return 0;
 }
 
@@ -335,6 +340,21 @@ int UnTarFile::CheckFileAndInitPath(const char *rootPath, ParseTarPath *parseTar
     return 0;
 }
 
+void UnTarFile::HandleSymType(ParseTarPath *parseTarPath, bool &isSkip, bool &isSoftLink, TarFileInfo &tarFileInfo)
+{
+    if (parseTarPath->fullPath != nullptr && parseTarPath->realLink != nullptr &&
+        OHOS::FileManagement::Backup::BDir::IsFilePathValid(std::string(parseTarPath->fullPath)) &&
+        OHOS::FileManagement::Backup::BDir::IsFilePathValid(std::string(parseTarPath->realLink))) {
+        CreateSoftlink(parseTarPath->realLink, parseTarPath->fullPath);
+        isSoftLink = true;
+        isSkip = false;
+    } else {
+        LOGE("SYMTYPE path validation failed, symlink creation forbidden");
+        isSkip = true;
+        fseeko(FilePtr, tarFileInfo.fileBlockCnt * BLOCK_SIZE, SEEK_CUR);
+    }
+}
+
 bool UnTarFile::ProcessTarBlock(char *buff, EParseType type, ParseTarPath *parseTarPath, bool &isSkip, bool &isSoftLink)
 {
     TarHeader *tarHeader = (TarHeader *)buff;
@@ -355,9 +375,7 @@ bool UnTarFile::ProcessTarBlock(char *buff, EParseType type, ParseTarPath *parse
             HandleRegularFile(buff, type, parseTarPath, isSkip, tarFileInfo);
             break;
         case SYMTYPE:
-            CreateSoftlink(parseTarPath->realLink, parseTarPath->fullPath);
-            isSoftLink = true;
-            isSkip = false;
+            HandleSymType(parseTarPath, isSkip, isSoftLink, tarFileInfo);
             break;
         case DIRTYPE:
             CreateDir(parseTarPath->fullPath, FILE_MODE);
@@ -415,6 +433,10 @@ void UnTarFile::HandleGnuLongLink(ParseTarPath *parseTarPath, bool &isSkip, TarF
         if (nameLen != fread(parseTarPath->longLink, sizeof(char), nameLen, FilePtr)) {
             free(parseTarPath->longLink);
             parseTarPath->longLink = nullptr;
+        } else if (!OHOS::FileManagement::Backup::BDir::IsFilePathValid(std::string(parseTarPath->longLink))) {
+            LOGE("HandleGnuLongLink longLink contains forbidden traversal");
+            free(parseTarPath->longLink);
+            parseTarPath->longLink = nullptr;
         }
     }
 
@@ -436,6 +458,10 @@ void UnTarFile::HandleGnuLongName(ParseTarPath *parseTarPath, bool &isSkip, TarF
     if (parseTarPath->longName != nullptr) {
         memset_s(parseTarPath->longName, (nameLen + 1) * sizeof(char), 0, (nameLen + 1) * sizeof(char));
         if (nameLen != fread(parseTarPath->longName, sizeof(char), nameLen, FilePtr)) {
+            free(parseTarPath->longName);
+            parseTarPath->longName = nullptr;
+        } else if (!OHOS::FileManagement::Backup::BDir::IsFilePathValid(std::string(parseTarPath->longName))) {
+            LOGE("HandleGnuLongName longName contains forbidden traversal");
             free(parseTarPath->longName);
             parseTarPath->longName = nullptr;
         }
@@ -591,7 +617,11 @@ int UnTarFile::ParseTarFile(const char *rootPath, EParseType type)
             parseTarPath.realName = parseTarPath.longName;
         }
 
-        GenRealPath(rootPath, parseTarPath.realName, parseTarPath.fullPath);
+        if (GenRealPath(rootPath, parseTarPath.realName, parseTarPath.fullPath) != 0) {
+            LOGE("GenRealPath failed, invalid path in tar entry");
+            FreePointer(&parseTarPath);
+            return ERR_PARAM;
+        }
         parseTarPath.realLink = tarHeader->linkname;
         if (parseTarPath.longLink != nullptr) {
             parseTarPath.realLink = parseTarPath.longLink;

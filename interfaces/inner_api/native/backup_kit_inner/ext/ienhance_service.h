@@ -41,6 +41,7 @@ struct FileBackupParam {
     char perm[MIGRATE_PERM_LEN] = {0};
     struct stat sta;
     bool isBigFile = false;
+    bool isSupportWithoutTar = false;
     int32_t recurseOpt = 0;
 };
 
@@ -88,7 +89,6 @@ public:
         int &reportFdVal, int &errCode) = 0;
     virtual int32_t MoveFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
     virtual int32_t OpenFiles(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
-
     virtual int32_t MoveDirectory(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
     virtual int32_t GetApkFileHandle(const std::vector<FileBackupParam> &fileInfo, FileBackupResultMsg &resultMsg) = 0;
 

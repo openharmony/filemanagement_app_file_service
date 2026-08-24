@@ -242,6 +242,44 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ConvertSandboxRe
 }
 
 /**
+ * @tc.name: Storage_Manager_ServiceTest_ConvertSandboxRealPath_003
+ * @tc.desc: check ConvertSandboxRealPath with empty sandboxPathStr
+ * @tc.type: FUNC
+ * @tc.require: AR000IGCR7
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ConvertSandboxRealPath_003,
+    testing::ext::TestSize.Level1)
+{
+    uint32_t userId = 100;
+    std::string bundleName = "com.example.app";
+    std::string sandboxPathStr;
+    std::vector<std::string> realPaths;
+    std::map<std::string, std::string> pathMap;
+    StorageManagerService::GetInstance().ConvertSandboxRealPath(userId, bundleName, sandboxPathStr, realPaths, pathMap);
+    EXPECT_TRUE(realPaths.empty());
+    EXPECT_TRUE(pathMap.empty());
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_ConvertSandboxRealPath_004
+ * @tc.desc: check ConvertSandboxRealPath with invalid path containing traversal
+ * @tc.type: FUNC
+ * @tc.require: AR000IGCR7
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ConvertSandboxRealPath_004,
+    testing::ext::TestSize.Level1)
+{
+    uint32_t userId = 100;
+    std::string bundleName = "com.example.app";
+    std::string sandboxPathStr = NORMAL_SAND_PREFIX + "/../etc/passwd";
+    std::vector<std::string> realPaths;
+    std::map<std::string, std::string> pathMap;
+    StorageManagerService::GetInstance().ConvertSandboxRealPath(userId, bundleName, sandboxPathStr, realPaths, pathMap);
+    EXPECT_TRUE(realPaths.empty());
+    EXPECT_TRUE(pathMap.empty());
+}
+
+/**
  * @tc.name: Storage_Manager_ServiceTest_CheckIfDirForIncludes_001
  * @tc.desc: check the CheckIfDirForIncludes function
  * @tc.type: FUNC
