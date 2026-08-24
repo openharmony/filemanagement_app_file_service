@@ -1570,7 +1570,7 @@ void BackupExtExtension::ApplyRestorePathMapping(
         return;
     }
     std::vector<std::pair<std::string, struct ReportFileInfo>> remappedEntries;
-    for (auto it = localFilesInfo.begin(); it != localFilesInfo.end(); ) {
+    for (auto it = localFilesInfo.begin(); it != localFilesInfo.end();) {
         std::string restorePath = MapPathWithCompatDir(it->first);
         if (restorePath != it->first) {
             it->second.restorePath = restorePath;
