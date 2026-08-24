@@ -179,7 +179,7 @@ public:
         return BError(BError::Codes::OK);
     };
 
-    ErrCode HandleOnRelease(int32_t scenario) override
+    ErrCode HandleOnRelease(int32_t scenario)
     {
         return BError(BError::Codes::OK);
     };

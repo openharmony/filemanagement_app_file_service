@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BACKUP_SERVICE_INNER_H
 
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <mutex>
@@ -27,6 +28,7 @@
 namespace OHOS::FileManagement::Backup {
 using CallbackFunc = std::function<int (int, int, unsigned int, unsigned int)>;
 typedef int (*CallDeviceTaskRequest)(int, unsigned int, unsigned int, CallbackFunc);
+typedef int32_t (*CallDirectTlc)(int, int, int);
 
 struct ExtensionMutexInfo {
     std::string bundleName;
@@ -56,6 +58,15 @@ struct GcProgressInfoUpdate {
     int errcode;
     unsigned int percent;
     unsigned int gap;
+};
+
+struct MigrateFileParam {
+    std::string srcPath;
+    std::string destPath;
+    uid_t uid {UINT32_MAX};
+    gid_t gid {UINT32_MAX};
+    bool isDir {false};
+    bool isSupportWithoutTar {false};
 };
 
 const int INVALID_FD = -1;

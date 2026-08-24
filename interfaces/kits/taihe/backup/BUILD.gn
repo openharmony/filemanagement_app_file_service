@@ -78,7 +78,9 @@ taihe_shared_library("file_backup_taihe") {
     "file_api:filemgmt_libn",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "samgr:samgr_proxy",
   ]
 }

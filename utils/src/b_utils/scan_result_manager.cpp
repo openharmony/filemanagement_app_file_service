@@ -97,9 +97,10 @@ void ScanResultManager::AddBigFile(const std::string &filePath,
         hashName = StringUtils::GenHashName(filePath + std::to_string(i));
     }
     hashNameSet_.emplace(hashName);
-    std::string fileName = ExtractFileName(filePath);
+    std::string fileName = StringUtils::GetFileName(filePath);
     std::string ext = ExtractFileExt(fileName);
-    if (!ext.empty() && ext.find(BConstants::ANCO_TAG) == std::string::npos) {
+    if (callerBundleName_ == BConstants::BUNDLE_DATA_CLONE && !ext.empty() &&
+        ext.find(BConstants::ANCO_TAG) == std::string::npos) {
         hashName += "." + ext;
     }
     if (restorePath.empty()) {
@@ -141,9 +142,9 @@ void ScanResultManager::AddAncoBigFile(
     }
     hashNameSet_.emplace(hashName);
     hashName += BConstants::ANCO_TAG;
-    std::string fileName = ExtractFileName(filePath);
+    std::string fileName = StringUtils::GetFileName(filePath);
     std::string ext = ExtractFileExt(fileName);
-    if (!ext.empty()) {
+    if (callerBundleName_ == BConstants::BUNDLE_DATA_CLONE && !ext.empty()) {
         hashName += "." + ext;
     }
     if (restorePath.empty()) {

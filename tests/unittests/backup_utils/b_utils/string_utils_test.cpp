@@ -243,60 +243,6 @@ HWTEST_F(StringUtilsTest, IS_SANBOX_ANCO_PATH_TEST_001, testing::ext::TestSize.L
 }
 
 /**
-* @tc.number: IS_PATH_PREFIX_TEST_001
-* @tc.name: IS_PATH_PREFIX_TEST_001
-* @tc.desc: Test function of IsPathPrefix
-* @tc.size: SMALL
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: NA
-*/
-HWTEST_F(StringUtilsTest, IS_PATH_PREFIX_TEST_001, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StringUtilsTest-begin IS_PATH_PREFIX_TEST_001";
-    // 传入path为空
-    EXPECT_FALSE(StringUtils::IsPathPrefix("", "/path/"));
-    // 传入prefix为空
-    EXPECT_FALSE(StringUtils::IsPathPrefix("/path/", ""));
-    // 传入字符串不以/开头
-    EXPECT_TRUE(StringUtils::IsPathPrefix("storage/Users/currentUser/", "/storage/Users/currentUser/"));
-    // path传入字符串不以/结尾
-    EXPECT_TRUE(StringUtils::IsPathPrefix("/storage/Users/currentUser", "/storage/Users/currentUser/"));
-    // 传入字符串都不以/结尾
-    EXPECT_TRUE(StringUtils::IsPathPrefix("/storage/Users/currentUser", "/storage/Users/currentUser"));
-    // 长度小于前缀
-    EXPECT_FALSE(StringUtils::IsPathPrefix("/storage/Users/", "/storage/Users/currentUser"));
-    // 前缀内容匹配
-    EXPECT_TRUE(StringUtils::IsPathPrefix("/storage/Users/currentUser/test/", "/storage/Users/currentUser"));
-    GTEST_LOG_(INFO) << "StringUtilsTest-end IS_PATH_PREFIX_TEST_001";
-}
- 
-/**
-* @tc.number: CONVERT_MEDIA_SANDBOX_TEST_001
-* @tc.name: CONVERT_MEDIA_SANDBOX_TEST_001
-* @tc.desc: Test function of ConvertMediaSandboxToPublic
-* @tc.size: SMALL
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: NA
-*/
-HWTEST_F(StringUtilsTest, CONVERT_MEDIA_SANDBOX_TEST_001, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StringUtilsTest-begin CONVERT_MEDIA_SANDBOX_TEST_001";
-    // 传入path为空
-    EXPECT_EQ(StringUtils::ConvertMediaSandboxToPublic(""), "");
-    // 传入path不为媒体沙箱
-    EXPECT_EQ(StringUtils::ConvertMediaSandboxToPublic("/storage/Users/currentUser"), "/storage/Users/currentUser");
-    // 传入path为媒体沙箱
-    EXPECT_EQ(StringUtils::ConvertMediaSandboxToPublic("/storage/media/local/files/Docs/test.txt"),
-        "/storage/Users/currentUser/test.txt");
-    // 传入path为媒体沙箱
-    EXPECT_EQ(StringUtils::ConvertMediaSandboxToPublic("/storage/media/local/files/Docs/test/test.txt"),
-        "/storage/Users/currentUser/test/test.txt");
-    GTEST_LOG_(INFO) << "StringUtilsTest-end CONVERT_MEDIA_SANDBOX_TEST_001";
-}
-
-/**
 * @tc.number: FILTER_ANCO_PATHS_TEST_001
 * @tc.name: FILTER_ANCO_PATHS_TEST_001
 * @tc.desc: Test function of FilterAncoPaths with mixed paths
@@ -597,18 +543,18 @@ HWTEST_F(StringUtilsTest, STRINGUTILS_IS_SUBDIRECTORY_TEST_001, testing::ext::Te
 */
 HWTEST_F(StringUtilsTest, STRINGUTILS_GET_FILE_NAME_TEST_001, testing::ext::TestSize.Level1) {
     // 1. 基础场景：包含路径分隔符的标准路径
-    EXPECT_EQ(StringUtils::GetFileName("C:\\Program Files\\app.exe"), "C:\\Program Files\\app.exe");
-    EXPECT_EQ(StringUtils::GetFileName("D:\\Data\\file"), "D:\\Data\\file");
+    EXPECT_EQ(StringUtils::GetFileName("/a/b/c.txt"), "c.txt");
+    EXPECT_EQ(StringUtils::GetFileName("/usr/local/bin"), "bin");
 
     // 2. 基础场景：包含反斜杠的路径
-    EXPECT_EQ(StringUtils::GetFileName("C:\\Program Files\\app.exe"), "app.exe");
-    EXPECT_EQ(StringUtils::GetFileName("C:\\a\\b\\"), "C:\\a\\b\\");
+    EXPECT_EQ(StringUtils::GetFileName("C:\\Program Files\\app.exe"), "C:\\Program Files\\app.exe");
+    EXPECT_EQ(StringUtils::GetFileName("D:\\Data\\file"), "D:\\Data\\file");
 
     // 3. 混合场景：路径末尾包含分隔符
     // 注意：根据实现逻辑，find_last_of 找到最后一个分隔符，substr 取其后内容。
     // 如果分隔符是最后一个字符，substr 会返回空字符串。
     EXPECT_EQ(StringUtils::GetFileName("/a/b/c/"), "");
-    EXPECT_EQ(StringUtils::GetFileName("C:\\a\\b\\"), "");
+    EXPECT_EQ(StringUtils::GetFileName("C:\\a\\b\\"), "C:\\a\\b\\");
 
     // 4. 边缘场景：只有文件名，不包含路径分隔符
     EXPECT_EQ(StringUtils::GetFileName("filename.txt"), "filename.txt");

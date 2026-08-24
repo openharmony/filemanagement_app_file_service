@@ -411,6 +411,10 @@ int32_t SandboxHelper::GetPhysicalDir(const std::string &fileUri, const std::str
     }
 
     string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if (!IsValidPath(sandboxPath)) {
+        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../' characters or exceeds maximum allowed length");
+        return -EINVAL;
+    }
     if (sandboxPath.length() > MAX_PATH_LENGTH || sandboxPath.length() == 0) {
         LOGE("sandboxPath length exceeds maximum allowed length or decodes error");
         return -EINVAL;
@@ -455,6 +459,10 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
     }
 
     string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if (!IsValidPath(sandboxPath)) {
+        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../' characters or exceeds maximum allowed length");
+        return -EINVAL;
+    }
     if (sandboxPath.length() > MAX_PATH_LENGTH || sandboxPath.length() == 0) {
         LOGE("sandboxPath length exceeds maximum allowed length or decodes error");
         return -EINVAL;
@@ -499,6 +507,10 @@ int32_t SandboxHelper::GetBackupPhysicalPath(const std::string &fileUri, const s
     }
 
     string sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    if (!IsValidPath(sandboxPath)) {
+        LOGE("fileUri is ValidUri, The fileUri contains '/./' or '../' characters or exceeds maximum allowed length");
+        return -EINVAL;
+    }
     if (sandboxPath.length() > MAX_PATH_LENGTH || sandboxPath.length() == 0) {
         LOGE("sandboxPath length exceeds maximum allowed length or decodes error");
         return -EINVAL;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -224,15 +224,15 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0003, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPath_0004, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0004";
-    string fileStr = "/data/storage/el2/base/files/test.txt";
-    string uri = "file://" + fileStr;
-    FileUri fileUri(uri);
-    EXPECT_EQ(fileUri.ToString(), uri);
-    EXPECT_EQ(fileUri.GetName(), "test.txt");
-    EXPECT_EQ(fileUri.GetPath(), fileStr);
-    EXPECT_EQ(fileUri.GetRealPath(), fileStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0004";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0004";
+   string fileStr = "/data/storage/el2/base/files/test.txt";
+   string uri = "file://" + fileStr;
+   FileUri fileUri(uri);
+   EXPECT_EQ(fileUri.ToString(), uri);
+   EXPECT_EQ(fileUri.GetName(), "test.txt");
+   EXPECT_EQ(fileUri.GetPath(), fileStr);
+   EXPECT_EQ(fileUri.GetRealPath(), fileStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0004";
 }
 /**
     * @tc.name: file_uri_test_0007
@@ -261,13 +261,13 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0005, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPath_0006, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0006";
-    string fileStr = "file://docs/storage/Users/currentUser/Documents/1.txt?networkid=xxx";
-    string rltStr = "/data/storage/el2/share/r/xxx/docs/storage/Users/currentUser/Documents/1.txt";
-    FileUri fileUri(fileStr);
-    string path = fileUri.GetRealPath();
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0006";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0006";
+   string fileStr = "file://docs/storage/Users/currentUser/Documents/1.txt?networkid=xxx";
+   string rltStr = "/data/storage/el2/share/r/xxx/docs/storage/Users/currentUser/Documents/1.txt";
+   FileUri fileUri(fileStr);
+   string path = fileUri.GetRealPath();
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0006";
 }
 /**
     * @tc.name: file_uri_test_0009
@@ -279,15 +279,15 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0006, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPath_0007, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0007";
-    string fileStr = "/mnt/data/fuse/1.txt";
-    string bundleB = "com.ohos.dlpmanager";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "/mnt/data/fuse/1.txt";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPath();
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0007";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0007";
+   string fileStr = "/mnt/data/fuse/1.txt";
+   string bundleB = "com.ohos.dlpmanager";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "/mnt/data/fuse/1.txt";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPath();
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0007";
 }
 /**
     * @tc.name: file_uri_test_00010
@@ -299,50 +299,50 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0007, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPath_0008, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0008";
-    string fileStr = "/data/appdata/el2/base/files/test.txt";
-    string bundleB = "com.demo.b";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPath();
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0008";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0008";
+   string fileStr = "/data/appdata/el2/base/files/test.txt";
+   string bundleB = "com.demo.b";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPath();
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0008";
 }
 
 /**
-    * @tc.name: file_uri_test_00011
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+     * @tc.name: file_uri_test_00011
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0009, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0009";
-    string uri = "file://docs/storage/Users/currentUser/Documents/1.txt?networkid=***";
-    string fileStr = "/data/storage/el2/share/r/***/docs/storage/Users/currentUser/Documents/1.txt";
-    FileUri fileUri(uri);
-    EXPECT_EQ(fileUri.GetRealPath(), fileStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0009";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0009";
+   string uri = "file://docs/storage/Users/currentUser/Documents/1.txt?networkid=***";
+   string fileStr = "/data/storage/el2/share/r/***/docs/storage/Users/currentUser/Documents/1.txt";
+   FileUri fileUri(uri);
+   EXPECT_EQ(fileUri.GetRealPath(), fileStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0009";
 }
 /**
-    * @tc.name: file_uri_test_00012
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
+     * @tc.name: file_uri_test_00012
+     * @tc.desc: Test function of GetPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPath_0010, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0010";
-    string uri = "file://docs/storage/Users/currentUser/Documents/1.txt?networkid=";
-    string fileStr = "/data/storage/el2/share/r/docs/storage/Users/currentUser/Documents/1.txt";
-    FileUri fileUri(uri);
-    EXPECT_EQ(fileUri.GetRealPath(), fileStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0010";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0010";
+   string uri = "file://docs/storage/Users/currentUser/Documents/1.txt?networkid=";
+   string fileStr = "/data/storage/el2/share/r/docs/storage/Users/currentUser/Documents/1.txt";
+   FileUri fileUri(uri);
+   EXPECT_EQ(fileUri.GetRealPath(), fileStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPath_0010";
 }
 
 /**
@@ -355,17 +355,16 @@ HWTEST_F(FileUriTest, File_uri_GetPath_0010, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0000";
-    string fileStr = "/data/storage/el2/base/files/test.txt";
-    string bundleB = "com.demo.b";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "/storage/Users/currentUser/appdata/el2/base/" + bundleB + "/files/test.txt";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPathBySA("");
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0000";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0000";
+   string fileStr = "/data/storage/el2/base/files/test.txt";
+   string bundleB = "com.demo.b";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "/storage/Users/currentUser/appdata/el2/base/" + bundleB + "/files/test.txt";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPathBySA("");
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0000";
 }
-
 /**
     * @tc.name: file_uri_test_0001
     * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
@@ -376,17 +375,16 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0000, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0001";
-    string fileStr = "/data/storage/el2/base/files/test.txt";
-    string bundleB = "com.demo.b";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "/data/storage/el2/base/files/test.txt";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPathBySA("com.demo.b");
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0001";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0001";
+   string fileStr = "/data/storage/el2/base/files/test.txt";
+   string bundleB = "com.demo.b";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "/data/storage/el2/base/files/test.txt";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPathBySA("com.demo.b");
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0001";
 }
-
 /**
     * @tc.name: file_uri_test_0002
     * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
@@ -397,17 +395,16 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0001, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0002, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0002";
-    string fileStr = "/storage/Users/currentUser/Documents/1.txt";
-    string bundleB = "docs";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "/storage/Users/currentUser/Documents/1.txt";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPathBySA("");
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0002";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0002";
+   string fileStr = "/storage/Users/currentUser/Documents/1.txt";
+   string bundleB = "docs";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "/storage/Users/currentUser/Documents/1.txt";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPathBySA("");
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0002";
 }
-    
 /**
     * @tc.name: file_uri_test_0003
     * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
@@ -418,17 +415,16 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0002, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0003, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0003";
-    string fileStr = "/storage/Users/currentUser/Documents/1.txt";
-    string bundleB = "docs";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "/storage/Users/currentUser/Documents/1.txt";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPathBySA("com.demo.b");
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0003";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0003";
+   string fileStr = "/storage/Users/currentUser/Documents/1.txt";
+   string bundleB = "docs";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "/storage/Users/currentUser/Documents/1.txt";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPathBySA("com.demo.b");
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0003";
 }
-    
 /**
     * @tc.name: file_uri_test_0004
     * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
@@ -439,17 +435,16 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0003, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0004, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0004";
-    string fileStr = "/mnt/data/fuse/1.txt";
-    string bundleB = "com.ohos.dlpmanager";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "/mnt/data/fuse/1.txt";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPathBySA("");
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0004";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0004";
+   string fileStr = "/mnt/data/fuse/1.txt";
+   string bundleB = "com.ohos.dlpmanager";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "/mnt/data/fuse/1.txt";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPathBySA("");
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0004";
 }
-
 /**
     * @tc.name: file_uri_test_0005
     * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
@@ -460,17 +455,16 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0004, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0005, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0005";
-    string fileStr = "/data/storage/el2/base/files/test.txt";
-    string bundleB = "com.ohos.dlpmanager";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "/storage/Users/currentUser/appdata/el2/base/" + bundleB + "/files/test.txt";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPathBySA("");
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0005";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0005";
+   string fileStr = "/data/storage/el2/base/files/test.txt";
+   string bundleB = "com.ohos.dlpmanager";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "/storage/Users/currentUser/appdata/el2/base/" + bundleB + "/files/test.txt";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPathBySA("");
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0005";
 }
-
 /**
     * @tc.name: file_uri_test_0006
     * @tc.desc: Test function of GetPathBySA() interface for SUCCESS.
@@ -481,86 +475,89 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0005, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0006, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0006";
-    string fileStr = "/data/data/el2/base/files/test.txt";
-    string bundleB = "com.ohos.dlpmanager";
-    string uri = "file://" + bundleB + fileStr;
-    string rltStr = "";
-    FileUri fileUri(uri);
-    string path = fileUri.GetRealPathBySA("");
-    EXPECT_EQ(path, rltStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0006";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0006";
+   string fileStr = "/data/data/el2/base/files/test.txt";
+   string bundleB = "com.ohos.dlpmanager";
+   string uri = "file://" + bundleB + fileStr;
+   string rltStr = "";
+   FileUri fileUri(uri);
+   string path = fileUri.GetRealPathBySA("");
+   EXPECT_EQ(path, rltStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0006";
 }
 
 /**
-    * @tc.name: file_uri_GetPathBySA_0007
-    * @tc.desc: Test function of GetPath) interface for SUCCESS.
+    * @tc.name: File_uri_GetPathBySA_0007
+    * @tc.desc: Test function of GetPath() interface for SUCCESS.
     * @tc.size: MEDIUM
     * @tc.type: FUNC
     * @tc.level Level 1
     * @tc.require: I7LW57
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0007, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0007";
-    string fileStr = "";
-    string uri = "file://com.example.demoa/data/storage/el2/base%()test.jpg";
-    FileUri fileUri(uri);
-    EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0007";
-}
-/**
-    * @tc.name: file_uri_GetPathBySA_0008
-    * @tc.desc: Test function of GetPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require: I7LW57
-*/
-HWTEST_F(FileUriTest, File_uri_GetPathBySA_0008, testing::ext::TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0008";
-    string fileStr = "";
-    string uri = "file://com.example.demoa/data/storage/el2/base/files/%你好test.jpg";
-    FileUri fileUri(uri);
-    EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0008";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0007";
+   string fileStr = "";
+   string uri = "file://com.example.demoa/data/storage/el2/base%()test.jpg";
+   FileUri fileUri(uri);
+   EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0007";
 }
 
 /**
-    * @tc.name: file_uri_GetPathBySA_0009
+    * @tc.name: File_uri_GetPathBySA_0008
     * @tc.desc: Test function of GetPath() interface for SUCCESS.
     * @tc.size: MEDIUM
     * @tc.type: FUNC
     * @tc.level Level 1
     * @tc.require: I7LW57
-*/
+ */
+HWTEST_F(FileUriTest, File_uri_GetPathBySA_0008, testing::ext::TestSize.Level1)
+{
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0008";
+   string fileStr = "";
+   string uri = "file://com.example.demoa/data/storage/el2/base/files/%你好test.jpg";
+   FileUri fileUri(uri);
+   EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0008";
+}
+
+/**
+    * @tc.name: File_uri_GetPathBySA_0009
+    * @tc.desc: Test function of GetPath() interface for SUCCESS.
+    * @tc.size: MEDIUM
+    * @tc.type: FUNC
+    * @tc.level Level 1
+    * @tc.require: I7LW57
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0009, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0009";
-    string fileStr = "";
-    string uri = "file://com.example.demoa/data/storage/el2%/base/files/test.jpg";
-    FileUri fileUri(uri);
-    EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0009";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0009";
+   string fileStr = "";
+   string uri = "file://com.example.demoa/data/storage/el2%/base/files/test.jpg";
+   FileUri fileUri(uri);
+   EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0009";
 }
+
 /**
-    * @tc.name: file_uri_GetPathBySA_0010
+    * @tc.name: File_uri_GetPathBySA_0010
     * @tc.desc: Test function of GetPath() interface for SUCCESS.
     * @tc.size: MEDIUM
     * @tc.type: FUNC
     * @tc.level Level 1
     * @tc.require: I7LW57
-*/
+ */
 HWTEST_F(FileUriTest, File_uri_GetPathBySA_0010, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0010";
-    string fileStr = "";
-    string uri = "file://com.example.demoa/data/storage/el2/base%#files/test.jpg";
-    FileUri fileUri(uri);
-    EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0010";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0010";
+   string fileStr = "";
+   string uri = "file://com.example.demoa/data/storage/el2/base%#files/test.jpg";
+   FileUri fileUri(uri);
+   EXPECT_EQ(fileUri.GetRealPathBySA(), fileStr);
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetPathBySA_0010";
 }
+
 /**
     * @tc.name: File_uri_GetFullDirectoryUri_0000
     * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
@@ -571,121 +568,121 @@ HWTEST_F(FileUriTest, File_uri_GetPathBySA_0010, testing::ext::TestSize.Level1)
 */
 HWTEST_F(FileUriTest, File_uri_GetFullDirectoryUri_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0000";
-    string fileStr = "/data/test/remote_file_share_test.txt";
-    FileUri fileUriObject(fileStr);
-    string fileDirectoryUri = "file://" + BUNDLE_A + "/data/test";
-    EXPECT_EQ(fileUriObject.GetFullDirectoryUri(), fileDirectoryUri);
-    string folderStr = "/data/test";
-    string folderUri = "file://" + BUNDLE_A + folderStr;
-    FileUri folderUriObject(folderUri);
-    string folderDirectoryUri = "file://" + BUNDLE_A + folderStr;
-    EXPECT_EQ(folderUriObject.GetFullDirectoryUri(), folderDirectoryUri);
-    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0000";
+   string fileStr = "/data/test/remote_file_share_test.txt";
+   FileUri fileUriObject(fileStr);
+   string fileDirectoryUri = "file://" + BUNDLE_A + "/data/test";
+   EXPECT_EQ(fileUriObject.GetFullDirectoryUri(), fileDirectoryUri);
+   string folderStr = "/data/test";
+   string folderUri = "file://" + BUNDLE_A + folderStr;
+   FileUri folderUriObject(folderUri);
+   string folderDirectoryUri = "file://" + BUNDLE_A + folderStr;
+   EXPECT_EQ(folderUriObject.GetFullDirectoryUri(), folderDirectoryUri);
+   GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0000";
 }
 /**
-    * @tc.name: file_uri_test_0008
-    * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require:
-*/
+     * @tc.name: file_uri_test_0008
+     * @tc.desc: Test function of GetFullDirectoryUri() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require:
+ */
 HWTEST_F(FileUriTest, File_uri_GetFullDirectoryUri_0001, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0001";
-    std::string fileUri0 = "file://docs/storage/Users/currentUser/../test../test1";
-    std::string fileUri1 = "file://docs/storage/Users/currentUser/test../../test";
-    std::string fileUri2 = "file://docs/storage/Users/currentUser/test../../";
-    std::string fileUri3 = "file://docs/storage/Users/currentUser/test../test../..";
-    std::string fileUri4 = "file://docs/storage/Users/currentUser/test/..test/..";
-    FileUri fileUriObject0(fileUri0);
-    EXPECT_EQ(fileUriObject0.GetFullDirectoryUri(), "");
-    FileUri fileUriObject1(fileUri1);
-    EXPECT_EQ(fileUriObject1.GetFullDirectoryUri(), "");
-    FileUri fileUriObject2(fileUri2);
-    EXPECT_EQ(fileUriObject2.GetFullDirectoryUri(), "");
-    FileUri fileUriObject3(fileUri3);
-    EXPECT_EQ(fileUriObject3.GetFullDirectoryUri(), "");
-    FileUri fileUriObject4(fileUri4);
-    EXPECT_EQ(fileUriObject4.GetFullDirectoryUri(), "");
-    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0001";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetFullDirectoryUri_0001";
+   std::string fileUri0 = "file://docs/storage/Users/currentUser/../test../test1";
+   std::string fileUri1 = "file://docs/storage/Users/currentUser/test../../test";
+   std::string fileUri2 = "file://docs/storage/Users/currentUser/test../../";
+   std::string fileUri3 = "file://docs/storage/Users/currentUser/test../test../..";
+   std::string fileUri4 = "file://docs/storage/Users/currentUser/test/..test/..";
+   FileUri fileUriObject0(fileUri0);
+   EXPECT_EQ(fileUriObject0.GetFullDirectoryUri(), "");
+   FileUri fileUriObject1(fileUri1);
+   EXPECT_EQ(fileUriObject1.GetFullDirectoryUri(), "");
+   FileUri fileUriObject2(fileUri2);
+   EXPECT_EQ(fileUriObject2.GetFullDirectoryUri(), "");
+   FileUri fileUriObject3(fileUri3);
+   EXPECT_EQ(fileUriObject3.GetFullDirectoryUri(), "");
+   FileUri fileUriObject4(fileUri4);
+   EXPECT_EQ(fileUriObject4.GetFullDirectoryUri(), "");
+   GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetPath_0001";
 }
 
 /**
-    * @tc.name: file_uri_test_0009
-    * @tc.desc: Test function of CheckUriFormat() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require:
-*/
+     * @tc.name: file_uri_test_0009
+     * @tc.desc: Test function of CheckUriFormat() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require:
+ */
 HWTEST_F(FileUriTest, File_uri_CheckUriFormat_0000, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_CheckUriFormat_0000";
-    std::string fileUri0 = "file://docs/storage/Users/currentUser/../test../test1";
-    std::string fileUri1 = "file://docs/storage/Users/currentUser/test../../test";
-    std::string fileUri2 = "file://docs/storage/Users/currentUser/test../../";
-    std::string fileUri3 = "file://docs/storage/Users/currentUser/test../test../..";
-    std::string fileUri4 = "file://docs/storage/Users/currentUser/test/..test/..";
-    std::string fileUri5 = "file://docs/storage/Users/currentUser/test/test../test";
-    std::string fileUri6 = "file://docs/storage/Users/currentUser/test../test../test";
-    std::string fileUri7 = "file://docs/storage/Users/currentUser/test../test../test../..test";
-    FileUri fileUriObject0(fileUri0);
-    EXPECT_FALSE(fileUriObject0.CheckUriFormat(fileUri0));
-    FileUri fileUriObject1(fileUri1);
-    EXPECT_FALSE(fileUriObject1.CheckUriFormat(fileUri1));
-    FileUri fileUriObject2(fileUri2);
-    EXPECT_FALSE(fileUriObject2.CheckUriFormat(fileUri2));
-    FileUri fileUriObject3(fileUri3);
-    EXPECT_FALSE(fileUriObject3.CheckUriFormat(fileUri3));
-    FileUri fileUriObject4(fileUri4);
-    EXPECT_FALSE(fileUriObject4.CheckUriFormat(fileUri4));
-    FileUri fileUriObject5(fileUri5);
-    EXPECT_TRUE(fileUriObject5.CheckUriFormat(fileUri5));
-    FileUri fileUriObject6(fileUri6);
-    EXPECT_TRUE(fileUriObject6.CheckUriFormat(fileUri6));
-    FileUri fileUriObject7(fileUri7);
-    EXPECT_TRUE(fileUriObject7.CheckUriFormat(fileUri7));
-    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_CheckUriFormat_0000";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_CheckUriFormat_0000";
+   std::string fileUri0 = "file://docs/storage/Users/currentUser/../test../test1";
+   std::string fileUri1 = "file://docs/storage/Users/currentUser/test../../test";
+   std::string fileUri2 = "file://docs/storage/Users/currentUser/test../../";
+   std::string fileUri3 = "file://docs/storage/Users/currentUser/test../test../..";
+   std::string fileUri4 = "file://docs/storage/Users/currentUser/test/..test/..";
+   std::string fileUri5 = "file://docs/storage/Users/currentUser/test/test../test";
+   std::string fileUri6 = "file://docs/storage/Users/currentUser/test../test../test";
+   std::string fileUri7 = "file://docs/storage/Users/currentUser/test../test../test../..test";
+   FileUri fileUriObject0(fileUri0);
+   EXPECT_FALSE(fileUriObject0.CheckUriFormat(fileUri0));
+   FileUri fileUriObject1(fileUri1);
+   EXPECT_FALSE(fileUriObject1.CheckUriFormat(fileUri1));
+   FileUri fileUriObject2(fileUri2);
+   EXPECT_FALSE(fileUriObject2.CheckUriFormat(fileUri2));
+   FileUri fileUriObject3(fileUri3);
+   EXPECT_FALSE(fileUriObject3.CheckUriFormat(fileUri3));
+   FileUri fileUriObject4(fileUri4);
+   EXPECT_FALSE(fileUriObject4.CheckUriFormat(fileUri4));
+   FileUri fileUriObject5(fileUri5);
+   EXPECT_TRUE(fileUriObject5.CheckUriFormat(fileUri5));
+   FileUri fileUriObject6(fileUri6);
+   EXPECT_TRUE(fileUriObject6.CheckUriFormat(fileUri6));
+   FileUri fileUriObject7(fileUri7);
+   EXPECT_TRUE(fileUriObject7.CheckUriFormat(fileUri7));
+   GTEST_LOG_(INFO) << "FileUriTest-end File_uri_CheckUriFormat_0000";
 }
 
 /**
-    * @tc.name: file_uri_test_0010
-    * @tc.desc: Test function of GetUriFromPath() interface for SUCCESS.
-    * @tc.size: MEDIUM
-    * @tc.type: FUNC
-    * @tc.level Level 1
-    * @tc.require:
-*/
+     * @tc.name: file_uri_test_0010
+     * @tc.desc: Test function of GetUriFromPath() interface for SUCCESS.
+     * @tc.size: MEDIUM
+     * @tc.type: FUNC
+     * @tc.level Level 1
+     * @tc.require:
+ */
 HWTEST_F(FileUriTest, File_uri_GetUriFromPath_0010, testing::ext::TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_0010";
-    std::string fileUri0 = "/storage/Users/currentUser/../test../test1";
-    std::string fileUri1 = "/storage/Users/currentUser/test../../test";
-    std::string fileUri2 = "/storage/Users/currentUser/test../../";
-    std::string fileUri3 = "/storage/Users/currentUser/test../test../..";
-    std::string fileUri4 = "/storage/Users/currentUser/test/..test/..";
-    std::string fileUri5 = "/storage/Users/currentUser/test/test../test";
-    std::string fileUri6 = "/storage/Users/currentUser/test../test../test";
-    std::string fileUri7 = "/storage/Users/currentUser/test../test../test../..test";
-    FileUri fileUriObject0(fileUri0);
-    EXPECT_EQ(fileUriObject0.ToString(), "");
-    FileUri fileUriObject1(fileUri1);
-    EXPECT_EQ(fileUriObject1.ToString(), "");
-    FileUri fileUriObject2(fileUri2);
-    EXPECT_EQ(fileUriObject2.ToString(), "");
-    FileUri fileUriObject3(fileUri3);
-    EXPECT_EQ(fileUriObject3.ToString(), "");
-    FileUri fileUriObject4(fileUri4);
-    EXPECT_EQ(fileUriObject4.ToString(), "");
-    FileUri fileUriObject5(fileUri5);
-    EXPECT_EQ(fileUriObject5.ToString(), "file://docs/storage/Users/currentUser/test/test../test");
-    FileUri fileUriObject6(fileUri6);
-    EXPECT_EQ(fileUriObject6.ToString(), "file://docs/storage/Users/currentUser/test../test../test");
-    FileUri fileUriObject7(fileUri7);
-    EXPECT_EQ(fileUriObject7.ToString(), "file://docs/storage/Users/currentUser/test../test../test../..test");
-    GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_0010";
+   GTEST_LOG_(INFO) << "FileUriTest-begin File_uri_GetUriFromPath_0010";
+   std::string fileUri0 = "/storage/Users/currentUser/../test../test1";
+   std::string fileUri1 = "/storage/Users/currentUser/test../../test";
+   std::string fileUri2 = "/storage/Users/currentUser/test../../";
+   std::string fileUri3 = "/storage/Users/currentUser/test../test../..";
+   std::string fileUri4 = "/storage/Users/currentUser/test/..test/..";
+   std::string fileUri5 = "/storage/Users/currentUser/test/test../test";
+   std::string fileUri6 = "/storage/Users/currentUser/test../test../test";
+   std::string fileUri7 = "/storage/Users/currentUser/test../test../test../..test";
+   FileUri fileUriObject0(fileUri0);
+   EXPECT_EQ(fileUriObject0.ToString(), "");
+   FileUri fileUriObject1(fileUri1);
+   EXPECT_EQ(fileUriObject1.ToString(), "");
+   FileUri fileUriObject2(fileUri2);
+   EXPECT_EQ(fileUriObject2.ToString(), "");
+   FileUri fileUriObject3(fileUri3);
+   EXPECT_EQ(fileUriObject3.ToString(), "");
+   FileUri fileUriObject4(fileUri4);
+   EXPECT_EQ(fileUriObject4.ToString(), "");
+   FileUri fileUriObject5(fileUri5);
+   EXPECT_EQ(fileUriObject5.ToString(), "file://docs/storage/Users/currentUser/test/test../test");
+   FileUri fileUriObject6(fileUri6);
+   EXPECT_EQ(fileUriObject6.ToString(), "file://docs/storage/Users/currentUser/test../test../test");
+   FileUri fileUriObject7(fileUri7);
+   EXPECT_EQ(fileUriObject7.ToString(), "file://docs/storage/Users/currentUser/test../test../test../..test");
+   GTEST_LOG_(INFO) << "FileUriTest-end File_uri_GetUriFromPath_0010";
 }
 
 /**
@@ -710,7 +707,7 @@ HWTEST_F(FileUriTest, File_uri_IsRemoteUri_0000, testing::ext::TestSize.Level1)
     string fileStr3 = "file://" + BUNDLE_A + "/data/test?networkid=123456/";
     FileUri fileUriObject3(fileStr3);
     EXPECT_EQ(fileUriObject3.IsRemoteUri(), false);
-
+ 
     string fileStr4 = "file://" + BUNDLE_A + "/data/test?networkid=123456";
     FileUri fileUriObject4(fileStr4);
     EXPECT_EQ(fileUriObject4.IsRemoteUri(), true);

@@ -34,6 +34,9 @@ struct ReportFileInfo {
     bool isIncremental {false};
     off_t userTar {0};
     bool encodeFlag {false};
+    // 兼容目录映射的目标路径. 内存字段, 不写入 rp 文件.
+    // WriteFile 写 column 0 时: 若 restorePath 非空则写 restorePath, 否则写 filePath.
+    std::string restorePath;
 };
 
 enum class KeyType {

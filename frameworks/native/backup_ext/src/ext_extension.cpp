@@ -59,8 +59,8 @@
 #include "b_utils/string_utils.h"
 #include "filemgmt_libhilog.h"
 #include "hitrace_meter.h"
-#include "installd_un_tar_file.h"
 #include "iservice.h"
+#include "installd_un_tar_file.h"
 #include "sandbox_helper.h"
 #include "service_client.h"
 #include "tar_file.h"
@@ -72,7 +72,7 @@ const string INDEX_FILE_RESTORE = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
 const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                              append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
 const string MEDIA_LIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
-const string FILE_MANAGER_BUNDLE_NAME = "com.ohos.filepicker";
+const string FILE_MANAGER_BUNDLE_NAME = "com.huawei.hmos.filemanager";
 using namespace std;
 
 static void RecordDoRestoreRes(const std::string &bundleName, const std::string &func,
@@ -96,7 +96,7 @@ static void RecordDoRestoreRes(const std::string &bundleName, const std::string 
 
 static string GetIndexFileRestorePath(const string &bundleName)
 {
-    if (BFile::EndsWith(bundleName, BConstants::BUNDLE_FILE_MANAGER) && bundleName.size() == BConstants::FM_LEN) {
+    if (bundleName == BConstants::BUNDLE_FILE_MANAGER) {
         return string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE).
                append(BConstants::EXT_BACKUP_MANAGE);
     } else if (bundleName == BConstants::BUNDLE_MEDIAL_DATA) {
@@ -422,7 +422,7 @@ FileOpenResult BackupExtExtension::GetIncreFileHandleForUntarNormalVersion(const
                    GetAnonyPath(fileName).c_str(), errCode);
             break;
         }
-        fd = UniqueFd(open(realDir.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
+        fd = UniqueFd(open(realDir.data(), O_RDWR | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR));
         if (fd < 0) {
             errCode = errno;
             HILOGE("Failed to open file, errno:%{public}d, path len:%{public}zu, path:%{public}s", errCode,
@@ -757,7 +757,7 @@ void BackupExtExtension::ProcessReadysInfo(std::vector<std::shared_ptr<IFileInfo
 
 ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFileInfo>>& allFiles)
 {
-    HILOGD("ReportAppFileReadys enter filenameSize: %{public}zu", allFiles.size());
+    HILOGD("ReportAppFileReadys enter filenameSize: %{public}lu", allFiles.size());
     vector<string> fileNames = {};
     vector<int> normalfds = {};
     vector<string> abnormalfileNames = {};
@@ -789,11 +789,11 @@ ErrCode BackupExtExtension::ReportAppFileReadys(std::vector<std::shared_ptr<IFil
         CloseFileWithFDSan(fdval);
     }
     if (SUCCEEDED(reportRs) && SUCCEEDED(reportRsWithoutFd)) {
-        HILOGI("Report app file ready success, filenameSize: %{public}zu", allFiles.size());
+        HILOGI("Report app file ready success, filenameSize: %{public}lu", allFiles.size());
     } else {
         HILOGW(
             "Report app file ready failed, reportRsWithoutFd: %{public}d, reportRs %{public}d, allfileSize: "
-            "%{public}zu",
+            "%{public}lu",
             reportRsWithoutFd, reportRs, normalfds.size());
     }
     return reportRs;
@@ -1156,17 +1156,6 @@ int BackupExtExtension::DoIncrementalRestore()
             err = errCode;
         }
     }
-    vector<string> publicFileSourcePath;
-    vector<string> publicFileTargetPath;
-    vector<StatInfo> publicFileStats;
-    for (const auto &[srcPath, dstPath, sta] : UntarFile::GetInstance().GetPublicFileInfos()) {
-        StatInfo statInfo;
-        statInfo.sta = sta;
-        publicFileSourcePath.push_back(srcPath);
-        publicFileTargetPath.push_back(dstPath);
-        publicFileStats.push_back(statInfo);
-    }
-    AncoIncrementalRestoreHelper::AddAncoMovePaths(publicFileSourcePath, publicFileTargetPath, publicFileStats);
     auto endTime = std::chrono::system_clock::now();
     radarRestoreInfo_.tarFileSpendTime =
         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
@@ -1205,7 +1194,9 @@ ErrCode BackupExtExtension::ProcessTarFile(const std::string& item, const std::v
             tempPath = path;
             return ERR_OK;
         }
-        GetTarIncludes(tarName, result);
+        if (ShouldUseRpFileOnRestore(false)) {
+            GetTarIncludes(tarName, result);
+        }
         if ((!extension_->SpecialVersionForCloneAndCloud()) && (!extension_->UseFullBackupOnly())) {
             path = "/";
         }
@@ -1355,6 +1346,11 @@ bool BackupExtExtension::CheckIsSplitTarList(const std::vector<const ExtManageIn
         // reset untar object
         unSplitTar->Reset();
 
+        if (!BDir::IsFilePathValid(item.hashName) || !BDir::IsFilePathValid(item.fileName)) {
+            HILOGE("Check split tarfile path err, path is forbidden");
+            break;
+        }
+
         HILOGI("check if split tar, filename: %{public}s, path: %{public}s", GetAnonyPath(item.hashName).c_str(),
             GetAnonyPath(item.fileName).c_str());
         // check if tar is split
@@ -1400,6 +1396,19 @@ ErrCode BackupExtExtension::RestoreSplitTarListForSpecialCloneCloud(const std::v
         radarRestoreInfo_.tarFileSize += static_cast<uint64_t>(item.sta.st_size);
         // reset untar object
         unSplitTar->Reset();
+
+        if (!BDir::IsFilePathValid(item.hashName)) {
+            HILOGE("Check split tarfile hash path : %{public}s err, path is forbidden",
+                GetAnonyPath(item.hashName).c_str());
+            errCode = ERR_INVALID_VALUE;
+            break;
+        }
+        if (!BDir::IsFilePathValid(item.fileName)) {
+            HILOGE("Check split tarfile path : %{public}s err, path is forbidden",
+                GetAnonyPath(item.fileName).c_str());
+            errCode = ERR_INVALID_VALUE;
+            break;
+        }
 
         // do untar with root path
         int ret = unSplitTar->UnSplitTar(item.hashName, item.fileName);
@@ -1522,7 +1531,7 @@ void BackupExtExtension::RestoreOneBigFile(const std::string &path, const ExtMan
 {
     string itemHashName = item.hashName;
     string itemFileName = item.fileName;
-    if (!item.isLongPath) {
+    if (ShouldUseRpFileOnRestore(item.isLongPath)) {
         // check if item.hasName and fileName need decode by report item attribute
         string reportPath = GetReportFileName(path + item.hashName);
         UniqueFd fd(open(reportPath.data(), O_RDONLY | O_UNCACHE));
@@ -1581,16 +1590,15 @@ void BackupExtExtension::RestoreBigFiles(bool appendTargetPath)
         radarRestoreInfo_.bigFileSize += static_cast<uint64_t>(item.sta.st_size);
         // 获取索引文件内容
         string path = GetRestoreTempPath(bundleName_, item.hashName);
-        if (StringUtils::IsPublicFilePath(item.fileName)) {
+        if (StringUtils::IsSandboxAncoPath(path)) {
             ancoSourcePath.push_back(path + item.hashName);
             ancoTargetPath.push_back(item.fileName);
             ancoStats.push_back(item.sta);
             continue;
         }
-        if (!item.isLongPath && (GetSupportWithoutTar() && !StringUtils::IsAncoFile(item.hashName))) {
-            continue;
+        if (ShouldMoveBigFileOnRestore(item)) {
+            RestoreOneBigFile(path, item, appendTargetPath);
         }
-        RestoreOneBigFile(path, item, appendTargetPath);
     }
     ExecuteAncoMove(ancoSourcePath, ancoTargetPath, ancoStats);
     auto end = std::chrono::system_clock::now();
@@ -1943,7 +1951,6 @@ void BackupExtExtension::ExtClear()
 
 void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
 {
-    ClearPublicTempFiles();
     auto task = [obj {wptr<BackupExtExtension>(this)}]() {
         auto ptr = obj.promote();
         BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
@@ -1973,7 +1980,7 @@ void BackupExtExtension::AsyncTaskIncrementalRestoreForUpgrade()
         } catch (const BError &e) {
             ptr->AppIncrementalDone(e.GetCode());
             ptr->DoClear();
-        } catch (...) {
+        }  catch (...) {
             HILOGE("Failed to restore the ext bundle");
             ptr->AppIncrementalDone(BError(BError::Codes::EXT_INVAL_ARG).GetCode());
             ptr->DoClear();
@@ -2094,10 +2101,10 @@ void BackupExtExtension::AppResultReport(std::string restoreRetInfo, BackupResto
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceClient handle");
     BJsonUtil::AddAncoFileResult(ancoRestoreRes_, restoreRetInfo);
     if (appStatistic_) {
-        uint32_t restoreSpend = appStatistic_->onRestoreSpend_.GetSpan() +
-            appStatistic_->onRestoreexSpend_.GetSpan();
-        BJsonUtil::AddRestoreSpend(restoreSpend, restoreRetInfo);
-    }
+ 	    uint32_t restoreSpend = appStatistic_->onRestoreSpend_.GetSpan() +
+ 	        appStatistic_->onRestoreexSpend_.GetSpan();
+ 	    BJsonUtil::AddRestoreSpend(restoreSpend, restoreRetInfo);
+ 	}
     HILOGI("restoreRetInfo is %{public}s", restoreRetInfo.c_str());
     auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario, errCode);
     if (ret != ERR_OK) {
@@ -2265,6 +2272,8 @@ void BackupExtExtension::FillFileInfos(UniqueFd incrementalFd,
     BReportEntity cloudRp(move(manifestFd));
     unordered_map<string, struct ReportFileInfo> cloudFiles;
     cloudRp.GetReportInfos(cloudFiles);
+    // 构建兼容目录映射并存入成员变量, 供子函数使用
+    compatDirMapping_ = BuildCompatibleDirMapping();
     appStatistic_->scanFileSpend_.Start();
     if (cloudFiles.empty()) {
         FillFileInfosWithoutCmp(allFiles, smallFiles, bigFiles, move(incrementalFd));
@@ -2382,9 +2391,16 @@ ErrCode BackupExtExtension::IncrementalAllFileReady(const TarMap &pkgInfo,
         HILOGE("Failed to open index json file = %{private}s, err = %{public}d", INDEX_FILE_BACKUP.c_str(), errno);
         return BError::GetCodeByErrno(errno);
     }
+
+    // 构建修正后的 TarMap, 用 compatDirMapping_ 替换物理路径前缀
+    TarMap correctedPkgInfo;
+    for (const auto &item : pkgInfo) {
+        auto [filePath, sta, isBeforeTar] = item.second;
+        correctedPkgInfo.emplace(item.first, std::make_tuple(MapPathWithCompatDir(filePath), sta, isBeforeTar));
+    }
     BJsonCachedEntity<BJsonEntityExtManage> cachedEntity(std::move(fdIndex));
     auto cache = cachedEntity.Structuralize();
-    cache.SetExtManage(pkgInfo, isSupportWithoutTar_);
+    cache.SetExtManage(correctedPkgInfo, isSupportWithoutTar_);
     cachedEntity.Persist();
     close(cachedEntity.GetFd().Release());
 
@@ -2420,5 +2436,46 @@ void BackupExtExtension::CloseFileWithFDSan(int fd)
     if (fd >= 0) {
         fdsan_close_with_tag(fd, BConstants::FDSAN_EXT_TAG);
     }
+}
+
+bool BackupExtExtension::ShouldRestoreToRootDir()
+{
+    std::call_once(restoreToRootDirOnceFlag_, [obj {wptr<BackupExtExtension>(this)}]() {
+        auto ptr = obj.promote();
+        BExcepUltils::BAssert(ptr, BError::Codes::EXT_BROKEN_FRAMEWORK, "Ext extension handle have been released");
+        ptr->cachedRestoreToRootDir_ =
+            !ptr->extension_->UseFullBackupOnly() || ptr->extension_->SpecialVersionForCloneAndCloud();
+    });
+    return cachedRestoreToRootDir_;
+}
+
+bool BackupExtExtension::ShouldRenameToFullPathOnBackup(const std::shared_ptr<IFileInfo> &fileInfo)
+{
+    return GetSupportWithoutTar() && !fileInfo->isAncoFile_ && !fileInfo->isLongPath_ && fileInfo->isBigFile_;
+}
+
+bool BackupExtExtension::ShouldUseRpFileOnRestore(bool isLongPath)
+{
+    return !isLongPath && GetRestoreScene() != BConstants::ExtensionRestoreScene::WITHOUT_RP &&
+           GetRestoreScene() != BConstants::ExtensionRestoreScene::WITHOUT_RP_AND_LITE_RESTORE;
+}
+
+bool BackupExtExtension::ShouldMoveBigFileOnRestore(const ExtManageInfo &item)
+{
+    if (HasFileMigratedToRootDirViaClone(item)) {
+        return false;
+    }
+    if (ShouldRestoreToRootDir()) {
+        return true;
+    }
+    if (GetSupportWithoutTar() && !item.isLongPath && !StringUtils::IsAncoFile(item.hashName)) {
+        return false;
+    }
+    return true;
+}
+
+bool BackupExtExtension::HasFileMigratedToRootDirViaClone(const ExtManageInfo &item)
+{
+    return ShouldRestoreToRootDir() && GetSupportWithoutTar() && StringUtils::IsPathWithDirectory(item.hashName);
 }
 } // namespace OHOS::FileManagement::Backup

@@ -32,8 +32,8 @@ public:
     static UidReadOut ParseUid(int uid)
     {
         return UidReadOut {
-            .userId = BConstants::DEFAULT_USER_ID,
-            .appId = BConstants::DEFAULT_USER_ID,
+            .userId = uid / BConstants::SPAN_USERID_UID,
+            .appId = uid % BConstants::SPAN_USERID_UID,
         };
     }
 };

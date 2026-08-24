@@ -44,6 +44,8 @@
 #define fdsan_exchange_owner_tag FdsanExchangeOwnerTag
 #define fdsan_close_with_tag FdsanCloseWithTag
 #define futimens Futimens
+#define fchmod Fchmod
+#define fileno Fileno
 #define RemoveFile MyRemoveFile
 
 

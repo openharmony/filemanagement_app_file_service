@@ -17,6 +17,8 @@
 #define OHOS_FILEMGMT_BACKUP_BUNDLE_MGR_ADAPTER_H
 
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "b_radar/radar_const.h"
@@ -36,6 +38,13 @@ struct BundleExtInfo {
     std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos_;
     RadarError error_;
     uint32_t getExtSpend_ = 0;
+};
+
+struct IncBundleProcessResult {
+    std::vector<std::string> bundleNames;
+    std::vector<int64_t> incrementalBackTimes;
+    std::vector<BJsonEntityCaps::BundleInfo> bundleInfos;
+    std::vector<BJsonEntityCaps::BundleInfo> noBackupBundleInfos;
 };
 
 class BundleMgrAdapter {
@@ -64,7 +73,8 @@ public:
      * @return std::vector<BJsonEntityCaps::BundleInfo>
      */
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(
-        const std::vector<BIncrementalData> &incrementalDataList, int32_t userId);
+        const std::vector<BIncrementalData> &incrementalDataList, int32_t userId,
+        const std::unordered_map<std::string, std::unordered_set<std::string>> &compatibleDirsMap = {});
 
     static std::vector<BJsonEntityCaps::BundleInfo> GetBundleInfosForIncremental(int32_t userId,
         const std::vector<BIncrementalData> &extraIncreData = {});
@@ -106,6 +116,10 @@ public:
 private:
     static bool GetCurBundleExtenionInfo(BundleExtInfo &bundleExtInfo, sptr<AppExecFwk::IBundleMgr> bms,
         int32_t userId);
+    static void ProcessIncBundleList(const vector<BIncrementalData> &incrementalDataList,
+        int32_t userId,
+        const std::unordered_map<std::string, std::unordered_set<std::string>> &compatibleDirsMap,
+        IncBundleProcessResult &result);
     static void RefreshBundleIncrementalData(const std::string &bundle, std::vector<BIncrementalData> &bundleNames,
         const std::vector<BIncrementalData> &incrementalDataList);
 };

@@ -366,4 +366,40 @@ HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_ProcessTarBlock_0100, testi
     }
     GTEST_LOG_(INFO) << "InstalldUnTarFileTest-end Installd_Un_Tar_File_ProcessTarBlock_0100";
 }
+
+/**
+ * @tc.number: Installd_Un_Tar_File_HandleSymType_0100
+ * @tc.name: Installd_Un_Tar_File_HandleSymType_0100
+ * @tc.desc: test HandleSymType rejects symlink with path traversal
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: IC15LE
+ */
+HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_HandleSymType_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InstalldUnTarFileTest-begin Installd_Un_Tar_File_HandleSymType_0100";
+    try {
+        const TestManager tm("Installd_Un_Tar_File_HandleSymType_0100");
+        const string rootPath = tm.GetRootDirCurTest();
+        UnTarFile unTarFile(rootPath.c_str());
+        TarHeader headBuff = {};
+        headBuff.size[0] = '0';
+        headBuff.typeflag = SYMTYPE;
+        ParseTarPath parseTarPath = {};
+        string fullPath = rootPath + "/../etc/passwd";
+        string realLink = "/data/local/tmp/link";
+        parseTarPath.fullPath = const_cast<char *>(fullPath.c_str());
+        parseTarPath.realLink = const_cast<char *>(realLink.c_str());
+        bool isSkip = false;
+        bool isSoftLink = false;
+        unTarFile.ProcessTarBlock((char *)(&headBuff),
+            UnTarFile::EParseType::eUnpack, &parseTarPath, isSkip, isSoftLink);
+        EXPECT_FALSE(isSoftLink);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InstalldUnTarFileTest-an exception occurred by HandleSymType.";
+    }
+    GTEST_LOG_(INFO) << "InstalldUnTarFileTest-end Installd_Un_Tar_File_HandleSymType_0100";
+}
 } // namespace OHOS::FileManagement::Backup

@@ -386,4 +386,70 @@ HWTEST_F(BReportEntityTest, b_report_entity_EncodeReportItem_0100, testing::ext:
     }
     GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_EncodeReportItem_0100";
 }
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_RestorePath_0100
+ * @tc.name: b_report_entity_RestorePath_0100
+ * @tc.desc: Test ReportFileInfo.restorePath default value is empty
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_RestorePath_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_RestorePath_0100";
+    try {
+        struct ReportFileInfo info;
+        EXPECT_TRUE(info.restorePath.empty());
+        EXPECT_EQ(info.filePath, "");
+
+        info.filePath = "/bak/file.txt";
+        info.restorePath = "/restore/file.txt";
+        EXPECT_EQ(info.filePath, "/bak/file.txt");
+        EXPECT_EQ(info.restorePath, "/restore/file.txt");
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by RestorePath. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_RestorePath_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_b_report_entity_RestorePath_0200
+ * @tc.name: b_report_entity_RestorePath_0200
+ * @tc.desc: Test ReportFileInfo with restorePath is parsed correctly from 8-column format
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(BReportEntityTest, b_report_entity_RestorePath_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BReportEntityTest-begin b_report_entity_RestorePath_0200";
+    try {
+        string fileName = "/a.txt";
+        string mode = "0644";
+        string isDir = "0";
+        string size = "1";
+        string mtime = "1501927260";
+        string hash = "ASDasadSDASDA";
+        string userTar = "0";
+        string encodeFlag = "0";
+
+        string content = "version=1.0&attrNum=8\r\npath;mode;dir;size;mtime;hash;usertar;encodeFlag\r\n";
+        content += fileName + ";" + mode + ";" + isDir + ";" + size + ";" + mtime + ";" + hash
+            + ";" + userTar + ";" + encodeFlag;
+        TestManager tm(__func__);
+        const auto [filePath, res] = GetTestFile(tm, content);
+        BReportEntity cloudRp(UniqueFd(open(filePath.data(), O_RDONLY, 0)));
+        unordered_map<string, struct ReportFileInfo> cloudFiles;
+        cloudRp.GetReportInfos(cloudFiles);
+        EXPECT_EQ(cloudFiles.size(), 1u);
+        // restorePath不在rp文件中, 解析后应为空
+        EXPECT_TRUE(cloudFiles.begin()->second.restorePath.empty());
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << "BReportEntityTest-an exception occurred by RestorePath. " << e.what();
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "BReportEntityTest-end b_report_entity_RestorePath_0200";
+}
 } // namespace OHOS::FileManagement::Backup

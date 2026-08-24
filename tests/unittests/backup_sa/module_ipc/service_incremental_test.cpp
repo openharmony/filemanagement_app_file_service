@@ -712,7 +712,12 @@ class ServiceIncrementalTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase();
-    void SetUp() {};
+    void SetUp()
+    {
+        if (service != nullptr && service->session_ != nullptr) {
+            service->session_->SetSessionUserId(0);
+        }
+    };
     void TearDown() {};
 
     static inline shared_ptr<DlfcnMock> dlFuncMock = nullptr;
@@ -904,7 +909,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0000, Tes
 
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*svcProxy, User0OnBackup()).WillOnce(Return(BError(BError::Codes::EXT_INVAL_ARG).GetCode()));
         service->StartGetFdTask("", service);
@@ -912,7 +916,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0000, Tes
 
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(true));
         EXPECT_CALL(*svcProxy, User0OnBackup()).WillOnce(Return(ERR_OK));
         service->StartGetFdTask("", service);
@@ -939,7 +942,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0100, Tes
     try {
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(false));
         EXPECT_THROW(service->StartGetFdTask("", service), BError);
@@ -948,11 +950,11 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartGetFdTask_0100, Tes
         vector<BJsonEntityCaps::BundleInfo> info;
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(connect));
         EXPECT_CALL(*connect, GetBackupExtProxy()).WillOnce(Return(svcProxy));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*bms, IsUser0BundleName(_, _)).WillOnce(Return(false));
         EXPECT_CALL(*session, StopExtTimer(_)).WillOnce(Return(true));
         EXPECT_CALL(*session, GetLastIncrementalTime(_)).WillOnce(Return(0));
-        EXPECT_CALL(*bms, GetBundleInfosForIncremental(An<const vector<BIncrementalData>&>(), An<int32_t>()))
+        EXPECT_CALL(*bms, GetBundleInfosForIncremental(An<const vector<BIncrementalData>&>(), An<int32_t>(),
+            An<const unordered_map<string, unordered_set<string>>&>()))
             .WillOnce(Return(info));
         EXPECT_CALL(*jsonUtil, ParseBundleNameIndexStr(_)).WillOnce(Return(bundleInfo));
         EXPECT_THROW(service->StartGetFdTask("", service), BError);
@@ -1028,24 +1030,28 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_GetAppLocalListAndDoIncr
     GTEST_LOG_(INFO) <<
         "ServiceIncrementalTest-begin SUB_ServiceIncremental_GetAppLocalListAndDoIncrementalBackup_0000";
     try {
+        BStringRawData emptyRD;
         auto session_ = service->session_;
         service->session_ = nullptr;
-        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(), BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(emptyRD),
+            BError(BError::Codes::SA_INVAL_ARG).GetCode());
         service->session_ = session_;
 
         service->isOccupyingSession_ = true;
-        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(), BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(emptyRD),
+            BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         service->isOccupyingSession_ = false;
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_, _))
             .WillOnce(Return(BError(BError::Codes::SA_INVAL_ARG).GetCode()));
-        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(), BError(BError::Codes::SA_INVAL_ARG).GetCode());
+        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(emptyRD),
+            BError(BError::Codes::SA_INVAL_ARG).GetCode());
 
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, VerifyCallerAndGetCallerName(_, _)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
         EXPECT_CALL(*session, GetExtConnection(_)).WillOnce(Return(nullptr));
-        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(), BError(BError::Codes::OK).GetCode());
+        EXPECT_EQ(service->GetAppLocalListAndDoIncrementalBackup(emptyRD), BError(BError::Codes::OK).GetCode());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ServiceIncrementalTest-an exception occurred by GetAppLocalListAndDoIncrementalBackup.";
@@ -1140,7 +1146,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_InitIncrementalBackupSes
         EXPECT_CALL(*skeleton, GetCallingTokenID()).WillOnce(Return(0));
         EXPECT_CALL(*srvMock, GetUserIdDefault()).WillOnce(Return(0));
         EXPECT_CALL(*session, Active(_, _)).WillOnce(Return(BError(BError::Codes::SA_SESSION_CONFLICT)));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         EXPECT_CALL(*session, GetSessionCallerName()).WillOnce(Return(""));
         EXPECT_CALL(*session, GetSessionActiveTime()).WillOnce(Return(""));
         EXPECT_CALL(*jsonUtil, BuildInitSessionErrInfo(_, _, _, _)).WillOnce(Return(""));
@@ -1189,7 +1194,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
         std::vector<std::string> supportBackupNames;
         vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillOnce(Return(bundleInfos));
         EXPECT_CALL(*srvMock, GetSupportBackupBundleNames(_, _, _, _)).WillOnce(Return(supportBackupNames));
         EXPECT_EQ(service->AppendBundlesIncrementalBackupSession({}), BError(BError::Codes::OK).GetCode());
@@ -1233,7 +1237,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppendBundlesIncremental
         vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> bundleNameDetailMap;
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0)).WillOnce(Return(0));
         EXPECT_CALL(*jsonUtil, BuildBundleInfos(_, _, _, _, _)).WillRepeatedly(Return(bundleNameDetailMap));
         EXPECT_CALL(*bms, GetBundleInfosForAppendBundles(_, _, _)).WillOnce(Return(bundleInfos));
         EXPECT_CALL(*srvMock, GetSupportBackupBundleNames(_, _, _, _)).WillOnce(Return(supportBackupNames));
@@ -1490,14 +1493,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0300
-* @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0300
-* @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_AppIncrementalFileReady_0300
+ * @tc.name: SUB_ServiceIncremental_AppIncrementalFileReady_0300
+ * @tc.desc: 测试 AppIncrementalFileReady 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_AppIncrementalFileReady_0300, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_AppIncrementalFileReady_0300";
@@ -2025,13 +2028,11 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Release_0000, TestSize.L
         service->session_ = session_;
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::RESTORE));
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::OK).GetCode()));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         ret = service->Release();
         EXPECT_EQ(ret, BError(BError::Codes::OK).GetCode());
 
         EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::BACKUP));
         EXPECT_CALL(*srvMock, VerifyCaller(_)).WillOnce(Return(BError(BError::Codes::SA_REFUSED_ACT).GetCode()));
-        EXPECT_CALL(*session, GetSessionUserId()).WillOnce(Return(0));
         ret = service->Release();
         EXPECT_EQ(ret, BError(BError::Codes::SA_REFUSED_ACT).GetCode());
 
@@ -2252,14 +2253,14 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0000, TestSize.Le
 }
 
 /**
-* @tc.number: SUB_ServiceIncremental_Cancel_0100
-* @tc.name: SUB_ServiceIncremental_Cancel_0100
-* @tc.desc: 测试 Cancel 的正常/异常分支
-* @tc.size: MEDIUM
-* @tc.type: FUNC
-* @tc.level Level 1
-* @tc.require: issueIAKC3I
-*/
+ * @tc.number: SUB_ServiceIncremental_Cancel_0100
+ * @tc.name: SUB_ServiceIncremental_Cancel_0100
+ * @tc.desc: 测试 Cancel 的正常/异常分支
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require: issueIAKC3I
+ */
 HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_Cancel_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_Cancel_0000";
@@ -2673,115 +2674,6 @@ HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_StartCleanData_0108, Tes
     auto res = service->StartCleanData(testTriggerType, testWriteSize, testWaitTime);
     EXPECT_EQ(res, BError(BError::Codes::SA_INVAL_ARG).GetCode());
     GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_StartCleanData_0108";
-}
-
-/**
- * @tc.number: SUB_ServiceIncremental_LoadGcLibrary_0000
- * @tc.name: SUB_ServiceIncremental_LoadGcLibrary_0000
- * @tc.desc: 测试 LoadGcLibrary 函数 triggerType==0 dlopen failed
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issueIAKC3I
- */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0000, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0000";
-    int testTriggerType = 0;
-    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(nullptr));
-    auto [handle, func] = service->LoadGcLibrary(testTriggerType);
-    EXPECT_EQ(handle, nullptr);
-    EXPECT_EQ(func, nullptr);
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_LoadGcLibrary_0000";
-}
-
-/**
- * @tc.number: SUB_ServiceIncremental_LoadGcLibrary_0001
- * @tc.name: SUB_ServiceIncremental_LoadGcLibrary_0001
- * @tc.desc: 测试 LoadGcLibrary 函数 triggerType==0 dlsym failed
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issueIAKC3I
- */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0001";
-    int testTriggerType = 0;
-    void *handle = &testTriggerType;
-
-    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(handle));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(nullptr));
-    auto [retHandle, retFunc] = service->LoadGcLibrary(testTriggerType);
-    EXPECT_EQ(retHandle, nullptr);
-    EXPECT_EQ(retFunc, nullptr);
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_LoadGcLibrary_0001";
-}
-
-/**
- * @tc.number: SUB_ServiceIncremental_LoadGcLibrary_0002
- * @tc.name: SUB_ServiceIncremental_LoadGcLibrary_0002
- * @tc.desc: 测试 LoadGcLibrary 函数 triggerType==1 dlopen failed
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issueIAKC3I
- */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0002";
-    int testTriggerType = 1;
-    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(nullptr));
-    auto [handle, func] = service->LoadGcLibrary(testTriggerType);
-    EXPECT_EQ(handle, nullptr);
-    EXPECT_EQ(func, nullptr);
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_LoadGcLibrary_0002";
-}
-
-/**
- * @tc.number: SUB_ServiceIncremental_LoadGcLibrary_0003
- * @tc.name: SUB_ServiceIncremental_LoadGcLibrary_0003
- * @tc.desc: 测试 LoadGcLibrary 函数 triggerType==1 dlsym failed
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issueIAKC3I
- */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_LoadGcLibrary_0003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_LoadGcLibrary_0003";
-    int testTriggerType = 1;
-    void *handle = &testTriggerType;
-
-    EXPECT_CALL(*dlFuncMock, dlopen(_, _)).WillOnce(Return(handle));
-    EXPECT_CALL(*dlFuncMock, dlsym(_, _)).WillOnce(Return(nullptr));
-    auto [retHandle, retFunc] = service->LoadGcLibrary(testTriggerType);
-    EXPECT_EQ(retHandle, nullptr);
-    EXPECT_EQ(retFunc, nullptr);
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_LoadGcLibrary_0003";
-}
-
-/**
- * @tc.number: SUB_ServiceIncremental_ExecuteGcTask_0000
- * @tc.name: SUB_ServiceIncremental_ExecuteGcTask_0000
- * @tc.desc: 测试 ExecuteGcTask 函数 func return failed
- * @tc.size: MEDIUM
- * @tc.type: FUNC
- * @tc.level Level 1
- * @tc.require: issueIAKC3I
- */
-HWTEST_F(ServiceIncrementalTest, SUB_ServiceIncremental_ExecuteGcTask_0000, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-begin SUB_ServiceIncremental_ExecuteGcTask_0000";
-    int testTriggerType = 0;
-    unsigned int testWriteSize = 1000;
-    unsigned int testWaitTime = 180;
-    void *handle = &testTriggerType;
-    CallDeviceTaskRequest func = gcFuncMock1;
-
-    auto res = service->ExecuteGcTask(handle, func, testTriggerType, testWriteSize, testWaitTime);
-    EXPECT_EQ(res, static_cast<ErrCode>(BError::BackupErrorCode::E_GC_FAILED));
-    GTEST_LOG_(INFO) << "ServiceIncrementalTest-end SUB_ServiceIncremental_ExecuteGcTask_0000";
 }
 
 /**

@@ -213,7 +213,6 @@ std::vector<std::string> Service::GetSupportBundleNamesBackup(const vector<Bundl
     std::vector<std::string> supportBundleNames = GetSupportBackupBundleNames(backupInfos,
         false, bundleNames, defaultFlag);
     if (supportBundleNames.empty()) {
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         HILOGW("supportBundleNames is empty.");
     }
     return supportBundleNames;
@@ -359,23 +358,20 @@ ErrCode Service::AppendBundlesSession(const std::vector<BundleName> &bundleNames
     UniqueFd fd)
 {
     try {
-        session_->IncreaseSessionCnt(__PRETTY_FUNCTION__);
+        CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         std::vector<BJsonEntityCaps::BundleInfo> bundleInfos;
         vector<string> supportBundleNames = CallGetSupportBundleNames(bundleNames, bundleInfos, scene, move(fd));
         AppendBundles(supportBundleNames);
         CallSetSessProperties(supportBundleNames, bundleInfos, scene);
         OnStartSched();
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return BError(BError::Codes::OK);
     } catch (const BError &e) {
         HILOGE("Catch exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return e.GetCode();
     } catch (...) {
         HILOGE("Unexpected exception");
         HandleExceptionOnAppendBundles(session_, bundleNames, {});
-        session_->DecreaseSessionCnt(__PRETTY_FUNCTION__);
         return EPERM;
     }
 }
@@ -399,10 +395,14 @@ ErrCode Service::InitBackupSession(const sptr<IServiceReverse> &remote)
 {
     auto scenario = IServiceReverseType::Scenario::BACKUP;
     auto bizScene = BizScene::BACKUP;
+    auto ret = InitSession(remote, scenario, bizScene);
+    if (ret != ERR_OK) {
+        return ret;
+    }
     int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
     HILOGI("InitBackupSession oldSize %{public}d", oldSize);
     session_->SetMemParaCurSize(oldSize);
-    return InitSession(remote, scenario, bizScene);
+    return ret;
 }
 
 ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote,
@@ -410,10 +410,14 @@ ErrCode Service::InitBackupSessionWithErrMsg(const sptr<IServiceReverse> &remote
 {
     auto scenario = IServiceReverseType::Scenario::BACKUP;
     auto bizScene = BizScene::BACKUP;
+    auto ret = InitSessionWithErrMsg(remote, scenario, bizScene, errCodeForMsg, errMsg);
+    if (ret != ERR_OK) {
+        return ret;
+    }
     int32_t oldSize = StorageMgrAdapter::UpdateMemPara(BConstants::BACKUP_VFS_CACHE_PRESSURE);
     HILOGI("InitBackupSession oldSize %{public}d", oldSize);
     session_->SetMemParaCurSize(oldSize);
-    return InitSessionWithErrMsg(remote, scenario, bizScene, errCodeForMsg, errMsg);
+    return ret;
 }
 
 ErrCode Service::AppendBundlesRestoreSessionData(int fd, const std::vector<std::string> &bundleNames,
@@ -430,6 +434,12 @@ ErrCode Service::AppendBundlesRestoreSessionData(int fd, const std::vector<std::
     }
     HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
     UniqueFd fdUnique(fd);
+    ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
+    if (ret != ERR_OK) {
+        HILOGE("AppendBundles restore session with infos error, verify caller failed, ret:%{public}d", ret);
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        return ret;
+    }
     restoreType_ = static_cast<RestoreTypeEnum>(restoreType);
     SetUserIdAndRestoreType(restoreType_, userId);
     auto bizScene = BizScene::RESTORE;
@@ -451,6 +461,12 @@ ErrCode Service::AppendBundlesRestoreSessionDataByDetail(int fd, const std::vect
     }
     HILOGI("Begin fd = %{public}d,restoreType = %{public}d,userId=%{public}d", fd, restoreType, userId);
     UniqueFd fdUnique(fd);
+    ErrCode ret = VerifyCaller(IServiceReverseType::Scenario::RESTORE);
+    if (ret != ERR_OK) {
+        HILOGE("AppendBundles restore session with infos error, verify caller failed, ret:%{public}d", ret);
+        HandleExceptionOnAppendBundles(session_, bundleNames, {});
+        return ret;
+    }
     restoreType_ = static_cast<RestoreTypeEnum>(restoreType);
     SetUserIdAndRestoreType(restoreType_, userId);
     auto bizScene = BizScene::RESTORE;
@@ -462,10 +478,6 @@ ErrCode Service::AppendBundlesSessionWithDetail(const std::vector<BundleName> &b
     BizScene &scene,
     UniqueFd fd)
 {
-    if (session_ == nullptr) {
-        HILOGE("session_ is nullptr");
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
     try {
         CounterHelper counterHelper(session_, __PRETTY_FUNCTION__);
         std::vector<std::string> bundleNamesOnly;

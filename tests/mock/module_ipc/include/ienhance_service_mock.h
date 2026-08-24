@@ -44,7 +44,7 @@ public:
     MOCK_METHOD(int32_t, OpenFiles, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
     MOCK_METHOD(int32_t, MoveDirectory, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
     MOCK_METHOD(int32_t, GetApkFileHandle, (const std::vector<FileBackupParam> &, FileBackupResultMsg &));
-    MOCK_METHOD(ErrCode, CreateDefaultTask, (const std::string &, int32_t));
+        MOCK_METHOD(ErrCode, CreateDefaultTask, (const std::string &, int32_t));
     MOCK_METHOD(ErrCode, DefaultAppFileHandle, (const std::string &,
         const std::string &, UniqueFd &, UniqueFd &));
     MOCK_METHOD(ErrCode, StartDefaultAppUnPack, (const std::string &));

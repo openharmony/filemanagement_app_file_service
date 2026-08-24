@@ -564,6 +564,51 @@ HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0001, testi
 }
 
 /**
+ * @tc.name: GetPathPolicyInfoFromUriPolicyInfo_test_0002
+ * @tc.desc: Test function of GetPathPolicyInfoFromUriPolicyInfo() interface for SUCCESS.
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ * @tc.require:
+ */
+HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0002, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileShareTest-begin GetPathPolicyInfoFromUriPolicyInfo_test_0002";
+    std::string targetBundleName1 = "com.example.myapplicationtest";
+    std::string targetBundleName2 = "com.grantpermission.myapplication";
+    UriPolicyInfo infoA = {.uri = "file://com.grantpermission.myapplication/data/storage/el2/cloud/457475.txt"};
+    UriPolicyInfo infoB = {.uri = "file://docs/storage/Users/currentUser/Documents/1.txt"};
+    UriPolicyInfo infoC = {.uri = "file://docs/storage/Users/currentUser/appdata/el2/base/"
+        "com.example.myapplicationtest/files/grs_files/version.txt"};
+    UriPolicyInfo infoD = {.uri = "file://com.grantpermission.myapplication/data/storage/el2/cloud/457475.txt"};
+    UriPolicyInfo infoE = {.uri = "/"};
+    std::vector<UriPolicyInfo> uriPolicies;
+    uriPolicies.emplace_back(infoA);
+    uriPolicies.emplace_back(infoB);
+    uriPolicies.emplace_back(infoC);
+    deque<struct PolicyErrorResult> errorResults;
+    EXPECT_CALL(*funcMock, lstat(_, _)).WillRepeatedly(Return(0));
+    auto pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, targetBundleName1, errorResults);
+    ASSERT_TRUE(pathPolicies.size() == 3);
+    EXPECT_EQ(pathPolicies[0].path, "/storage/Users/currentUser/appdata/el2/cloud/"
+        "com.grantpermission.myapplication/457475.txt");
+    EXPECT_EQ(pathPolicies[1].path, "/storage/Users/currentUser/Documents/1.txt");
+    EXPECT_EQ(pathPolicies[2].path, "/storage/Users/currentUser/appdata/el2/base/"
+        "com.example.myapplicationtest/files/grs_files/version.txt");
+    std::vector<UriPolicyInfo> uriPolicies2;
+    uriPolicies2.emplace_back(infoD);
+    pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies2, targetBundleName2, errorResults);
+    ASSERT_TRUE(pathPolicies.size() == 1);
+    EXPECT_EQ(pathPolicies[0].path, "/data/storage/el2/cloud/457475.txt");
+    std::vector<UriPolicyInfo> uriPolicies3;
+    uriPolicies3.emplace_back(infoE);
+    pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies3, targetBundleName2, errorResults);
+    ASSERT_TRUE(errorResults.size() == 1);
+    EXPECT_EQ(errorResults[0].code, PolicyErrorCode::INVALID_PATH);
+    GTEST_LOG_(INFO) << "FileShareTest-end GetPathPolicyInfoFromUriPolicyInfo_test_0002";
+}
+
+/**
  * @tc.name: ParseErrorResults_test_0001
  * @tc.desc: Test function of ParseErrorResults() interface for SUCCESS.
  * @tc.size: MEDIUM

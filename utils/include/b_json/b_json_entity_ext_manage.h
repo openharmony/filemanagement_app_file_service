@@ -79,7 +79,7 @@ public:
                              struct stat sta,
                              bool isAncoFile = false,
                              bool isSupportWithoutTar = false);
- 
+
     /**
      * @brief 将文件stat信息转换为json内容对象
      *

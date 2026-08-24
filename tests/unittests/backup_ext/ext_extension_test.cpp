@@ -678,29 +678,29 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_FDSan_HandleIncrementalBackup_Test_1303
 HWTEST_F(ExtExtensionTest, Ext_Extension_FDSan_ReportAncoAppFileReady_Test_1301, testing::ext::TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_FDSan_ReportAncoAppFileReady_Test_1400";
- 
+
     try {
         string testFile = PATH + "fdsan_report_test.txt";
         int fd = open(testFile.data(), O_RDWR | O_CREAT | O_TRUNC, S_IRWXU);
         EXPECT_GT(fd, -1) << "Failed to create test file";
- 
+
         // 模拟 ReportAncoAppFileReady 中的 FDSan 操作
         fdsan_exchange_owner_tag(fd, 0, BConstants::FDSAN_EXT_TAG);
- 
+
         // 写入测试数据
         const char* testData = "FDSan test data";
         write(fd, testData, strlen(testData));
- 
+
         // 验证文件可读
         lseek(fd, 0, SEEK_SET);
         char buffer[128] = {0};
         ssize_t readBytes = read(fd, buffer, sizeof(buffer) - 1);
         EXPECT_GT(readBytes, 0);
         EXPECT_STREQ(buffer, testData);
- 
+
         int ret = fdsan_close_with_tag(fd, BConstants::FDSAN_EXT_TAG);
         EXPECT_EQ(ret, 0);
- 
+
         // 清理
         remove(testFile.c_str());
     } catch (...) {
@@ -708,5 +708,159 @@ HWTEST_F(ExtExtensionTest, Ext_Extension_FDSan_ReportAncoAppFileReady_Test_1301,
         GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_FDSan_ReportAncoAppFileReady_Test_1301";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_0604
+ * @tc.name: Ext_Extension_Test_0604
+ * @tc.desc: 测试WriteFile restorePath非空时写入restorePath作为column 0
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0604, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0604";
+    try {
+        string fileName = PATH + BUNDLE_NAME + "2.txt";
+        int fd = open(fileName.data(), O_RDWR | O_TRUNC, S_IRWXU);
+        EXPECT_GT(fd, 0);
+        close(fd);
+        vector<struct ReportFileInfo> srcFiles;
+        struct ReportFileInfo info;
+        info.filePath = "/bak/p1/file.txt";
+        info.restorePath = "/p1/file.txt";
+        info.mode = "755";
+        info.isDir = 0;
+        info.size = 100;
+        info.mtime = 123456789;
+        info.hash = "abc123";
+        info.userTar = 0;
+        info.encodeFlag = false;
+        srcFiles.push_back(info);
+        BFile::WriteFile(fileName, srcFiles);
+        ifstream f(fileName);
+        if (!f.is_open()) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "open failed");
+        }
+        string line;
+        getline(f, line); // version header
+        getline(f, line); // column header
+        getline(f, line); // data line
+        // restorePath非空时, column 0应为restorePath
+        EXPECT_NE(line.find("/p1/file.txt"), string::npos);
+        EXPECT_EQ(line.find("/bak/p1/file.txt"), string::npos);
+        f.close();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0604";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_0605
+ * @tc.name: Ext_Extension_Test_0605
+ * @tc.desc: 测试WriteFile restorePath为空时写入filePath作为column 0
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0605, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0605";
+    try {
+        string fileName = PATH + BUNDLE_NAME + "2.txt";
+        int fd = open(fileName.data(), O_RDWR | O_TRUNC, S_IRWXU);
+        EXPECT_GT(fd, 0);
+        close(fd);
+        vector<struct ReportFileInfo> srcFiles;
+        struct ReportFileInfo info;
+        info.filePath = "/data/app/file.txt";
+        info.restorePath = "";
+        info.mode = "755";
+        info.isDir = 0;
+        info.size = 200;
+        info.mtime = 123456790;
+        info.hash = "def456";
+        info.userTar = 0;
+        info.encodeFlag = false;
+        srcFiles.push_back(info);
+        BFile::WriteFile(fileName, srcFiles);
+        ifstream f(fileName);
+        if (!f.is_open()) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "open failed");
+        }
+        string line;
+        getline(f, line); // version header
+        getline(f, line); // column header
+        getline(f, line); // data line
+        // restorePath为空时, column 0应为filePath
+        EXPECT_NE(line.find("/data/app/file.txt"), string::npos);
+        f.close();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0605";
+}
+
+/**
+ * @tc.number: SUB_Ext_Extension_0606
+ * @tc.name: Ext_Extension_Test_0606
+ * @tc.desc: 测试WriteFile 混合restorePath(有值和空值)场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionTest, Ext_Extension_Test_0606, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionTest-begin Ext_Extension_Test_0606";
+    try {
+        string fileName = PATH + BUNDLE_NAME + "2.txt";
+        int fd = open(fileName.data(), O_RDWR | O_TRUNC, S_IRWXU);
+        EXPECT_GT(fd, 0);
+        close(fd);
+        vector<struct ReportFileInfo> srcFiles;
+        struct ReportFileInfo info1;
+        info1.filePath = "/bak/p1/a.txt";
+        info1.restorePath = "/p1/a.txt";
+        info1.mode = "755";
+        info1.isDir = 0;
+        info1.size = 100;
+        info1.mtime = 123;
+        info1.hash = "h1";
+        info1.encodeFlag = false;
+        srcFiles.push_back(info1);
+        struct ReportFileInfo info2;
+        info2.filePath = "/data/normal/b.txt";
+        info2.restorePath = "";
+        info2.mode = "644";
+        info2.isDir = 0;
+        info2.size = 200;
+        info2.mtime = 456;
+        info2.hash = "h2";
+        info2.encodeFlag = false;
+        srcFiles.push_back(info2);
+        BFile::WriteFile(fileName, srcFiles);
+        ifstream f(fileName);
+        if (!f.is_open()) {
+            throw BError(BError::Codes::EXT_INVAL_ARG, "open failed");
+        }
+        string line;
+        getline(f, line); // version header
+        getline(f, line); // column header
+        getline(f, line); // first data line
+        // 第一个文件restorePath非空，应写入/p1/a.txt
+        EXPECT_NE(line.find("/p1/a.txt"), string::npos);
+        getline(f, line); // second data line
+        // 第二个文件restorePath为空，应写入/data/normal/b.txt
+        EXPECT_NE(line.find("/data/normal/b.txt"), string::npos);
+        f.close();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ExtExtensionTest-an exception occurred by construction.";
+    }
+    GTEST_LOG_(INFO) << "ExtExtensionTest-end Ext_Extension_Test_0606";
 }
 } // namespace OHOS::FileManagement::Backup

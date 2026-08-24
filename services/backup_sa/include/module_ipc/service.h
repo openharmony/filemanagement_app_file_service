@@ -111,7 +111,7 @@ public:
     ErrCode Release() override;
     ErrCode CancelForResult(const std::string& bundleName, int32_t &result) override;
     ErrCode GetLocalCapabilitiesIncremental(const std::vector<BIncrementalData>& bundleNames, int& fd) override;
-    ErrCode GetAppLocalListAndDoIncrementalBackup() override;
+    ErrCode GetAppLocalListAndDoIncrementalBackup(const BStringRawData &compatibleDirs) override;
     ErrCode InitIncrementalBackupSession(const sptr<IServiceReverse>& remote) override;
     ErrCode InitIncrementalBackupSessionWithErrMsg(const sptr<IServiceReverse>& remote, int32_t &errCodeForMsg,
                                                    std::string &errMsg) override;
@@ -165,9 +165,9 @@ public:
     ErrCode StartAncoUnPacket(const std::string &rootPath) override;
     ErrCode AddAncoMovePaths(const std::vector<std::string> &ancoSourcePath,
         const std::vector<std::string> &ancoTargetPath, const std::vector<StatInfo> &ancoStats) override;
-    ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) override;
     ErrCode MigrateFile(const BPathInfo &path, const std::string &bundleName, const std::string &fileName) override;
     ErrCode GetApkFileHandle(const std::string &path, const std::string &fileName, int &fd) override;
+    ErrCode StartAncoMove(AncoRestoreResult &ancoRestoreRes) override;
     // 以下都是非IPC接口
 public:
     void OnStart() override;
@@ -616,6 +616,9 @@ private:
                                   std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos,
                                   const std::string &bundleNameIndexInfo);
 
+    void ApplyBundleSettings(const std::string &bundleNameIndexInfo,
+                             const std::map<std::string, BJsonUtil::BundleSettingInfo> &bundleSettingInfos);
+
     /**
      * @brief add useridinfo to  current backup session
      *
@@ -807,7 +810,8 @@ private:
 
     void SendScannedInfo(const string &scannendInfos, sptr<SvcSessionManager> session);
 
-    void CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList);
+    void CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList,
+        CounterHelper counterHelper);
 
     bool GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &scanning);
 
@@ -859,9 +863,8 @@ private:
     void UpdateGcProgress(std::shared_ptr<GcProgressInfo> gcProgress,
         GcProgressInfoUpdate progressData);
     bool VerifyDataClone();
-    std::pair<void*, CallDeviceTaskRequest> LoadGcLibrary(int triggerType);
-    ErrCode ExecuteGcTask(void* handle, CallDeviceTaskRequest func,
-        int triggerType, unsigned int writeSize, unsigned int waitTime);
+    ErrCode StartIO(int triggerType, int writeSize, int waitTime);
+    ErrCode StartGC(int triggerType, unsigned int writeSize, unsigned int waitTime);
     std::vector<BundleName> HandleBroadcastOnlyBundles(
         std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> &bundleNameDetailMap,
         const std::vector<BundleName> &bundleNames);
@@ -870,11 +873,10 @@ private:
     void SleepForDelayTime(const std::string &bundleName);
     ErrCode GetMigrateUidGid(const std::string &destPath, const std::string &bundleName, int32_t userId,
         uid_t &uid, gid_t &gid);
-    ErrCode DoEnhanceMove(const std::string &srcFile, const std::string &destFile, uid_t uid, gid_t gid,
-        int32_t &errCode, bool isDir);
+    ErrCode DoEnhanceMove(const MigrateFileParam &param, int32_t &errCode);
     ErrCode DoEnhanceOpen(const std::string &filePath, uid_t uid, gid_t gid, int &fd);
     ErrCode OpenIncrementalRpFile(const std::string &bundleName, const std::string &fileName);
-    ErrCode MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path);
+    ErrCode MigrateFilePrecheck(const std::string &bundleName, const BPathInfo &path, const std::string &fileName);
     void NotifyMigrateResult(int32_t errCode, const std::string &bundleName);
     ErrCode ExecuteEnhanceServiceOperationWithAuth(
         std::function<ErrCode(IEnhanceService *, const std::string &)> func);

@@ -920,6 +920,39 @@ void SvcSessionManager::SetBundleDataSize(const std::string &bundleName, int64_t
         bundleName.c_str(), dataSize);
 }
 
+void SvcSessionManager::SetCompatibleDirs(const std::string &bundleName,
+    const std::unordered_set<std::string> &compatibleDirs)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+    it->second.compatibleDirs = compatibleDirs;
+    HILOGI("Set compatible dirs end, bundlename = %{public}s , dirCount = %{public}zu",
+        bundleName.c_str(), compatibleDirs.size());
+}
+
+std::unordered_set<std::string> SvcSessionManager::GetCompatibleDirs(const std::string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return {};
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return {};
+    }
+    return it->second.compatibleDirs;
+}
+
 uint32_t SvcSessionManager::CalAppProcessTime(const std::string &bundleName)
 {
     const int64_t minTimeout = 900;      /* 900 second */
@@ -1632,5 +1665,36 @@ int32_t SvcSessionManager::GetBatchSize(const std::string &bundleName)
         return 0;
     }
     return it->second.batchSize;
+}
+
+void SvcSessionManager::SetRestoreScene(const std::string &bundleName, BConstants::ExtensionRestoreScene restoreScene)
+{
+    unique_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+    it->second.restoreScene = restoreScene;
+    HILOGI("bundleName:%{public}s, set restore scene:%{public}d.", bundleName.c_str(), restoreScene);
+}
+
+BConstants::ExtensionRestoreScene SvcSessionManager::GetRestoreScene(const std::string &bundleName)
+{
+    shared_lock<shared_mutex> lock(lock_);
+    if (!impl_.clientToken) {
+        HILOGE("No caller token was specified, bundleName:%{public}s", bundleName.c_str());
+        return BConstants::DEFAULT_RESTORE_SCENE;
+    }
+    auto [findBundleSuc, it] = GetBackupExtNameMap(bundleName);
+    if (!findBundleSuc) {
+        HILOGE("BackupExtNameMap can not find bundle %{public}s", bundleName.c_str());
+        return BConstants::DEFAULT_RESTORE_SCENE;
+    }
+    return it->second.restoreScene;
 }
 } // namespace OHOS::FileManagement::Backup

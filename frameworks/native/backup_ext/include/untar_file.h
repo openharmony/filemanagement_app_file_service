@@ -16,7 +16,6 @@
 #ifndef OHOS_FILEMGMT_BACKUP_BACKUP_UNTAR_FILE_H
 #define OHOS_FILEMGMT_BACKUP_BACKUP_UNTAR_FILE_H
 
-#include <sys/stat.h>
 #include <utime.h>
 
 #include "tar_file.h"
@@ -29,6 +28,9 @@ struct FileStatInfo {
     uid_t uid {0};
     gid_t gid {0};
     off_t mtime {0};
+    long mtimeNsec {0};
+    off_t atime {0};
+    long atimeNsec {0};
     std::string longName {};
 };
 
@@ -55,7 +57,6 @@ public:
     std::tuple<int, EndFileInfo, ErrFileInfo> IncrementalUnPacket(
         const std::string &tarFile, const std::string &rootPath,
         const std::unordered_map<std::string, struct ReportFileInfo> &includes);
-    std::vector<std::tuple<std::string, std::string, struct stat>> GetPublicFileInfos();
 
 private:
     UntarFile() = default;
@@ -203,11 +204,11 @@ private:
     bool DealFileTag(ErrFileInfo &errFileInfo,
         FileStatInfo &info, bool &isFilter, const std::string &tmpFullPath);
 
-    std::tuple<int, std::string> ParsePaxBlock();
+    std::tuple<int, std::string> ParsePaxBlock(FileStatInfo &info);
 
     void CheckLongName(std::string longName, FileStatInfo &info);
 
-    std::tuple<int, std::string> GetLongName(uint32_t recLen, uint32_t allLen);
+    std::tuple<int, std::string> GetLongName(uint32_t recLen, uint32_t allLen, FileStatInfo &info);
 
     std::tuple<int, bool, ErrFileInfo> MatchIncrementalScenario(bool isFilter, ErrFileInfo &errFileInfo,
         std::string tmpFullPath, char typeFlag, FileStatInfo &info);
@@ -224,6 +225,8 @@ private:
 
     bool UnTarFileInner(FILE *destFile);
 
+    void SetFileTime(int fd, FileStatInfo &info, ErrFileInfo &errFileInfo);
+
 private:
     std::string rootPath_ {};
 
@@ -233,7 +236,6 @@ private:
     off_t pos_ {0};
     size_t readCnt_ {0};
     std::unordered_map<std::string, struct ReportFileInfo> includes_;
-    std::vector<std::tuple<std::string, std::string, struct stat>> publicFileInfos_;
 };
 } // namespace OHOS::FileManagement::Backup
 

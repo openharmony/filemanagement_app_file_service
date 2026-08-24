@@ -19,7 +19,6 @@
 #include "b_utils/scan_result_manager.h"
 
 namespace OHOS::FileManagement::Backup {
-
 class ScanFileSingleton : public ScanResultManager {
 public:
     static ScanFileSingleton &GetInstance();

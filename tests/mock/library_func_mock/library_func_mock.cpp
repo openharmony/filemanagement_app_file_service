@@ -156,6 +156,16 @@ int Futimens(int fd, const struct timespec times[2])
     return LibraryFunc::libraryFunc_->futimens(fd, times);
 }
 
+int Fchmod(int fd, mode_t mode)
+{
+    return LibraryFunc::libraryFunc_->fchmod(fd, mode);
+}
+
+int Fileno(FILE *stream)
+{
+    return LibraryFunc::libraryFunc_->fileno(stream);
+}
+
 namespace OHOS {
 bool MyRemoveFile(const std::string &fileName)
 {

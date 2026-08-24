@@ -42,10 +42,6 @@ static bool SpecialDefaultVersion(const string &versionName)
 ErrCode Service::SetSessPropertiesRestore(const std::vector<std::string> &restoreBundleNames,
     vector<BJsonEntityCaps::BundleInfo> &restoreBundleInfos)
 {
-    if (session_ == nullptr) {
-        HILOGE("session_ is nullptr");
-        return BError(BError::Codes::SA_INVAL_ARG);
-    }
     session_->SetOldBackupVersion(oldBackupVersion_);
     std::vector<std::string> strategies = {
         "RestoreBasePropertyStrategy",
@@ -135,13 +131,7 @@ ErrCode Service::SetSessPropertiesWithDetailRestore(const std::vector<std::strin
         if (BundleMgrAdapter::IsUser0BundleName(bundleNameIndexInfo, session_->GetSessionUserId())) {
             SendUserIdToApp(bundleNameIndexInfo, session_->GetSessionUserId());
         }
-        auto iterSet = bundleSettingInfos.find(bundleNameIndexInfo);
-        if (iterSet != bundleSettingInfos.end()) {
-            session_->SetClearDataFlag(bundleNameIndexInfo, iterSet->second.isClearData);
-            session_->SetSupportWithoutTar(bundleNameIndexInfo, iterSet->second.isSupportWithoutTar);
-            session_->SetExcludeInfos(bundleNameIndexInfo, iterSet->second.excludeInfos);
-            session_->SetBatchSize(bundleNameIndexInfo, iterSet->second.batchSize);
-        }
+        ApplyBundleSettings(bundleNameIndexInfo, bundleSettingInfos);
         StrategyContext context;
         context.bundleName = bundleNameIndexInfo;
         context.bundleNameIndexInfo = bundleNameIndexInfo;

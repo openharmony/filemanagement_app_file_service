@@ -77,6 +77,47 @@ const uint32_t MAX_FD_GROUP_USE_TIME = 1000; // 每组打开最大时间1000ms
 const uint32_t HIERARCHY_OF_FILE_ENCRYPTION_TYPE = 3;
 const int MANAGE_JSON_GENERATE_MAX_TIMEOUT = 15; // manageJson文件最长等待时间
 
+static void NotifyIncrementalBackup(const std::unordered_set<std::string> &compatibleDirs)
+{
+    auto proxy = ServiceClient::GetInstance();
+    if (proxy == nullptr) {
+        HILOGE("ServiceClient is nullptr");
+        return;
+    }
+    std::vector<std::string> compatDirsVec(compatibleDirs.begin(), compatibleDirs.end());
+    BStringRawData compatDirsRD;
+    compatDirsRD.Marshalling(StringUtils::StringVectorSerialize(compatDirsVec));
+    proxy->GetAppLocalListAndDoIncrementalBackup(compatDirsRD);
+}
+
+void BackupExtExtension::ReportOnBackupTimeCost(const std::string &callbackTag)
+{
+    auto spendTime = GetOnStartTimeCost();
+    if (spendTime >= BConstants::MAX_TIME_COST) {
+        AppRadar::Info info(bundleName_, "", string("\"spend_time\":\" ").
+            append(to_string(spendTime)).append(string("ms\"")));
+        AppRadar::GetInstance().RecordBackupFuncRes(info, callbackTag,
+            AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
+            static_cast<int32_t>(ERR_OK));
+    }
+}
+
+void BackupExtExtension::HandleIncBackupExSuccess(const std::string &backupExRetInfo)
+{
+    if (backupExRetInfo.empty()) {
+        return;
+    }
+    ReportOnBackupTimeCost("BackupExtExtension::IncOnBackupExCallback");
+    HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
+    FinishOnProcessTask();
+    BJsonCachedEntity<BJsonEntityOnBackupExRet> cachedEntity(backupExRetInfo);
+    auto entity = cachedEntity.Structuralize();
+    compatibleDirs_ = entity.GetCompatibleDirs();
+    HILOGI("compatibleDirs size=%{public}zu", compatibleDirs_.size());
+    NotifyIncrementalBackup(compatibleDirs_);
+    AppResultReport(backupExRetInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
+}
+
 ErrCode BackupExtExtension::HandleIncrementalBackup(int incrementalFd, int manifestFd)
 {
     HILOGI("Start HandleIncrementalBackup. incrementalFd:%{public}d, manifestFd:%{public}d", incrementalFd, manifestFd);
@@ -113,6 +154,8 @@ ErrCode BackupExtExtension::IncrementalOnBackup(bool isClearData)
     SetSupportWithoutTar(isSupportWithoutTar);
     int32_t batchSize = extension_ ? extension_->GetBatchSize() : 0;
     SetBatchSize(batchSize);
+    auto restoreScene = extension_ ? extension_->GetRestoreScene() : BConstants::ExtensionRestoreScene::NORMAL;
+    SetRestoreScene(restoreScene);
     std::string callerBundleName = extension_ ? extension_->GetCallerBundleName() : "";
     SetCallerBundleName(callerBundleName);
     if (!IfAllowToBackupRestore()) {
@@ -199,30 +242,50 @@ void BackupExtExtension::SetCallerBundleName(const std::string& callerBundleName
     ScanFileSingleton::GetInstance().SetCallerBundleName(callerBundleName);
     HILOGI("set callerBundleName:%{public}s", callerBundleName.c_str());
 }
- 
+
 std::string BackupExtExtension::GetCallerBundleName() const
 {
     return callerBundleName_;
 }
 
-string BackupExtExtension::GetBundlePath()
+void BackupExtExtension::SetRestoreScene(BConstants::ExtensionRestoreScene restoreScene)
+{
+    restoreScene_ = restoreScene;
+    HILOGI("set restoreScene: %{public}d", restoreScene_);
+}
+
+BConstants::ExtensionRestoreScene BackupExtExtension::GetRestoreScene() const
+{
+    return restoreScene_;
+}
+
+string BackupExtExtension::GetBundlePath(const std::string &hashName)
 {
     if (bundleName_ == BConstants::BUNDLE_FILE_MANAGER) {
-        return string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        return StringUtils::IsAncoFile(hashName)
+                   ? BConstants::GetAncoRestoreDir(bundleName_)
+                   : string(BConstants::PATH_FILEMANAGE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     } else if (bundleName_ == BConstants::BUNDLE_MEDIAL_DATA) {
-        return string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
+        return StringUtils::IsAncoFile(hashName)
+                   ? BConstants::GetAncoRestoreDir(bundleName_)
+                   : string(BConstants::PATH_MEDIALDATA_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
     }
     return string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_RESTORE);
 }
 
-std::map<std::string, off_t> BackupExtExtension::GetIdxFileInfos(bool isSpecialVersion)
+std::map<std::string, std::pair<off_t, bool>> BackupExtExtension::GetIdxFileInfos(bool isSpecialVersion)
 {
-    string restoreDir = isSpecialVersion ? "" : GetBundlePath();
     auto extManageInfo = GetExtManageInfo(isSpecialVersion);
-    std::map<std::string, off_t> idxFileInfos;
+    std::map<std::string, std::pair<off_t, bool>> idxFileInfos; // <st_size, isMigrated>
     for (size_t i = 0; i < extManageInfo.size(); ++i) {
-        std::string realPath = restoreDir + extManageInfo[i].hashName;
-        idxFileInfos[realPath] = extManageInfo[i].sta.st_size;
+        if (HasFileMigratedToRootDirViaClone(extManageInfo[i])) {
+            std::string realPath = extManageInfo[i].fileName;
+            idxFileInfos[realPath] = std::make_pair(extManageInfo[i].sta.st_size, true);
+        } else {
+            string restoreDir = isSpecialVersion ? "" : GetBundlePath(extManageInfo[i].hashName);
+            std::string realPath = restoreDir + extManageInfo[i].hashName;
+            idxFileInfos[realPath] = std::make_pair(extManageInfo[i].sta.st_size, false);
+        }
     }
     return idxFileInfos;
 }
@@ -232,20 +295,25 @@ void BackupExtExtension::CheckTmpDirFileInfos(bool isSpecialVersion)
     ErrFileInfo errFiles;
     auto idxFileInfos = GetIdxFileInfos(isSpecialVersion);
     struct stat attr;
-    const std::string sandboxRoot = std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME) + BConstants::BACKSLASH;
     for (const auto &it : idxFileInfos) {
-        auto newPath = BExcepUltils::Canonicalize(it.first);
-        if (newPath.empty() || newPath.rfind(sandboxRoot, 0) != 0) {
+        const auto &filePath = StringUtils::NormalizeLexicalPath(it.first);
+        const auto &[fileSize, isMigrated] = it.second;
+        if (StringUtils::IsSandboxAncoPath(filePath) || !BDir::IsFilePathValid(filePath)) {
             continue;
         }
-        if (newPath.size() >= PATH_MAX || stat(newPath.data(), &attr) == -1) {
-            HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(newPath).c_str(),
+        if (isMigrated) {
+            // Already migrated to root dir, check later
+            endFileInfos_[filePath] = fileSize;
+            continue;
+        }
+        if (filePath.size() >= PATH_MAX || stat(filePath.data(), &attr) == -1) {
+            HILOGE("(Debug) Failed to get stat of %{public}s, errno = %{public}d", GetAnonyPath(filePath).c_str(),
                 errno);
-            errFiles[newPath].emplace_back(errno);
-        } else if (it.second != attr.st_size) {
+            errFiles[filePath].emplace_back(errno);
+        } else if (fileSize != attr.st_size && (!S_ISDIR(attr.st_mode))) {
             HILOGE("(Debug) RecFile:%{public}s size err, recSize: %{public}" PRId64 ", idxSize: %{public}" PRId64 "",
-                GetAnonyPath(newPath).c_str(), attr.st_size, it.second);
-            errFiles[newPath] = std::vector<int>();
+                   GetAnonyPath(filePath).c_str(), attr.st_size, fileSize);
+            errFiles[filePath] = std::vector<int>();
         }
     }
     HILOGE("(Debug) Temp file check result: Total file: %{public}zu, err file: %{public}zu", idxFileInfos.size(),
@@ -269,15 +337,14 @@ tuple<bool, vector<string>> BackupExtExtension::CheckRestoreFileInfos()
     vector<string> errFiles;
     struct stat curFileStat {};
     for (const auto &it : endFileInfos_) {
-        std::string sandboxRoot = std::string(BConstants::PATH_FILEMANAGE_BACKUP_HOME) + BConstants::BACKSLASH;
-        if (it.first.rfind(sandboxRoot, 0) != 0) {
+        if (StringUtils::IsSandboxAncoPath(it.first) || !BDir::IsFilePathValid(it.first)) {
             continue;
         }
         if (lstat(it.first.c_str(), &curFileStat) != 0) {
             HILOGE("Failed to lstat %{public}s, err = %{public}d", GetAnonyPath(it.first).c_str(), errno);
             errFiles.emplace_back(it.first);
             errFileInfos_[it.first].emplace_back(errno);
-        } else if (curFileStat.st_size != it.second) {
+        } else if (curFileStat.st_size != it.second && (!S_ISDIR(curFileStat.st_mode))) {
             HILOGE("File size error, file: %{public}s, idx: %{public}" PRId64 ", act: %{public}" PRId64 "",
                 GetAnonyPath(it.first).c_str(), it.second, curFileStat.st_size);
             errFiles.emplace_back(it.first);
@@ -630,15 +697,8 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupC
         HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
         extPtr->FinishOnProcessTask();
         if (errCode == ERR_OK) {
-            auto spendTime = extPtr->GetOnStartTimeCost();
-            if (spendTime >= BConstants::MAX_TIME_COST) {
-                AppRadar::Info info(extPtr->bundleName_, "", string("\"spend_time\":\" ").
-                    append(to_string(spendTime)).append(string("ms\"")));
-                AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupCallback",
-                    AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-                    static_cast<int32_t>(ERR_OK));
-            }
-            proxy->GetAppLocalListAndDoIncrementalBackup();
+            extPtr->ReportOnBackupTimeCost("BackupExtExtension::IncOnBackupCallback");
+            NotifyIncrementalBackup({});
             return;
         }
         HILOGE("Call extension IncOnBackup failed, errInfo = %{public}s", errMsg.c_str());
@@ -676,21 +736,7 @@ std::function<void(ErrCode, const std::string)> BackupExtExtension::IncOnBackupE
         }
         extensionPtr->extension_->InvokeAppExtMethod(errCode, backupExRetInfo);
         if (errCode == ERR_OK) {
-            if (backupExRetInfo.size()) {
-                auto spendTime = extensionPtr->GetOnStartTimeCost();
-                if (spendTime >= BConstants::MAX_TIME_COST) {
-                    AppRadar::Info info(extensionPtr->bundleName_, "", string("\"spend_time\":\" ").
-                        append(to_string(spendTime)).append(string("ms\"")));
-                    AppRadar::GetInstance().RecordBackupFuncRes(info, "BackupExtExtension::IncOnBackupExCallback",
-                        AppRadar::GetInstance().GetUserId(), BizStageBackup::BIZ_STAGE_ON_BACKUP,
-                        static_cast<int32_t>(ERR_OK));
-                }
-                HILOGI("Start GetAppLocalListAndDoIncrementalBackup");
-                extensionPtr->FinishOnProcessTask();
-                proxy->GetAppLocalListAndDoIncrementalBackup();
-                HILOGI("Will notify backup result report");
-                extensionPtr->AppResultReport(backupExRetInfo, BackupRestoreScenario::INCREMENTAL_BACKUP);
-            }
+            extensionPtr->HandleIncBackupExSuccess(backupExRetInfo);
             return;
         }
         HILOGE("Call extension IncOnBackupEx failed, errInfo = %{public}s", backupExRetInfo.c_str());
@@ -1327,7 +1373,9 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
     string path = string(BConstants::PATH_BUNDLE_BACKUP_HOME).append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
     uint64_t totalSize = 0;
     uint32_t fileCount = 0;
-    vector<string> packFiles;
+    // packFiles 改为 vector<pair<物理路径, restorePath>>,
+    // 替代了原来仅存物理路径的 vector<string>, 使得 tar 打包时能获取 restorePath.
+    vector<pair<string, string>> packFiles;
     vector<struct ReportFileInfo> tarInfos;
     TarFile::GetInstance().SetPacketMode(true); // 设置下打包模式
     auto startTime = std::chrono::system_clock::now();
@@ -1340,10 +1388,11 @@ void BackupExtExtension::IncrementalPacket(const vector<struct ReportFileInfo> &
         UpdateFileStat(small.filePath, small.size);
         totalSize += static_cast<uint64_t>(small.size);
         fileCount += 1;
-        packFiles.emplace_back(small.filePath);
+        packFiles.emplace_back(small.filePath, small.restorePath);
         tarInfos.emplace_back(small);
         if (totalSize >= BConstants::DEFAULT_SLICE_SIZE || fileCount >= BConstants::MAX_FILE_COUNT) {
             TarMap tarMap {};
+            // 传入 pair 向量, 内部遍历时将 restorePath 传给 TraversalFile → AddFile
             TarFile::GetInstance().Packet(packFiles, partName, path, tarMap, reportCb);
             UpdateTarStat(TarFile::GetInstance().GetTarFileSize());
             tar.insert(tarMap.begin(), tarMap.end());
@@ -1462,15 +1511,96 @@ std::function<void(ErrCode, std::string)> BackupExtExtension::ReportOnProcessRes
     };
 }
 
+std::unordered_map<std::string, std::string> BackupExtExtension::BuildCompatibleDirMapping()
+{
+    std::unordered_map<std::string, std::string> mapping;
+    if (extension_ == nullptr) {
+        return mapping;
+    }
+    auto configStr = extension_->GetUsrConfig();
+    if (configStr.empty()) {
+        return mapping;
+    }
+    BJsonCachedEntity<BJsonEntityExtensionConfig> cachedEntity(configStr);
+    auto cache = cachedEntity.Structuralize();
+    auto dirMapping = cache.GetCompatibleDirMapping();
+    auto includes = cache.GetIncludes();
+    if (dirMapping.empty() || compatibleDirs_.empty() || includes.empty()) {
+        return mapping;
+    }
+    // 仅当 restoreDir 同时存在于 includes 和 compatibleDirs_ 时才启用映射
+    std::set<std::string> includeSet(includes.begin(), includes.end());
+    for (const auto &item : dirMapping) {
+        const std::string &restoreDir = item.first;
+        const std::string &backupDir = item.second;
+        // 安全校验: 防止路径遍历
+        if (!BDir::IsFilePathValid(restoreDir) || !BDir::IsFilePathValid(backupDir)) {
+            HILOGE("compatDirMapping contains invalid path, restoreDir=%{public}s, backupDir=%{public}s",
+                   GetAnonyPath(restoreDir).c_str(), GetAnonyPath(backupDir).c_str());
+            continue;
+        }
+        if (compatibleDirs_.find(restoreDir) != compatibleDirs_.end() &&
+            includeSet.find(restoreDir) != includeSet.end()) {
+            mapping.emplace(backupDir, restoreDir);
+            HILOGI("compatDir enabled, backupDir=%{public}s, restoreDir=%{public}s",
+                GetAnonyPath(backupDir).c_str(), GetAnonyPath(restoreDir).c_str());
+        }
+    }
+    HILOGI("compatDirMapping size=%{public}zu", mapping.size());
+    return mapping;
+}
+
+std::string BackupExtExtension::MapPathWithCompatDir(const std::string &filePath) const
+{
+    for (const auto &mapEntry : compatDirMapping_) {
+        const std::string &backupDir = mapEntry.first;
+        const std::string &restoreDir = mapEntry.second;
+        if (filePath.compare(0, backupDir.length(), backupDir) == 0 &&
+            (filePath.length() == backupDir.length() || filePath[backupDir.length()] == '/')) {
+            return restoreDir + filePath.substr(backupDir.length());
+        }
+    }
+    return filePath;
+}
+
+void BackupExtExtension::ApplyRestorePathMapping(
+    unordered_map<string, struct ReportFileInfo> &localFilesInfo)
+{
+    if (compatDirMapping_.empty() || localFilesInfo.empty()) {
+        return;
+    }
+    std::vector<std::pair<std::string, struct ReportFileInfo>> remappedEntries;
+    for (auto it = localFilesInfo.begin(); it != localFilesInfo.end(); ) {
+        std::string restorePath = MapPathWithCompatDir(it->first);
+        if (restorePath != it->first) {
+            it->second.restorePath = restorePath;
+            remappedEntries.emplace_back(std::move(restorePath), std::move(it->second));
+            it = localFilesInfo.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto &entry : remappedEntries) {
+        auto [iter, inserted] = localFilesInfo.emplace(std::move(entry.first), std::move(entry.second));
+        if (!inserted) {
+            HILOGE("ApplyRestorePathMapping key conflict, restorePath=%{public}s", GetAnonyPath(iter->first).c_str());
+        }
+    }
+}
+
 void BackupExtExtension::FillFileInfosWithoutCmp(vector<struct ReportFileInfo> &allFiles,
                                                  vector<struct ReportFileInfo> &smallFiles,
                                                  vector<struct ReportFileInfo> &bigFiles,
                                                  UniqueFd incrementalFd)
 {
+    // restorePath 映射: 在每个 batch 读取后调用 ApplyRestorePathMapping,
+    // 将兼容目录下的文件记录上 restorePath.
     HILOGI("Fill file info without cmp begin");
     BReportEntity storageRp(move(incrementalFd));
     unordered_map<string, struct ReportFileInfo> localFilesInfo;
     while (storageRp.GetStorageReportInfos(localFilesInfo)) {
+        // 对刚读出的这批文件做兼容路径映射
+        ApplyRestorePathMapping(localFilesInfo);
         for (auto localIter = localFilesInfo.begin(); localIter != localFilesInfo.end(); ++localIter) {
             const string &path = localIter->second.filePath;
             if (path.empty()) {
@@ -1493,6 +1623,7 @@ void BackupExtExtension::FillFileInfosWithoutCmp(vector<struct ReportFileInfo> &
             if (ExtractFileExt(path) == "tar") {
                 localIter->second.userTar = 1; // 1: default value, means true
             }
+            // 此时 localIter->second.restorePath 已被 ApplyRestorePathMapping 设置
             allFiles.emplace_back(localIter->second);
             if (!localIter->second.isIncremental) {
                 HILOGE("It's not incre, no need record %{public}s", GetAnonyPath(path).c_str());
@@ -1518,6 +1649,7 @@ void BackupExtExtension::FillFileInfosWithCmp(vector<struct ReportFileInfo> &all
     BReportEntity storageRp(move(incrementalFd));
     unordered_map<string, struct ReportFileInfo> localFilesInfo;
     while (storageRp.GetStorageReportInfos(localFilesInfo)) {
+        ApplyRestorePathMapping(localFilesInfo);
         CompareFiles(allFiles, smallFiles, bigFiles, cloudFiles, localFilesInfo);
         localFilesInfo.clear();
     }
@@ -1536,7 +1668,9 @@ void BackupExtExtension::CompareFiles(vector<struct ReportFileInfo> &allFiles,
             HILOGE("GetStorageReportInfos failed");
             continue;
         }
-        auto it = cloudFiles.find(path);
+        // 使用 map key 查找 cloudFiles, 因为兼容文件的 key 已被 ApplyRestorePathMapping 改写为 restorePath,
+        // 而 cloud manifest 的 column 0 也存的是 restorePath(由 WriteFile 写入). 两者 key 一致才能匹配.
+        auto it = cloudFiles.find(localIter->first);
         bool isExist = (it != cloudFiles.end());
         if (localIter->second.isIncremental && !isExist && localIter->second.isDir) {
             smallFiles.emplace_back(localIter->second);
@@ -1686,16 +1820,16 @@ ErrCode BackupExtExtension::ReportBatchFiles(std::vector<std::shared_ptr<IFileIn
     return ERR_OK;
 }
 
-void BackupExtExtension::DoBackupTaskCore(
-    bool supportWithoutTar, std::vector<std::shared_ptr<IFileInfo>> &allFiles, int &ret)
+int BackupExtExtension::DoBackupTaskCore(std::vector<std::shared_ptr<IFileInfo>> &allFiles)
 {
+    bool supportWithoutTar = GetSupportWithoutTar();
     int fdNum = 0;
     auto startTime = std::chrono::system_clock::now();
     std::vector<std::shared_ptr<IFileInfo>> tmpFiles;
     if (!InitManageJsonFd()) {
-        ret = static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
-        return;
+        return static_cast<int>(BError::Codes::EXT_REPORT_FILE_READY_FAIL);
     }
+    int ret = ERR_OK;
     while (!ScanFileSingleton::GetInstance().IsProcessCompleted() ||
            ScanFileSingleton::GetInstance().HasFileReady()) {
         ScanFileSingleton::GetInstance().WaitForFiles();
@@ -1704,13 +1838,8 @@ void BackupExtExtension::DoBackupTaskCore(
             HILOGE("Get null file info!!");
             continue;
         }
-        bool isWithoutTarFile = supportWithoutTar && !fileInfo->isAncoFile_;
-        if (isWithoutTarFile && !fileInfo->isLongPath_) {
-            std::string restorePath = fileInfo->GetRestorePath();
-            fileInfo->filename_ = restorePath.empty() ? fileInfo->filePath_ : restorePath;
-        }
         WaitToSendFd(startTime, fdNum);
-        if (isWithoutTarFile) {
+        if (supportWithoutTar && !fileInfo->isAncoFile_) {
             tmpFiles.push_back(fileInfo);
             if (tmpFiles.size() == static_cast<size_t>(GetBatchSize())) {
                 ret = ReportBatchFiles(tmpFiles, allFiles);
@@ -1740,15 +1869,14 @@ void BackupExtExtension::DoBackupTaskCore(
         DoAppendFiles(tmpFiles, ret, supportWithoutTar);
         tmpFiles.clear();
     }
+    return ret;
 }
 
 void BackupExtExtension::DoBackupTask()
 {
-    bool supportWithoutTar = GetSupportWithoutTar();
     std::vector<std::shared_ptr<IFileInfo>> allFiles;
-    HILOGD("supportWithoutTar is, %{public}d", supportWithoutTar);
-    int ret = ERR_OK;
-    DoBackupTaskCore(supportWithoutTar, allFiles, ret);
+    HILOGI("supportWithoutTar is, %{public}d", GetSupportWithoutTar());
+    int ret = DoBackupTaskCore(allFiles);
     WaitforFdAppendComplete(allFiles);
     int indexRet = IndexFileReady(); // 无需WaitToSendFd，sendRate=0时克隆实际还可以继续接收数据
     if (indexRet != ERR_OK) {
@@ -1796,7 +1924,6 @@ ErrCode BackupExtExtension::CleanBundleTempDir()
         return BError(BError::Codes::EXT_BROKEN_IPC).GetCode();
     }
 }
-
 std::function<void(ErrCode, const std::string)> BackupExtExtension::OnReleaseCallback(wptr<BackupExtExtension> obj)
 {
     HILOGI("Begin get HandleOnReleaseCallback");
@@ -2012,17 +2139,9 @@ void BackupExtExtension::GetScanDirList(vector<string>& pathInclude, string type
     if (extension_->ancoFileListClone_ == "1" && type == BConstants::INCLUDES) {
         HILOGI("GetScanDirList ancoFileListClone_ is 1");
         vector<std::string> ancoMediaFilePaths =
-            CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryAncoMediaFile();
+        CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryAncoMediaFile();
         pathInclude.insert(pathInclude.end(), std::make_move_iterator(ancoMediaFilePaths.begin()),
             std::make_move_iterator(ancoMediaFilePaths.end()));
-    }
-    if (extension_->fileManagerFileListClone_ == "1" && type == BConstants::INCLUDES) {
-        HILOGI("GetScanDirList fileManagerFileListClone_ is 1");
-        vector<std::string> fileManagerFilePaths =
-            CloneFileInfoBackupRdbstore::GetInstance(dbPath_)->QueryFileManagerFile();
-        fileManagerFilePaths = StringUtils::ConvertMediaSandboxPaths(fileManagerFilePaths);
-        pathInclude.insert(pathInclude.end(), std::make_move_iterator(fileManagerFilePaths.begin()),
-            std::make_move_iterator(fileManagerFilePaths.end()));
     }
     if (type == BConstants::EXCLUDES) {
         auto excludeInfos = extension_->GetExcludeInfos();
@@ -2090,26 +2209,12 @@ void BackupExtExtension::PathHasEl3OrEl4(const set<string> &includes, const vect
     }
 }
 
-void BackupExtExtension::ClearPublicTempFiles()
-{
-    if (bundleName_ != BConstants::BUNDLE_FILE_MANAGER) {
-        return;
-    }
-    std::string tempPath = string(BConstants::PATH_FILEMANAGE_BACKUP_HOME)
-        .append(BConstants::SA_BUNDLE_BACKUP_RESTORE).append(BConstants::PATH_PUBLIC_HOME_NO_SLASH);
-    BDir::ClearDirectory(tempPath);
-}
-
 std::string BackupExtExtension::FileInfoToString(std::shared_ptr<IFileInfo> fileInfo)
 {
     Json::Value value;
-    if (fileInfo->isAncoFile_ || fileInfo->isLongPath_) {
-        value["path"] = fileInfo->filename_;
-    } else {
-        std::string restorePath = fileInfo->GetRestorePath();
-        value["path"] = restorePath.empty() ? fileInfo->filePath_ : restorePath;
-    }
- 
+    std::string restorePath = fileInfo->GetRestorePath();
+    std::string targetPath = restorePath.empty() ? fileInfo->filePath_ : restorePath;
+    value["path"] = ShouldRenameToFullPathOnBackup(fileInfo) ? targetPath : fileInfo->filename_;
     value["st_mode"] = static_cast<uint64_t>(fileInfo->sta_.st_mode);
     value["st_atim"]["tv_sec"] = static_cast<int64_t>(fileInfo->sta_.st_atim.tv_sec);
     value["st_atim"]["tv_nsec"] = static_cast<int64_t>(fileInfo->sta_.st_atim.tv_nsec);
@@ -2138,7 +2243,7 @@ bool BackupExtExtension::InitManageJsonFd()
         HILOGE("InitManageJsonFd: Failed to open file, err=%{public}d", errno);
         return false;
     }
- 
+
     manageJsonFd_ = UniqueFd(rawFd);
     ssize_t writeLen = write(manageJsonFd_.Get(), "[", 1);
     if (writeLen < 0 || writeLen != 1) {
@@ -2149,7 +2254,7 @@ bool BackupExtExtension::InitManageJsonFd()
     HILOGI("InitManageJsonFd: successfully opened fd=%{public}d", rawFd);
     return true;
 }
- 
+
 void BackupExtExtension::CloseManageJsonFd()
 {
     std::lock_guard<std::mutex> lock(manageJsonFdLock_);
@@ -2164,7 +2269,7 @@ void BackupExtExtension::CloseManageJsonFd()
         HILOGW("CloseManageJsonFd: file not find");
     }
 }
- 
+
 void BackupExtExtension::DoAppendFiles(const std::vector<std::shared_ptr<IFileInfo>> &tmpFiles, int &ret,
                                        bool isSupportWithoutTar)
 {
@@ -2184,20 +2289,16 @@ void BackupExtExtension::DoAppendFiles(const std::vector<std::shared_ptr<IFileIn
         }
         for (const auto &item : tmpFiles) {
             Json::Value value;
-            value["fileName"] = item->filename_;
             std::string restorePath = item->GetRestorePath();
-            value["information"]["path"] = restorePath.empty() ? item->filePath_ : restorePath;
+            std::string targetPath = restorePath.empty() ? item->filePath_ : restorePath;
+            value["fileName"] = ptr->ShouldRenameToFullPathOnBackup(item) ? targetPath : item->filename_;
+            value["information"]["path"] = targetPath;
             value["isUserTar"] =
                 item->isBigFile_ &&
                 BJsonEntityExtManage::CheckUserTar(item->filePath_, item->sta_, item->isAncoFile_, isSupportWithoutTar);
             value["isBigFile"] = item->isBigFile_;
             value["isLongPath"] = item->isLongPath_;
-            if (isSupportWithoutTar && !item->isLongPath_) {
-                value["information"]["stat"]["st_size"] = static_cast<int64_t>(item->sta_.st_size);
-                value["information"]["stat"]["st_mode"] = static_cast<int32_t>(item->sta_.st_mode);
-            } else {
-                value["information"]["stat"] = BJsonEntityExtManage::Stat2JsonValue(item->sta_);
-            }
+            value["information"]["stat"] = BJsonEntityExtManage::Stat2JsonValue(item->sta_);
             Json::StreamWriterBuilder builder;
             builder["commentStyle"] = "None";
             builder["indentation"] = "";
@@ -2225,7 +2326,7 @@ void BackupExtExtension::DoAppendFiles(const std::vector<std::shared_ptr<IFileIn
         }
     });
 }
- 
+
 void BackupExtExtension::WaitforFdAppendComplete(std::vector<std::shared_ptr<IFileInfo>> &files)
 {
     std::unique_lock<std::mutex> lock {appendManageJsonLock_};
