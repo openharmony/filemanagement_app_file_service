@@ -198,7 +198,7 @@ constexpr int THIRD = 2;
 // backup process name
 static inline std::string BACKUP_SA_NAME = "backup_sa";
 // 文管bundleName
-static inline std::string BUNDLE_FILE_MANAGER = "com.huawei.hmos.filemanager";
+static inline std::string BUNDLE_FILE_MANAGER = ".filemanager";
 // 媒体库数据bundleName
 static inline std::string BUNDLE_MEDIAL_DATA = "com.ohos.medialibrary.medialibrarydata";
 // SA Ext
@@ -364,7 +364,7 @@ constexpr int GC_TASK_TIMEOUT = -16;
 constexpr int GC_MAX_WAIT_TIME_S = 200;
 // 克隆应用bundleName
 
-static inline std::string BUNDLE_DATA_CLONE = "com.huawei.hmos.dataclone";
+static inline std::string BUNDLE_DATA_CLONE = ".dataclone";
 
 // 迁移文件路径标识
 static inline std::string MIGRATE_ANCO_INSTALL_PATH = "app_clone_install";

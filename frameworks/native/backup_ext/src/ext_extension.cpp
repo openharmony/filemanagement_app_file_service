@@ -72,7 +72,7 @@ const string INDEX_FILE_RESTORE = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
 const string INDEX_FILE_INCREMENTAL_BACKUP = string(BConstants::PATH_BUNDLE_BACKUP_HOME).
                                              append(BConstants::SA_BUNDLE_BACKUP_BACKUP);
 const string MEDIA_LIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
-const string FILE_MANAGER_BUNDLE_NAME = "com.huawei.hmos.filemanager";
+const string FILE_MANAGER_BUNDLE_NAME = "com.ohos.filepicker";
 using namespace std;
 
 static void RecordDoRestoreRes(const std::string &bundleName, const std::string &func,
@@ -2101,10 +2101,10 @@ void BackupExtExtension::AppResultReport(std::string restoreRetInfo, BackupResto
     BExcepUltils::BAssert(proxy, BError::Codes::EXT_BROKEN_IPC, "Failed to obtain the ServiceClient handle");
     BJsonUtil::AddAncoFileResult(ancoRestoreRes_, restoreRetInfo);
     if (appStatistic_) {
- 	    uint32_t restoreSpend = appStatistic_->onRestoreSpend_.GetSpan() +
- 	        appStatistic_->onRestoreexSpend_.GetSpan();
- 	    BJsonUtil::AddRestoreSpend(restoreSpend, restoreRetInfo);
- 	}
+        uint32_t restoreSpend = appStatistic_->onRestoreSpend_.GetSpan() +
+            appStatistic_->onRestoreexSpend_.GetSpan();
+        BJsonUtil::AddRestoreSpend(restoreSpend, restoreRetInfo);
+    }
     HILOGI("restoreRetInfo is %{public}s", restoreRetInfo.c_str());
     auto ret = proxy->ServiceResultReport(restoreRetInfo, scenario, errCode);
     if (ret != ERR_OK) {
