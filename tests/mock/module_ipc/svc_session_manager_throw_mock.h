@@ -113,6 +113,8 @@ public:
     virtual bool GetSupportWithoutTar(const std::string &bundleName) = 0;
     virtual void SetBatchSize(const std::string &bundleName, int32_t batchSize) = 0;
     virtual int32_t GetBatchSize(const std::string &bundleName) = 0;
+    virtual void SetRestoreScene(const std::string &bundleName, BConstants::ExtensionRestoreScene restoreScene) = 0;
+    virtual BConstants::ExtensionRestoreScene GetRestoreScene(const std::string &bundleName) = 0;
 public:
     static inline std::shared_ptr<BackupSvcSessionManager> session = nullptr;
 };
@@ -205,6 +207,8 @@ public:
     MOCK_METHOD(bool, GetSupportWithoutTar, (const std::string &));
     MOCK_METHOD(void, SetBatchSize, (const std::string &, int32_t));
     MOCK_METHOD(int32_t, GetBatchSize, (const std::string &));
+    MOCK_METHOD(void, SetRestoreScene, (const std::string &, BConstants::ExtensionRestoreScene));
+    MOCK_METHOD(BConstants::ExtensionRestoreScene, GetRestoreScene, (const std::string &));
 };
 
 } // namespace OHOS::FileManagement::Backup

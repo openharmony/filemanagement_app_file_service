@@ -16,6 +16,9 @@
 #ifndef OHOS_FILEMGMT_BACKUP_B_JSON_ENTITY_CAPS_H
 #define OHOS_FILEMGMT_BACKUP_B_JSON_ENTITY_CAPS_H
 
+#include <unordered_map>
+#include <unordered_set>
+
 #include "b_json/b_json_cached_entity.h"
 #include "filemgmt_libhilog.h"
 
@@ -46,6 +49,8 @@ public:
         std::string supportScene;
         std::vector<std::string> includes;
         std::vector<std::string> excludes;
+        std::unordered_map<std::string, std::string> compatibleDirMapping;
+        std::unordered_set<std::string> compatibleDirs;
         Json::Value extraInfo;
     };
 public:

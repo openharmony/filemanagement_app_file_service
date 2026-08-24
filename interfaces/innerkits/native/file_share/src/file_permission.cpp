@@ -26,11 +26,14 @@
 #include "uri_permission_manager_client.h"
 #endif
 #include "bundle_constants.h"
+#include "bundle_mgr_interface.h"
 #include "file_uri.h"
 #include "hap_token_info.h"
 #include "ipc_skeleton.h"
+#include "iservice_registry.h"
 #include "n_error.h"
 #include "sandbox_helper.h"
+#include "system_ability_definition.h"
 #include "tokenid_kit.h"
 
 namespace OHOS {
@@ -58,7 +61,6 @@ const std::unordered_map<std::string, std::string> permissionPathMap = {
     {READ_WRITE_DOCUMENTS_PERMISSION, DOCUMENTS_PATH}};
 #ifdef SANDBOX_MANAGER
 namespace {
-
 bool CheckValidUri(const string &uriStr, const string &path, bool checkAccess)
 {
     if (uriStr.find(FILE_SCHEME_PREFIX) != 0) {
@@ -71,8 +73,8 @@ bool CheckValidUri(const string &uriStr, const string &path, bool checkAccess)
     }
     // Only Media path can skip access check
     Uri uri(uriStr);
-    std::string bundleName = uri.GetAuthority();
-    if (bundleName == MEDIA_AUTHORITY) {
+    std::string authority = uri.GetAuthority();
+    if (authority == MEDIA_AUTHORITY) {
         LOGI("media path, skip access check");
         return true;
     }
@@ -197,7 +199,6 @@ int32_t ConvertSandboxManagerError(int32_t sandboxManagerErrorCode,
     }
     return EPERM;
 }
-
 } // namespace
 void FilePermission::ParseErrorResults(const vector<uint32_t> &resultCodes,
                                        const vector<PolicyInfo> &pathPolicies,
@@ -280,6 +281,25 @@ vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vect
             PolicyInfo policyInfo = {path, uriPolicy.mode};
             pathPolicies.emplace_back(policyInfo);
             errorResults.emplace_back(true);
+        }
+    }
+    return pathPolicies;
+}
+
+vector<PolicyInfo> FilePermission::GetPathPolicyInfoFromUriPolicyInfo(const vector<UriPolicyInfo> &uriPolicies,
+    const std::string &targetBundleName, deque<struct PolicyErrorResult> &errorResults)
+{
+    vector<PolicyInfo> pathPolicies;
+    for (const auto &uriPolicy : uriPolicies) {
+        AppFileService::ModuleFileUri::FileUri fileuri(uriPolicy.uri);
+        string path = fileuri.GetRealPathBySA(targetBundleName);
+        if (!CheckValidUri(uriPolicy.uri, path, false)) {
+            LOGE("Not correct uri!");
+            PolicyErrorResult result = {uriPolicy.uri, PolicyErrorCode::INVALID_PATH, INVALID_PATH_MESSAGE};
+            errorResults.emplace_back(result);
+        } else {
+            PolicyInfo policyInfo = {path, uriPolicy.mode};
+            pathPolicies.emplace_back(policyInfo);
         }
     }
     return pathPolicies;
@@ -432,7 +452,7 @@ int32_t FilePermission::GrantPermission(const vector<UriPolicyInfo> &uriPolicies
         LOGE("The number of result codes exceeds the maximum");
         return EPERM;
     }
-    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, errorResults, false);
+    vector<PolicyInfo> pathPolicies = GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, bundleName, errorResults);
     if (pathPolicies.size() == 0) {
         return EPERM;
     }

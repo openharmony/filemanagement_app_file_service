@@ -54,6 +54,7 @@ ohos_shared_library("cj_file_fileuri_ffi") {
       "ipc:ipc_core",
       "napi:cj_bind_ffi",
       "napi:cj_bind_native",
+      "node:node_header_notice",
       "samgr:samgr_proxy",
     ]
     sources = [

@@ -48,6 +48,7 @@ ohos_fuzztest("BackupSaGetFileHandleFuzzTest") {
   external_deps = [
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "file_api:filemgmt_libn",

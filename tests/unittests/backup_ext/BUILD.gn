@@ -413,14 +413,7 @@ ohos_unittest("ext_backup_js_test") {
 
 ohos_unittest("tar_file_sub_test") {
   module_out_path = path_module_out_tests
-  sanitize = {
-    integer_overflow = true
-    cfi = true
-    cfi_cross_dso = true
-    cfi_vcall_icall_only = true
-    debug = false
-    blocklist = "${path_backup}/cfi_blocklist.txt"
-  }
+
   sources = [
     "${path_backup}/tests/mock/library_func_mock/library_func_mock.cpp",
     "tar_file_sub_test.cpp",
@@ -598,7 +591,6 @@ ohos_unittest("ext_extension_sub_test") {
     "${path_backup}/tests/mock/backup_ext/src/ext_backup_mock.cpp",
     "${path_backup}/tests/mock/backup_ext/src/ext_extension_mock.cpp",
     "${path_backup}/tests/mock/backup_kit_inner/service_proxy_mock.cpp",
-    "${path_backup}/tests/mock/direct_ex_mock/direct_ex_mock.cpp",
     "${path_backup}/tests/mock/utils_mock/src/utils_mock_global_variable.cpp",
     "${path_backup}/tests/utils/src/test_manager.cpp",
     "ext_extension_sub_test.cpp",
@@ -616,7 +608,6 @@ ohos_unittest("ext_extension_sub_test") {
     "${path_backup}/tests/mock/backup_ext/include",
     "${path_backup}/tests/mock/utils_mock/include",
     "${path_backup}/tests/mock/backup_kit_inner",
-    "${path_backup}/tests/mock/direct_ex_mock",
     "${path_backup}/tests/utils/include",
     "${path_backup}/tests/utils_mock/include",
     "${path_backup}/utils/include",

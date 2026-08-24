@@ -2089,7 +2089,8 @@ HWTEST_F(ServiceTest, SUB_Service_CyclicSendScannedInfo_0000, TestSize.Level1)
         }))).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
             service->isScannedEnd_.store(true);
         })));
-        service->CyclicSendScannedInfo(isPreciseScan, bundleNameList);
+        service->CyclicSendScannedInfo(isPreciseScan, bundleNameList,
+            CounterHelper(service->session_, __PRETTY_FUNCTION__));
         EXPECT_TRUE(true);
 
         isPreciseScan = true;
@@ -2098,7 +2099,8 @@ HWTEST_F(ServiceTest, SUB_Service_CyclicSendScannedInfo_0000, TestSize.Level1)
         }))).WillOnce(WithArgs<0>(Invoke([](const ThreadPool::Task &f) {
             service->isScannedEnd_.store(true);
         })));
-        service->CyclicSendScannedInfo(isPreciseScan, bundleNameList);
+        service->CyclicSendScannedInfo(isPreciseScan, bundleNameList,
+            CounterHelper(service->session_, __PRETTY_FUNCTION__));
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

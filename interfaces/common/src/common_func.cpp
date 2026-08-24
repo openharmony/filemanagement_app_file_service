@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -211,14 +211,6 @@ string CommonFunc::GetUriFromPath(const string &path)
     }
     realPath = FILE_SCHEME_PREFIX + packageName + SandboxHelper::Encode(realPath);
     return realPath;
-}
-
-bool CommonFunc::EndsWith(const std::string &str, const std::string &suffix)
-{
-    if (suffix.length() > str.length()) {
-        return false;
-    }
-    return (str.rfind(suffix) == (str.length() - suffix.length()));
 }
 } // namespace AppFileService
 } // namespace OHOS

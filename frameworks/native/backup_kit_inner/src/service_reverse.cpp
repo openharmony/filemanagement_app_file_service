@@ -34,7 +34,7 @@ void ServiceReverse::FlushPendingFiles()
         callbacksBackup_.onFileReadyBatch(files);
     }
 }
- 
+
 void ServiceReverse::AddFileToBatch(const std::string &bundleName,
                                     const std::vector<std::string> &fileNames,
                                     const std::vector<int> &fds,

@@ -214,7 +214,7 @@ ErrCode Service::GetLocalCapabilitiesIncremental(const std::vector<BIncrementalD
     return BError(BError::Codes::OK);
 }
 
-ErrCode Service::GetAppLocalListAndDoIncrementalBackup()
+ErrCode Service::GetAppLocalListAndDoIncrementalBackup(const BStringRawData &compatibleDirs)
 {
     return BError(BError::Codes::OK);
 }
@@ -437,7 +437,8 @@ void Service::WriteScannedInfoToList(const string &bundleName, int64_t dataSize,
 
 void Service::SendScannedInfo(const string&scannendInfos, sptr<SvcSessionManager> session) {}
 
-void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList) {}
+void Service::CyclicSendScannedInfo(bool isPreciseScan, vector<BIncrementalData> bundleNameList,
+    CounterHelper counterHelper) {}
 
 bool Service::GetScanningInfo(wptr<Service> obj, size_t scannedSize, string &scanning)
 {

@@ -169,7 +169,7 @@ public:
         return BError(BError::Codes::OK);
     }
 
-    ErrCode GetAppLocalListAndDoIncrementalBackup() override
+    ErrCode GetAppLocalListAndDoIncrementalBackup(const BStringRawData &compatibleDirs) override
     {
         return BError(BError::Codes::OK);
     }

@@ -27,6 +27,7 @@ public:
     virtual sptr<IServiceReverse> GetServiceReverseProxy() = 0;
     virtual IServiceReverseType::Scenario GetScenario() = 0;
     virtual int32_t GetSessionUserId() = 0;
+    virtual void SetSessionUserId(int32_t userId) = 0;
     virtual std::string GetSessionCallerName() = 0;
     virtual std::string GetSessionActiveTime() = 0;
     virtual bool OnBundleFileReady(const std::string&, const std::string&) = 0;
@@ -77,6 +78,11 @@ public:
     virtual bool GetSupportWithoutTar(const std::string &bundleName) = 0;
     virtual void SetBatchSize(const std::string &bundleName, int32_t batchSize) = 0;
     virtual int32_t GetBatchSize(const std::string &bundleName) = 0;
+    virtual void SetRestoreScene(const std::string &bundleName, BConstants::ExtensionRestoreScene restoreScene) = 0;
+    virtual BConstants::ExtensionRestoreScene GetRestoreScene(const std::string &bundleName) = 0;
+    virtual void SetCompatibleDirs(const std::string &bundleName,
+        const std::unordered_set<std::string> &compatibleDirs) = 0;
+    virtual std::unordered_set<std::string> GetCompatibleDirs(const std::string &bundleName) = 0;
 public:
     BSvcSessionManager() = default;
     virtual ~BSvcSessionManager() = default;
@@ -86,10 +92,12 @@ public:
 
 class SvcSessionManagerMock : public BSvcSessionManager {
 public:
+    SvcSessionManagerMock() = default;
     MOCK_METHOD(ErrCode, Active, (struct SvcSessionManager::Impl, bool));
     MOCK_METHOD((sptr<IServiceReverse>), GetServiceReverseProxy, ());
     MOCK_METHOD(IServiceReverseType::Scenario, GetScenario, ());
     MOCK_METHOD(int32_t, GetSessionUserId, ());
+    MOCK_METHOD(void, SetSessionUserId, (int32_t userId));
     MOCK_METHOD(std::string, GetSessionCallerName, ());
     MOCK_METHOD(std::string, GetSessionActiveTime, ());
     MOCK_METHOD(bool, OnBundleFileReady, (const std::string&, const std::string&));
@@ -140,6 +148,10 @@ public:
     MOCK_METHOD(bool, GetSupportWithoutTar, (const std::string &));
     MOCK_METHOD(void, SetBatchSize, (const std::string &, int32_t));
     MOCK_METHOD(int32_t, GetBatchSize, (const std::string &));
+    MOCK_METHOD(void, SetRestoreScene, (const std::string &, BConstants::ExtensionRestoreScene));
+    MOCK_METHOD(BConstants::ExtensionRestoreScene, GetRestoreScene, (const std::string &));
+    MOCK_METHOD(void, SetCompatibleDirs, (const std::string &, const std::unordered_set<std::string> &));
+    MOCK_METHOD((std::unordered_set<std::string>), GetCompatibleDirs, (const std::string &));
 };
 } // namespace OHOS::FileManagement::Backup
 #endif // OHOS_FILEMGMT_BACKUP_SVC_SESSION_MANAGER_MOCK_H

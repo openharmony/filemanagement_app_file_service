@@ -244,10 +244,14 @@ void BFile::WriteFile(const string &filename, const vector<struct ReportFileInfo
     }
 
     // 前面2行先填充进去
+    // rp 简报保持8列格式(不新增列), 通过 column 0 实现兼容映射:
+    //   - 兼容文件(restorePath非空): column 0 = restorePath, 老恢复直接读到目标路径
+    //   - 普通文件(restorePath空): column 0 = filePath
     f << "version=1.0&attrNum=8" << endl;
     f << "path;mode;dir;size;mtime;hash;usertar;encodeFlag" << endl;
     for (const auto &item : srcFiles) {
-        string path = BReportEntity::EncodeReportItem(item.filePath, item.encodeFlag);
+        string writePath = item.restorePath.empty() ? item.filePath : item.restorePath;
+        string path = BReportEntity::EncodeReportItem(writePath, item.encodeFlag);
         string str = path + ";" + item.mode + ";" + to_string(item.isDir) + ";" + to_string(item.size);
         str += ";" + to_string(item.mtime) + ";" + item.hash + ";" + to_string(item.userTar)+ ";";
         if (item.encodeFlag) {

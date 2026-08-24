@@ -211,7 +211,6 @@ public:
 public:
     std::string backupScene_;
     std::string ancoFileListClone_;
-    std::string fileManagerFileListClone_;
 
 protected:
     std::string appVersionStr_;
@@ -232,12 +231,14 @@ private:
     bool supportWithoutTar_ {false};
     std::vector<std::string> excludeInfos_;
     int32_t batchSize_ {500};
+    BConstants::ExtensionRestoreScene restoreScene_ {BConstants::ExtensionRestoreScene::NORMAL};
     std::string callerBundleName_;
     
 public:
     bool GetSupportWithoutTar() const;
     std::vector<std::string> GetExcludeInfos() const;
     int32_t GetBatchSize() const;
+    BConstants::ExtensionRestoreScene GetRestoreScene() const;
     std::string GetCallerBundleName() const;
 };
 } // namespace OHOS::FileManagement::Backup

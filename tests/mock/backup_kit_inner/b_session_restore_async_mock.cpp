@@ -67,7 +67,7 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap, vector<BundleNam
         return BError(BError::Codes::OK);
     }
     callbacks_.onBundleStarted(0, "com.example.app2backup");
-
+ 
     BFileInfo bFileInfo("com.example.app2backup", "1.tar", 0);
     TestManager tm("BSessionRestoreAsyncMock_GetFd_0100");
     string filePath = tm.GetRootDirCurTest().append("1.tar");
@@ -81,7 +81,7 @@ ErrCode BSessionRestoreAsync::AppendBundles(UniqueFd remoteCap, vector<BundleNam
     GTEST_LOG_(INFO) << "File ready callback for manage.json";
     callbacks_.onFileReady(bFileInfo, move(fdManage), 0);
     callbacks_.onBundleFinished(0, "com.example.app2backup");
-
+ 
     callbacks_.onAllBundlesFinished(0);
     callbacks_.onBundleStarted(1, "com.example.app2backup");
     callbacks_.onBundleFinished(1, "com.example.app2backup");

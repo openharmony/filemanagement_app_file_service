@@ -176,6 +176,11 @@ int32_t ExtBackup::GetBatchSize() const
     return BExtBackup::extBackup->GetBatchSize();
 }
 
+BConstants::ExtensionRestoreScene ExtBackup::GetRestoreScene() const
+{
+    return BExtBackup::extBackup->GetRestoreScene();
+}
+
 std::string ExtBackup::GetCallerBundleName() const
 {
     return BExtBackup::extBackup->GetCallerBundleName();

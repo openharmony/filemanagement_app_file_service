@@ -169,10 +169,13 @@ bool SvcSessionManager::NeedToUnloadService()
 
 int32_t SvcSessionManager::GetSessionUserId()
 {
-    return BSvcSessionManager::sessionManager->GetSessionUserId();
+    return impl_.userId;
 }
 
-void SvcSessionManager::SetSessionUserId(int32_t) {}
+void SvcSessionManager::SetSessionUserId(int32_t userId)
+{
+    impl_.userId = userId;
+}
 
 std::string SvcSessionManager::GetSessionCallerName()
 {
@@ -369,5 +372,26 @@ void SvcSessionManager::SetBatchSize(const std::string &bundleName, int32_t batc
 int32_t SvcSessionManager::GetBatchSize(const std::string &bundleName)
 {
     return BSvcSessionManager::sessionManager->GetBatchSize(bundleName);
+}
+
+void SvcSessionManager::SetRestoreScene(const std::string &bundleName, BConstants::ExtensionRestoreScene restoreScene)
+{
+    return BSvcSessionManager::sessionManager->SetRestoreScene(bundleName, restoreScene);
+}
+
+BConstants::ExtensionRestoreScene SvcSessionManager::GetRestoreScene(const std::string &bundleName)
+{
+    return BSvcSessionManager::sessionManager->GetRestoreScene(bundleName);
+}
+
+void SvcSessionManager::SetCompatibleDirs(const std::string &bundleName,
+    const std::unordered_set<std::string> &compatibleDirs)
+{
+    return BSvcSessionManager::sessionManager->SetCompatibleDirs(bundleName, compatibleDirs);
+}
+
+std::unordered_set<std::string> SvcSessionManager::GetCompatibleDirs(const std::string &bundleName)
+{
+    return BSvcSessionManager::sessionManager->GetCompatibleDirs(bundleName);
 }
 } // namespace OHOS::FileManagement::Backup

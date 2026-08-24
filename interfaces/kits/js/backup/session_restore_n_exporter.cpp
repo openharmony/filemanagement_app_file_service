@@ -801,7 +801,7 @@ static NContextCBExec GetFileHandlesCBExec(napi_env env, NFuncArg &funcArg, std:
             return NError(BError(BError::Codes::SDK_INVAL_ARG, "file name is empty").GetCode());
         }
         if (entity->sessionWhole) {
-            return NError(entity->sessionWhole->GetFileHandle(bundle, fileNames[0])); // 改了麻烦,暂时不管
+            return NError(entity->sessionWhole->GetFileHandle(bundle, fileNames[0]));
         }
         return NError(entity->sessionSheet->GetFileHandles(bundle, fileNames));
     };

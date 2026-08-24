@@ -395,12 +395,6 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_DoBackupTask_Test_0100, testing::ext
 {
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-begin Ext_Extension_DoBackupTask_Test_0100";
     ASSERT_TRUE(extExtension_ != nullptr);
-    string filename = "app_file_ready_test";
-    string filePath = "/tmp";
-    struct stat sta;
-    shared_ptr<IFileInfo> file1 = make_shared<FileInfo>(filename, filePath, sta, false);
-    ScanFileSingleton::GetInstance().pendingFileQueue_.push(file1);
-    ScanFileSingleton::GetInstance().SetCompletedFlag(true);
     EXPECT_CALL(*funcMock_, open(_, _)).WillRepeatedly([](const char* path, int mode) -> int {
         errno = EPERM;
         return -1;
@@ -1127,5 +1121,456 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_RestoreBigFileAfter_Test_0000, testi
     EXPECT_EQ(extExtension_->errFileInfos_.find(filePath), extExtension_->errFileInfos_.end());
 
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_RestoreBigFileAfter_Test_0000";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0100
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0100
+ * @tc.desc: 测试BuildCompatibleDirMapping extension_为空场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0100";
+    auto tempExt = extExtension_->extension_;
+    extExtension_->extension_ = nullptr;
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty());
+    extExtension_->extension_ = tempExt;
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0200
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0200
+ * @tc.desc: 测试BuildCompatibleDirMapping config为空场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0200";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(""));
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0200";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0300
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0300
+ * @tc.desc: 测试BuildCompatibleDirMapping compatibleDirs_为空场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0300";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 = R"({"compatibleDirMapping": [{"backupDir": "/bak/p1", "restoreDir": "/p1"}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0300";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0400
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0400
+ * @tc.desc: 测试BuildCompatibleDirMapping 无匹配场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0400";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 =
+        R"({"includes": ["/p2", "/p3"],)"
+        R"("compatibleDirMapping": [{"backupDir": "/bak/p1", "restoreDir": "/p1"}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {"/p2", "/p3"};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0400";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0500
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0500
+ * @tc.desc: 测试BuildCompatibleDirMapping 成功匹配场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0500";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 =
+        R"({"includes": ["/p1", "/p3"],)"
+        R"("compatibleDirMapping": [{"backupDir": "/bak/p1", "restoreDir": "/p1"},)"
+        R"( {"backupDir": "/bak/p2", "restoreDir": "/p2"}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {"/p1", "/p3"};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_EQ(mapping.size(), 1u);
+    EXPECT_NE(mapping.find("/bak/p1"), mapping.end());
+    EXPECT_EQ(mapping["/bak/p1"], "/p1");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0500";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0600
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0600
+ * @tc.desc: 测试BuildCompatibleDirMapping 含..路径遍历攻击防护(BDir::IsFilePathValid)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0600, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0600";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 =
+        R"({"includes": ["/p1"],)"
+        R"("compatibleDirMapping": [{"backupDir": "/bak/../p1", "restoreDir": "/p1"}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {"/p1"};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty()); // 含../的backupDir应被IsFilePathValid拦截
+
+    string_view sv2 =
+        R"({"includes": ["/p1/.."],)"
+        R"("compatibleDirMapping": [{"backupDir": "/bak/p1", "restoreDir": "/p1/.."}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv2)));
+    mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty()); // 以/..结尾的restoreDir应被IsFilePathValid拦截
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0600";
+}
+
+/**
+ * @tc.number: Ext_Extension_ApplyRestorePathMapping_Test_0100
+ * @tc.name: Ext_Extension_ApplyRestorePathMapping_Test_0100
+ * @tc.desc: 测试ApplyRestorePathMapping mapping为空场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ApplyRestorePathMapping_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ApplyRestorePathMapping_Test_0100";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {};
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    struct ReportFileInfo info;
+    info.filePath = "/data/test/file.txt";
+    localFilesInfo.emplace("/data/test/file.txt", info);
+    extExtension_->ApplyRestorePathMapping(localFilesInfo);
+    EXPECT_EQ(localFilesInfo.size(), 1u);
+    EXPECT_TRUE(localFilesInfo.begin()->second.restorePath.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ApplyRestorePathMapping_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_ApplyRestorePathMapping_Test_0200
+ * @tc.name: Ext_Extension_ApplyRestorePathMapping_Test_0200
+ * @tc.desc: 测试ApplyRestorePathMapping localFilesInfo为空场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ApplyRestorePathMapping_Test_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ApplyRestorePathMapping_Test_0200";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}};
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    extExtension_->ApplyRestorePathMapping(localFilesInfo);
+    EXPECT_TRUE(localFilesInfo.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ApplyRestorePathMapping_Test_0200";
+}
+
+/**
+ * @tc.number: Ext_Extension_ApplyRestorePathMapping_Test_0300
+ * @tc.name: Ext_Extension_ApplyRestorePathMapping_Test_0300
+ * @tc.desc: 测试ApplyRestorePathMapping 成功匹配场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ApplyRestorePathMapping_Test_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ApplyRestorePathMapping_Test_0300";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}};
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    struct ReportFileInfo info;
+    info.filePath = "/bak/p1/sub/file.txt";
+    localFilesInfo.emplace("/bak/p1/sub/file.txt", info);
+    extExtension_->ApplyRestorePathMapping(localFilesInfo);
+    EXPECT_EQ(localFilesInfo.size(), 1u);
+    EXPECT_NE(localFilesInfo.find("/p1/sub/file.txt"), localFilesInfo.end());
+    EXPECT_EQ(localFilesInfo["/p1/sub/file.txt"].restorePath, "/p1/sub/file.txt");
+    EXPECT_EQ(localFilesInfo["/p1/sub/file.txt"].filePath, "/bak/p1/sub/file.txt");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ApplyRestorePathMapping_Test_0300";
+}
+
+/**
+ * @tc.number: Ext_Extension_ApplyRestorePathMapping_Test_0400
+ * @tc.name: Ext_Extension_ApplyRestorePathMapping_Test_0400
+ * @tc.desc: 测试ApplyRestorePathMapping 精确匹配目录(无子路径)场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ApplyRestorePathMapping_Test_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ApplyRestorePathMapping_Test_0400";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}};
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    struct ReportFileInfo info;
+    info.filePath = "/bak/p1";
+    info.isDir = true;
+    localFilesInfo.emplace("/bak/p1", info);
+    extExtension_->ApplyRestorePathMapping(localFilesInfo);
+    EXPECT_EQ(localFilesInfo.size(), 1u);
+    EXPECT_NE(localFilesInfo.find("/p1"), localFilesInfo.end());
+    EXPECT_EQ(localFilesInfo["/p1"].restorePath, "/p1");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ApplyRestorePathMapping_Test_0400";
+}
+
+/**
+ * @tc.number: Ext_Extension_ApplyRestorePathMapping_Test_0500
+ * @tc.name: Ext_Extension_ApplyRestorePathMapping_Test_0500
+ * @tc.desc: 测试ApplyRestorePathMapping 前缀不匹配场景(部分匹配但不以/分隔)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ApplyRestorePathMapping_Test_0500, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ApplyRestorePathMapping_Test_0500";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}};
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    struct ReportFileInfo info;
+    info.filePath = "/bak/p1other/file.txt";
+    localFilesInfo.emplace("/bak/p1other/file.txt", info);
+    extExtension_->ApplyRestorePathMapping(localFilesInfo);
+    EXPECT_EQ(localFilesInfo.size(), 1u);
+    // 不应匹配，因为 /bak/p1other 不是 /bak/p1/ 子路径
+    EXPECT_NE(localFilesInfo.find("/bak/p1other/file.txt"), localFilesInfo.end());
+    EXPECT_TRUE(localFilesInfo.begin()->second.restorePath.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ApplyRestorePathMapping_Test_0500";
+}
+
+/**
+ * @tc.number: Ext_Extension_MapPathWithCompatDir_Test_0100
+ * @tc.name: Ext_Extension_MapPathWithCompatDir_Test_0100
+ * @tc.desc: 测试MapPathWithCompatDir mapping为空时返回原路径
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_MapPathWithCompatDir_Test_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_MapPathWithCompatDir_Test_0100";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {};
+    EXPECT_EQ(extExtension_->MapPathWithCompatDir("/bak/p1/file.txt"), "/bak/p1/file.txt");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_MapPathWithCompatDir_Test_0100";
+}
+
+/**
+ * @tc.number: Ext_Extension_MapPathWithCompatDir_Test_0200
+ * @tc.name: Ext_Extension_MapPathWithCompatDir_Test_0200
+ * @tc.desc: 测试MapPathWithCompatDir 前缀匹配成功
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_MapPathWithCompatDir_Test_0200, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_MapPathWithCompatDir_Test_0200";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}};
+    EXPECT_EQ(extExtension_->MapPathWithCompatDir("/bak/p1/sub/file.txt"), "/p1/sub/file.txt");
+    EXPECT_EQ(extExtension_->MapPathWithCompatDir("/bak/p1"), "/p1");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_MapPathWithCompatDir_Test_0200";
+}
+
+/**
+ * @tc.number: Ext_Extension_MapPathWithCompatDir_Test_0300
+ * @tc.name: Ext_Extension_MapPathWithCompatDir_Test_0300
+ * @tc.desc: 测试MapPathWithCompatDir 前缀部分匹配但不以/分隔时返回原路径
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_MapPathWithCompatDir_Test_0300, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_MapPathWithCompatDir_Test_0300";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}};
+    EXPECT_EQ(extExtension_->MapPathWithCompatDir("/bak/p1other/file.txt"), "/bak/p1other/file.txt");
+    EXPECT_EQ(extExtension_->MapPathWithCompatDir("/data/other/file.txt"), "/data/other/file.txt");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_MapPathWithCompatDir_Test_0300";
+}
+
+/**
+ * @tc.number: Ext_Extension_MapPathWithCompatDir_Test_0400
+ * @tc.name: Ext_Extension_MapPathWithCompatDir_Test_0400
+ * @tc.desc: 测试MapPathWithCompatDir 多条映射规则命中第一条
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_MapPathWithCompatDir_Test_0400, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_MapPathWithCompatDir_Test_0400";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}, {"/bak/p2", "/p2"}};
+    EXPECT_EQ(extExtension_->MapPathWithCompatDir("/bak/p2/a.txt"), "/p2/a.txt");
+    EXPECT_EQ(extExtension_->MapPathWithCompatDir("/bak/p1/b.txt"), "/p1/b.txt");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_MapPathWithCompatDir_Test_0400";
+}
+
+/**
+ * @tc.number: Ext_Extension_ApplyRestorePathMapping_Test_0600
+ * @tc.name: Ext_Extension_ApplyRestorePathMapping_Test_0600
+ * @tc.desc: 测试ApplyRestorePathMapping 混合匹配和不匹配场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ApplyRestorePathMapping_Test_0600, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ApplyRestorePathMapping_Test_0600";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}, {"/bak/p2", "/p2"}};
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    struct ReportFileInfo info1;
+    info1.filePath = "/bak/p1/a.txt";
+    localFilesInfo.emplace("/bak/p1/a.txt", info1);
+    struct ReportFileInfo info2;
+    info2.filePath = "/data/other/b.txt";
+    localFilesInfo.emplace("/data/other/b.txt", info2);
+    struct ReportFileInfo info3;
+    info3.filePath = "/bak/p2/c.txt";
+    localFilesInfo.emplace("/bak/p2/c.txt", info3);
+    extExtension_->ApplyRestorePathMapping(localFilesInfo);
+    EXPECT_EQ(localFilesInfo.size(), 3u);
+    EXPECT_NE(localFilesInfo.find("/p1/a.txt"), localFilesInfo.end());
+    EXPECT_EQ(localFilesInfo["/p1/a.txt"].restorePath, "/p1/a.txt");
+    EXPECT_NE(localFilesInfo.find("/p2/c.txt"), localFilesInfo.end());
+    EXPECT_EQ(localFilesInfo["/p2/c.txt"].restorePath, "/p2/c.txt");
+    EXPECT_NE(localFilesInfo.find("/data/other/b.txt"), localFilesInfo.end());
+    EXPECT_TRUE(localFilesInfo["/data/other/b.txt"].restorePath.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ApplyRestorePathMapping_Test_0600";
+}
+
+/**
+ * @tc.number: Ext_Extension_ApplyRestorePathMapping_Test_0700
+ * @tc.name: Ext_Extension_ApplyRestorePathMapping_Test_0700
+ * @tc.desc: 测试ApplyRestorePathMapping key冲突场景(两个物理路径映射到同一restorePath时保留先插入的条目)
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_ApplyRestorePathMapping_Test_0700, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_ApplyRestorePathMapping_Test_0700";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    // 两个不同的 backupDir 映射到同一个 restoreDir, 制造 key 冲突
+    extExtension_->compatDirMapping_ = {{"/bak/p1", "/p1"}, {"/bak_alias/p1", "/p1"}};
+    unordered_map<string, struct ReportFileInfo> localFilesInfo;
+    struct ReportFileInfo info1;
+    info1.filePath = "/bak/p1/a.txt";
+    localFilesInfo.emplace("/bak/p1/a.txt", info1);
+    struct ReportFileInfo info2;
+    info2.filePath = "/bak_alias/p1/a.txt";
+    localFilesInfo.emplace("/bak_alias/p1/a.txt", info2);
+    extExtension_->ApplyRestorePathMapping(localFilesInfo);
+    // 两个映射均指向 /p1/a.txt, emplace 第二次冲突失败, 保留先插入的条目
+    EXPECT_EQ(localFilesInfo.size(), 1u);
+    EXPECT_NE(localFilesInfo.find("/p1/a.txt"), localFilesInfo.end());
+    // 保留的是第一次 emplace 成功的条目, filePath 应为其中一个原始物理路径
+    EXPECT_TRUE(localFilesInfo["/p1/a.txt"].filePath == "/bak/p1/a.txt" ||
+                localFilesInfo["/p1/a.txt"].filePath == "/bak_alias/p1/a.txt");
+    EXPECT_EQ(localFilesInfo["/p1/a.txt"].restorePath, "/p1/a.txt");
+    EXPECT_EQ(localFilesInfo["/p1/a.txt"].restorePath, "/p1/a.txt");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_ApplyRestorePathMapping_Test_0700";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0700
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0700
+ * @tc.desc: 测试BuildCompatibleDirMapping dirMapping为空场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0700, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0700";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 = R"({"includes": ["/p1"]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {"/p1"};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0700";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0800
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0800
+ * @tc.desc: 测试BuildCompatibleDirMapping includes为空场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0800, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0800";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 =
+        R"({"compatibleDirMapping": [{"backupDir": "/bak/p1", "restoreDir": "/p1"}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {"/p1"};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0800";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_0900
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_0900
+ * @tc.desc: 测试BuildCompatibleDirMapping restoreDir在compatibleDirs_但不在includes中
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0900, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_0900";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 =
+        R"({"includes": ["/p2"],)"
+        R"("compatibleDirMapping": [{"backupDir": "/bak/p1", "restoreDir": "/p1"}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {"/p1"};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_TRUE(mapping.empty());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0900";
 }
 }

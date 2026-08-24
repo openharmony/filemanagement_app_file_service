@@ -344,7 +344,7 @@ bool MessageParcel::WriteFileDescriptor(int fd)
 {
     return true;
 }
- 
+
 int MessageParcel::ReadFileDescriptor()
 {
     return -1;

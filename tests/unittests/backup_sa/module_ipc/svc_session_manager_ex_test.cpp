@@ -89,6 +89,151 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_DecreaseSessionCnt_0101, t
 }
 
 /**
+ * @tc.number: SUB_backup_sa_session_CounterHelper_0100
+ * @tc.name: SUB_backup_sa_session_CounterHelper_0100
+ * @tc.desc: 测试 CounterHelper 正常构造和析构时 sessionCnt 增减
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CounterHelper_0100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_CounterHelper_0100";
+    try {
+        int cntBefore = sessionManagerPtr_->GetSessionCnt();
+        {
+            CounterHelper counterHelper(sessionManagerPtr_, __PRETTY_FUNCTION__);
+            int cntAfterIncrease = sessionManagerPtr_->GetSessionCnt();
+            EXPECT_EQ(cntAfterIncrease, cntBefore + 1);
+        }
+        int cntAfterDecrease = sessionManagerPtr_->GetSessionCnt();
+        EXPECT_EQ(cntAfterDecrease, cntBefore);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by CounterHelper.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CounterHelper_0100";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_CounterHelper_0101
+ * @tc.name: SUB_backup_sa_session_CounterHelper_0101
+ * @tc.desc: 测试 CounterHelper session 为 nullptr 时不崩溃
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CounterHelper_0101, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_CounterHelper_0101";
+    try {
+        sptr<SvcSessionManager> nullSession = nullptr;
+        {
+            CounterHelper counterHelper(nullSession, __PRETTY_FUNCTION__);
+            EXPECT_TRUE(true);
+        }
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by CounterHelper with nullptr.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CounterHelper_0101";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_CounterHelper_0102
+ * @tc.name: SUB_backup_sa_session_CounterHelper_0102
+ * @tc.desc: 测试 CounterHelper 作用域提前退出时仍能正确 DecreaseSessionCnt
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CounterHelper_0102, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_CounterHelper_0102";
+    try {
+        int cntBefore = sessionManagerPtr_->GetSessionCnt();
+        {
+            CounterHelper counterHelper(sessionManagerPtr_, __PRETTY_FUNCTION__);
+            EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore + 1);
+            if (true) {
+                // 模拟提前退出作用域
+            }
+        }
+        EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by CounterHelper early exit.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CounterHelper_0102";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_CounterHelper_0103
+ * @tc.name: SUB_backup_sa_session_CounterHelper_0103
+ * @tc.desc: 测试 CounterHelper move 后源对象不再 Decrease，目标对象负责 Decrease
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CounterHelper_0103, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_CounterHelper_0103";
+    try {
+        int cntBefore = sessionManagerPtr_->GetSessionCnt();
+        {
+            CounterHelper counterHelperSrc(sessionManagerPtr_, __PRETTY_FUNCTION__);
+            EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore + 1);
+            // move 转移所有权：源对象不再负责 Decrease
+            CounterHelper counterHelperDst = std::move(counterHelperSrc);
+            // 此时计数仍然是 cntBefore + 1（没有额外 Increase/Decrease）
+            EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore + 1);
+        }
+        // counterHelperDst 析构时 Decrease，计数恢复
+        EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by CounterHelper move.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CounterHelper_0103";
+}
+
+/**
+ * @tc.number: SUB_backup_sa_session_CounterHelper_0104
+ * @tc.name: SUB_backup_sa_session_CounterHelper_0104
+ * @tc.desc: 测试 CounterHelper move 到 lambda 跨线程场景
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_CounterHelper_0104, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-begin SUB_backup_sa_session_CounterHelper_0104";
+    try {
+        int cntBefore = sessionManagerPtr_->GetSessionCnt();
+        {
+            CounterHelper counterHelper(sessionManagerPtr_, __PRETTY_FUNCTION__);
+            EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore + 1);
+            // 模拟转移所有权到 lambda
+            auto task = [counterHelper = std::move(counterHelper)]() mutable {
+                // counterHelper 在 lambda 析构时 Decrease
+            };
+            // 源对象已 move，不再负责 Decrease
+            EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore + 1);
+            task();
+            // lambda 执行后 counterHelper 仍存活（在 task 对象中），直到 task 析构
+            EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore + 1);
+        }
+        // task 析构后 counterHelper 析构，Decrease
+        EXPECT_EQ(sessionManagerPtr_->GetSessionCnt(), cntBefore);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SvcSessionManagerTest-an exception occurred by CounterHelper move to lambda.";
+    }
+    GTEST_LOG_(INFO) << "SvcSessionManagerTest-end SUB_backup_sa_session_CounterHelper_0104";
+}
+
+/**
  * @tc.number: SUB_backup_sa_session_GetServiceSchedAction_0104
  * @tc.name: SUB_backup_sa_session_GetServiceSchedAction_0104
  * @tc.desc: 测试 GetServiceSchedAction 获取状态

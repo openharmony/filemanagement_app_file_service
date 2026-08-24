@@ -905,25 +905,26 @@ HWTEST_F(ServiceThrowTest, SUB_Service_throw_GetAppLocalListAndDoIncrementalBack
     GTEST_LOG_(INFO) << "ServiceThrowTest-begin SUB_Service_throw_GetAppLocalListAndDoIncrementalBackup_0100";
     try {
         EXPECT_NE(service, nullptr);
+        BStringRawData emptyRD;
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw BError(BError::Codes::EXT_THROW_EXCEPTION);
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillRepeatedly(Return());
-        auto ret = service->GetAppLocalListAndDoIncrementalBackup();
+        auto ret = service->GetAppLocalListAndDoIncrementalBackup(emptyRD);
         EXPECT_EQ(ret, BError(BError::Codes::EXT_THROW_EXCEPTION).GetCode());
 
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw runtime_error("运行时错误");
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillRepeatedly(Return());
-        ret = service->GetAppLocalListAndDoIncrementalBackup();
+        ret = service->GetAppLocalListAndDoIncrementalBackup(emptyRD);
         EXPECT_EQ(ret, EPERM);
 
         EXPECT_CALL(*sessionMock, IncreaseSessionCnt(_)).WillOnce(Invoke([]() {
             throw "未知错误";
         }));
         EXPECT_CALL(*sessionMock, DecreaseSessionCnt(_)).WillRepeatedly(Return());
-        ret = service->GetAppLocalListAndDoIncrementalBackup();
+        ret = service->GetAppLocalListAndDoIncrementalBackup(emptyRD);
         EXPECT_EQ(ret, EPERM);
     } catch (...) {
         EXPECT_TRUE(false);

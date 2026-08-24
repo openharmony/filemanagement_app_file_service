@@ -27,6 +27,7 @@
 
 #include "b_anony/b_anony.h"
 #include "b_error/b_error.h"
+#include "b_filesystem/b_dir.h"
 #include "b_resources/b_constants.h"
 #include "b_utils/string_utils.h"
 #include "filemgmt_libhilog.h"
@@ -373,6 +374,10 @@ void StorageManagerService::ConvertSandboxRealPath(const uint32_t userId, const 
     const std::string &sandboxPathStr, std::vector<std::string> &realPaths,
     std::map<std::string, std::string>& pathMap)
 {
+    if (sandboxPathStr.empty() || !BDir::IsFilePathValid(sandboxPathStr)) {
+        HILOGE("Invalid sandboxPathStr: %{public}s", GetAnonyPath(sandboxPathStr).c_str());
+        return;
+    }
     std::string uriString;
     if (sandboxPathStr.find(NORMAL_SAND_PREFIX) == 0) {
         // for normal hap, start with file://bundleName

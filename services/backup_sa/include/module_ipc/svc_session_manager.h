@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <unordered_set>
 #include <shared_mutex>
 #include <vector>
 
@@ -80,7 +81,9 @@ struct BackupExtInfo {
     std::string backupScene;
     bool isSupportWithoutTar {false};
     std::vector<std::string> excludeInfos;
+    std::unordered_set<std::string> compatibleDirs;
     int32_t batchSize {500};
+    BConstants::ExtensionRestoreScene restoreScene {BConstants::ExtensionRestoreScene::NORMAL};
 };
 
 class Service;
@@ -443,6 +446,23 @@ public:
     void SetBundleDataSize(const std::string &bundleName, int64_t dataSize);
 
     /**
+     * @brief Set the compatible dirs for incremental backup
+     *
+     * @param bundleName bundle name
+     * @param compatibleDirs compatible dirs from onBackupEx
+     */
+    void SetCompatibleDirs(const std::string &bundleName,
+        const std::unordered_set<std::string> &compatibleDirs);
+
+    /**
+     * @brief Get the compatible dirs for incremental backup
+     *
+     * @param bundleName bundle name
+     * @return compatible dirs
+     */
+    std::unordered_set<std::string> GetCompatibleDirs(const std::string &bundleName);
+
+    /**
      * @brief 启动框架定时器
      *
      * @param bundleName 应用名称
@@ -625,6 +645,8 @@ public:
     std::vector<std::string> GetExcludeInfos(const std::string &bundleName);
     void SetBatchSize(const std::string &bundleName, int32_t batchSize);
     int32_t GetBatchSize(const std::string &bundleName);
+    void SetRestoreScene(const std::string &bundleName, BConstants::ExtensionRestoreScene restoreScene);
+    BConstants::ExtensionRestoreScene GetRestoreScene(const std::string &bundleName);
     
 private:
     /**
@@ -710,13 +732,22 @@ public:
     }
     ~CounterHelper()
     {
-        if (session_ != nullptr) {
+        if (valid_ && session_ != nullptr) {
             session_->DecreaseSessionCnt(funcName_);
         }
     }
+    CounterHelper(CounterHelper&& other) noexcept
+        : session_(std::move(other.session_)), funcName_(std::move(other.funcName_)), valid_(other.valid_)
+    {
+        other.valid_ = false;
+    }
+    CounterHelper(const CounterHelper&) = delete;
+    CounterHelper& operator=(const CounterHelper&) = delete;
+    CounterHelper& operator=(CounterHelper&&) = delete;
 private:
     sptr<SvcSessionManager> session_;
     std::string funcName_;
+    bool valid_ {true};
 };
 } // namespace OHOS::FileManagement::Backup
 
