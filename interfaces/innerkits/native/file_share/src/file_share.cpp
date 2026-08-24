@@ -60,7 +60,7 @@ const string FILE_DEFAULT_PATH = "/storage/Users/currentUser";
 const string FILE_PATH_TAIL = "/files/Docs";
 const string FILE_PATH_HEAD = "/mnt/hmdfs/";
 const string FILE_PATH_MID = "/account/device_view/";
-const string FILE_MANAGER_BUNDLE_NAME = "com.huawei.hmos.filemanager";
+const string FILE_MANAGER_BUNDLE_NAME = ".filemanager";
 }
 
 struct FileShareInfo {

@@ -588,7 +588,8 @@ HWTEST_F(FilePermissionTest, GetPathPolicyInfoFromUriPolicyInfo_test_0002, testi
     uriPolicies.emplace_back(infoC);
     deque<struct PolicyErrorResult> errorResults;
     EXPECT_CALL(*funcMock, lstat(_, _)).WillRepeatedly(Return(0));
-    auto pathPolicies = FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, targetBundleName1, errorResults);
+    auto pathPolicies =
+        FilePermission::GetPathPolicyInfoFromUriPolicyInfo(uriPolicies, targetBundleName1, errorResults);
     ASSERT_TRUE(pathPolicies.size() == 3);
     EXPECT_EQ(pathPolicies[0].path, "/storage/Users/currentUser/appdata/el2/cloud/"
         "com.grantpermission.myapplication/457475.txt");
