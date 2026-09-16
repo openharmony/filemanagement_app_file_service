@@ -210,7 +210,7 @@ private:
     /**
      * @brief 根据连接结果生成 BError，供后续 GetError() 获取。
      *
-     * 利用连接耗时和 AMS 超时阈值区分超时（SA_BOOT_EXT_TIMEOUT）和其他死亡原因
+     * 利用连接耗时和超时阈值区分超时（SA_BOOT_EXT_TIMEOUT）和其他死亡原因
      *（EXT_ABILITY_DIED）。内部获取 errMutex_，可持有 mutex_ 时调用（锁序 mutex_ → errMutex_）。
      *
      * @param errCode 框架提供的错误码（死亡监听路径为 0）。
