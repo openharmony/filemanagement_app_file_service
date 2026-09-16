@@ -502,10 +502,11 @@ HWTEST_F(ServiceTest, SUB_Service_ExtConnectDied_0002, TestSize.Level1)
     auto callDied = [](const string &bundleName, bool isCleanCalled) {};
     auto callConnected = [](const string &bundleName) {};
     auto connectPtr = sptr(new SvcBackupConnection(callDied, callConnected, callName));
-   connectPtr->connState_ = SvcBackupConnection::ConnState::DISCONNECTED;
+    connectPtr->connState_ = SvcBackupConnection::ConnState::DISCONNECTED;
     EXPECT_CALL(*saUtils, IsSABundleName(_)).WillOnce(Return(true)).WillOnce(Return(true)).RetiresOnSaturation();
     EXPECT_CALL(*session, GetExtConnection(_)).WillRepeatedly(Return(wptr(connectPtr)));
     EXPECT_CALL(*connect, GetWasEverConnected()).WillOnce(Return(true)).RetiresOnSaturation();
+    EXPECT_CALL(*connect, IsExtAbilityConnected()).WillRepeatedly(Return(false));
     EXPECT_CALL(*session, GetClearDataFlag(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*session, GetIsRestoreEnd(_)).WillOnce(Return(false)).WillOnce(Return(false));
     EXPECT_CALL(*session, GetScenario()).WillOnce(Return(IServiceReverseType::Scenario::UNDEFINED))
