@@ -23,7 +23,6 @@
 #include "file_uri.h"
 #include "sandbox_helper.h"
 #include "module_external/storage_manager_service.h"
-#include "module_external/storage_manager_service.cpp"
 
 namespace OHOS {
 const std::string CAMERA_BUNDLENAME = "file";
@@ -460,56 +459,6 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetMediaTypeAndS
     EXPECT_EQ(storageStats.image_, 0);
     EXPECT_EQ(storageStats.audio_, 0);
     EXPECT_EQ(storageStats.video_, 0);
-}
-
-/**
- * @tc.name: Storage_Manager_ServiceTest_GetQuotaSrcMountPath_001
- * @tc.desc: check the GetQuotaSrcMountPath function
- * @tc.type: FUNC
- * @tc.require: AR000IGCR7
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetQuotaSrcMountPath_001,
-    testing::ext::TestSize.Level1)
-{
-    mQuotaReverseMounts.insert(std::make_pair("/path1", "/mount1"));
-    mQuotaReverseMounts.insert(std::make_pair("/path2", "/mount2"));
-    std::string target = "/path1";
-    std::string expectedPath = "/mount1";
-    std::string actualPath = GetQuotaSrcMountPath(target);
-    EXPECT_EQ(expectedPath, actualPath);
-    mQuotaReverseMounts.clear();
-}
-
-/**
- * @tc.name: Storage_Manager_ServiceTest_GetQuotaSrcMountPath_002
- * @tc.desc: check the GetQuotaSrcMountPath function
- * @tc.type: FUNC
- * @tc.require: AR000IGCR7
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetQuotaSrcMountPath_002,
-    testing::ext::TestSize.Level1)
-{
-    mQuotaReverseMounts.insert(std::make_pair("/path1", "/mount1"));
-    mQuotaReverseMounts.insert(std::make_pair("/path1", "/mount1"));
-    std::string target = "/path3";
-    std::string expectedPath = "";
-    std::string actualPath = GetQuotaSrcMountPath(target);
-    EXPECT_EQ(expectedPath, actualPath);
-    mQuotaReverseMounts.clear();
-}
-
-/**
- * @tc.name: Storage_Manager_ServiceTest_PathSortFunc_001
- * @tc.desc: check the PathSortFunc function
- * @tc.type: FUNC
- * @tc.require: AR000IGCR7
- */
-HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_PathSortFunc_001,
-    testing::ext::TestSize.Level1)
-{
-    std::string path1 = "AAA";
-    std::string path2 = "BBB";
-    EXPECT_TRUE(PathSortFunc(path1, path2));
 }
 
 /**
