@@ -19,6 +19,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <refbase.h>
 #include "file_uri.h"
 #include "sandbox_helper.h"
@@ -713,5 +714,350 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_WriteFileList_00
     } catch (const fs::filesystem_error& e) {
         std::cerr << "Filesystem error: " << e.what() << '\n';
     }
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_BasicApi_001
+ * @tc.desc: cover simple APIs and deterministic media path conversion branches
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_BasicApi_001,
+    testing::ext::TestSize.Level1)
+{
+    auto &service = StorageManagerService::GetInstance();
+    StorageManager::BundleStats bundleStats;
+    EXPECT_TRUE(service.GetBundleStats("bundle", bundleStats));
+    EXPECT_EQ(service.UpdateMemoryPara(1, 0), E_OK);
+
+    uint32_t userId = 100;
+    std::vector<std::string> realPaths;
+    std::map<std::string, std::string> pathMap;
+    std::string mediaPath = MEDIA_SAND_PREFIX + "/Photo/test.jpg";
+    service.ConvertSandboxRealPath(userId, "bundle", mediaPath, realPaths, pathMap);
+    ASSERT_EQ(realPaths.size(), 1);
+    EXPECT_EQ(realPaths[0], MEDIA_SAND_PREFIX + "/100/Photo/test.jpg");
+    EXPECT_EQ(pathMap[realPaths[0]], mediaPath);
+
+    std::string cloudPath = MEDIA_CLOUD_SAND_PREFIX + "/Photo/cloud.jpg";
+    service.ConvertSandboxRealPath(userId, "bundle", cloudPath, realPaths, pathMap);
+    ASSERT_EQ(realPaths.size(), 2);
+    EXPECT_EQ(realPaths[1], MEDIA_CLOUD_SAND_PREFIX + "/100/Photo/cloud.jpg");
+    EXPECT_EQ(pathMap[realPaths[1]], cloudPath);
+
+    service.ConvertSandboxRealPath(userId, "bundle", "/valid/but/unsupported", realPaths, pathMap);
+    EXPECT_EQ(realPaths.size(), 2);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_ReadIncludesExcludesPath_003
+ * @tc.desc: cover successful parsing of include and exclude sections
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ReadIncludesExcludesPath_003,
+    testing::ext::TestSize.Level1)
+{
+    uint32_t userId = 100;
+    int64_t backupTime = 0;
+    std::string bundleName = "coverage.bundle." + std::to_string(getpid());
+    fs::path bundleDir = BACKUP_PATH_PREFIX + std::to_string(userId) + BACKUP_PATH_SURFFIX + bundleName;
+    fs::create_directories(bundleDir);
+    fs::path configPath = bundleDir / (BACKUP_INCEXC_SYMBOL + std::to_string(backupTime));
+    {
+        std::ofstream configFile(configPath);
+        ASSERT_TRUE(configFile.is_open());
+        configFile << BACKUP_INCLUDE << '\n';
+        configFile << MEDIA_SAND_PREFIX + "/Photo" << '\n';
+        configFile << BACKUP_EXCLUDE << '\n';
+        configFile << MEDIA_SAND_PREFIX + "/Photo/hidden" << '\n';
+    }
+
+    auto [includes, excludes] = StorageManagerService::GetInstance().ReadIncludesExcludesPath(
+        bundleName, backupTime, userId);
+    ASSERT_EQ(includes.size(), 1);
+    ASSERT_EQ(excludes.size(), 1);
+    EXPECT_EQ(includes[0], MEDIA_SAND_PREFIX + "/Photo");
+    EXPECT_EQ(excludes[0], MEDIA_SAND_PREFIX + "/Photo/hidden");
+    fs::remove_all(bundleDir);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_GetBundleStatsForIncreaseEach_002
+ * @tc.desc: cover the normal include/exclude conversion and stat-file path
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetBundleStatsForIncreaseEach_002,
+    testing::ext::TestSize.Level1)
+{
+    uint32_t userId = 100;
+    int64_t backupTime = 0;
+    std::string bundleName = "coverage.stats." + std::to_string(getpid());
+    fs::path bundleDir = BACKUP_PATH_PREFIX + std::to_string(userId) + BACKUP_PATH_SURFFIX + bundleName;
+    fs::create_directories(bundleDir);
+    fs::path configPath = bundleDir / (BACKUP_INCEXC_SYMBOL + std::to_string(backupTime));
+    {
+        std::ofstream configFile(configPath);
+        ASSERT_TRUE(configFile.is_open());
+        configFile << BACKUP_INCLUDE << '\n';
+        configFile << MEDIA_SAND_PREFIX + "/coverage_missing" << '\n';
+        configFile << BACKUP_EXCLUDE << '\n';
+        configFile << "storage/media/coverage_missing/exclude" << '\n';
+    }
+
+    std::vector<int64_t> pkgFileSizes;
+    std::vector<int64_t> incPkgFileSizes;
+    StorageManagerService::GetInstance().GetBundleStatsForIncreaseEach(userId, bundleName, backupTime,
+        pkgFileSizes, incPkgFileSizes);
+    ASSERT_EQ(pkgFileSizes.size(), 1);
+    ASSERT_EQ(incPkgFileSizes.size(), 1);
+    EXPECT_EQ(pkgFileSizes[0], 0);
+    EXPECT_EQ(incPkgFileSizes[0], 0);
+    EXPECT_TRUE(fs::exists(bundleDir / (BACKUP_STAT_SYMBOL + std::to_string(backupTime))));
+    fs::remove_all(bundleDir);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_SetExcludePathMap_001
+ * @tc.desc: cover empty, missing, regular-file and directory exclude paths
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_SetExcludePathMap_001,
+    testing::ext::TestSize.Level1)
+{
+    auto &service = StorageManagerService::GetInstance();
+    fs::path root = fs::temp_directory_path() / ("backup_exclude_" + std::to_string(getpid()));
+    fs::path dirPath = root / "dir";
+    fs::path filePath = root / "file";
+    fs::create_directories(dirPath);
+    {
+        std::ofstream file(filePath);
+        file << "data";
+    }
+    std::map<std::string, bool> excludesMap;
+    std::string emptyPath;
+    service.SetExcludePathMap(emptyPath, excludesMap);
+    std::string missingPath = (root / "missing").string();
+    service.SetExcludePathMap(missingPath, excludesMap);
+    std::string file = filePath.string();
+    service.SetExcludePathMap(file, excludesMap);
+    std::string dir = dirPath.string();
+    service.SetExcludePathMap(dir, excludesMap);
+    ASSERT_EQ(excludesMap.size(), 2);
+    EXPECT_FALSE(excludesMap[file]);
+    EXPECT_TRUE(excludesMap[dir + "/"]);
+
+    std::map<std::string, bool> trailingSlashMap;
+    std::string dirWithSlash = dir + "/";
+    service.SetExcludePathMap(dirWithSlash, trailingSlashMap);
+    EXPECT_TRUE(trailingSlashMap[dirWithSlash]);
+    fs::remove_all(root);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_ExcludeFilter_003
+ * @tc.desc: cover exact file exclusion, directory exclusion and non-matches
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_ExcludeFilter_003,
+    testing::ext::TestSize.Level1)
+{
+    auto &service = StorageManagerService::GetInstance();
+    std::map<std::string, bool> excludesMap = {
+        {"/tmp/excluded_file", false},
+        {"/tmp/excluded_dir/", true},
+    };
+    EXPECT_TRUE(service.ExcludeFilter(excludesMap, "/tmp/excluded_file"));
+    EXPECT_TRUE(service.ExcludeFilter(excludesMap, "/tmp/excluded_dir/child"));
+    EXPECT_FALSE(service.ExcludeFilter(excludesMap, "/tmp/excluded_file_suffix"));
+    EXPECT_FALSE(service.ExcludeFilter(excludesMap, "/tmp/other"));
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_CheckIfDirForIncludes_004
+ * @tc.desc: cover missing paths, symbolic links, directories and regular files
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_CheckIfDirForIncludes_004,
+    testing::ext::TestSize.Level1)
+{
+    auto &service = StorageManagerService::GetInstance();
+    fs::path root = fs::temp_directory_path() / ("backup_check_include_" + std::to_string(getpid()));
+    fs::path filePath = root / "file";
+    fs::path linkPath = root / "link";
+    fs::path statPath = root / "stat";
+    fs::create_directories(root);
+    {
+        std::ofstream file(filePath);
+        file << "content";
+    }
+    ASSERT_EQ(symlink(filePath.c_str(), linkPath.c_str()), 0);
+    std::ofstream statFile(statPath);
+    ASSERT_TRUE(statFile.is_open());
+    std::string bundleName = "bundle";
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+        .lastBackupTime = std::numeric_limits<int64_t>::max(), .fileSizeSum = 0, .incFileSizeSum = 0};
+    std::map<std::string, std::string> pathMap = {{filePath.string(), "/sandbox/file"}};
+    std::map<std::string, bool> excludesMap;
+
+    EXPECT_EQ(service.CheckIfDirForIncludes((root / "missing").string(), paras, pathMap, statFile, excludesMap),
+        std::make_tuple(false, false));
+    EXPECT_EQ(service.CheckIfDirForIncludes(linkPath.string(), paras, pathMap, statFile, excludesMap),
+        std::make_tuple(false, false));
+    EXPECT_EQ(service.CheckIfDirForIncludes(root.string(), paras, pathMap, statFile, excludesMap),
+        std::make_tuple(true, true));
+    EXPECT_EQ(service.CheckIfDirForIncludes(filePath.string(), paras, pathMap, statFile, excludesMap),
+        std::make_tuple(true, false));
+    EXPECT_GT(paras.fileSizeSum, 0);
+    EXPECT_EQ(paras.incFileSizeSum, 0);
+    statFile.close();
+    fs::remove_all(root);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_GetIncludesFileStats_001
+ * @tc.desc: cover recursive scanning of files, directories and symbolic links
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetIncludesFileStats_001,
+    testing::ext::TestSize.Level1)
+{
+    auto &service = StorageManagerService::GetInstance();
+    fs::path root = fs::temp_directory_path() / ("backup_file_stats_" + std::to_string(getpid()));
+    fs::path subDir = root / "sub";
+    fs::path filePath = root / "file";
+    fs::path nestedFile = subDir / "nested";
+    fs::path linkPath = root / "link";
+    fs::path statPath = fs::temp_directory_path() / ("backup_file_stats_result_" + std::to_string(getpid()));
+    fs::create_directories(subDir);
+    {
+        std::ofstream file(filePath);
+        file << "root-file";
+        std::ofstream nested(nestedFile);
+        nested << "nested-file";
+    }
+    ASSERT_EQ(symlink(filePath.c_str(), linkPath.c_str()), 0);
+    std::ofstream statFile(statPath);
+    ASSERT_TRUE(statFile.is_open());
+    std::string bundleName = "bundle";
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+        .lastBackupTime = std::numeric_limits<int64_t>::max(), .fileSizeSum = 0, .incFileSizeSum = 0};
+    std::map<std::string, std::string> pathMap = {{root.string(), "/sandbox/root"}};
+    std::map<std::string, bool> excludesMap;
+    EXPECT_TRUE(service.GetIncludesFileStats(root.string(), paras, pathMap, statFile, excludesMap));
+    EXPECT_GT(paras.fileSizeSum, 0);
+    EXPECT_EQ(paras.incFileSizeSum, 0);
+    statFile.close();
+
+    std::ifstream resultFile(statPath);
+    std::string result((std::istreambuf_iterator<char>(resultFile)), std::istreambuf_iterator<char>());
+    EXPECT_NE(result.find("/sandbox/root/file"), std::string::npos);
+    EXPECT_NE(result.find("/sandbox/root/sub/nested"), std::string::npos);
+    EXPECT_EQ(result.find("/sandbox/root/link"), std::string::npos);
+    fs::remove_all(root);
+    fs::remove(statPath);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_GetPathWildCard_001
+ * @tc.desc: cover invalid and valid wildcard directory expansion
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_GetPathWildCard_001,
+    testing::ext::TestSize.Level1)
+{
+    auto &service = StorageManagerService::GetInstance();
+    std::vector<std::string> includePaths;
+    std::map<std::string, std::string> pathMap;
+    EXPECT_FALSE(service.GetPathWildCard(100, "bundle", "/tmp/no_wildcard", includePaths, pathMap));
+    EXPECT_FALSE(service.GetPathWildCard(100, "bundle", "/tmp/not_exist_for_backup/*", includePaths, pathMap));
+
+    fs::path root = fs::temp_directory_path() / ("backup_wildcard_" + std::to_string(getpid()));
+    fs::path hapDir = root / "hap";
+    fs::create_directories(hapDir / DEFAULT_INCLUDE_PATH_IN_HAP_FILES);
+    fs::create_directories(hapDir / DEFAULT_INCLUDE_PATH_IN_HAP_DATABASE);
+    fs::create_directories(hapDir / DEFAULT_INCLUDE_PATH_IN_HAP_PREFERENCE);
+    fs::create_directories(hapDir / "other");
+    {
+        std::ofstream nonDir(root / "plain_file");
+        nonDir << "data";
+    }
+    EXPECT_TRUE(service.GetPathWildCard(100, "bundle", root.string() + "/*", includePaths, pathMap));
+    EXPECT_EQ(includePaths.size(), 3);
+    fs::remove_all(root);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_WriteFileList_002
+ * @tc.desc: cover invalid output, plain paths, directories and non-incremental files
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_WriteFileList_002,
+    testing::ext::TestSize.Level1)
+{
+    auto &service = StorageManagerService::GetInstance();
+    std::string bundleName = "bundle";
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+        .lastBackupTime = 1, .fileSizeSum = 0, .incFileSizeSum = 0};
+    FileStat fileStat = {.filePath = "/plain/file", .fileSize = 8, .lastUpdateTime = 1,
+        .mode = 0644, .isDir = false, .isIncre = false};
+    std::ofstream closedFile;
+    service.WriteFileList(closedFile, fileStat, paras);
+
+    fs::path statPath = fs::temp_directory_path() / ("backup_write_list_" + std::to_string(getpid()));
+    std::ofstream statFile(statPath);
+    ASSERT_TRUE(statFile.is_open());
+    FileStat emptyPath = fileStat;
+    emptyPath.filePath.clear();
+    service.WriteFileList(statFile, emptyPath, paras);
+    service.WriteFileList(statFile, fileStat, paras);
+    FileStat dirStat = {.filePath = "/plain/dir", .fileSize = 4, .lastUpdateTime = 2,
+        .mode = 0755, .isDir = true, .isIncre = true};
+    service.WriteFileList(statFile, dirStat, paras);
+    statFile.close();
+    EXPECT_EQ(paras.fileSizeSum, 12);
+    EXPECT_EQ(paras.incFileSizeSum, 4);
+
+    std::ifstream resultFile(statPath);
+    std::string firstLine;
+    std::string secondLine;
+    std::getline(resultFile, firstLine);
+    std::getline(resultFile, secondLine);
+    EXPECT_NE(firstLine.find("/plain/file;"), std::string::npos);
+    EXPECT_NE(firstLine.rfind(";0"), std::string::npos);
+    EXPECT_NE(secondLine.find("/plain/dir;"), std::string::npos);
+    fs::remove(statPath);
+}
+
+/**
+ * @tc.name: Storage_Manager_ServiceTest_AddOuterDirIntoFileStat_002
+ * @tc.desc: cover invalid, missing, included and excluded outer directories
+ * @tc.type: FUNC
+ */
+HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_AddOuterDirIntoFileStat_002,
+    testing::ext::TestSize.Level1)
+{
+    auto &service = StorageManagerService::GetInstance();
+    fs::path root = fs::temp_directory_path() / ("backup_outer_dir_" + std::to_string(getpid()));
+    fs::create_directories(root);
+    fs::path statPath = root / "stat";
+    std::string bundleName = "bundle";
+    BundleStatsParas paras = {.userId = 100, .bundleName = bundleName,
+        .lastBackupTime = 0, .fileSizeSum = 0, .incFileSizeSum = 0};
+    std::map<std::string, bool> excludesMap;
+    std::ofstream closedFile;
+    EXPECT_FALSE(service.AddOuterDirIntoFileStat(root.string(), paras, "/sandbox", closedFile, excludesMap));
+
+    std::ofstream statFile(statPath);
+    ASSERT_TRUE(statFile.is_open());
+    EXPECT_FALSE(service.AddOuterDirIntoFileStat((root / "missing").string(), paras,
+        "/sandbox", statFile, excludesMap));
+    EXPECT_TRUE(service.AddOuterDirIntoFileStat(root.string(), paras, "/sandbox", statFile, excludesMap));
+    EXPECT_GT(paras.fileSizeSum, 0);
+
+    int64_t previousSize = paras.fileSizeSum;
+    std::map<std::string, bool> excluded = {{root.string() + "/", true}};
+    EXPECT_TRUE(service.AddOuterDirIntoFileStat(root.string() + "/", paras, "/sandbox", statFile, excluded));
+    EXPECT_EQ(paras.fileSizeSum, previousSize);
+    statFile.close();
+    fs::remove_all(root);
 }
 }

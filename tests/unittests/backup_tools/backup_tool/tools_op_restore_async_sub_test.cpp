@@ -350,4 +350,93 @@ HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_1502, testing::ext::Tes
     }
     GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-end tools_op_restore_async_1502";
 }
+
+/**
+ * @tc.name: tools_op_restore_async_SessionBranches_1600
+ * @tc.desc: Cover notification short-circuit combinations and process callback.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_SessionBranches_1600,
+    testing::ext::TestSize.Level1)
+{
+    auto ctx = make_shared<SessionAsync>();
+    ctx->SetBundleFinishedCount(1);
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+    ctx->UpdateBundleFinishedCount();
+    ctx->TryNotify();
+    EXPECT_TRUE(ctx->ready_);
+
+    auto forceCtx = make_shared<SessionAsync>();
+    forceCtx->TryNotify(true);
+    EXPECT_TRUE(forceCtx->ready_);
+    OnProcess(forceCtx, "bundle", "process");
+    EXPECT_FALSE(GenHelpMsg().empty());
+}
+
+/**
+ * @tc.name: tools_op_restore_async_FileReadyBranches_1700
+ * @tc.desc: Cover normal and manage-file transfer plus publish threshold.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_FileReadyBranches_1700,
+    testing::ext::TestSize.Level1)
+{
+    const string owner = "coverage.restore.async";
+    const string bundleDir = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + owner;
+    ASSERT_TRUE(ForceCreateDirectory(bundleDir));
+    UniqueFd dataSource(open((bundleDir + "/data.tar").c_str(), O_RDWR | O_CREAT | O_TRUNC,
+        S_IRUSR | S_IWUSR));
+    UniqueFd manageSource(open((bundleDir + "/" + string(BConstants::EXT_BACKUP_MANAGE)).c_str(),
+        O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    ASSERT_GE(dataSource.Get(), 0);
+    ASSERT_GE(manageSource.Get(), 0);
+
+    auto ctx = make_shared<SessionAsync>();
+    ctx->session_ = BSessionRestoreAsync::Init({});
+    ASSERT_NE(ctx->session_, nullptr);
+    ctx->fileNums_[owner] = 2;
+
+    BFileInfo dataInfo(owner, "data.tar", 0);
+    UniqueFd outputOne(open("/dev/null", O_WRONLY));
+    EXPECT_NO_THROW(OnFileReady(ctx, dataInfo, move(outputOne), 0));
+    EXPECT_EQ(ctx->fileCount_[owner], 1);
+
+    BFileInfo manageInfo(owner, "prefix_manage.json", 0);
+    UniqueFd outputTwo(open("/dev/null", O_WRONLY));
+    EXPECT_NO_THROW(OnFileReady(ctx, manageInfo, move(outputTwo), 0));
+    EXPECT_EQ(ctx->fileCount_[owner], 2);
+
+    ForceRemoveDirectoryBMS(bundleDir);
+}
+
+/**
+ * @tc.name: tools_op_restore_async_ReadyExtManageBranches_1800
+ * @tc.desc: Cover leading slash, directory creation, rename success, and mixed big-file flags.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpRestoreAsyncTest, tools_op_restore_async_ReadyExtManageBranches_1800,
+    testing::ext::TestSize.Level1)
+{
+    const string root = "/data/test/backup/tools_op_restore_async_branches";
+    ForceRemoveDirectoryBMS(root);
+    ASSERT_TRUE(ForceCreateDirectory(root));
+    UniqueFd hashFile(open((root + "/hash").c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    ASSERT_GE(hashFile.Get(), 0);
+
+    ExtManageInfo item;
+    item.hashName = "hash";
+    item.fileName = "/nested/data.tar";
+    item.isBigFile = true;
+    item.isUserTar = false;
+    vector<ExtManageInfo> pkgInfo = {item};
+
+    auto result = ReadyExtManage(root, pkgInfo);
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_EQ(pkgInfo[0].hashName, "nested/data.tar");
+    EXPECT_EQ(pkgInfo[0].fileName, "");
+    EXPECT_EQ(access((root + "/nested/data.tar").c_str(), F_OK), 0);
+
+    ForceRemoveDirectoryBMS(root);
+}
 } // namespace OHOS::FileManagement::Backup

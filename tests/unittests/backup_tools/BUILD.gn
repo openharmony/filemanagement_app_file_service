@@ -28,7 +28,6 @@ ohos_unittest("backup_tool_test") {
     "${path_backup}/tests/mock/backup_kit_inner/b_session_backup_mock.cpp",
     "${path_backup}/tests/mock/backup_kit_inner/service_client_mock.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op.cpp",
-    "${path_backup}/tools/backup_tool/src/tools_op_backup.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_check_sa.cpp",
     "${path_backup}/tools/backup_tool/src/tools_op_help.cpp",
     "backup_tool/tools_op_backup_test.cpp",
@@ -60,6 +59,12 @@ ohos_unittest("backup_tool_test") {
   ldflags = [ "--coverage" ]
 
   cflags_cc = [ "--coverage" ]
+
+  defines = [
+    "LOG_TAG=\"app_file_service\"",
+    "LOG_DOMAIN=0xD004303",
+    "private = public",
+  ]
 
   external_deps = [
     "c_utils:utils",

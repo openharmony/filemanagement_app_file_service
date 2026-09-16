@@ -237,6 +237,7 @@ ohos_unittest("b_file_test") {
   module_out_path = path_module_out_tests
 
   sources = [
+    "b_filesystem/b_file_branch_test.cpp",
     "b_filesystem/b_file_test.cpp",
   ]
 
