@@ -1122,8 +1122,8 @@ HWTEST_F(ServiceSubTest, SUB_Service_HandleCurBundleEndWork_0100, testing::ext::
         servicePtr_->HandleCurBundleEndWork(BUNDLE_NAME, BackupRestoreScenario::FULL_RESTORE);
 
         GTEST_LOG_(INFO) << "4. HandleCurBundleEndWork nullptr3";
-        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
-        auto callConnected = [](const string &&bundleName) {};
+        auto callDied = [](const string &bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &bundleName) {};
         string bundleNameIndexInfo = "123456789";
         auto connection = sptr(new SvcBackupConnection(callDied, callConnected, bundleNameIndexInfo));
         BackupExtInfo extInfo {};
@@ -1175,11 +1175,11 @@ HWTEST_F(ServiceSubTest, SUB_Service_LaunchBackupSAExtension_0100, testing::ext:
         BackupExtInfo extInfo {};
         extInfo.backUpConnection = nullptr;
 
-        auto callDied = [](const string &&bundleName) {};
-        auto callConnected = [](const string &&bundleName) {};
-        auto callBackup = [](const std::string &&bundleName, const int &&fd, const std::string &&result,
+        auto callDied = [](const string &bundleName) {};
+        auto callConnected = [](const string &bundleName) {};
+        auto callBackup = [](const std::string &bundleName, int fd, const std::string &result,
                              const ErrCode &&errCode) {};
-        auto callRestore = [](const std::string &&bundleName, const std::string &&result, const ErrCode &&errCode) {};
+        auto callRestore = [](const std::string &bundleName, const std::string &result, ErrCode errCode) {};
         extInfo.saBackupConnection =
             std::make_shared<SABackupConnection>(callDied, callConnected, callBackup, callRestore);
 
@@ -1227,15 +1227,15 @@ HWTEST_F(ServiceSubTest, SUB_Service_ExtConnectDied_0100, testing::ext::TestSize
         SvcSessionManager::Impl impl_;
         impl_.clientToken = 1;
         BackupExtInfo extInfo {};
-        auto callDied = [](const string &&bundleName, bool isCleanCalled) {};
-        auto callConnected = [](const string &&bundleName) {};
+        auto callDied = [](const string &bundleName, bool isCleanCalled) {};
+        auto callConnected = [](const string &bundleName) {};
         extInfo.backUpConnection = sptr(new SvcBackupConnection(callDied, callConnected, BUNDLE_NAME));
         impl_.backupExtNameMap[callName] = extInfo;
         impl_.scenario = IServiceReverseType::Scenario::RESTORE;
         EXPECT_TRUE(servicePtr_ != nullptr);
-        extInfo.backUpConnection->isConnected_.store(false);
+        extInfo.backUpConnection->connState_ = SvcBackupConnection::ConnState::DISCONNECTED;
         servicePtr_->ExtConnectDied(callName);
-        extInfo.backUpConnection->isConnected_.store(true);
+        extInfo.backUpConnection->connState_ = SvcBackupConnection::ConnState::CONNECTED;
         servicePtr_->ExtConnectDied(callName);
         extInfo.isRestoreEnd = true;
         servicePtr_->ExtConnectDied(callName);

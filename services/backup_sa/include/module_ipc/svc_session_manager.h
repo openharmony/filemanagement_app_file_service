@@ -352,6 +352,13 @@ public:
     sptr<SvcBackupConnection> CreateBackupConnection(const BundleName &bundleName);
 
     /**
+     * @brief 替换已使用过的连接为新连接
+     *
+     * @param bundleName 应用名称
+     */
+    void ReplaceExtConnection(const BundleName &bundleName);
+
+    /**
      * @brief 开始备份
      *
      * @return ErrCode

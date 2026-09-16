@@ -39,9 +39,14 @@ bool SvcBackupConnection::IsExtAbilityConnected()
     return BSvcBackupConnection::connect->IsExtAbilityConnected();
 }
 
-void SvcBackupConnection::SetCallback(function<void(const std::string &&)>) {}
+bool SvcBackupConnection::GetWasEverConnected()
+{
+    return BSvcBackupConnection::connect->GetWasEverConnected();
+}
 
-void SvcBackupConnection::SetCallDied(function<void(const std::string &&, bool)>) {}
+void SvcBackupConnection::SetOnConnectedCb(function<void(const std::string &)>) {}
+
+void SvcBackupConnection::SetOnDiedCb(function<void(const std::string &, bool)>) {}
 
 sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()
 {

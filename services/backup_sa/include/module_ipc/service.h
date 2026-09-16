@@ -192,11 +192,20 @@ public:
     ErrCode LaunchBackupSAExtension(const BundleName &bundleName);
 
     /**
+     * @brief 连接 backup extension（want 构造、连接复用检查、拉起）
+     *
+     * @param bundleName 应用名称
+     * @param action 执行动作 BACKUP/RESTORE
+     * @return ErrCode
+     */
+    ErrCode ConnectBackupExtension(const BundleName &bundleName, BConstants::ExtensionAction action);
+
+    /**
      * @brief backup extension died
      *
      * @param bundleName 应用名称
      */
-    void OnBackupExtensionDied(const std::string &&bundleName, bool isCleanCalled = false);
+    void OnBackupExtensionDied(const std::string &bundleName, bool isCleanCalled = false);
 
     /**
      * @brief extension启动连接成功
@@ -304,7 +313,7 @@ public:
      * @param bundleName 应用名称
      *
      */
-    std::function<void(const std::string &&)> GetBackupInfoConnectDone(wptr<Service> obj,
+    std::function<void(const std::string &)> GetBackupInfoConnectDone(wptr<Service> obj,
                                                                        const std::string &bundleName);
 
     /**
@@ -314,7 +323,7 @@ public:
      * @param bundleName 应用名称
      *
      */
-    std::function<void(const std::string &&, bool)> GetBackupInfoConnectDied(
+    std::function<void(const std::string &, bool)> GetBackupInfoConnectDied(
         wptr<Service> obj, const std::string &bundleName);
 
     /**

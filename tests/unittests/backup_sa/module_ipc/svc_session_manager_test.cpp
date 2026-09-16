@@ -439,14 +439,14 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupAbilityExt_0100, 
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->reversePtr_ = nullptr;
         auto ret = sessionManagerPtr_->GetBackupAbilityExt(BUNDLE_NAME);
-        ret->callDied_("", false);
-        ret->callConnected_("");
+        ret->onDiedCb_("", false);
+        ret->onConnectedCb_("");
         EXPECT_TRUE(true);
 
         sessionManagerPtr_->reversePtr_ = servicePtr_;
         ret = sessionManagerPtr_->GetBackupAbilityExt(BUNDLE_NAME);
-        ret->callDied_("", false);
-        ret->callConnected_("");
+        ret->onDiedCb_("", false);
+        ret->onConnectedCb_("");
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -471,18 +471,18 @@ HWTEST_F(SvcSessionManagerTest, SUB_backup_sa_session_GetBackupSAExt_0100, testi
         EXPECT_TRUE(sessionManagerPtr_ != nullptr);
         sessionManagerPtr_->reversePtr_ = nullptr;
         auto ret = sessionManagerPtr_->GetBackupSAExt(BUNDLE_NAME);
-        ret->callDied_("");
-        ret->callConnected_("");
-        ret->callBackup_("", 0, "", BError(BError::Codes::OK));
-        ret->callRestore_("", "", BError(BError::Codes::OK));
+        ret->onDiedCb_("");
+        ret->onConnectedCb_("");
+        ret->onBackupCb_("", 0, "", BError(BError::Codes::OK));
+        ret->onRestoreCb_("", "", BError(BError::Codes::OK));
         EXPECT_TRUE(true);
 
         sessionManagerPtr_->reversePtr_ = servicePtr_;
         ret = sessionManagerPtr_->GetBackupSAExt(BUNDLE_NAME);
-        ret->callDied_("");
-        ret->callConnected_("");
-        ret->callBackup_("", 0, "", BError(BError::Codes::OK));
-        ret->callRestore_("", "", BError(BError::Codes::OK));
+        ret->onDiedCb_("");
+        ret->onConnectedCb_("");
+        ret->onBackupCb_("", 0, "", BError(BError::Codes::OK));
+        ret->onRestoreCb_("", "", BError(BError::Codes::OK));
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

@@ -72,12 +72,12 @@ ErrCode SABackupConnection::LoadBackupSAExt()
 {
     if (proxy_ && isConnected_.load()) {
         HILOGI("SA %{public}d is running.", saId_);
-        callConnected_(move(bundleName_));
+        onConnectedCb_(bundleName_);
         return BError(BError::Codes::OK);
     }
     if (reloadNum_.load() >= BConstants::BACKUP_SA_RELOAD_MAX) {
         HILOGI("SA %{public}d reload done and return", saId_);
-        callDied_(move(bundleName_));
+        onDiedCb_(bundleName_);
         return BError(BError::Codes::SA_EXT_RELOAD_FAIL);
     }
     vector<ISystemAbilityManager::SaExtensionInfo> saExtentionInfos;
@@ -97,7 +97,7 @@ ErrCode SABackupConnection::LoadBackupSAExt()
             isLoaded_.store(false);
             HILOGI("Get running sa proxy success.");
             proxy_ = iface_cast<ILocalAbilityManager>(saExtentionInfo.processObj);
-            callConnected_(move(bundleName_));
+            onConnectedCb_(bundleName_);
             return BError(BError::Codes::OK);
         }
     }
@@ -183,7 +183,7 @@ ErrCode SABackupConnection::CallBackupSA()
             HILOGI("SA backup done %{public}d", ret);
             int fd = parcel_.ReadFileDescriptor();
             std::string result = parcel_.ReadString();
-            callBackup_(move(bundleName_), move(fd), move(result), move(ret));
+            onBackupCb_(bundleName_, fd, result, ret);
         }
     };
 
@@ -207,7 +207,7 @@ ErrCode SABackupConnection::CallRestoreSA(UniqueFd fd)
             int32_t ret = proxy_->SystemAbilityExtProc(BConstants::EXTENSION_RESTORE, saId_, this);
             HILOGI("SA restore done %{public}d", ret);
             std::string result = parcel_.ReadString();
-            callRestore_(move(bundleName_), move(result), move(ret));
+            onRestoreCb_(bundleName_, result, ret);
         }
     };
 
