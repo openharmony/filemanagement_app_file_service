@@ -26,6 +26,7 @@ public:
     virtual ErrCode ConnectBackupExtAbility(AAFwk::Want&, int32_t, bool) = 0;
     virtual ErrCode DisconnectBackupExtAbility() = 0;
     virtual bool IsExtAbilityConnected() = 0;
+    virtual bool GetWasEverConnected() = 0;
     virtual sptr<IExtension> GetBackupExtProxy() = 0;
     virtual bool WaitDisconnectDone() = 0;
 public:
@@ -40,6 +41,7 @@ public:
     MOCK_METHOD(ErrCode, ConnectBackupExtAbility, (AAFwk::Want&, int32_t, bool));
     MOCK_METHOD(ErrCode, DisconnectBackupExtAbility, ());
     MOCK_METHOD(bool, IsExtAbilityConnected, ());
+    MOCK_METHOD(bool, GetWasEverConnected, ());
     MOCK_METHOD((sptr<IExtension>), GetBackupExtProxy, ());
     MOCK_METHOD(bool, WaitDisconnectDone, ());
     const BError& GetError()

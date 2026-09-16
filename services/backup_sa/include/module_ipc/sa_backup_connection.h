@@ -90,11 +90,11 @@ public:
 
 public:
     SABackupConnection(
-        std::function<void(const std::string &&)> callDied,
-        std::function<void(const std::string &&)> callConnect,
-        std::function<void(const std::string &&, const int &&, const std::string &&, const ErrCode &&)> callBackup,
-        std::function<void(const std::string &&, const std::string &&, const ErrCode &&)> callRestore)
-        : callDied_(callDied), callConnected_(callConnect), callBackup_(callBackup), callRestore_(callRestore)
+        std::function<void(const std::string &)> onDiedCb,
+        std::function<void(const std::string &)> onConnectedCb,
+        std::function<void(const std::string &, int, const std::string &, ErrCode)> onBackupCb,
+        std::function<void(const std::string &, const std::string &, ErrCode)> onRestoreCb)
+        : onDiedCb_(onDiedCb), onConnectedCb_(onConnectedCb), onBackupCb_(onBackupCb), onRestoreCb_(onRestoreCb)
     {
         threadPool_.Start(BConstants::EXTENSION_THREAD_POOL_COUNT);
     }
@@ -115,10 +115,10 @@ public:
     };
 
 private:
-    std::function<void(const std::string &&)> callDied_;
-    std::function<void(const std::string &&)> callConnected_;
-    std::function<void(const std::string &&, const int &&, const std::string &&, const ErrCode &&)> callBackup_;
-    std::function<void(const std::string &&, const std::string &&, const ErrCode &&)> callRestore_;
+    std::function<void(const std::string &)> onDiedCb_;
+    std::function<void(const std::string &)> onConnectedCb_;
+    std::function<void(const std::string &, int, const std::string &, ErrCode)> onBackupCb_;
+    std::function<void(const std::string &, const std::string &, ErrCode)> onRestoreCb_;
     std::mutex mutex_;
     std::condition_variable condition_;
     std::atomic<bool> isConnected_ = {false};

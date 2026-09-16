@@ -79,6 +79,11 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &b
     return BackupSvcSessionManager::session->GetBackupAbilityExt(bundleName);
 }
 
+void SvcSessionManager::ReplaceExtConnection(const BundleName &bundleName)
+{
+    BackupSvcSessionManager::session->ReplaceExtConnection(bundleName);
+}
+
 void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string> &args)
 {
     BackupSvcSessionManager::session->DumpInfo(fd, args);

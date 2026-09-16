@@ -562,8 +562,6 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     HILOGI("begin %{public}s", bundleName.data());
-    IServiceReverseType::Scenario scenario = session_->GetScenario();
-    BConstants::ExtensionAction action;
     if (defaultAppManager_->IsDefaultBundle(bundleName)) {
         HILOGI("enter DefaultAPP clone, bundleName:%{public}s", bundleName.c_str());
         // 移除拉起超时定时器，进入下一阶段状态机
@@ -571,6 +569,8 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         ExtConnectDone(bundleName);
         return BError(BError::Codes::OK);
     }
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
+    BConstants::ExtensionAction action;
     if (scenario == IServiceReverseType::Scenario::BACKUP || scenario == IServiceReverseType::Scenario::CLEAN) {
         action = BConstants::ExtensionAction::BACKUP;
     } else if (scenario == IServiceReverseType::Scenario::RESTORE) {
@@ -584,6 +584,12 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
     if (SAUtils::IsSABundleName(bundleName)) {
         return LaunchBackupSAExtension(bundleName);
     }
+    return ConnectBackupExtension(bundleName, action);
+}
+ 
+ErrCode Service::ConnectBackupExtension(const BundleName &bundleName, BConstants::ExtensionAction action)
+{
+    IServiceReverseType::Scenario scenario = session_->GetScenario();
     AAFwk::Want want;
     SetWant(want, bundleName, action);
     auto backUpConnection = session_->GetExtConnection(bundleName);
@@ -591,9 +597,18 @@ ErrCode Service::LaunchBackupExtension(const BundleName &bundleName)
         HILOGE("LaunchBackupExtension error, backUpConnection is empty");
         return BError(BError::Codes::SA_INVAL_ARG);
     }
-    if (backUpConnection->IsExtAbilityConnected() && !backUpConnection->WaitDisconnectDone()) {
-        HILOGE("LaunchBackupExtension error, WaitDisconnectDone failed");
-        return BError(BError::Codes::SA_INVAL_ARG);
+    if (backUpConnection->GetWasEverConnected()) {
+        if (backUpConnection->IsExtAbilityConnected() && !backUpConnection->WaitDisconnectDone()) {
+            HILOGE("LaunchBackupExtension error, WaitDisconnectDone failed");
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
+        session_->ReplaceExtConnection(bundleName);
+        backUpConnection = session_->GetExtConnection(bundleName);
+        if (backUpConnection == nullptr) {
+            HILOGE("LaunchBackupExtension error, backUpConnection is empty after replace, bundle:%{public}s",
+                   bundleName.c_str());
+            return BError(BError::Codes::SA_INVAL_ARG);
+        }
     }
     BConstants::ServiceSchedAction bundleAction = session_->GetServiceSchedAction(bundleName);
     if (bundleAction == BConstants::ServiceSchedAction::UNKNOWN) {
@@ -848,7 +863,7 @@ void Service::ExtConnectDied(const string &callName)
             BError connectErr = backupConnection->GetError();
             errCode = connectErr.GetCode();
             AppStatReportErr(callName, "ExtConnectDied", RadarError(MODULE_ABILITY_MGR_SVC, connectErr));
-            hasConnected = backupConnection->hasConnected_.load();
+            hasConnected = backupConnection->GetWasEverConnected();
             if (backupConnection->IsExtAbilityConnected()) {
                 backupConnection->DisconnectBackupExtAbility();
             }
@@ -876,7 +891,7 @@ void Service::ExtConnectDied(const string &callName)
     RemoveExtensionMutex(callName);
 }
 
-void Service::OnBackupExtensionDied(const string &&bundleName, bool isCleanCalled)
+void Service::OnBackupExtensionDied(const string &bundleName, bool isCleanCalled)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     if (isCleanCalled) {
@@ -892,7 +907,7 @@ void Service::OnBackupExtensionDied(const string &&bundleName, bool isCleanCalle
         return;
     }
     try {
-        string callName = move(bundleName);
+        string callName = bundleName;
         HILOGE("Backup <%{public}s> Extension Process Died", callName.c_str());
         ErrCode ret = session_->VerifyBundleName(callName);
         if (ret != ERR_OK) {
@@ -1459,8 +1474,8 @@ ErrCode Service::TryToConnectExt(const std::string& bundleName, sptr<SvcBackupCo
     }
     auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
     auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
-    extConnection->SetCallback(callConnected);
-    extConnection->SetCallDied(callDied);
+    extConnection->SetOnConnectedCb(callConnected);
+    extConnection->SetOnDiedCb(callDied);
     AAFwk::Want want;
     try {
         want = CreateConnectWant(bundleName);
