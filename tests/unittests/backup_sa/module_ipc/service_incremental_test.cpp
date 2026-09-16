@@ -31,8 +31,8 @@
 #include "svc_backup_connection_mock.h"
 #include "svc_extension_proxy_mock.h"
 #include "svc_session_manager_mock.h"
-
-#include "service_incremental.cpp"
+#include "module_ipc/service.h"
+#include "module_ipc/svc_restore_deps_manager.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;

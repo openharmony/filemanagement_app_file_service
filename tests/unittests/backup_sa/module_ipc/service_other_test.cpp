@@ -35,11 +35,10 @@
 #include "svc_restore_deps_manager_mock.h"
 #include "svc_session_manager_mock.h"
 #include "system_ability_mock.h"
+#include "module_ipc/service.h"
 
-#include "service.cpp"
-#include "sub_service.cpp"
-#include "service_enhance.cpp"
 #include "ienhance_service_mock.h"
+#include "service.cpp"
 
 namespace OHOS::FileManagement::Backup {
 static bool g_verifyDataCloneResult = false;
