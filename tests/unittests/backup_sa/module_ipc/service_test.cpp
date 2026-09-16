@@ -32,15 +32,14 @@
 #include "test_common.h"
 #include "test_manager.h"
 
-#include "service.cpp"
-#include "sub_service.cpp"
-#include "service_enhance.cpp"
 #include "ienhance_service_mock.h"
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
 using namespace testing;
 using namespace PowerMgr;
+constexpr int ERR_NO_PERMISSION = 13;
+
 class ServiceTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
