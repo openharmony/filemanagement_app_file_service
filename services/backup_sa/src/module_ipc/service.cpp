@@ -1369,10 +1369,10 @@ void Service::SessionDeactive()
     }
 }
 
-std::function<void(const std::string &&)> Service::GetBackupInfoConnectDone(wptr<Service> obj,
-                                                                            const std::string &bundleName)
+std::function<void(const std::string &)> Service::GetBackupInfoConnectDone(wptr<Service> obj,
+                                                                           const std::string &bundleName)
 {
-    return [obj](const string &&bundleName) {
+    return [obj](const string &bundleName) {
         HILOGI("GetBackupInfoConnectDone, bundleName: %{public}s", bundleName.c_str());
         auto thisPtr = obj.promote();
         if (!thisPtr) {
@@ -1411,10 +1411,10 @@ void Service::ProcessDeactiveCleanup(std::vector<std::string> &bundleNameList, E
     }
 }
 
-std::function<void(const std::string &&, bool)> Service::GetBackupInfoConnectDied(wptr<Service> obj,
-                                                                                  const std::string &bundleName)
+std::function<void(const std::string &, bool)> Service::GetBackupInfoConnectDied(wptr<Service> obj,
+                                                                                 const std::string &bundleName)
 {
-    return [obj](const string &&bundleName, bool isCleanCalled) {
+    return [obj](const string &bundleName, bool isCleanCalled) {
         HILOGI("GetBackupInfoConnectDied, bundleName: %{public}s", bundleName.c_str());
         auto thisPtr = obj.promote();
         if (!thisPtr) {
@@ -1469,8 +1469,8 @@ ErrCode Service::GetBackupInfoCmdHandle(const BundleName &bundleName, std::strin
     }
     auto callConnected = GetBackupInfoConnectDone(wptr(this), bundleName);
     auto callDied = GetBackupInfoConnectDied(wptr(this), bundleName);
-    backupConnection->SetCallback(callConnected);
-    backupConnection->SetCallDied(callDied);
+    backupConnection->SetOnConnectedCb(callConnected);
+    backupConnection->SetOnDiedCb(callDied);
     AAFwk::Want want = CreateConnectWant(bundleName);
     auto ret = backupConnection->ConnectBackupExtAbility(want, GetUserIdDefault(), false);
     if (ret) {

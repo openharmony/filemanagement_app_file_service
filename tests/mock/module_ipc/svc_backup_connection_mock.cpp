@@ -30,21 +30,21 @@ void SvcBackupConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &el
                                                const sptr<IRemoteObject> &remoteObject,
                                                int resultCode)
 {
-    isConnected_.store(true);
+    connState_ = ConnState::CONNECTED;
     backupProxy_ = iface_cast<IExtension>(remoteObject);
     string bundleName = "";
-    callConnected_(move(bundleName));
+    onConnectedCb_(bundleName);
 }
 
 void SvcBackupConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
 {
     backupProxy_ = nullptr;
-    isConnected_.store(false);
+    connState_ = ConnState::DISCONNECTED;
     string bundleName = "";
-    callDied_(move(bundleName), false);
+    onDiedCb_(bundleName, false);
 }
 
-ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId, bool isCleanCalled)
+ErrCode SvcBackupConnection::ConnectBackupExtAbility(AAFwk::Want &want, int32_t userId, bool isCleanMode)
 {
     return 0;
 }
@@ -66,14 +66,19 @@ bool SvcBackupConnection::IsExtAbilityConnected()
     return bFlag;
 }
 
-void SvcBackupConnection::SetCallback(function<void(const std::string &&)> callConnected)
+bool SvcBackupConnection::GetWasEverConnected()
 {
-    callConnected_ = callConnected;
+    return connState_ == ConnState::CONNECTED || connState_ == ConnState::DISCONNECTED;
 }
 
-void SvcBackupConnection::SetCallDied(function<void(const std::string &&, bool)> callDied)
+void SvcBackupConnection::SetOnConnectedCb(function<void(const std::string &)> onConnectedCb)
 {
-    callDied_ = callDied;
+    onConnectedCb_ = onConnectedCb;
+}
+
+void SvcBackupConnection::SetOnDiedCb(function<void(const std::string &, bool)> onDiedCb)
+{
+    onDiedCb_ = onDiedCb;
 }
 
 sptr<IExtension> SvcBackupConnection::GetBackupExtProxy()

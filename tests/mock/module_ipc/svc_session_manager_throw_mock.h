@@ -38,6 +38,7 @@ public:
     virtual UniqueFd OnBundleExtManageInfo(const std::string &, UniqueFd) = 0;
     virtual void RemoveExtInfo(const std::string &) = 0;
     virtual wptr<SvcBackupConnection> GetExtConnection(const BundleName &) = 0;
+    virtual void ReplaceExtConnection(const BundleName &) = 0;
     virtual sptr<SvcBackupConnection> GetBackupAbilityExt(const std::string &) = 0;
     virtual void DumpInfo(const int, const std::vector<std::u16string> &) = 0;
     virtual ErrCode InitClient(SvcSessionManager::Impl &) = 0;
@@ -131,6 +132,7 @@ public:
     MOCK_METHOD(UniqueFd, OnBundleExtManageInfo, (const std::string &, UniqueFd));
     MOCK_METHOD(void, RemoveExtInfo, (const std::string &));
     MOCK_METHOD(wptr<SvcBackupConnection>, GetExtConnection, (const BundleName &));
+    MOCK_METHOD(void, ReplaceExtConnection, (const BundleName &));
     MOCK_METHOD(sptr<SvcBackupConnection>, GetBackupAbilityExt, (const std::string &));
     MOCK_METHOD(void, DumpInfo, (const int, const std::vector<std::u16string> &));
     MOCK_METHOD(ErrCode, InitClient, (SvcSessionManager::Impl &));

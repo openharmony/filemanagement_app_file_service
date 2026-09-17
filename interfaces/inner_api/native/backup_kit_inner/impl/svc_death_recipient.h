@@ -26,7 +26,11 @@ public:
     void OnRemoteDied(const wptr<IRemoteObject> &object) override
     {
         functor_(object);
-        object->RemoveDeathRecipient(this);
+        auto sptrObj = object.promote();
+        if (sptrObj == nullptr) {
+            return;
+        }
+        sptrObj->RemoveDeathRecipient(this);
     };
 
 public:

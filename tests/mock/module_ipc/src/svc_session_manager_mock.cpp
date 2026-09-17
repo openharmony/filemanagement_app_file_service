@@ -78,6 +78,8 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &b
     return nullptr;
 }
 
+void SvcSessionManager::ReplaceExtConnection(const BundleName &bundleName) {}
+
 void SvcSessionManager::DumpInfo(const int, const std::vector<std::u16string> &) {}
 
 ErrCode SvcSessionManager::InitClient(Impl &)

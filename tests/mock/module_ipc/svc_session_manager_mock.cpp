@@ -113,8 +113,8 @@ wptr<SvcBackupConnection> SvcSessionManager::GetExtConnection(const BundleName &
     }
     if (!it->second.backUpConnection) {
         GTEST_LOG_(INFO) << "connection is null, init now!";
-        auto callDied = [](const string &&bundleName, bool isCleanCalled = false) {};
-        auto callConnected = [](const string &&bundleName) {};
+        auto callDied = [](const string &bundleName, bool isCleanCalled = false) {};
+        auto callConnected = [](const string &bundleName) {};
         it->second.backUpConnection = sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected,
             bundleName));
         sptr<BackupExtExtensionMock> mock = sptr(new BackupExtExtensionMock());
@@ -127,6 +127,16 @@ sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &b
 {
     GTEST_LOG_(INFO) << "GetBackupAbilityExt";
     return sptr<SvcBackupConnection>(new SvcBackupConnection(nullptr, nullptr, bundleName));
+}
+
+void SvcSessionManager::ReplaceExtConnection(const BundleName &bundleName)
+{
+    GTEST_LOG_(INFO) << "ReplaceExtConnection";
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        return;
+    }
+    it->second.backUpConnection = GetBackupAbilityExt(bundleName);
 }
 
 void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string> &args)
@@ -249,11 +259,11 @@ std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const Bu
         return std::weak_ptr<SABackupConnection>();
     }
     if (!it->second.saBackupConnection) {
-        auto callDied = [](const string &&bundleName) {};
-        auto callConnected = [](const string &&bundleName) {};
-        auto callBackup = [](const std::string &&bundleName, const int &&fd, const std::string &&result,
+        auto callDied = [](const string &bundleName) {};
+        auto callConnected = [](const string &bundleName) {};
+        auto callBackup = [](const std::string &bundleName, int fd, const std::string &result,
                              const ErrCode &&errCode) {};
-        auto callRestore = [](const std::string &&bundleName, const std::string &&result, const ErrCode &&errCode) {};
+        auto callRestore = [](const std::string &bundleName, const std::string &result, ErrCode errCode) {};
         it->second.saBackupConnection =
             std::make_shared<SABackupConnection>(callDied, callConnected, callBackup, callRestore);
     }
