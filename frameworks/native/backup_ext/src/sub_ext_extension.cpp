@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-// LCOV_EXCL_START
+// LCOV_EXCL_BR_START
 #include "ext_extension.h"
 
 #include <algorithm>
@@ -2351,4 +2351,4 @@ void BackupExtExtension::WaitforFdAppendComplete(std::vector<std::shared_ptr<IFi
     CloseManageJsonFd();
 }
 } // namespace OHOS::FileManagement::Backup
-// LCOV_EXCL_STOP
+// LCOV_EXCL_BR_STOP
