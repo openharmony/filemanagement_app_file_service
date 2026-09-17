@@ -380,74 +380,74 @@ std::weak_ptr<SABackupConnection> SvcSessionManager::GetSAExtConnection(const Bu
 
 sptr<SvcBackupConnection> SvcSessionManager::GetBackupAbilityExt(const string &bundleName)
 {
-    auto callDied = [revPtr {reversePtr_}](const string &&bundleName, bool isCleanCalled = false) {
+    auto onDiedCb = [revPtr {reversePtr_}](const string &bundleName, bool isCleanCalled = false) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->OnBackupExtensionDied(move(bundleName), isCleanCalled);
+        revPtrStrong->OnBackupExtensionDied(bundleName, isCleanCalled);
     };
 
-    auto callConnected = [revPtr {reversePtr_}](const string &&bundleName) {
+    auto onConnectedCb = [revPtr {reversePtr_}](const string &bundleName) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->ExtConnectDone(move(bundleName));
+        revPtrStrong->ExtConnectDone(bundleName);
     };
 
-    return sptr<SvcBackupConnection>(new SvcBackupConnection(callDied, callConnected, bundleName));
+    return sptr<SvcBackupConnection>(new SvcBackupConnection(onDiedCb, onConnectedCb, bundleName));
 }
 
 std::shared_ptr<SABackupConnection> SvcSessionManager::GetBackupSAExt(const std::string &bundleName)
 {
-    auto callDied = [revPtr {reversePtr_}](const string &&bundleName) {
+    auto onDiedCb = [revPtr {reversePtr_}](const string &bundleName) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->OnBackupExtensionDied(move(bundleName));
+        revPtrStrong->OnBackupExtensionDied(bundleName);
     };
 
-    auto callConnected = [revPtr {reversePtr_}](const string &&bundleName) {
+    auto onConnectedCb = [revPtr {reversePtr_}](const string &bundleName) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->ExtConnectDone(move(bundleName));
+        revPtrStrong->ExtConnectDone(bundleName);
     };
 
-    auto callBackup = [revPtr {reversePtr_}](const string &&bundleName, const int &&fd, const std::string result,
-                                             const ErrCode &&errCode) {
+    auto onBackupCb = [revPtr {reversePtr_}](const string &bundleName, int fd, const std::string result,
+                                             ErrCode errCode) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->OnSABackup(move(bundleName), move(fd), move(result), move(errCode));
+        revPtrStrong->OnSABackup(bundleName, fd, result, errCode);
     };
 
-    auto callRestore = [revPtr {reversePtr_}](const string &&bundleName, const std::string result,
-                                              const ErrCode &&errCode) {
+    auto onRestoreCb = [revPtr {reversePtr_}](const string &bundleName, const std::string result,
+                                              ErrCode errCode) {
         auto revPtrStrong = revPtr.promote();
         if (!revPtrStrong) {
             // 服务先于客户端死亡是一种异常场景，但该场景对本流程来说也没什么影响，所以只是简单记录一下
             HILOGW("It's curious that the backup sa dies before the backup client");
             return;
         }
-        revPtrStrong->OnSARestore(move(bundleName), move(result), move(errCode));
+        revPtrStrong->OnSARestore(bundleName, result, errCode);
     };
 
-    return std::make_shared<SABackupConnection>(callDied, callConnected, callBackup, callRestore);
+    return std::make_shared<SABackupConnection>(onDiedCb, onConnectedCb, onBackupCb, onRestoreCb);
 }
 
 void SvcSessionManager::DumpInfo(const int fd, const std::vector<std::u16string> &args)
@@ -737,6 +737,18 @@ sptr<SvcBackupConnection> SvcSessionManager::CreateBackupConnection(const Bundle
 {
     HILOGD("SvcSessionManager::CreateBackupConnection begin.");
     return GetBackupAbilityExt(bundleName);
+}
+
+void SvcSessionManager::ReplaceExtConnection(const BundleName &bundleName)
+{
+    HILOGI("Replace ext connection, bundleName:%{public}s", bundleName.c_str());
+    unique_lock<shared_mutex> lock(lock_);
+    auto it = impl_.backupExtNameMap.find(bundleName);
+    if (it == impl_.backupExtNameMap.end()) {
+        HILOGE("Could not find the bundle from current session, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    it->second.backUpConnection = GetBackupAbilityExt(bundleName);
 }
 
 ErrCode SvcSessionManager::Start()

@@ -42,22 +42,22 @@ public:
     static inline shared_ptr<MessageParcelMock> messageParcelMock = nullptr;
 };
 
-static void CallDied(const std::string &&name)
+static void CallDied(const std::string &name)
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-CallDied SUCCESS";
 }
 
-static void CallConnect(const std::string &&name)
+static void CallConnect(const std::string &name)
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-CallConnect SUCCESS";
 }
 
-static void CallBackup(const std::string &&name, const int &&fd, const std::string &&result, const ErrCode &&err)
+static void CallBackup(const std::string &name, int fd, const std::string &result, ErrCode err)
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-CallBackup SUCCESS";
 }
 
-static void CallRestore(const std::string &&name, const std::string &&result, const ErrCode &&err)
+static void CallRestore(const std::string &name, const std::string &result, ErrCode err)
 {
     GTEST_LOG_(INFO) << "ServiceReverseProxyTest-CallRestore SUCCESS";
 }
