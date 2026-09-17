@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include "b_error/b_error.h"
+#include "securec.h"
 #include "test_manager.h"
 
 #include <sys/stat.h>
@@ -431,14 +432,14 @@ HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_HeaderValidation_0200, test
     EXPECT_FALSE(unTarFile.IsValidTarBlock(nullptr));
 
     TarHeader header = {};
-    (void)strncpy(header.magic, TMAGIC, sizeof(header.magic));
-    (void)memset(header.chksum, ' ', sizeof(header.chksum));
+    ASSERT_EQ(strncpy_s(header.magic, sizeof(header.magic), TMAGIC, strlen(TMAGIC)), EOK);
+    ASSERT_EQ(memset_s(header.chksum, sizeof(header.chksum), ' ', sizeof(header.chksum)), EOK);
     unsigned int checksum = 0;
     const auto *bytes = reinterpret_cast<const unsigned char *>(&header);
     for (int i = 0; i < BLOCK_SIZE; ++i) {
         checksum += bytes[i];
     }
-    (void)snprintf(header.chksum, sizeof(header.chksum), "%06o", checksum);
+    ASSERT_GE(snprintf_s(header.chksum, sizeof(header.chksum), sizeof(header.chksum) - 1, "%06o", checksum), 0);
     header.chksum[6] = '\0';
     header.chksum[7] = ' ';
     EXPECT_TRUE(unTarFile.VerifyChecksum(&header));

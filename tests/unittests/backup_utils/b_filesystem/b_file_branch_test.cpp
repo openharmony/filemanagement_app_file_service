@@ -15,7 +15,7 @@
 
 #include <filesystem>
 #include <fstream>
-#include <limits.h>
+#include <climits>
 
 #include <fcntl.h>
 #include <gtest/gtest.h>
