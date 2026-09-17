@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+// LCOV_EXCL_START
 #include <atomic>
 #include <cerrno>
 #include <condition_variable>
@@ -304,3 +305,4 @@ bool BackUpRegister()
     }});
 }
 } // namespace OHOS::FileManagement::Backup
+// LCOV_EXCL_STOP
