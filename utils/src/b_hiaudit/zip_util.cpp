@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-// LCOV_EXCL_START
+// LCOV_EXCL_BR_START
 #include "b_hiaudit/zip_util.h"
 
 #include <cerrno>
@@ -122,4 +122,4 @@ std::string ZipUtil::GetDestFilePath(const std::string &srcFile, const std::stri
     return result;
 }
 }
-// LCOV_EXCL_STOP
+// LCOV_EXCL_BR_STOP
