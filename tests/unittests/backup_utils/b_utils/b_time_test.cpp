@@ -105,4 +105,32 @@ HWTEST_F(BTimeUtilsTest, GenAfsTimeout_001, testing::ext::TestSize.Level1)
     EXPECT_EQ(timeout2 - timeout1, 5);
     GTEST_LOG_(INFO) << "BTimeUtilsTest-end GenAfsTimeout_001";
 }
+
+HWTEST_F(BTimeUtilsTest, SpendTime_001, testing::ext::TestSize.Level1)
+{
+    const int64_t nowS = TimeUtils::GetTimeS();
+    const int64_t nowMs = TimeUtils::GetTimeMS();
+    const int64_t nowUs = TimeUtils::GetTimeUS();
+    EXPECT_GT(nowS, 0);
+    EXPECT_GT(nowMs, 0);
+    EXPECT_GT(nowUs, 0);
+
+    EXPECT_EQ(TimeUtils::GetSpendSecond(0), 0U);
+    EXPECT_EQ(TimeUtils::GetSpendSecond(nowS + 10), 0U);
+    EXPECT_LE(TimeUtils::GetSpendSecond(nowS), 1U);
+    EXPECT_EQ(TimeUtils::GetSpendMS(0), 0U);
+    EXPECT_EQ(TimeUtils::GetSpendMS(nowMs + 10000), 0U);
+    EXPECT_LE(TimeUtils::GetSpendMS(nowMs), 1000U);
+    EXPECT_EQ(TimeUtils::GetSpendUS(0), 0U);
+    EXPECT_EQ(TimeUtils::GetSpendUS(nowUs + 10000000), 0U);
+    EXPECT_LE(TimeUtils::GetSpendUS(nowUs), 1000000U);
+    EXPECT_FALSE(TimeUtils::GetCurrentTime().empty());
+}
+
+HWTEST_F(BTimeUtilsTest, CachedAmsTimeout_001, testing::ext::TestSize.Level1)
+{
+    TimeUtils::amsTimeoutRatio_ = 2;
+    EXPECT_EQ(TimeUtils::GetAmsTimeout(), 2 * CONNECT_EXTENSION_TIMEOUT);
+    EXPECT_EQ(TimeUtils::GenAfsTimeout(), 2 * CONNECT_EXTENSION_TIMEOUT + 5);
+}
 } // namespace OHOS::FileManagement::Backup
