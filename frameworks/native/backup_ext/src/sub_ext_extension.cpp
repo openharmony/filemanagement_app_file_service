@@ -1541,9 +1541,11 @@ std::unordered_map<std::string, std::string> BackupExtExtension::BuildCompatible
         }
         if (compatibleDirs_.find(restoreDir) != compatibleDirs_.end() &&
             includeSet.find(restoreDir) != includeSet.end()) {
-            mapping.emplace(backupDir, restoreDir);
+            std::string normalizedBackupDir = StringUtils::RemoveLeadingSlash(backupDir);
+            std::string normalizedRestoreDir = StringUtils::RemoveLeadingSlash(restoreDir);
+            mapping.emplace(normalizedBackupDir, normalizedRestoreDir);
             HILOGI("compatDir enabled, backupDir=%{public}s, restoreDir=%{public}s",
-                GetAnonyPath(backupDir).c_str(), GetAnonyPath(restoreDir).c_str());
+                   GetAnonyPath(normalizedBackupDir).c_str(), GetAnonyPath(normalizedRestoreDir).c_str());
         }
     }
     HILOGI("compatDirMapping size=%{public}zu", mapping.size());

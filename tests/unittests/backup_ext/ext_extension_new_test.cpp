@@ -1222,8 +1222,8 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0500,
     extExtension_->compatibleDirs_ = {"/p1", "/p3"};
     auto mapping = extExtension_->BuildCompatibleDirMapping();
     EXPECT_EQ(mapping.size(), 1u);
-    EXPECT_NE(mapping.find("/bak/p1"), mapping.end());
-    EXPECT_EQ(mapping["/bak/p1"], "/p1");
+    EXPECT_NE(mapping.find("bak/p1"), mapping.end());
+    EXPECT_EQ(mapping["bak/p1"], "p1");
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0500";
 }
 
@@ -1572,5 +1572,61 @@ HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_0900,
     auto mapping = extExtension_->BuildCompatibleDirMapping();
     EXPECT_TRUE(mapping.empty());
     GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_0900";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_1000
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_1000
+ * @tc.desc: 测试BuildCompatibleDirMapping 验证去除前导'/'后的映射结果
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_1000, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_1000";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 =
+        R"({"includes": ["/p1", "/p2"],)"
+        R"("compatibleDirMapping": [{"backupDir": "/bak/p1", "restoreDir": "/p1"},)"
+        R"( {"backupDir": "/bak/p2", "restoreDir": "/p2"}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {"/p1", "/p2"};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_EQ(mapping.size(), 2u);
+    // 验证映射key/value已去除前导'/'
+    EXPECT_NE(mapping.find("bak/p1"), mapping.end());
+    EXPECT_EQ(mapping["bak/p1"], "p1");
+    EXPECT_NE(mapping.find("bak/p2"), mapping.end());
+    EXPECT_EQ(mapping["bak/p2"], "p2");
+    // 验证原始带'/'的key不存在
+    EXPECT_EQ(mapping.find("/bak/p1"), mapping.end());
+    EXPECT_EQ(mapping.find("/bak/p2"), mapping.end());
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_1000";
+}
+
+/**
+ * @tc.number: Ext_Extension_BuildCompatibleDirMapping_Test_1100
+ * @tc.name: Ext_Extension_BuildCompatibleDirMapping_Test_1100
+ * @tc.desc: 测试BuildCompatibleDirMapping 无前导'/'的路径不受影响
+ * @tc.size: MEDIUM
+ * @tc.type: FUNC
+ * @tc.level Level 1
+ */
+HWTEST_F(ExtExtensionNewTest, Ext_Extension_BuildCompatibleDirMapping_Test_1100, testing::ext::TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-begin Ext_Extension_BuildCompatibleDirMapping_Test_1100";
+    ASSERT_TRUE(extExtension_ != nullptr);
+    string_view sv1 =
+        R"({"includes": ["p1"],)"
+        R"("compatibleDirMapping": [{"backupDir": "bak/p1", "restoreDir": "p1"}]})";
+    EXPECT_CALL(*extBackupMock_, GetUsrConfig()).WillOnce(Return(string(sv1)));
+    extExtension_->compatibleDirs_ = {"p1"};
+    auto mapping = extExtension_->BuildCompatibleDirMapping();
+    EXPECT_EQ(mapping.size(), 1u);
+    // 无前导'/'的路径应保持不变
+    EXPECT_NE(mapping.find("bak/p1"), mapping.end());
+    EXPECT_EQ(mapping["bak/p1"], "p1");
+    GTEST_LOG_(INFO) << "ExtExtensionNewTest-end Ext_Extension_BuildCompatibleDirMapping_Test_1100";
 }
 }

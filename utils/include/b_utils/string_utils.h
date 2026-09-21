@@ -46,6 +46,7 @@ public:
     static bool IsAncoFile(const std::string &filePath);
     static std::string AddTrailingSlash(const std::string& path);
     static std::string RemoveTrailingSlash(const std::string& path);
+    static std::string RemoveLeadingSlash(const std::string& path);
     static std::string GetFileName(const std::string& filePath);
     static bool IsPathWithDirectory(const std::string& filePath);
     static std::string NormalizeLexicalPath(const std::string& filePath);
