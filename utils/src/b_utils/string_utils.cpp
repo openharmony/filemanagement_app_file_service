@@ -292,6 +292,17 @@ std::string StringUtils::RemoveTrailingSlash(const std::string &path)
     return result;
 }
 
+std::string StringUtils::RemoveLeadingSlash(const std::string &path)
+{
+    if (path.empty()) {
+        return "";
+    }
+    if (path.front() == BConstants::FILE_SEPARATOR_CHAR) {
+        return path.substr(1);
+    }
+    return path;
+}
+
 std::string StringUtils::GetFileName(const std::string& filePath)
 {
     size_t lastSlashPos = filePath.find_last_of("/");

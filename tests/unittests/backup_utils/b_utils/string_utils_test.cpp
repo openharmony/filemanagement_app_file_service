@@ -510,6 +510,50 @@ HWTEST_F(StringUtilsTest, STRINGUTILS_REMOVE_TRAILING_SLASH_TEST_001, testing::e
 }
 
 /**
+* @tc.number: STRINGUTILS_REMOVE_LEADING_SLASH_TEST_001
+* @tc.name: RemoveLeadingSlash_MultipleScenarios
+* @tc.desc: Test multiple scenarios for RemoveLeadingSlash function
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_REMOVE_LEADING_SLASH_TEST_001, testing::ext::TestSize.Level1) {
+    // 空字符串
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash(""), "");
+    // 单个'/'
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("/"), "");
+    // 以'/'开头的绝对路径
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("/a/b/c"), "a/b/c");
+    // 不以'/'开头的相对路径, 保持不变
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("a/b/c"), "a/b/c");
+    // 多个前导'/', 仅去除第一个
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("//a/b/c"), "/a/b/c");
+}
+
+/**
+* @tc.number: STRINGUTILS_REMOVE_LEADING_SLASH_TEST_002
+* @tc.name: RemoveLeadingSlash_EdgeCases
+* @tc.desc: Test edge cases for RemoveLeadingSlash function
+* @tc.size: SMALL
+* @tc.type: FUNC
+* @tc.level: Level 1
+* @tc.require: NA
+*/
+HWTEST_F(StringUtilsTest, STRINGUTILS_REMOVE_LEADING_SLASH_TEST_002, testing::ext::TestSize.Level1) {
+    // 仅一个字符且为'/'
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("/"), "");
+    // 仅一个字符且不为'/'
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("a"), "a");
+    // backupDir/restoreDir 典型场景
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("/bak/p1"), "bak/p1");
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("/p1"), "p1");
+    // 无前导'/'的路径
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("bak/p1"), "bak/p1");
+    EXPECT_EQ(StringUtils::RemoveLeadingSlash("p1"), "p1");
+}
+
+/**
 * @tc.number: STRINGUTILS_IS_SUBDIRECTORY_TEST_001
 * @tc.name: IsSubdirectory_MultipleScenarios
 * @tc.desc: Test multiple scenarios for IsSubdirectory function
