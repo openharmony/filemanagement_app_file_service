@@ -18,8 +18,70 @@
 #include <limits>
 
 #include "b_utils/storage_manager_helper.h"
+#include "storage_manager_proxy.h"
 
 namespace OHOS::FileManagement::Backup {
+
+class StorageManagerRemoteObject : public IRemoteObject {
+public:
+    StorageManagerRemoteObject() : IRemoteObject(u"storage_manager_test") {}
+
+    int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
+    {
+        if (sendRet_ != 0) {
+            return sendRet_;
+        }
+        reply.WriteInt32(serviceRet_);
+        if (serviceRet_ == 0) {
+            reply.WriteInt64(freeSize_);
+        }
+        return 0;
+    }
+
+    int32_t GetObjectRefCount() override
+    {
+        return 0;
+    }
+
+    bool CheckObjectLegality() const override
+    {
+        return true;
+    }
+
+    bool IsProxyObject() const override
+    {
+        return true;
+    }
+
+    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) override
+    {
+        return true;
+    }
+
+    bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) override
+    {
+        return true;
+    }
+
+    sptr<IRemoteBroker> AsInterface() override
+    {
+        return nullptr;
+    }
+
+    bool Marshalling(Parcel &parcel) const override
+    {
+        return true;
+    }
+
+    int Dump(int fd, const std::vector<std::u16string> &args) override
+    {
+        return 0;
+    }
+
+    int32_t sendRet_ = 0;
+    int32_t serviceRet_ = 0;
+    int64_t freeSize_ = 0;
+};
 
 class StorageManagerHelperTest : public testing::Test {
 public:
@@ -104,6 +166,30 @@ HWTEST_F(StorageManagerHelperTest, storage_manager_helper_GetFreeSize_0300, test
         EXPECT_GE(signedSize, 0);
     }
     GTEST_LOG_(INFO) << "StorageManagerHelperTest-end: storage_manager_helper_GetFreeSize_0300";
+}
+
+HWTEST_F(StorageManagerHelperTest, storage_manager_helper_GetFreeSize_0400, testing::ext::TestSize.Level1)
+{
+    auto &instance = StorageManagerHelper::GetInstance();
+    auto oldProxy = instance.storageManagerProxy_;
+    sptr<StorageManagerRemoteObject> remote = new StorageManagerRemoteObject();
+    instance.storageManagerProxy_ = new StorageManager::StorageManagerProxy(remote);
+
+    EXPECT_EQ(instance.GetStorageManagerProxy(), instance.storageManagerProxy_);
+    remote->sendRet_ = -1;
+    EXPECT_EQ(instance.GetFreeSize(), 0U);
+
+    remote->sendRet_ = 0;
+    remote->serviceRet_ = -1;
+    EXPECT_EQ(instance.GetFreeSize(), 0U);
+
+    remote->serviceRet_ = 0;
+    remote->freeSize_ = -1;
+    EXPECT_EQ(instance.GetFreeSize(), 0U);
+
+    remote->freeSize_ = 1024;
+    EXPECT_EQ(instance.GetFreeSize(), 1024U);
+    instance.storageManagerProxy_ = oldProxy;
 }
 
 } // namespace OHOS::FileManagement::Backup

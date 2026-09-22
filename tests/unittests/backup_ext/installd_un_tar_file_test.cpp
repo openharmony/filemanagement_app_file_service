@@ -24,9 +24,14 @@
 #include <unistd.h>
 
 #include "b_error/b_error.h"
+#include "securec.h"
 #include "test_manager.h"
 
 #include <sys/stat.h>
+
+namespace installd {
+uid_t FixUpOwnerDirFile(const uid_t uid, const gid_t gid, const uid_t owner, gid_t &newGid);
+}
 
 namespace OHOS::FileManagement::Backup {
 using namespace std;
@@ -401,5 +406,144 @@ HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_HandleSymType_0100, testing
         GTEST_LOG_(INFO) << "InstalldUnTarFileTest-an exception occurred by HandleSymType.";
     }
     GTEST_LOG_(INFO) << "InstalldUnTarFileTest-end Installd_Un_Tar_File_HandleSymType_0100";
+}
+
+HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_OwnerAndOctal_0200, testing::ext::TestSize.Level1)
+{
+    gid_t newGid = 0;
+    EXPECT_EQ(FixUpOwnerDirFile(100, 200, 0, newGid), 100U);
+    EXPECT_EQ(newGid, 200U);
+    EXPECT_EQ(FixUpOwnerDirFile(APP_ID_START + 1, APP_ID_START + 1, 300, newGid), 300U);
+    EXPECT_EQ(newGid, 300U);
+    EXPECT_EQ(FixUpOwnerDirFile(APP_ID_START + 1, APP_ID_START + 1 + UID_GID_OFFSET, 400, newGid), 400U);
+    EXPECT_EQ(newGid, 400U + UID_GID_OFFSET);
+    EXPECT_EQ(FixUpOwnerDirFile(APP_ID_START + 1, APP_ID_START + 2, 500, newGid), 500U);
+    EXPECT_EQ(newGid, APP_ID_START + 2);
+
+    EXPECT_EQ(ParseOctalStr("  17x", 5), 15);
+    EXPECT_EQ(ParseOctalStr("xyz", 3), 0);
+    EXPECT_EQ(ParseOctalStr("777", 1), 7);
+}
+
+HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_HeaderValidation_0200, testing::ext::TestSize.Level1)
+{
+    UnTarFile unTarFile(nullptr);
+    EXPECT_FALSE(unTarFile.VerifyChecksum(nullptr));
+    EXPECT_FALSE(unTarFile.IsValidTarBlock(nullptr));
+
+    TarHeader header = {};
+    ASSERT_EQ(strncpy_s(header.magic, sizeof(header.magic), TMAGIC, strlen(TMAGIC)), EOK);
+    ASSERT_EQ(memset_s(header.chksum, sizeof(header.chksum), ' ', sizeof(header.chksum)), EOK);
+    unsigned int checksum = 0;
+    const auto *bytes = reinterpret_cast<const unsigned char *>(&header);
+    for (int i = 0; i < BLOCK_SIZE; ++i) {
+        checksum += bytes[i];
+    }
+    ASSERT_GE(snprintf_s(header.chksum, sizeof(header.chksum), sizeof(header.chksum) - 1, "%06o", checksum), 0);
+    header.chksum[6] = '\0';
+    header.chksum[7] = ' ';
+    EXPECT_TRUE(unTarFile.VerifyChecksum(&header));
+    EXPECT_TRUE(unTarFile.IsValidTarBlock(&header));
+    header.magic[0] = 'x';
+    EXPECT_FALSE(unTarFile.IsValidTarBlock(&header));
+    header.magic[0] = TMAGIC[0];
+    header.name[0] = 'x';
+    EXPECT_FALSE(unTarFile.VerifyChecksum(&header));
+}
+
+HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_CheckFileAndReset_0200, testing::ext::TestSize.Level1)
+{
+    UnTarFile unTarFile(nullptr);
+    ParseTarPath path = {};
+    EXPECT_EQ(unTarFile.CheckFileAndInitPath("/data", &path), ERR_PARAM);
+
+    unTarFile.FilePtr = tmpfile();
+    ASSERT_NE(unTarFile.FilePtr, nullptr);
+    EXPECT_EQ(unTarFile.CheckFileAndInitPath(nullptr, &path), ERR_NOEXIST);
+    ASSERT_EQ(fwrite("x", 1, 1, unTarFile.FilePtr), 1U);
+    EXPECT_EQ(unTarFile.CheckFileAndInitPath("/data", &path), ERR_FORMAT);
+    unTarFile.Reset();
+    EXPECT_EQ(unTarFile.FilePtr, nullptr);
+    EXPECT_FALSE(unTarFile.isSplit);
+
+    unTarFile.FilePtr = tmpfile();
+    ASSERT_NE(unTarFile.FilePtr, nullptr);
+    char block[BLOCK_SIZE] = {};
+    ASSERT_EQ(fwrite(block, 1, sizeof(block), unTarFile.FilePtr), sizeof(block));
+    EXPECT_EQ(unTarFile.CheckFileAndInitPath("/data", &path), 0);
+    EXPECT_NE(path.fullPath, nullptr);
+    unTarFile.FreePointer(&path);
+}
+
+HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_LongNameAndLink_0200, testing::ext::TestSize.Level1)
+{
+    UnTarFile unTarFile(nullptr);
+    unTarFile.FilePtr = tmpfile();
+    ASSERT_NE(unTarFile.FilePtr, nullptr);
+    const std::string validName = "valid/path";
+    ASSERT_EQ(fwrite(validName.data(), 1, validName.size(), unTarFile.FilePtr), validName.size());
+    rewind(unTarFile.FilePtr);
+    ParseTarPath path = {};
+    TarFileInfo info = {static_cast<off_t>(validName.size()), 1, 0};
+    bool isSkip = false;
+    unTarFile.HandleGnuLongName(&path, isSkip, info);
+    EXPECT_TRUE(isSkip);
+    EXPECT_NE(path.longName, nullptr);
+    unTarFile.FreeLongTypePointer(&path);
+
+    fclose(unTarFile.FilePtr);
+    unTarFile.FilePtr = tmpfile();
+    ASSERT_NE(unTarFile.FilePtr, nullptr);
+    const std::string invalidName = "../invalid";
+    ASSERT_EQ(fwrite(invalidName.data(), 1, invalidName.size(), unTarFile.FilePtr), invalidName.size());
+    rewind(unTarFile.FilePtr);
+    info.fileSize = invalidName.size();
+    unTarFile.HandleGnuLongLink(&path, isSkip, info);
+    EXPECT_EQ(path.longLink, nullptr);
+
+    info.fileSize = PATH_MAX_LEN;
+    unTarFile.HandleGnuLongName(&path, isSkip, info);
+    EXPECT_EQ(path.longName, nullptr);
+}
+
+HWTEST_F(InstalldUnTarFileTest, Installd_Un_Tar_File_ReadWriteAndSwitch_0200, testing::ext::TestSize.Level1)
+{
+    UnTarFile unTarFile(nullptr);
+    unTarFile.FilePtr = tmpfile();
+    FILE *dest = tmpfile();
+    ASSERT_NE(unTarFile.FilePtr, nullptr);
+    ASSERT_NE(dest, nullptr);
+    ASSERT_EQ(fwrite("abc", 1, 3, unTarFile.FilePtr), 3U);
+    rewind(unTarFile.FilePtr);
+    char data[4] = {};
+    EXPECT_TRUE(unTarFile.FileReadAndWrite(data, dest, 3));
+    EXPECT_STREQ(data, "abc");
+    EXPECT_FALSE(unTarFile.FileReadAndWrite(data, dest, 1));
+    fclose(dest);
+
+    TarHeader header = {};
+    header.typeflag = SPLIT_START_TYPE;
+    ParseTarPath path = {};
+    char fullPath[] = "/data/local/tmp/untar_switch";
+    path.fullPath = fullPath;
+    bool isSkip = false;
+    bool isSoftLink = false;
+    rewind(unTarFile.FilePtr);
+    EXPECT_FALSE(unTarFile.ProcessTarBlock(reinterpret_cast<char *>(&header), UnTarFile::eCheckSplit,
+        &path, isSkip, isSoftLink));
+    EXPECT_TRUE(unTarFile.isSplit);
+
+    header.typeflag = 'z';
+    rewind(unTarFile.FilePtr);
+    EXPECT_TRUE(unTarFile.ProcessTarBlock(reinterpret_cast<char *>(&header), UnTarFile::eList,
+        &path, isSkip, isSoftLink));
+    EXPECT_FALSE(isSkip);
+
+    header.typeflag = REGTYPE;
+    path.realName = header.name;
+    rewind(unTarFile.FilePtr);
+    EXPECT_TRUE(unTarFile.ProcessTarBlock(reinterpret_cast<char *>(&header), UnTarFile::eList,
+        &path, isSkip, isSoftLink));
+    EXPECT_EQ(unTarFile.file_names.size(), 1U);
 }
 } // namespace OHOS::FileManagement::Backup

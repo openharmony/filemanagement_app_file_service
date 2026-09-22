@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 #include "b_resources/b_constants.h"
+#include "directory_ex.h"
 #include "tools_op.h"
 #include "tools_op_incremental_restore.cpp"
 
@@ -361,5 +362,114 @@ HWTEST_F(ToolsOpIncrementalRestoreTest, SUB_backup_tools_op_incremental_restore_
         GTEST_LOG_(INFO) << "ToolsOpRestoreAsyncTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpIncrementalRestoreTest-end SUB_backup_tools_op_incremental_restore_1205";
+}
+
+/**
+ * @tc.name: tools_op_incremental_restore_SessionBranches_1300
+ * @tc.desc: Cover session notification short-circuit combinations and simple callbacks.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, tools_op_incremental_restore_SessionBranches_1300,
+    testing::ext::TestSize.Level1)
+{
+    auto ctx = make_shared<SessionRestore>();
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+
+    ctx->UpdateBundleSendFiles("bundle", "file");
+    ctx->isAllBundelsFinished.store(true);
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+
+    ctx->ClearBundleOfMap("bundle");
+    ctx->SetBundleFinishedCount(1);
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+    ctx->UpdateBundleFinishedCount();
+    ctx->TryNotify();
+    EXPECT_TRUE(ctx->ready_);
+
+    auto forceCtx = make_shared<SessionRestore>();
+    forceCtx->TryNotify(true);
+    EXPECT_TRUE(forceCtx->ready_);
+    OnResultReport(forceCtx, "bundle", "result");
+    OnProcess(forceCtx, "bundle", "process");
+    EXPECT_FALSE(GenHelpMsg().empty());
+}
+
+/**
+ * @tc.name: tools_op_incremental_restore_FileReadyBranches_1400
+ * @tc.desc: Cover existing incremental file, optional manifest, and publish thresholds.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, tools_op_incremental_restore_FileReadyBranches_1400,
+    testing::ext::TestSize.Level1)
+{
+    const string owner = "coverage.incremental.bundle";
+    constexpr int64_t time = 123;
+    const string root = string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + owner + "/" + to_string(time);
+    const string incrementalDir = root + string(BConstants::BACKUP_TOOL_INCREMENTAL);
+    const string manifestDir = root + string(BConstants::BACKUP_TOOL_MANIFEST);
+    ASSERT_TRUE(ForceCreateDirectory(incrementalDir));
+    ASSERT_TRUE(ForceCreateDirectory(manifestDir));
+
+    const string source = incrementalDir + "/data.tar";
+    UniqueFd sourceFd(open(source.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    ASSERT_GE(sourceFd.Get(), 0);
+
+    auto ctx = make_shared<SessionRestore>();
+    vector<BundleName> bundleNames = {owner};
+    vector<string> times = {to_string(time)};
+    ASSERT_EQ(InitRestoreSession(ctx, bundleNames, times), 0);
+    ctx->fileNums_[owner] = 2;
+
+    BFileInfo fileInfo(owner, "data.tar", 0);
+    UniqueFd outputOne(open("/dev/null", O_WRONLY));
+    UniqueFd manifestOne(open("/dev/null", O_WRONLY));
+    EXPECT_NO_THROW(OnFileReady(ctx, fileInfo, move(outputOne), move(manifestOne), 0));
+    EXPECT_EQ(ctx->fileCount_[owner], 1);
+
+    const string manifest = manifestDir + "/data.tar.rp";
+    UniqueFd manifestSource(open(manifest.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    ASSERT_GE(manifestSource.Get(), 0);
+    UniqueFd outputTwo(open("/dev/null", O_WRONLY));
+    UniqueFd manifestTwo(open("/dev/null", O_WRONLY));
+    EXPECT_NO_THROW(OnFileReady(ctx, fileInfo, move(outputTwo), move(manifestTwo), 0));
+    EXPECT_EQ(ctx->fileCount_[owner], 2);
+
+    ForceRemoveDirectoryBMS(string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + owner);
+}
+
+/**
+ * @tc.name: tools_op_incremental_restore_RestoreAndPathBranches_1500
+ * @tc.desc: Cover an existing restore directory and real-path success/failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpIncrementalRestoreTest, tools_op_incremental_restore_RestoreAndPathBranches_1500,
+    testing::ext::TestSize.Level1)
+{
+    string existingPath = "/data";
+    EXPECT_TRUE(GetRealPath(existingPath));
+    string missingPath = "/data/coverage_incremental_missing";
+    EXPECT_FALSE(GetRealPath(missingPath));
+
+    const string owner = "coverage.incremental.restore";
+    constexpr int64_t time = 456;
+    const string bundleRoot = string(BConstants::BACKUP_TOOL_INCREMENTAL_RECEIVE_DIR) + owner;
+    const string incrementalDir = bundleRoot + "/" + to_string(time) +
+        string(BConstants::BACKUP_TOOL_INCREMENTAL);
+    ASSERT_TRUE(ForceCreateDirectory(incrementalDir));
+    UniqueFd file(open((incrementalDir + "/data.tar").c_str(), O_RDWR | O_CREAT | O_TRUNC,
+        S_IRUSR | S_IWUSR));
+    ASSERT_GE(file.Get(), 0);
+
+    auto ctx = make_shared<SessionRestore>();
+    vector<BundleName> bundleNames = {owner};
+    vector<string> times = {to_string(time)};
+    ASSERT_EQ(InitRestoreSession(ctx, bundleNames, times), 0);
+    EXPECT_NO_THROW(RestoreApp(ctx));
+    EXPECT_EQ(ctx->bundleStatusMap_[owner].sendFile.count("data.tar"), 1);
+
+    ForceRemoveDirectoryBMS(bundleRoot);
 }
 } // namespace OHOS::FileManagement::Backup

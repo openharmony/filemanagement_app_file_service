@@ -980,4 +980,20 @@ HWTEST_F(StringUtilsTest, STRINGUTILS_STRING_VECTOR_DESERIALIZE_TEST_012, testin
     EXPECT_TRUE(output.empty());
     GTEST_LOG_(INFO) << "StringUtilsTest-end STRING_VECTOR_DESERIALIZE_TEST_012";
 }
+
+HWTEST_F(StringUtilsTest, STRINGUTILS_ANCO_FILE_TEST_001, testing::ext::TestSize.Level1)
+{
+    EXPECT_FALSE(StringUtils::IsAncoFile("/data/file_anco.txt"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567.txt"));
+    EXPECT_TRUE(StringUtils::IsAncoFile("file_anco.txt"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("normal.txt"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("ABC_anco.txt"));
+}
+
+HWTEST_F(StringUtilsTest, STRINGUTILS_LEXICAL_AND_EMPTY_TEST_001, testing::ext::TestSize.Level1)
+{
+    EXPECT_EQ(StringUtils::NormalizeLexicalPath("/data/./app/../file"), "/data/file");
+    EXPECT_TRUE(StringUtils::EndsWith("value", ""));
+    EXPECT_TRUE(StringUtils::Concat({}, ",").empty());
+}
 } // namespace OHOS::FileManagement::Backup

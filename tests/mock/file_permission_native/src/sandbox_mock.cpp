@@ -24,6 +24,12 @@ int32_t SandboxManagerKit::CheckPersistPolicy(uint32_t tokenId,
     return SandboxManagerKitMock::sandboxManagerKitMock->CheckPersistPolicy(tokenId, policy, result);
 }
 
+int32_t SandboxManagerKit::CheckPolicy(uint32_t tokenId,
+    const std::vector<PolicyInfo> &policy, std::vector<bool> &result)
+{
+    return SandboxManagerKitMock::sandboxManagerKitMock->CheckPolicy(tokenId, policy, result);
+}
+
 int32_t SandboxManagerKit::PersistPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
 {
     return SandboxManagerKitMock::sandboxManagerKitMock->PersistPolicy(policy, result);
@@ -42,6 +48,44 @@ int32_t SandboxManagerKit::StartAccessingPolicy(const std::vector<PolicyInfo> &p
 int32_t SandboxManagerKit::StopAccessingPolicy(const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
 {
     return SandboxManagerKitMock::sandboxManagerKitMock->StopAccessingPolicy(policy, result);
+}
+
+int32_t SandboxManagerKit::UnPersistPolicy(uint32_t tokenId)
+{
+    return SandboxManagerKitMock::sandboxManagerKitMock->UnPersistPolicyByTokenId(tokenId);
+}
+
+int32_t SandboxManagerKit::UnPersistPolicy(
+    uint32_t tokenId, const std::vector<PolicyInfo> &policy, std::vector<uint32_t> &result)
+{
+    return SandboxManagerKitMock::sandboxManagerKitMock->UnPersistPolicyByTokenIdAndPolicies(tokenId, policy, result);
+}
+
+int32_t SandboxManagerKit::GetPersistPolicy(uint32_t tokenId, std::vector<PolicyInfo> &policy)
+{
+    return SandboxManagerKitMock::sandboxManagerKitMock->GetPersistPolicyByTokenId(tokenId, policy);
+}
+
+int32_t SandboxManagerKit::SetPolicyByBundleName(const std::string &bundleName, int32_t appCloneIndex,
+    const std::vector<PolicyInfo> &policy, uint64_t policyFlag, std::vector<uint32_t> &result)
+{
+    return SandboxManagerKitMock::sandboxManagerKitMock->SetPolicyByBundleName(
+        bundleName, appCloneIndex, policy, policyFlag, result);
+}
+
+int32_t SandboxManagerKit::GrantSharedDirectoryPermission()
+{
+    return SandboxManagerKitMock::sandboxManagerKitMock->GrantSharedDirectoryPermission();
+}
+
+int32_t SandboxManagerKit::RevokeSharedDirectoryPermission()
+{
+    return SandboxManagerKitMock::sandboxManagerKitMock->RevokeSharedDirectoryPermission();
+}
+
+int32_t SandboxManagerKit::GetSharedDirectoryInfo(std::vector<SharedDirectoryInfo> &result)
+{
+    return SandboxManagerKitMock::sandboxManagerKitMock->GetSharedDirectoryInfo(result);
 }
 }
 #endif

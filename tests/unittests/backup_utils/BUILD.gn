@@ -237,6 +237,7 @@ ohos_unittest("b_file_test") {
   module_out_path = path_module_out_tests
 
   sources = [
+    "b_filesystem/b_file_branch_test.cpp",
     "b_filesystem/b_file_test.cpp",
   ]
 
@@ -662,6 +663,7 @@ ohos_unittest("b_utils_test") {
 
   sources = [
     "b_utils\scan_file_singleton_test.cpp",
+    "b_utils\scan_result_manager_test.cpp",
     "b_utils\string_utils_test.cpp",
     "b_utils\storage_manager_helper_test.cpp",
     "b_utils\b_time_test.cpp",

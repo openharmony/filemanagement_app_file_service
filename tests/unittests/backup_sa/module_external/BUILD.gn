@@ -77,6 +77,7 @@ ohos_unittest("storage_manager_service_test") {
   sources = [
     "${path_backup_mock}/utils_mock/src/b_jsonutil_mock.cpp",
     "${path_backup_mock}/utils_mock/src/b_sa_utils_mock.cpp",
+    "${path_backup}/services/backup_sa/src/module_external/storage_manager_service.cpp",
     "storage_manager_service_test.cpp",
   ]
 
