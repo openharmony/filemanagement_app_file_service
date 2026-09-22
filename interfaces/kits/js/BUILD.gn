@@ -178,6 +178,7 @@ ohos_shared_library("backup") {
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "node:node_header_notice",
     "samgr:samgr_proxy",
   ]
 }
@@ -229,7 +230,9 @@ ohos_shared_library("backup_inner") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
+    "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "samgr:samgr_proxy",
   ]
 }

@@ -21,7 +21,7 @@
 
 #include "b_resources/b_constants.h"
 #include "tools_op.h"
-#include "tools_op_backup.h"
+#include "tools_op_backup.cpp"
 #include "utils_mock_global_variable.h"
 
 namespace OHOS::FileManagement::Backup {
@@ -348,5 +348,94 @@ HWTEST_F(ToolsOpBackupTest, SUB_backup_tools_op_backup_1000, testing::ext::TestS
         GTEST_LOG_(INFO) << "ToolsOpBackupTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpBackupTest-end SUB_backup_tools_op_backup_1000";
+}
+
+/**
+ * @tc.name: tools_op_backup_SessionBranches_1100
+ * @tc.desc: Cover session state and callback branches without depending on backup SA.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpBackupTest, tools_op_backup_SessionBranches_1100, testing::ext::TestSize.Level1)
+{
+    auto ctx = make_shared<Session>();
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+
+    ctx->bundleStatusMap_["bundle"].indexFile.insert("file");
+    ctx->UpdateBundleReceivedFiles("bundle", "other");
+    EXPECT_EQ(ctx->bundleStatusMap_.count("bundle"), 1);
+
+    auto clearCtx = make_shared<Session>();
+    clearCtx->bundleStatusMap_["bundle"].indexFile.insert("file");
+    clearCtx->UpdateBundleReceivedFiles("bundle", "file");
+    EXPECT_TRUE(clearCtx->bundleStatusMap_.empty());
+
+    ctx->SetBundleFinishedCount(1);
+    ctx->isAllBundelsFinished.store(true);
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+    ctx->UpdateBundleFinishedCount();
+    ctx->bundleStatusMap_.clear();
+    ctx->TryNotify();
+    EXPECT_TRUE(ctx->ready_);
+
+    auto forceCtx = make_shared<Session>();
+    forceCtx->TryNotify(true);
+    EXPECT_TRUE(forceCtx->ready_);
+}
+
+/**
+ * @tc.name: tools_op_backup_CallbackBranches_1200
+ * @tc.desc: Cover success and failure callback branches.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpBackupTest, tools_op_backup_CallbackBranches_1200, testing::ext::TestSize.Level1)
+{
+    auto started = make_shared<Session>();
+    OnBundleStarted(started, 0, "bundle");
+    EXPECT_FALSE(started->isAllBundelsFinished.load());
+
+    started->SetBundleFinishedCount(1);
+    OnBundleStarted(started, -1, "bundle");
+    EXPECT_TRUE(started->isAllBundelsFinished.load());
+
+    auto finished = make_shared<Session>();
+    finished->SetBundleFinishedCount(1);
+    OnBundleFinished(finished, 0, "bundle");
+    OnAllBundlesFinished(finished, 0);
+    EXPECT_TRUE(finished->isAllBundelsFinished.load());
+
+    auto failed = make_shared<Session>();
+    OnAllBundlesFinished(failed, -1);
+    EXPECT_TRUE(failed->ready_);
+    OnBackupServiceDied(failed);
+    OnResultReport(failed, "bundle", "result");
+    OnProcess(failed, "bundle", "process");
+    EXPECT_FALSE(GenHelpMsg().empty());
+}
+
+/**
+ * @tc.name: tools_op_backup_OnFileReadyBranches_1300
+ * @tc.desc: Cover file-name validation and normal received-file handling.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpBackupTest, tools_op_backup_OnFileReadyBranches_1300, testing::ext::TestSize.Level1)
+{
+    const string owner = "coverage.backup.bundle";
+    const string bundleDir = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + owner;
+    ASSERT_TRUE(ForceCreateDirectory(string(BConstants::BACKUP_TOOL_RECEIVE_DIR)));
+    ForceRemoveDirectoryBMS(bundleDir);
+
+    auto ctx = make_shared<Session>();
+    BFileInfo invalidInfo(owner, "invalid/name", 0);
+    UniqueFd invalidFd(open("/dev/null", O_RDONLY));
+    EXPECT_THROW(OnFileReady(ctx, invalidInfo, move(invalidFd)), BError);
+
+    BFileInfo normalInfo(owner, "data.tar", 0);
+    UniqueFd normalFd(open("/dev/null", O_RDONLY));
+    EXPECT_NO_THROW(OnFileReady(ctx, normalInfo, move(normalFd)));
+    EXPECT_EQ(ctx->bundleStatusMap_.count(owner), 1);
+
+    ForceRemoveDirectoryBMS(bundleDir);
 }
 } // namespace OHOS::FileManagement::Backup

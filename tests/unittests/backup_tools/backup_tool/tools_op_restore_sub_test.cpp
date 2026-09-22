@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 
 #include "b_resources/b_constants.h"
+#include "directory_ex.h"
 #include "tools_op.h"
 
 #include "b_error/b_error.h"
@@ -609,5 +610,90 @@ HWTEST_F(ToolsOpRestoreSubTest, tools_op_restore_Exec_1304, testing::ext::TestSi
         GTEST_LOG_(INFO) << "ToolsOpRestoreSubTest-an exception occurred by construction.";
     }
     GTEST_LOG_(INFO) << "ToolsOpRestoreSubTest-end tools_op_restore_Exec_1304";
+}
+
+/**
+ * @tc.name: tools_op_restore_SessionBranches_1400
+ * @tc.desc: Cover notification short-circuit combinations and process callback.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpRestoreSubTest, tools_op_restore_SessionBranches_1400, testing::ext::TestSize.Level1)
+{
+    auto ctx = make_shared<Session>();
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+
+    ctx->UpdateBundleSendFiles("bundle", "file");
+    ctx->isAllBundelsFinished.store(true);
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+
+    ctx->ClearBundleOfMap("bundle");
+    ctx->SetBundleFinishedCount(1);
+    ctx->TryNotify();
+    EXPECT_FALSE(ctx->ready_);
+    ctx->UpdateBundleFinishedCount();
+    ctx->TryNotify();
+    EXPECT_TRUE(ctx->ready_);
+
+    auto forceCtx = make_shared<Session>();
+    forceCtx->TryNotify(true);
+    EXPECT_TRUE(forceCtx->ready_);
+    OnProcess(forceCtx, "bundle", "process");
+    EXPECT_FALSE(GenHelpMsg().empty());
+}
+
+/**
+ * @tc.name: tools_op_restore_FileReadyBranches_1500
+ * @tc.desc: Cover normal file transfer and both publish-threshold branches.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpRestoreSubTest, tools_op_restore_FileReadyBranches_1500, testing::ext::TestSize.Level1)
+{
+    const string owner = "coverage.restore.bundle";
+    const string bundleDir = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + owner;
+    ASSERT_TRUE(ForceCreateDirectory(bundleDir));
+    UniqueFd source(open((bundleDir + "/data.tar").c_str(), O_RDWR | O_CREAT | O_TRUNC,
+        S_IRUSR | S_IWUSR));
+    ASSERT_GE(source.Get(), 0);
+
+    auto ctx = make_shared<Session>();
+    ASSERT_EQ(InitRestoreSession(ctx), 0);
+    ctx->fileNums_[owner] = 2;
+    BFileInfo fileInfo(owner, "data.tar", 0);
+
+    UniqueFd outputOne(open("/dev/null", O_WRONLY));
+    EXPECT_NO_THROW(OnFileReady(ctx, fileInfo, move(outputOne), 0));
+    EXPECT_EQ(ctx->fileCount_[owner], 1);
+
+    UniqueFd outputTwo(open("/dev/null", O_WRONLY));
+    EXPECT_NO_THROW(OnFileReady(ctx, fileInfo, move(outputTwo), 0));
+    EXPECT_EQ(ctx->fileCount_[owner], 2);
+
+    ForceRemoveDirectoryBMS(bundleDir);
+}
+
+/**
+ * @tc.name: tools_op_restore_RestoreAppBranches_1600
+ * @tc.desc: Cover missing bundle and existing directory with updateSendFiles true and false.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ToolsOpRestoreSubTest, tools_op_restore_RestoreAppBranches_1600, testing::ext::TestSize.Level1)
+{
+    const string owner = "coverage.restore.scan";
+    const string bundleDir = string(BConstants::BACKUP_TOOL_RECEIVE_DIR) + owner;
+    ASSERT_TRUE(ForceCreateDirectory(bundleDir));
+    UniqueFd file(open((bundleDir + "/data.tar").c_str(), O_RDWR | O_CREAT | O_TRUNC,
+        S_IRUSR | S_IWUSR));
+    ASSERT_GE(file.Get(), 0);
+
+    auto ctx = make_shared<Session>();
+    ASSERT_EQ(InitRestoreSession(ctx), 0);
+    vector<BundleName> bundles = {"coverage.restore.missing", owner};
+    EXPECT_NO_THROW(RestoreApp(ctx, bundles, true));
+    EXPECT_EQ(ctx->bundleStatusMap_[owner].sendFile.count("data.tar"), 1);
+    EXPECT_NO_THROW(RestoreApp(ctx, bundles, false));
+
+    ForceRemoveDirectoryBMS(bundleDir);
 }
 } // namespace OHOS::FileManagement::Backup

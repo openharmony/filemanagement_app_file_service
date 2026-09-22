@@ -1901,5 +1901,87 @@ HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_DoClearInner_0003, testing::ext:
     }
     GTEST_LOG_(INFO) << "ExtExtensionSubTest-end SUB_Ext_Extension_DoClearInner_0003";
 }
+
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_Accessors_0400, testing::ext::TestSize.Level1)
+{
+    ASSERT_NE(extExtension, nullptr);
+    extExtension->SetSupportWithoutTar(true);
+    EXPECT_TRUE(extExtension->GetSupportWithoutTar());
+    extExtension->SetSupportWithoutTar(false);
+    EXPECT_FALSE(extExtension->GetSupportWithoutTar());
+
+    extExtension->SetBatchSize(8);
+    EXPECT_EQ(extExtension->GetBatchSize(), 8);
+    extExtension->SetCallerBundleName("com.example.whitebox");
+    EXPECT_EQ(extExtension->GetCallerBundleName(), "com.example.whitebox");
+    extExtension->SetRestoreScene(BConstants::ExtensionRestoreScene::WITHOUT_RP);
+    EXPECT_EQ(extExtension->GetRestoreScene(), BConstants::ExtensionRestoreScene::WITHOUT_RP);
+}
+
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_DfxAndFinish_0400, testing::ext::TestSize.Level1)
+{
+    ASSERT_NE(extExtension, nullptr);
+    EXPECT_EQ(extExtension->UpdateDfxInfo(12345, 67, "caller.bundle"), ERR_OK);
+    EXPECT_EQ(extExtension->appStatistic_->uniqId_, 12345);
+    EXPECT_EQ(extExtension->appStatistic_->extConnectSpend_, 67U);
+    EXPECT_EQ(extExtension->appStatistic_->appCaller_, "caller.bundle");
+
+    extExtension->DoBackupStart();
+    extExtension->DoBackupEnd();
+    extExtension->OnBackupFinish();
+    extExtension->OnBackupExFinish();
+    extExtension->OnRestoreFinish();
+    extExtension->OnRestoreExFinish();
+    extExtension->stopCallJsOnProcess_.store(true);
+    extExtension->FinishOnProcessTask();
+    EXPECT_FALSE(extExtension->isFirstCallOnProcess_.load());
+    EXPECT_FALSE(extExtension->isExecAppDone_.load());
+}
+
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ReportAndHandle_0400, testing::ext::TestSize.Level1)
+{
+    ASSERT_NE(extExtension, nullptr);
+    auto oldProxy = ServiceClient::serviceProxy_;
+    ServiceClient::serviceProxy_ = nullptr;
+    extExtension->ReportAppProcessInfo("process", BackupRestoreScenario::FULL_BACKUP);
+    ServiceClient::serviceProxy_ = proxy;
+    extExtension->ReportAppProcessInfo("process", BackupRestoreScenario::FULL_BACKUP);
+    ServiceClient::serviceProxy_ = oldProxy;
+
+    int fd = 0;
+    int reportFd = 0;
+    EXPECT_EQ(extExtension->GetIncrementalBackupFileHandle(fd, reportFd), ERR_OK);
+    EXPECT_EQ(fd, BConstants::INVALID_FD_NUM);
+    EXPECT_EQ(reportFd, BConstants::INVALID_FD_NUM);
+    auto [incrementalFd, manifestFd] = extExtension->GetIncrementalBackupFileHandle();
+    EXPECT_EQ(incrementalFd.Get(), BConstants::INVALID_FD_NUM);
+    EXPECT_EQ(manifestFd.Get(), BConstants::INVALID_FD_NUM);
+}
+
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_CleanBundleTempDir_0400, testing::ext::TestSize.Level1)
+{
+    ASSERT_NE(extExtension, nullptr);
+    auto oldExtension = extExtension->extension_;
+    extExtension->extension_ = nullptr;
+    EXPECT_NE(extExtension->CleanBundleTempDir(), ERR_OK);
+
+    extExtension->extension_ = extension;
+    EXPECT_CALL(*extBackupMock, GetExtensionAction())
+        .WillOnce(Return(BConstants::ExtensionAction::INVALID));
+    EXPECT_NE(extExtension->CleanBundleTempDir(), ERR_OK);
+    extExtension->extension_ = oldExtension;
+}
+
+HWTEST_F(ExtExtensionSubTest, SUB_Ext_Extension_ManageJsonFd_0400, testing::ext::TestSize.Level1)
+{
+    ASSERT_NE(extExtension, nullptr);
+    extExtension->CloseManageJsonFd();
+    EXPECT_TRUE(extExtension->InitManageJsonFd());
+    EXPECT_GE(extExtension->manageJsonFd_.Get(), 0);
+    EXPECT_TRUE(extExtension->InitManageJsonFd());
+    extExtension->CloseManageJsonFd();
+    EXPECT_LT(extExtension->manageJsonFd_.Get(), 0);
+    extExtension->CloseManageJsonFd();
+}
 #include "ext_extension_sub_ext_test.cpp"
 } // namespace OHOS::FileManagement::Backup
