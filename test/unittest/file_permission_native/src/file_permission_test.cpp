@@ -1484,11 +1484,13 @@ HWTEST_F(FilePermissionTest, FilePermission_BranchHelpers_2000, testing::ext::Te
         OperationMode::READ_MODE}};
     EXPECT_CALL(*funcMock, lstat(_, _)).WillOnce(Return(-1));
     EXPECT_TRUE(FilePermission::GetPathPolicyInfoFromUriPolicyInfo(localUri, errors, true).empty());
+    EXPECT_TRUE(Mock::VerifyAndClearExpectations(funcMock.get()));
 
     struct stat linkStat = {};
     linkStat.st_mode = S_IFLNK;
     EXPECT_CALL(*funcMock, lstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(linkStat), Return(0)));
     EXPECT_TRUE(FilePermission::GetPathPolicyInfoFromUriPolicyInfo(localUri, errors, true).empty());
+    EXPECT_TRUE(Mock::VerifyAndClearExpectations(funcMock.get()));
 }
 
 /**
@@ -1561,9 +1563,13 @@ HWTEST_F(FilePermissionTest, FilePermission_GrantAndSharedDirectory_2000, testin
         .WillOnce(DoAll(SetArgReferee<4>(okCodes), Return(SANDBOX_MANAGER_OK)));
     EXPECT_EQ(FilePermission::GrantPermission(uriPolicies, BUNDLE_NAME_A, 0, errors), 0);
 
+    struct stat fileStat = {};
+    fileStat.st_mode = S_IFREG;
+    EXPECT_CALL(*funcMock, lstat(_, _)).WillOnce(DoAll(SetArgPointee<1>(fileStat), Return(0)));
     EXPECT_CALL(*sandboxMock_, UnPersistPolicyByTokenIdAndPolicies(_, _, _))
         .WillOnce(DoAll(SetArgReferee<2>(okCodes), Return(SANDBOX_MANAGER_OK)));
     EXPECT_EQ(FilePermission::UnPersistPolicyByTokenIdAndPolicies(1, uriPolicies, errors), 0);
+    EXPECT_TRUE(Mock::VerifyAndClearExpectations(funcMock.get()));
 
     EXPECT_CALL(*sandboxMock_, GrantSharedDirectoryPermission()).WillOnce(Return(SANDBOX_MANAGER_OK));
     EXPECT_CALL(*sandboxMock_, RevokeSharedDirectoryPermission()).WillOnce(Return(PERMISSION_DENIED));
