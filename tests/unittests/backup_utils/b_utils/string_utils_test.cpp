@@ -987,7 +987,8 @@ HWTEST_F(StringUtilsTest, STRINGUTILS_ANCO_FILE_TEST_001, testing::ext::TestSize
     EXPECT_FALSE(StringUtils::IsAncoFile("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567.txt"));
     EXPECT_TRUE(StringUtils::IsAncoFile("file_anco.txt"));
     EXPECT_FALSE(StringUtils::IsAncoFile("normal.txt"));
-    EXPECT_FALSE(StringUtils::IsAncoFile("ABC_anco.txt"));
+    EXPECT_TRUE(StringUtils::IsAncoFile("ABC_anco.txt"));
+    EXPECT_FALSE(StringUtils::IsAncoFile("ABCDEFGHIJKLMNOPQRSTUVWXYZ12_anco.txt"));
 }
 
 HWTEST_F(StringUtilsTest, STRINGUTILS_LEXICAL_AND_EMPTY_TEST_001, testing::ext::TestSize.Level1)
