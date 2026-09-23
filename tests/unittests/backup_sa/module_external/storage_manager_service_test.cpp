@@ -842,13 +842,22 @@ HWTEST_F(StorageManagerServiceTest, Storage_Manager_ServiceTest_SetExcludePathMa
     std::string dir = dirPath.string();
     service.SetExcludePathMap(dir, excludesMap);
     ASSERT_EQ(excludesMap.size(), 2);
-    EXPECT_FALSE(excludesMap[file]);
-    EXPECT_TRUE(excludesMap[dir + "/"]);
+    auto fileIt = excludesMap.find(file);
+    ASSERT_NE(fileIt, excludesMap.end());
+    EXPECT_FALSE(fileIt->second);
+    EXPECT_EQ(dir, dirPath.string() + "/");
+    auto dirIt = excludesMap.find(dir);
+    ASSERT_NE(dirIt, excludesMap.end());
+    EXPECT_TRUE(dirIt->second);
 
     std::map<std::string, bool> trailingSlashMap;
-    std::string dirWithSlash = dir + "/";
+    std::string dirWithSlash = dirPath.string() + "/";
     service.SetExcludePathMap(dirWithSlash, trailingSlashMap);
-    EXPECT_TRUE(trailingSlashMap[dirWithSlash]);
+    EXPECT_EQ(dirWithSlash, dirPath.string() + "/");
+    ASSERT_EQ(trailingSlashMap.size(), 1);
+    auto trailingSlashIt = trailingSlashMap.find(dirWithSlash);
+    ASSERT_NE(trailingSlashIt, trailingSlashMap.end());
+    EXPECT_TRUE(trailingSlashIt->second);
     fs::remove_all(root);
 }
 

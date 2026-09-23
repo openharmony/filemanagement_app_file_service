@@ -772,21 +772,36 @@ HWTEST_F(BDirTest, b_dir_ProcessFileWithResultManager_Branches_001, testing::ext
     std::filesystem::path bigPath = root / "big";
     {
         std::ofstream small(smallPath);
+        ASSERT_TRUE(small.is_open());
         small << "123";
         std::ofstream big(bigPath);
+        ASSERT_TRUE(big.is_open());
         big << "1234567890";
     }
+    ASSERT_EQ(std::filesystem::file_size(smallPath), 3);
+    ASSERT_EQ(std::filesystem::file_size(bigPath), 10);
 
     auto resultManager = std::make_shared<ScanResultManager>();
     AdvancedScanOption option(false, "", resultManager);
     int64_t bigFileSize = 0;
     int64_t smallFileSize = 0;
     ProcessFile({smallPath.string(), "/restore/small", 5}, bigFileSize, smallFileSize, {}, option);
-    ProcessFile({bigPath.string(), "/restore/big", 5}, bigFileSize, smallFileSize, {}, option);
     EXPECT_EQ(smallFileSize, 3);
+    auto smallFiles = resultManager->GetAllSmallFiles();
+    ASSERT_EQ(smallFiles.size(), 1);
+    EXPECT_EQ(smallFiles[0]->filePath_, smallPath.string());
+    EXPECT_EQ(smallFiles[0]->fileSize_, 3);
+    EXPECT_EQ(smallFiles[0]->GetRestorePath(), "/restore/small");
+
+    ProcessFile({bigPath.string(), "/restore/big", 5}, bigFileSize, smallFileSize, {}, option);
     EXPECT_EQ(bigFileSize, 10);
-    EXPECT_EQ(resultManager->GetAllSmallFiles().size(), 1);
-    EXPECT_EQ(resultManager->GetAllFiles().size(), 1);
+    auto bigFile = resultManager->GetFileInfo();
+    ASSERT_NE(bigFile, nullptr);
+    EXPECT_TRUE(bigFile->isBigFile_);
+    EXPECT_EQ(bigFile->filePath_, bigPath.string());
+    EXPECT_EQ(bigFile->sta_.st_size, 10);
+    EXPECT_EQ(bigFile->GetRestorePath(), "/restore/big");
+    EXPECT_FALSE(resultManager->HasFileReady());
 }
 
 /**
