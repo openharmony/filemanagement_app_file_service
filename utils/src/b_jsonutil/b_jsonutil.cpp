@@ -14,6 +14,7 @@
  */
 
 #include "b_jsonutil/b_jsonutil.h"
+#include "b_jsonutil/parse_bundle_index.h"
 
 #include <cstring>
 #include <chrono>
@@ -47,7 +48,11 @@ BJsonUtil::BundleDetailInfo BJsonUtil::ParseBundleNameIndexStr(const std::string
     std::string bundleName = bundleNameStr.substr(0, hasPos);
     if (bundleNameStr.back() != BUNDLE_INDEX_SPLICE) {
         std::string indexStr = bundleNameStr.substr(hasPos + 1);
-        int index = std::atoi(indexStr.c_str());
+        int32_t index = BUNDLE_INDEX_DEFAULT_VAL;
+        if (!ParseBundleIndex(indexStr, index)) {
+            HILOGE("Invalid bundle index: %{public}s", indexStr.c_str());
+            index = BUNDLE_INDEX_DEFAULT_VAL;
+        }
         bundleDetailInfo.bundleIndex = index;
     } else {
         bundleDetailInfo.bundleIndex =  BUNDLE_INDEX_DEFAULT_VAL;
@@ -776,7 +781,11 @@ std::map<std::string, std::vector<BJsonUtil::BundleDetailInfo>> BJsonUtil::Build
             std::string bundleNameSplit = bundleName.substr(0, pos);
             if (bundleName.back() != BUNDLE_INDEX_SPLICE) {
                 std::string indexSplit = bundleName.substr(pos + 1);
-                int index = std::atoi(indexSplit.c_str());
+                int32_t index = BUNDLE_INDEX_DEFAULT_VAL;
+                if (!ParseBundleIndex(indexSplit, index)) {
+                    HILOGE("Invalid bundle index: %{public}s", indexSplit.c_str());
+                    index = BUNDLE_INDEX_DEFAULT_VAL;
+                }
                 bundleIndex = index;
             } else {
                 bundleIndex = BUNDLE_INDEX_DEFAULT_VAL;
